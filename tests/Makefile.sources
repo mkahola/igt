@@ -182,6 +182,7 @@ TESTS_progs = \
 	kms_crtc_background_color \
 	kms_cursor_crc \
 	kms_cursor_legacy \
+	kms_cursor_limited \
 	kms_draw_crc \
 	kms_fbc_crc \
 	kms_fbcon_fbt \
