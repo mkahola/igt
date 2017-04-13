@@ -3343,3 +3343,43 @@ uint32_t kmstest_get_vbl_flag(uint32_t pipe_id)
 		return pipe_flag;
 	}
 }
+
+void kmstest_cleanup(kmstest_data_t *data, enum pipe pipe, igt_output_t *output)
+{
+	int n_planes = data->display.pipes[pipe].n_planes;
+	int index;
+	igt_plane_t *primary;
+
+	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
+	igt_assert(primary);
+
+	for (int i = 0; i < n_planes; i++) {
+		igt_plane_t *plane = data->plane[i];
+
+		if (!plane)
+			continue;
+
+		if (plane->type == DRM_PLANE_TYPE_PRIMARY) {
+			index = i;
+			continue;
+		}
+
+		igt_plane_set_fb(plane, NULL);
+		data->plane[i] = NULL;
+	}
+
+	igt_remove_fb(data->display.drm_fd, &data->fb[index]);
+
+	/* reset the constraint on the pipe */
+	igt_output_set_pipe(output, PIPE_ANY);
+
+	free(data->plane);
+	data->plane = NULL;
+
+	free(data->fb);
+	data->fb = NULL;
+
+	igt_pipe_crc_free(data->pipe_crc);
+
+	igt_display_commit2(&data->display, COMMIT_ATOMIC);
+}

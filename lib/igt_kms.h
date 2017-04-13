@@ -37,6 +37,7 @@
 
 #include "igt_fb.h"
 #include "ioctl_wrappers.h"
+#include "igt_debugfs.h"
 
 /* Low-level helpers with kmstest_ prefix */
 
@@ -377,6 +378,13 @@ struct igt_display {
 	bool is_atomic;
 };
 
+typedef struct {
+	igt_display_t display;
+	igt_pipe_crc_t *pipe_crc;
+	igt_plane_t **plane;
+	struct igt_fb *fb;
+} kmstest_data_t;
+
 void igt_display_init(igt_display_t *display, int drm_fd);
 void igt_display_fini(igt_display_t *display);
 int  igt_display_commit2(igt_display_t *display, enum igt_commit_style s);
@@ -581,6 +589,8 @@ void igt_enable_connectors(void);
 void igt_reset_connectors(void);
 
 uint32_t kmstest_get_vbl_flag(uint32_t pipe_id);
+void kmstest_cleanup(kmstest_data_t *data, enum pipe pipe,
+		     igt_output_t *output);
 
 #define EDID_LENGTH 128
 const unsigned char* igt_kms_get_base_edid(void);
