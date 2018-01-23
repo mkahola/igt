@@ -55,7 +55,7 @@ static int paint_fb(struct igt_fb *fb, const char *test_name,
 	igt_cairo_printf_line(cr, align_hcenter, 10, "%s", mode_format_str);
 	igt_cairo_printf_line(cr, align_hcenter, 10, "%s", cconf_str);
 
-	cairo_destroy(cr);
+	igt_put_cairo_ctx(drm_fd, fb, cr);
 
 	return 0;
 }
