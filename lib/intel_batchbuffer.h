@@ -181,8 +181,8 @@ intel_batchbuffer_require_space(struct intel_batchbuffer *batch,
 
 void
 intel_blt_copy(struct intel_batchbuffer *batch,
-	      drm_intel_bo *src_bo, int src_x1, int src_y1, int src_pitch,
-	      drm_intel_bo *dst_bo, int dst_x1, int dst_y1, int dst_pitch,
+	      drm_intel_bo *src_bo, uint32_t src_delta, int src_x1, int src_y1, int src_pitch,
+	      drm_intel_bo *dst_bo, uint32_t dst_delta, int dst_x1, int dst_y1, int dst_pitch,
 	      int width, int height, int bpp);
 void intel_copy_bo(struct intel_batchbuffer *batch,
 		   drm_intel_bo *dst_bo, drm_intel_bo *src_bo,

@@ -64,7 +64,7 @@ static void gpu_blit(struct igt_fb *dst_fb, struct igt_fb *src_fb)
 {
 	drm_intel_bo *dst_bo;
 	drm_intel_bo *src_bo;
-	int bpp;
+	int i;
 	static drm_intel_bufmgr *bufmgr;
 	struct intel_batchbuffer *batch;
 	uint32_t devid;
@@ -79,7 +79,7 @@ static void gpu_blit(struct igt_fb *dst_fb, struct igt_fb *src_fb)
 	igt_assert(dst_fb->drm_format == src_fb->drm_format);
 	igt_assert(src_fb->drm_format == DRM_FORMAT_RGB565 ||
 	       igt_drm_format_to_bpp(src_fb->drm_format) != 16);
-	bpp = igt_drm_format_to_bpp(src_fb->drm_format);
+
 	dst_bo = gem_handle_to_libdrm_bo(bufmgr, drm_fd, "destination",
 					 dst_fb->gem_handle);
 	igt_assert(dst_bo);
@@ -87,10 +87,13 @@ static void gpu_blit(struct igt_fb *dst_fb, struct igt_fb *src_fb)
 					 src_fb->gem_handle);
 	igt_assert(src_bo);
 
-	intel_blt_copy(batch,
-		       src_bo, 0, 0, src_fb->width * bpp / 8,
-		       dst_bo, 0, 0, dst_fb->width * bpp / 8,
-		       src_fb->width, src_fb->height, bpp);
+	for (i = 0; i < src_fb->num_planes; i++) {
+		intel_blt_copy(batch,
+			      src_bo, src_fb->offsets[i], 0, 0, src_fb->stride,
+			      dst_bo, dst_fb->offsets[i], 0, 0, dst_fb->stride,
+			      src_fb->plane_width[i], src_fb->plane_height[i],
+			      src_fb->plane_bpp[i]);
+	}
 	intel_batchbuffer_flush(batch);
 	gem_quiescent_gpu(drm_fd);
 

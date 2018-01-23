@@ -874,8 +874,8 @@ static void render_copy_bo(struct buffers *b, drm_intel_bo *dst, drm_intel_bo *s
 static void blt_copy_bo(struct buffers *b, drm_intel_bo *dst, drm_intel_bo *src)
 {
 	intel_blt_copy(b->batch,
-		       src, 0, 0, 4*b->width,
-		       dst, 0, 0, 4*b->width,
+		       src, 0, 0, 0, 4*b->width,
+		       dst, 0, 0, 0, 4*b->width,
 		       b->width, b->height, 32);
 }
 

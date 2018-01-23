@@ -83,8 +83,8 @@ static drm_intel_bo *bcs_copy_bo(drm_intel_bo *dst, drm_intel_bo *src)
 	drm_intel_bo_reference(bo);
 
 	intel_blt_copy(batch,
-		       src, 0, 0, 4*width,
-		       dst, 0, 0, 4*width,
+		       src, 0, 0, 0, 4*width,
+		       dst, 0, 0, 0, 4*width,
 		       width, height, 32);
 
 	return bo;

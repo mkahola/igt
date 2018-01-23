@@ -310,10 +310,12 @@ intel_batchbuffer_data(struct intel_batchbuffer *batch,
  * intel_blt_copy:
  * @batch: batchbuffer object
  * @src_bo: source libdrm buffer object
+ * @src_delta: offset into the source bo, in bytes
  * @src_x1: source pixel x-coordination
  * @src_y1: source pixel y-coordination
  * @src_pitch: @src_bo's pitch in bytes
  * @dst_bo: destination libdrm buffer object
+ * @sdst_delta: offset into the source bo, in bytes
  * @dst_x1: destination pixel x-coordination
  * @dst_y1: destination pixel y-coordination
  * @dst_pitch: @dst_bo's pitch in bytes
@@ -326,8 +328,8 @@ intel_batchbuffer_data(struct intel_batchbuffer *batch,
  */
 void
 intel_blt_copy(struct intel_batchbuffer *batch,
-	       drm_intel_bo *src_bo, int src_x1, int src_y1, int src_pitch,
-	       drm_intel_bo *dst_bo, int dst_x1, int dst_y1, int dst_pitch,
+	       drm_intel_bo *src_bo, uint32_t src_delta, int src_x1, int src_y1, int src_pitch,
+	       drm_intel_bo *dst_bo, uint32_t dst_delta, int dst_x1, int dst_y1, int dst_pitch,
 	       int width, int height, int bpp)
 {
 	const int gen = batch->gen;
@@ -387,10 +389,10 @@ intel_blt_copy(struct intel_batchbuffer *batch,
 		  dst_pitch);
 	OUT_BATCH((dst_y1 << 16) | dst_x1); /* dst x1,y1 */
 	OUT_BATCH(((dst_y1 + height) << 16) | (dst_x1 + width)); /* dst x2,y2 */
-	OUT_RELOC_FENCED(dst_bo, I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER, 0);
+	OUT_RELOC_FENCED(dst_bo, I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER, dst_delta);
 	OUT_BATCH((src_y1 << 16) | src_x1); /* src x1,y1 */
 	OUT_BATCH(src_pitch);
-	OUT_RELOC_FENCED(src_bo, I915_GEM_DOMAIN_RENDER, 0, 0);
+	OUT_RELOC_FENCED(src_bo, I915_GEM_DOMAIN_RENDER, 0, src_delta);
 	ADVANCE_BATCH();
 
 #define CMD_POLY_STIPPLE_OFFSET       0x7906
@@ -431,8 +433,8 @@ intel_copy_bo(struct intel_batchbuffer *batch,
 	igt_assert(size % 4096 == 0);
 
 	intel_blt_copy(batch,
-		       src_bo, 0, 0, 4096,
-		       dst_bo, 0, 0, 4096,
+		       src_bo, 0, 0, 0, 4096,
+		       dst_bo, 0, 0, 0, 4096,
 		       4096/4, size/4096, 32);
 }
 
