@@ -413,6 +413,33 @@ void igt_get_fb_tile_size(int fd, uint64_t modifier, int fb_bpp,
 			*height_ret = 32;
 		}
 		break;
+	case LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS:
+		igt_require_intel(fd);
+		switch (fb_bpp) {
+		case 8:
+			*width_ret = 512;
+			*height_ret = 32;
+			break;
+		case 16:
+			*width_ret = 256;
+			*height_ret = 32;
+			break;
+		case 32:
+			*width_ret = 128;
+			*height_ret = 32;
+			break;
+		case 64:
+			*width_ret = 64;
+			*height_ret = 32;
+			break;
+		case 128:
+			*width_ret = 32;
+			*height_ret = 32;
+			break;
+		default:
+			igt_assert(false);
+		}
+		break;
 	case LOCAL_I915_FORMAT_MOD_Yf_TILED:
 	case LOCAL_I915_FORMAT_MOD_Yf_TILED_CCS:
 		igt_require_intel(fd);
@@ -467,8 +494,10 @@ void igt_get_fb_tile_size(int fd, uint64_t modifier, int fb_bpp,
 
 static bool is_ccs_modifier(uint64_t modifier)
 {
-	return modifier == LOCAL_I915_FORMAT_MOD_Y_TILED_CCS ||
-		modifier == LOCAL_I915_FORMAT_MOD_Yf_TILED_CCS;
+
+	return modifier == I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS ||
+		modifier == I915_FORMAT_MOD_Y_TILED_CCS ||
+		modifier == I915_FORMAT_MOD_Yf_TILED_CCS;
 }
 
 static unsigned fb_plane_width(const struct igt_fb *fb, int plane)
@@ -687,6 +716,7 @@ uint64_t igt_fb_mod_to_tiling(uint64_t modifier)
 		return I915_TILING_X;
 	case LOCAL_I915_FORMAT_MOD_Y_TILED:
 	case LOCAL_I915_FORMAT_MOD_Y_TILED_CCS:
+	case LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS:
 		return I915_TILING_Y;
 	case LOCAL_I915_FORMAT_MOD_Yf_TILED:
 	case LOCAL_I915_FORMAT_MOD_Yf_TILED_CCS:
