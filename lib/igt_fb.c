@@ -405,6 +405,7 @@ void igt_get_fb_tile_size(int fd, uint64_t modifier, int fb_bpp,
 		}
 		break;
 	case LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS:
+	case LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS:
 		igt_require_intel(fd);
 		switch (fb_bpp) {
 		case 8:
@@ -487,6 +488,7 @@ static bool is_ccs_modifier(uint64_t modifier)
 {
 
 	return modifier == I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS ||
+		modifier == I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS ||
 		modifier == I915_FORMAT_MOD_Y_TILED_CCS ||
 		modifier == I915_FORMAT_MOD_Yf_TILED_CCS;
 }
@@ -708,6 +710,7 @@ uint64_t igt_fb_mod_to_tiling(uint64_t modifier)
 	case LOCAL_I915_FORMAT_MOD_Y_TILED:
 	case LOCAL_I915_FORMAT_MOD_Y_TILED_CCS:
 	case LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS:
+	case LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS:
 		return I915_TILING_Y;
 	case LOCAL_I915_FORMAT_MOD_Yf_TILED:
 	case LOCAL_I915_FORMAT_MOD_Yf_TILED_CCS:
