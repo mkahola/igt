@@ -88,6 +88,11 @@ static void get_ccs_fb(int fd, struct drm_mode_fb_cmd2 *ret)
 	};
 	int size;
 
+	if (intel_gen(intel_get_drm_devid(fd)) >= 12) {
+		add.modifier[0] = I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS;
+		add.modifier[1] = I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS;
+	}
+
 	igt_require(has_addfb2_iface(fd));
 	igt_require_intel(fd);
 
