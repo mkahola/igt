@@ -77,6 +77,7 @@ static const uint64_t ccs_modifiers[] = {
 
 static const uint64_t ccs_gen12_modifiers[] = {
 	LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS,
+	LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS,
 };
 
 /*
