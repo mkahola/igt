@@ -75,6 +75,10 @@ static const uint64_t ccs_modifiers[] = {
 	LOCAL_I915_FORMAT_MOD_Yf_TILED_CCS,
 };
 
+static const uint64_t ccs_gen12_modifiers[] = {
+	LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS,
+};
+
 /*
  * Limit maximum used sprite plane width so this test will not mistakenly
  * fail on hardware limitations which are not interesting to this test.
@@ -307,9 +311,16 @@ static int __test_output(data_t *data)
 
 	igt_output_set_pipe(data->output, data->pipe);
 
-	for (i = 0; i < ARRAY_SIZE(ccs_modifiers); i++) {
-		data->ccs_modifier = ccs_modifiers[i];
-		valid_tests += test_ccs(data);
+	if (intel_gen(intel_get_drm_devid(data->drm_fd)) >= 12) {
+		for (i = 0; i < ARRAY_SIZE(ccs_gen12_modifiers); i++) {
+			data->ccs_modifier = ccs_gen12_modifiers[i];
+			valid_tests += test_ccs(data);
+		}
+	} else {
+		for (i = 0; i < ARRAY_SIZE(ccs_modifiers); i++) {
+			data->ccs_modifier = ccs_modifiers[i];
+			valid_tests += test_ccs(data);
+		}
 	}
 
 	igt_output_set_pipe(data->output, PIPE_NONE);
