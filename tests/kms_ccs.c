@@ -88,7 +88,7 @@ static const uint64_t ccs_gen12_modifiers[] = {
  * comment saying:
  * "Requested display configuration exceeds system watermark limitations"
  */
-#define MAX_SPRITE_PLANE_WIDTH 2000
+#define MAX_SPRITE_PLANE_WIDTH 1000
 
 static void addfb_init(struct igt_fb *fb, struct drm_mode_fb_cmd2 *f)
 {
@@ -141,13 +141,13 @@ static void generate_fb(data_t *data, struct igt_fb *fb,
 
 	if (fb_flags & FB_COMPRESSED) {
 		if (fb_flags & FB_MISALIGN_AUX_STRIDE) {
-			igt_skip_on_f(width <= 1024,
+			igt_skip_on_f(width <= 800,
 				      "FB already has the smallest possible stride\n");
 			f.pitches[1] -= 64;
 		}
 
 		if (fb_flags & FB_SMALL_AUX_STRIDE) {
-			igt_skip_on_f(width <= 1024,
+			igt_skip_on_f(width <= 800,
 				      "FB already has the smallest possible stride\n");
 			f.pitches[1] = ALIGN(f.pitches[1]/2, 128);
 		}
