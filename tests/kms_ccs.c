@@ -316,7 +316,10 @@ static int __test_output(data_t *data)
 	if (intel_gen(intel_get_drm_devid(data->drm_fd)) >= 12) {
 		for (i = 0; i < ARRAY_SIZE(ccs_gen12_modifiers); i++) {
 			data->ccs_modifier = ccs_gen12_modifiers[i];
-			valid_tests += test_ccs(data);
+
+			/* render decompression not supported for 90/270 rotation */
+			if (data->flags != TEST_BAD_ROTATION_90)
+				valid_tests += test_ccs(data);
 		}
 	} else {
 		for (i = 0; i < ARRAY_SIZE(ccs_modifiers); i++) {
