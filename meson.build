@@ -124,6 +124,9 @@ build_info += 'With libunwind: @0@'.format(libunwind.found())
 
 libdw = dependency('libdw', required : true)
 pixman = dependency('pixman-1', required : true)
+gbm = dependency('gbm', version : '>=13.0', required : true)
+egl = dependency('egl')
+gles2 = dependency('glesv2')
 
 valgrind = dependency('valgrind', required : get_option('valgrind'))
 if valgrind.found()

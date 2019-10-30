@@ -9,6 +9,7 @@ test_progs = [
 	'drm_import_export',
 	'drm_mm',
 	'drm_read',
+	'igtcube',
 	'kms_3d',
 	'kms_addfb_basic',
 	'kms_atomic',
@@ -239,7 +240,7 @@ i915_progs = [
 	'i915_suspend',
 ]
 
-test_deps = [ igt_deps ]
+test_deps = [ igt_deps, egl, gbm, gles2 ]
 
 if libdrm_nouveau.found()
 	test_progs += [

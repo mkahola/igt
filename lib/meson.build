@@ -1,5 +1,10 @@
 lib_sources = [
+	'common.c',
+	'cube-smooth.c',
+	'drm-atomic.c',
+	'drm-common.c',
 	'drmtest.c',
+	'esTransform.c',
 	'i915/gem_context.c',
 	'i915/gem_engine_topology.c',
 	'i915/gem_scheduler.c',
@@ -66,6 +71,9 @@ lib_sources = [
 
 lib_deps = [
 	cairo,
+	egl,
+	gbm,
+	gles2,
 	glib,
 	libdrm,
 	libdw,
