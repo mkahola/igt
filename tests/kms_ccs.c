@@ -70,15 +70,15 @@ static const struct {
 	{0.0, 1.0, 0.0}
 };
 
-static const uint64_t ccs_modifiers[] = {
-	LOCAL_I915_FORMAT_MOD_Y_TILED_CCS,
-	LOCAL_I915_FORMAT_MOD_Yf_TILED_CCS,
-};
-
-static const uint64_t ccs_gen12_modifiers[] = {
-	LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS,
-	LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS,
-	LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS_CC,
+static const struct {
+	uint64_t modifier;
+	char name[8];
+} ccs_modifiers[5] = {
+	{LOCAL_I915_FORMAT_MOD_Y_TILED_CCS, "Y"},
+	{LOCAL_I915_FORMAT_MOD_Yf_TILED_CCS, "Yf"},
+	{LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS, "rc"},
+	{LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS, "mc"},
+	{LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS_CC, "rc-cc"},
 };
 
 /*
@@ -89,6 +89,17 @@ static const uint64_t ccs_gen12_modifiers[] = {
  * "Requested display configuration exceeds system watermark limitations"
  */
 #define MAX_SPRITE_PLANE_WIDTH 2000
+
+static bool is_gen12_modifier(uint64_t modifier)
+{
+
+	if (modifier == LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS ||
+	    modifier == LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS ||
+	    modifier == LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS_CC)
+		return true;
+
+	return false;
+}
 
 static void addfb_init(struct igt_fb *fb, struct drm_mode_fb_cmd2 *f)
 {
@@ -306,27 +317,14 @@ static int test_ccs(data_t *data)
 static int __test_output(data_t *data)
 {
 	igt_display_t *display = &data->display;
-	int i, valid_tests = 0;
+	int valid_tests = 0;
 
 	data->output = igt_get_single_output_for_pipe(display, data->pipe);
 	igt_require(data->output);
 
 	igt_output_set_pipe(data->output, data->pipe);
 
-	if (intel_gen(intel_get_drm_devid(data->drm_fd)) >= 12) {
-		for (i = 0; i < ARRAY_SIZE(ccs_gen12_modifiers); i++) {
-			data->ccs_modifier = ccs_gen12_modifiers[i];
-
-			/* render decompression not supported for 90/270 rotation */
-			if (data->flags != TEST_BAD_ROTATION_90)
-				valid_tests += test_ccs(data);
-		}
-	} else {
-		for (i = 0; i < ARRAY_SIZE(ccs_modifiers); i++) {
-			data->ccs_modifier = ccs_modifiers[i];
-			valid_tests += test_ccs(data);
-		}
-	}
+	valid_tests += test_ccs(data);
 
 	igt_output_set_pipe(data->output, PIPE_NONE);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
@@ -345,11 +343,13 @@ static data_t data;
 igt_main
 {
 	enum pipe pipe;
+	int i;
+	int gen;
 
 	igt_fixture {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL);
-
-		igt_require(intel_gen(intel_get_drm_devid(data.drm_fd)) >= 9);
+		gen = intel_gen(intel_get_drm_devid(data.drm_fd));
+		igt_require(gen >= 9);
 		kmstest_set_vt_graphics_mode();
 		igt_require_pipe_crc(data.drm_fd);
 
@@ -361,51 +361,63 @@ igt_main
 
 		data.pipe = pipe;
 
-		data.flags = TEST_BAD_PIXEL_FORMAT;
-		igt_subtest_f("pipe-%s-bad-pixel-format", pipe_name)
-			test_output(&data);
-
-		data.flags = TEST_BAD_ROTATION_90;
-		igt_subtest_f("pipe-%s-bad-rotation-90", pipe_name)
-			test_output(&data);
-
-		data.flags = TEST_CRC;
-		igt_subtest_f("pipe-%s-crc-primary-basic", pipe_name)
-			test_output(&data);
-
-		data.flags = TEST_CRC | TEST_ROTATE_180;
-		igt_subtest_f("pipe-%s-crc-primary-rotation-180", pipe_name)
-			test_output(&data);
-
-		data.flags = TEST_CRC;
-		igt_subtest_f("pipe-%s-crc-sprite-planes-basic", pipe_name) {
-			int valid_tests = 0;
-
-			igt_display_require_output_on_pipe(&data.display, data.pipe);
-
-			for_each_plane_on_pipe(&data.display, data.pipe, data.plane) {
-				if (data.plane->type == DRM_PLANE_TYPE_PRIMARY)
-					continue;
-				valid_tests += __test_output(&data);
+		for (i = 0; i < ARRAY_SIZE(ccs_modifiers); i++) {
+			if (gen >= 12 && is_gen12_modifier(ccs_modifiers[i].modifier)) {
+				data.ccs_modifier = ccs_modifiers[i].modifier;
+			} else if (gen < 12 && !is_gen12_modifier(ccs_modifiers[i].modifier)){
+				data.ccs_modifier = ccs_modifiers[i].modifier;
+			} else {
+				continue;
 			}
 
-			igt_require_f(valid_tests > 0,
-				      "CCS not supported, skipping\n");
+			data.flags = TEST_BAD_PIXEL_FORMAT;
+			igt_subtest_f("pipe-%s-bad-pixel-format-%s", pipe_name, ccs_modifiers[i].name)
+				test_output(&data);
+
+			if (gen < 12 && !is_gen12_modifier(data.ccs_modifier)) {
+				data.flags = TEST_BAD_ROTATION_90;
+				igt_subtest_f("pipe-%s-bad-rotation-90-%s", pipe_name, ccs_modifiers[i].name)
+					test_output(&data);
+			}
+
+			data.flags = TEST_CRC;
+			igt_subtest_f("pipe-%s-crc-primary-basic-%s", pipe_name, ccs_modifiers[i].name)
+				test_output(&data);
+			
+			data.flags = TEST_CRC | TEST_ROTATE_180;
+			igt_subtest_f("pipe-%s-crc-primary-rotation-180-%s", pipe_name, ccs_modifiers[i].name)
+				test_output(&data);
+			
+			data.flags = TEST_CRC;
+			igt_subtest_f("pipe-%s-crc-sprite-planes-basic-%s", pipe_name, ccs_modifiers[i].name) {
+				int valid_tests = 0;
+				
+				igt_display_require_output_on_pipe(&data.display, data.pipe);
+				
+				for_each_plane_on_pipe(&data.display, data.pipe, data.plane) {
+					if (data.plane->type == DRM_PLANE_TYPE_PRIMARY)
+						continue;
+					valid_tests += __test_output(&data);
+				}
+				
+				igt_require_f(valid_tests > 0,
+					      "CCS not supported, skipping\n");
+			}
+
+			data.plane = NULL;
+
+			data.flags = TEST_NO_AUX_BUFFER;
+			igt_subtest_f("pipe-%s-missing-ccs-buffer-%s", pipe_name, ccs_modifiers[i].name)
+				test_output(&data);
+			
+			data.flags = TEST_BAD_CCS_HANDLE;
+			igt_subtest_f("pipe-%s-ccs-on-another-bo-%s", pipe_name, ccs_modifiers[i].name)
+				test_output(&data);
+			
+			data.flags = TEST_BAD_AUX_STRIDE;
+			igt_subtest_f("pipe-%s-bad-aux-stride-%s", pipe_name, ccs_modifiers[i].name)
+				test_output(&data);
 		}
-
-		data.plane = NULL;
-
-		data.flags = TEST_NO_AUX_BUFFER;
-		igt_subtest_f("pipe-%s-missing-ccs-buffer", pipe_name)
-			test_output(&data);
-
-		data.flags = TEST_BAD_CCS_HANDLE;
-		igt_subtest_f("pipe-%s-ccs-on-another-bo", pipe_name)
-			test_output(&data);
-
-		data.flags = TEST_BAD_AUX_STRIDE;
-		igt_subtest_f("pipe-%s-bad-aux-stride", pipe_name)
-			test_output(&data);
 	}
 
 	igt_fixture
