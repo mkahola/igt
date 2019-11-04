@@ -73,11 +73,12 @@ static const struct {
 static const struct {
 	uint64_t modifier;
 	char name[8];
-} ccs_modifiers[3] = {
+} ccs_modifiers[4] = {
 	{LOCAL_I915_FORMAT_MOD_Y_TILED_CCS, "Y"},
 	{LOCAL_I915_FORMAT_MOD_Yf_TILED_CCS, "Yf"},
 	{LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS, "Y-rc"},
- };
+	{LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS, "Y-mc"},
+};
 
 /*
  * Limit maximum used sprite plane width so this test will not mistakenly
@@ -91,7 +92,8 @@ static const struct {
 static bool is_gen12_modifier(uint64_t modifier)
 {
 
-	if (modifier == LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS)
+	if (modifier == LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS ||
+	    modifier == LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS)
 		return true;
 
 	return false;
