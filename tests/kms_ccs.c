@@ -54,6 +54,7 @@ enum test_fb_flags {
 
 typedef struct {
 	int drm_fd;
+	int devid;
 	igt_display_t display;
 	igt_output_t *output;
 	enum pipe pipe;
@@ -62,6 +63,9 @@ typedef struct {
 	igt_pipe_crc_t *pipe_crc;
 	uint32_t format;
 	uint64_t ccs_modifier;
+	struct igt_fb primary_fb;
+	igt_plane_t *primary;
+	igt_render_clearfunc_t fast_clear;
 } data_t;
 
 static const struct {
@@ -441,6 +445,153 @@ static void test_output(data_t *data)
 	igt_require_f(valid_tests > 0, "CCS not supported, skipping\n");
 }
 
+static void cleanup(data_t *data)
+{
+	igt_display_t *display = &data->display;
+
+	igt_pipe_crc_stop(data->pipe_crc);
+	igt_pipe_crc_free(data->pipe_crc);
+	data->pipe_crc = NULL;
+
+	/* reset the constraint on the pipe */
+	igt_output_set_pipe(data->output, PIPE_ANY);
+
+	igt_plane_set_fb(data->primary, NULL);
+	igt_display_commit(display);
+
+	igt_remove_fb(data->drm_fd, &data->primary_fb);
+
+	igt_display_reset(display);
+}
+
+static void scratch_buf_init(data_t *data, drm_intel_bo *drmibo,
+			     struct igt_buf *igtbo)
+{
+	igtbo->bo = drmibo;
+	igtbo->surface[0].stride = data->primary_fb.strides[0];
+	igtbo->tiling = data->primary_fb.modifier;
+	igtbo->surface[0].size = data->primary_fb.size;
+	igtbo->bpp = data->primary_fb.plane_bpp[0];
+}
+
+static igt_crc_t get_reference(data_t *data)
+{
+	drmModeModeInfo *mode;
+	igt_display_t *display = &data->display;
+	cairo_t *cr;
+	unsigned int fb_id;
+	igt_crc_t crc;
+
+	/* select the pipe we want to use */
+	igt_output_set_pipe(data->output, data->pipe);
+
+	/* create and set the primary plane fbs */
+	mode = igt_output_get_mode(data->output);
+
+	data->primary = compatible_main_plane(data);
+
+	fb_id = igt_create_fb(data->drm_fd,
+			      mode->hdisplay, mode->vdisplay,
+			      DRM_FORMAT_XRGB8888,
+			      LOCAL_DRM_FORMAT_MOD_NONE,
+			      &data->primary_fb);
+	igt_assert(fb_id);
+
+	cr = igt_get_cairo_ctx(data->drm_fd, &data->primary_fb);
+	igt_paint_color(cr, 0, 0, mode->hdisplay, mode->vdisplay,
+			colors[0].r, colors[0].g, colors[0].b);
+	igt_put_cairo_ctx(data->drm_fd, &data->primary_fb, cr);
+
+	igt_plane_set_fb(data->primary, &data->primary_fb);
+	igt_display_commit(display);
+
+	data->pipe_crc = igt_pipe_crc_new(data->drm_fd, data->pipe, INTEL_PIPE_CRC_SOURCE_AUTO);
+	igt_pipe_crc_start(data->pipe_crc);
+	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, &crc);
+
+	return crc;
+}
+
+static bool _test_fast_clear(data_t *data, igt_crc_t *crc)
+{
+	drmModeModeInfo *mode;
+	igt_display_t *display = &data->display;
+	drm_intel_bufmgr *bufmgr;
+	drm_intel_bo *drmibo;
+	struct intel_batchbuffer *batch;
+	struct igt_buf igtbo;
+	cairo_t *cr;
+	enum test_fb_flags fb_flags = 0;
+
+	/* select the pipe we want to use */
+	igt_output_set_pipe(data->output, data->pipe);
+
+	/* create and set the primary plane fbs */
+	mode = igt_output_get_mode(data->output);
+
+	data->primary = compatible_main_plane(data);
+	if (!igt_plane_has_format_mod(data->primary, data->format, data->ccs_modifier))
+		return false;
+
+	generate_fb(data, &data->primary_fb, mode->hdisplay, mode->vdisplay,
+		    (fb_flags & ~FB_COMPRESSED) | FB_HAS_PLANE);
+
+	cr = igt_get_cairo_ctx(data->drm_fd, &data->primary_fb);
+	igt_paint_color(cr, 0, 0, mode->hdisplay, mode->vdisplay,
+			colors[0].r, colors[0].g, colors[0].b);
+	igt_put_cairo_ctx(data->drm_fd, &data->primary_fb, cr);
+
+	igt_plane_set_fb(data->primary, &data->primary_fb);
+
+	igt_display_commit(display);
+
+	drmibo = gem_handle_to_libdrm_bo(bufmgr, data->drm_fd, "",
+					 data->primary_fb.gem_handle);
+	igt_assert(drmibo);
+
+	scratch_buf_init(data, drmibo, &igtbo);
+
+	batch = intel_batchbuffer_alloc(bufmgr, data->devid);
+	igt_assert(batch);
+
+	/* use rendercopy if available */
+	data->fast_clear(batch, &igtbo, 0, 0,
+			 data->primary_fb.width,
+			 data->primary_fb.height);
+
+	igt_display_commit(display);
+
+	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, crc);
+
+	return true;
+}
+
+
+static void test_fast_clear(data_t *data)
+{
+	bool ret;
+	igt_crc_t ref_crc, crc;
+
+	igt_require(data->devid >= 12);
+
+	data->output = igt_get_single_output_for_pipe(&data->display, data->pipe);
+	igt_require(data->output);
+
+	/* software test */
+	ref_crc = get_reference(data);
+
+	/* hardware test */
+	data->ccs_modifier = LOCAL_I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS_CC;
+	data->fast_clear = igt_get_render_clearfunc(data->devid);
+	ret = _test_fast_clear(data, &crc);
+	igt_assert_f(ret, "Clear Color format modifier not supported\n");
+
+	/* compare crc's */
+	igt_assert_crc_equal(&crc, &ref_crc);
+
+	cleanup(data);
+}
+
 static data_t data;
 
 static int opt_handler(int opt, int opt_index, void *opt_data)
@@ -467,7 +618,8 @@ igt_main_args("c", NULL, help_str, opt_handler, NULL)
 	igt_fixture {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL);
 
-		igt_require(intel_gen(intel_get_drm_devid(data.drm_fd)) >= 9);
+		data.devid = intel_gen(intel_get_drm_devid(data.drm_fd));
+		igt_require(data.devid >= 9);
 		kmstest_set_vt_graphics_mode();
 		igt_require_pipe_crc(data.drm_fd);
 
@@ -530,6 +682,10 @@ igt_main_args("c", NULL, help_str, opt_handler, NULL)
 		igt_describe("Test with bad AUX stride with given CCS modifier");
 		igt_subtest_f("pipe-%s-bad-aux-stride", pipe_name)
 			test_output(&data);
+
+		igt_describe("Test clear color with solid red color");
+		igt_subtest_f("pipe-%s-clear-color", pipe_name)
+			test_fast_clear(&data);
 	}
 
 	igt_fixture

@@ -1110,6 +1110,120 @@ void _gen9_render_copyfunc(struct intel_batchbuffer *batch,
 	intel_batchbuffer_reset(batch);
 }
 
+static
+void _gen12_render_clearfunc(struct intel_batchbuffer *batch,
+			     drm_intel_context *context,
+			     const struct igt_buf *dst, unsigned int dst_x,
+			     unsigned int dst_y, unsigned int width, unsigned int height,
+			     drm_intel_bo *aux_pgtable_bo,
+			     const uint32_t ps_kernel[][4],
+			     uint32_t ps_kernel_size)
+{
+	uint32_t ps_sampler_state, ps_kernel_off;
+	uint32_t scissor_state;
+	uint32_t vertex_buffer;
+	uint32_t batch_end;
+	uint32_t aux_pgtable_state;
+
+	intel_batchbuffer_flush_with_context(batch, context);
+
+	intel_batchbuffer_align(batch, 8);
+
+	batch->ptr = &batch->buffer[BATCH_STATE_SPLIT];
+
+	annotation_init(&aub_annotations);
+
+	ps_sampler_state  = gen8_create_sampler(batch);
+	ps_kernel_off = gen8_fill_ps(batch, ps_kernel, ps_kernel_size);
+	vertex_buffer = gen7_fill_vertex_buffer_data(batch, NULL,
+						     0, 0,
+						     dst_x, dst_y,
+						     width, height);
+	cc.cc_state = gen6_create_cc_state(batch);
+	cc.blend_state = gen8_create_blend_state(batch);
+	viewport.cc_state = gen6_create_cc_viewport(batch);
+	viewport.sf_clip_state = gen7_create_sf_clip_viewport(batch);
+	scissor_state = gen6_create_scissor_rect(batch);
+
+	aux_pgtable_state = gen12_create_aux_pgtable_state(batch,
+							   aux_pgtable_bo);
+
+	/* TODO: there is other state which isn't setup */
+
+	assert(batch->ptr < &batch->buffer[4095]);
+
+	batch->ptr = batch->buffer;
+
+	/* Start emitting the commands. The order roughly follows the mesa blorp
+	 * order */
+	OUT_BATCH(G4X_PIPELINE_SELECT | PIPELINE_SELECT_3D |
+				GEN9_PIPELINE_SELECTION_MASK);
+
+	gen12_emit_aux_pgtable_state(batch, aux_pgtable_state, true);
+
+	gen8_emit_sip(batch);
+
+	gen7_emit_push_constants(batch);
+
+	gen9_emit_state_base_address(batch);
+
+	OUT_BATCH(GEN7_3DSTATE_VIEWPORT_STATE_POINTERS_CC);
+	OUT_BATCH(viewport.cc_state);
+	OUT_BATCH(GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP);
+	OUT_BATCH(viewport.sf_clip_state);
+
+	gen7_emit_urb(batch);
+
+	gen8_emit_cc(batch);
+
+	gen8_emit_multisample(batch);
+
+	gen8_emit_null_state(batch);
+
+	OUT_BATCH(GEN7_3DSTATE_STREAMOUT | (5 - 2));
+	OUT_BATCH(0);
+	OUT_BATCH(0);
+	OUT_BATCH(0);
+	OUT_BATCH(0);
+
+	gen7_emit_clip(batch);
+
+	gen8_emit_sf(batch);
+
+	gen8_emit_ps(batch, ps_kernel_off);
+
+	OUT_BATCH(GEN7_3DSTATE_SAMPLER_STATE_POINTERS_PS);
+	OUT_BATCH(ps_sampler_state);
+
+	OUT_BATCH(GEN8_3DSTATE_SCISSOR_STATE_POINTERS);
+	OUT_BATCH(scissor_state);
+
+	gen9_emit_depth(batch);
+
+	gen7_emit_clear(batch);
+
+	gen6_emit_drawing_rectangle(batch, dst);
+
+	gen7_emit_vertex_buffer(batch, vertex_buffer);
+	gen6_emit_vertex_elements(batch);
+
+	gen8_emit_vf_topology(batch);
+	gen8_emit_primitive(batch, vertex_buffer);
+
+	OUT_BATCH(MI_BATCH_BUFFER_END);
+
+	batch_end = intel_batchbuffer_align(batch, 8);
+	assert(batch_end < BATCH_STATE_SPLIT);
+	annotation_add_batch(&aub_annotations, batch_end);
+
+	dump_batch(batch);
+
+	annotation_flush(&aub_annotations, batch);
+
+	gen6_render_flush(batch, context, batch_end);
+	intel_batchbuffer_reset(batch);
+}
+
 void gen9_render_copyfunc(struct intel_batchbuffer *batch,
 			  drm_intel_context *context,
 			  const struct igt_buf *src, unsigned src_x, unsigned src_y,
@@ -1150,6 +1264,23 @@ void gen12_render_copyfunc(struct intel_batchbuffer *batch,
 			  pgtable_info.pgtable_bo,
 			  gen12_render_copy,
 			  sizeof(gen12_render_copy));
+
+	gen12_aux_pgtable_cleanup(&pgtable_info);
+}
+
+void gen12_render_clearfunc(struct intel_batchbuffer *batch,
+			    const struct igt_buf *dst, unsigned int dst_x, unsigned int dst_y,
+			    unsigned int width, unsigned int height)
+{
+	struct aux_pgtable_info pgtable_info = { };
+
+	gen12_aux_pgtable_init(&pgtable_info, batch->bufmgr, NULL, dst);
+
+	_gen12_render_clearfunc(batch, NULL,
+				dst, dst_x, dst_y, 0, 0,
+				pgtable_info.pgtable_bo,
+				gen12_render_copy,
+				sizeof(gen12_render_copy));
 
 	gen12_aux_pgtable_cleanup(&pgtable_info);
 }

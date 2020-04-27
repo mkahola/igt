@@ -367,6 +367,11 @@ typedef void (*igt_vebox_copyfunc_t)(struct intel_batchbuffer *batch,
 
 igt_vebox_copyfunc_t igt_get_vebox_copyfunc(int devid);
 
+typedef void (*igt_render_clearfunc_t)(struct intel_batchbuffer *batch,
+				       const struct igt_buf *dst, unsigned int dst_x, unsigned int dst_y,
+				       unsigned int width, unsigned int height);
+igt_render_clearfunc_t igt_get_render_clearfunc(int devid);
+
 /**
  * igt_fillfunc_t:
  * @batch: batchbuffer object
