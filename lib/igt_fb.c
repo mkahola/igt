@@ -2173,6 +2173,45 @@ unsigned int igt_create_fb(int fd, int width, int height, uint32_t format,
 }
 
 /**
+ * igt_copy_fb:
+ * @fd: open drm file descriptor
+ * @src: pointer to source #igt_fb structure
+ * @fb: pointer to destination #igt_fb structure
+ *
+ * This function creates a new framebuffer with the same properties as @src
+ * and copies the pixel data.
+ *
+ * Returns:
+ * The kms id of the created framebuffer on success or a negative error code.
+ */
+int igt_copy_fb(int fd, struct igt_fb *src, struct igt_fb *fb)
+{
+	char *in_ptr, *out_ptr;
+	int fb_id = 0;
+
+	igt_assert(src);
+
+	if (src->num_planes != 1)
+		return -EINVAL;
+
+	fb_id = igt_create_fb(fd, src->width, src->height, src->drm_format,
+			      src->modifier, fb);
+
+	/* copy buffer contents */
+	in_ptr = igt_fb_map_buffer(fb->fd, src);
+	igt_assert(in_ptr);
+	out_ptr = igt_fb_map_buffer(fb->fd, fb);
+	igt_assert(out_ptr);
+
+	igt_memcpy_from_wc(out_ptr, in_ptr, fb->size);
+
+	igt_fb_unmap_buffer(fb, out_ptr);
+	igt_fb_unmap_buffer(src, in_ptr);
+
+	return fb_id;
+}
+
+/**
  * igt_create_color_fb:
  * @fd: open drm file descriptor
  * @width: width of the framebuffer in pixel
