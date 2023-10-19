@@ -142,6 +142,7 @@ void igt_require_vc4(int fd);
 void igt_require_xe(int fd);
 void igt_require_vkms(void);
 
+bool is_vkms_device(int fd);
 bool is_amdgpu_device(int fd);
 bool is_i915_device(int fd);
 bool is_mtk_device(int fd);
