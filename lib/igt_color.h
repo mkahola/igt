@@ -16,6 +16,7 @@
 
 #include "igt_fb.h"
 #include "igt_kms.h"
+#include "igt_color_lut.h"
 
 #define MAX_COLOR_LUT_ENTRIES 4096
 
@@ -111,6 +112,12 @@ void igt_colorop_set_custom_1dlut(igt_display_t *display,
 				  const igt_1dlut_t *lut1d,
 				  const size_t lut_size);
 
+void igt_colorop_set_3dlut(igt_display_t *display,
+			   igt_colorop_t *colorop,
+			   const igt_3dlut_norm_t *lut3d,
+			   const size_t lut_size);
+
+
 /* transformations */
 
 void igt_color_srgb_inv_eotf(igt_pixel_t *pixel);
@@ -133,4 +140,7 @@ void igt_color_ctm_3x4_bt709_enc(igt_pixel_t *pixel);
 
 void igt_color_multiply_125(igt_pixel_t *pixel);
 void igt_color_multiply_inv_125(igt_pixel_t *pixel);
+void igt_color_3dlut_17_12_rgb(igt_pixel_t *pixel);
+void igt_color_3dlut_17_12_bgr(igt_pixel_t *pixel);
+
 #endif

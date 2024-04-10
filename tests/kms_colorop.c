@@ -53,6 +53,7 @@
  * @ctm_3x4_bt709_dec_enc:		BT709 decoding matrix, followed by encoding matrix
  * @multiply_125:			Multiplier by 125
  * @multiply_inv_125:			Multiplier by inverse of 125
+ * @3dlut_17_12_rgb:			3D LUT with length 17, color depth 12, and traversal order = RGB
  *
  */
 
@@ -182,6 +183,7 @@ static bool can_use_colorop(igt_display_t *display, igt_colorop_t *colorop, kms_
 	case KMS_COLOROP_MULTIPLIER:
 		return (igt_colorop_get_prop(display, colorop, IGT_COLOROP_TYPE) == DRM_COLOROP_MULTIPLIER);
 	case KMS_COLOROP_LUT3D:
+		return (igt_colorop_get_prop(display, colorop, IGT_COLOROP_TYPE) == DRM_COLOROP_3D_LUT);
 	default:
 		return false;
 	}
@@ -270,16 +272,37 @@ static void fill_custom_1dlut(igt_display_t *display, kms_colorop_t *colorop)
 	}
 }
 
+static void configure_3dlut(igt_display_t *display, kms_colorop_t *colorop, uint64_t size)
+{
+	uint64_t lut_size = 0;
+	uint64_t i;
+	igt_3dlut_norm_t *igt_3dlut;
+
+	/* Convert 3DLUT floating points to u16 required by colorop API */
+	lut_size = size * size * size;
+	igt_3dlut = (igt_3dlut_norm_t *) malloc(sizeof(struct drm_color_lut32) * lut_size);
+	for (i = 0; i < lut_size; i++) {
+		const struct igt_color_lut_float *lut_f = &colorop->lut3d->lut[i];
+
+		igt_3dlut->lut[i].red = round((double)lut_f->red * UINT_MAX);
+		igt_3dlut->lut[i].green = round((double)lut_f->green * UINT_MAX);
+		igt_3dlut->lut[i].blue = round((double)lut_f->blue * UINT_MAX);
+	}
+
+	igt_colorop_set_3dlut(display, colorop->colorop, igt_3dlut, lut_size * sizeof(struct drm_color_lut32));
+	free(igt_3dlut);
+}
+
 static void set_colorop(igt_display_t *display,
 			kms_colorop_t *colorop)
 {
+	enum drm_colorop_lut3d_interpolation_type interpolation;
 	uint64_t lut_size = 0;
 	uint64_t mult = 1;
 
 	igt_assert(colorop->colorop);
 	igt_colorop_set_prop_value(colorop->colorop, IGT_COLOROP_BYPASS, 0);
 
-	/* Set to desired value from kms_colorop_t */
 	switch (colorop->type) {
 	case KMS_COLOROP_ENUMERATED_LUT1D:
 		igt_colorop_set_prop_enum(colorop->colorop, IGT_COLOROP_CURVE_1D_TYPE, kms_colorop_lut1d_tf_names[colorop->enumerated_lut1d_info.tf]);
@@ -297,6 +320,15 @@ static void set_colorop(igt_display_t *display,
 		igt_colorop_set_prop_value(colorop->colorop, IGT_COLOROP_MULTIPLIER, mult);
 		break;
 	case KMS_COLOROP_LUT3D:
+		lut_size = igt_colorop_get_prop(display, colorop->colorop, IGT_COLOROP_SIZE);
+		interpolation = igt_colorop_get_prop(display, colorop->colorop, IGT_COLOROP_LUT3D_INTERPOLATION);
+
+		/* Check driver's lut size, color depth and interpolation with kms_colorop */
+		igt_skip_on(colorop->lut3d_info.size != lut_size);
+		igt_skip_on(colorop->lut3d_info.interpolation != interpolation);
+
+		configure_3dlut(display, colorop, lut_size);
+		break;
 	default:
 		igt_fail(IGT_EXIT_FAILURE);
 	}
@@ -507,6 +539,7 @@ igt_main_args("d", long_options, help_str, opt_handler, NULL)
 		{ { &kms_colorop_ctm_3x4_bt709_dec, &kms_colorop_ctm_3x4_bt709_enc, NULL }, "ctm_3x4_bt709_dec_enc" },
 		{ { &kms_colorop_multiply_125, NULL }, "multiply_125" },
 		{ { &kms_colorop_multiply_inv_125, NULL }, "multiply_inv_125" },
+		{ { &kms_colorop_3dlut_17_12_rgb, NULL }, "3dlut_17_12_rgb" },
 	};
 
 	struct {

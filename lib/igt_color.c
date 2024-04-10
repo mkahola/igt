@@ -213,6 +213,184 @@ void igt_color_multiply_inv_125(igt_pixel_t *pixel)
 	igt_color_multiply(pixel, 1 / 125.0f);
 }
 
+static int
+igt_get_lut3d_index_blue_fast(int r, int g, int b, long dim, int components)
+{
+	return components * (b + (int)dim * (g + (int)dim * r));
+}
+
+/* algorithm from https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/src/OpenColorIO/ops/lut3d/Lut3DOpCPU.cpp#L422 */
+static void igt_color_3dlut_tetrahedral(igt_pixel_t *pixel, const igt_3dlut_t *lut3d, long m_dim)
+{
+	int n000, n100, n010, n001, n110, n101, n011, n111;
+	float m_step = (float) m_dim - 1.0f;
+	const float dimMinusOne = (float) m_dim - 1.f;
+	float *m_optLut = (float *) lut3d->lut;
+	float idx[3];
+	float out[3];
+	int indexLow[3];
+	int indexHigh[3];
+	float fx, fy, fz;
+
+	idx[0] = pixel->b * m_step;
+	idx[1] = pixel->g * m_step;
+	idx[2] = pixel->r * m_step;
+
+	// NaNs become 0.
+	idx[0] = clamp(idx[0], 0.f, dimMinusOne);
+	idx[1] = clamp(idx[1], 0.f, dimMinusOne);
+	idx[2] = clamp(idx[2], 0.f, dimMinusOne);
+
+	indexLow[0] = floor(idx[0]);
+	indexLow[1] = floor(idx[1]);
+	indexLow[2] = floor(idx[2]);
+
+	// When the idx is exactly equal to an index (e.g. 0,1,2...)
+	// then the computation of highIdx is wrong. However,
+	// the delta is then equal to zero (e.g. idx-lowIdx),
+	// so the highIdx has no impact.
+	indexHigh[0] = ceil(idx[0]);
+	indexHigh[1] = ceil(idx[1]);
+	indexHigh[2] = ceil(idx[2]);
+
+	fx = idx[0] - (float) indexLow[0];
+	fy = idx[1] - (float) indexLow[1];
+	fz = idx[2] - (float) indexLow[2];
+
+	// Compute index into LUT for surrounding corners
+	n000 = igt_get_lut3d_index_blue_fast(indexLow[0], indexLow[1], indexLow[2], m_dim, 3);
+	n100 = igt_get_lut3d_index_blue_fast(indexHigh[0], indexLow[1], indexLow[2], m_dim, 3);
+	n010 = igt_get_lut3d_index_blue_fast(indexLow[0], indexHigh[1], indexLow[2], m_dim, 3);
+	n001 = igt_get_lut3d_index_blue_fast(indexLow[0], indexLow[1], indexHigh[2], m_dim, 3);
+	n110 = igt_get_lut3d_index_blue_fast(indexHigh[0], indexHigh[1], indexLow[2], m_dim, 3);
+	n101 = igt_get_lut3d_index_blue_fast(indexHigh[0], indexLow[1], indexHigh[2], m_dim, 3);
+	n011 = igt_get_lut3d_index_blue_fast(indexLow[0], indexHigh[1], indexHigh[2], m_dim, 3);
+	n111 = igt_get_lut3d_index_blue_fast(indexHigh[0], indexHigh[1], indexHigh[2], m_dim, 3);
+
+	if (fx > fy) {
+		if (fy > fz) {
+			out[0] =
+				(1 - fx)  * m_optLut[n000] +
+				(fx - fy) * m_optLut[n100] +
+				(fy - fz) * m_optLut[n110] +
+				(fz)      * m_optLut[n111];
+
+			out[1] =
+				(1 - fx)  * m_optLut[n000 + 1] +
+				(fx - fy) * m_optLut[n100 + 1] +
+				(fy - fz) * m_optLut[n110 + 1] +
+				(fz)      * m_optLut[n111 + 1];
+
+			out[2] =
+				(1 - fx)  * m_optLut[n000 + 2] +
+				(fx - fy) * m_optLut[n100 + 2] +
+				(fy - fz) * m_optLut[n110 + 2] +
+				(fz)      * m_optLut[n111 + 2];
+		} else if (fx > fz) {
+			out[0] =
+				(1 - fx)  * m_optLut[n000] +
+				(fx - fz) * m_optLut[n100] +
+				(fz - fy) * m_optLut[n101] +
+				(fy)      * m_optLut[n111];
+
+			out[1] =
+				(1 - fx)  * m_optLut[n000 + 1] +
+				(fx - fz) * m_optLut[n100 + 1] +
+				(fz - fy) * m_optLut[n101 + 1] +
+				(fy)      * m_optLut[n111 + 1];
+
+			out[2] =
+				(1 - fx)  * m_optLut[n000 + 2] +
+				(fx - fz) * m_optLut[n100 + 2] +
+				(fz - fy) * m_optLut[n101 + 2] +
+				(fy)      * m_optLut[n111 + 2];
+		} else {
+			out[0] =
+				(1 - fz)  * m_optLut[n000] +
+				(fz - fx) * m_optLut[n001] +
+				(fx - fy) * m_optLut[n101] +
+				(fy)      * m_optLut[n111];
+
+			out[1] =
+				(1 - fz)  * m_optLut[n000 + 1] +
+				(fz - fx) * m_optLut[n001 + 1] +
+				(fx - fy) * m_optLut[n101 + 1] +
+				(fy)      * m_optLut[n111 + 1];
+
+			out[2] =
+				(1 - fz)  * m_optLut[n000 + 2] +
+				(fz - fx) * m_optLut[n001 + 2] +
+				(fx - fy) * m_optLut[n101 + 2] +
+				(fy)      * m_optLut[n111 + 2];
+		}
+	} else {
+		if (fz > fy) {
+			out[0] =
+				(1 - fz)  * m_optLut[n000] +
+				(fz - fy) * m_optLut[n001] +
+				(fy - fx) * m_optLut[n011] +
+				(fx)      * m_optLut[n111];
+
+			out[1] =
+				(1 - fz)  * m_optLut[n000 + 1] +
+				(fz - fy) * m_optLut[n001 + 1] +
+				(fy - fx) * m_optLut[n011 + 1] +
+				(fx)      * m_optLut[n111 + 1];
+
+			out[2] =
+				(1 - fz)  * m_optLut[n000 + 2] +
+				(fz - fy) * m_optLut[n001 + 2] +
+				(fy - fx) * m_optLut[n011 + 2] +
+				(fx)      * m_optLut[n111 + 2];
+		} else if (fz > fx) {
+			out[0] =
+				(1 - fy)  * m_optLut[n000] +
+				(fy - fz) * m_optLut[n010] +
+				(fz - fx) * m_optLut[n011] +
+				(fx)      * m_optLut[n111];
+
+			out[1] =
+				(1 - fy)  * m_optLut[n000 + 1] +
+				(fy - fz) * m_optLut[n010 + 1] +
+				(fz - fx) * m_optLut[n011 + 1] +
+				(fx)      * m_optLut[n111 + 1];
+
+			out[2] =
+				(1 - fy)  * m_optLut[n000 + 2] +
+				(fy - fz) * m_optLut[n010 + 2] +
+				(fz - fx) * m_optLut[n011 + 2] +
+				(fx)      * m_optLut[n111 + 2];
+		} else {
+			out[0] =
+				(1 - fy)  * m_optLut[n000] +
+				(fy - fx) * m_optLut[n010] +
+				(fx - fz) * m_optLut[n110] +
+				(fz)      * m_optLut[n111];
+
+			out[1] =
+				(1 - fy)  * m_optLut[n000 + 1] +
+				(fy - fx) * m_optLut[n010 + 1] +
+				(fx - fz) * m_optLut[n110 + 1] +
+				(fz)      * m_optLut[n111 + 1];
+
+			out[2] =
+				(1 - fy)  * m_optLut[n000 + 2] +
+				(fy - fx) * m_optLut[n010 + 2] +
+				(fx - fz) * m_optLut[n110 + 2] +
+				(fz)      * m_optLut[n111 + 2];
+		}
+	}
+
+	pixel->r = out[0];
+	pixel->g = out[1];
+	pixel->b = out[2];
+}
+
+void igt_color_3dlut_17_12_rgb(igt_pixel_t *pixel)
+{
+	igt_color_3dlut_tetrahedral(pixel, &igt_3dlut_17_rgb, 17);
+}
+
 static void
 igt_color_fourcc_to_pixel(uint32_t raw_pixel, uint32_t drm_format, igt_pixel_t *pixel)
 {
@@ -445,4 +623,12 @@ void igt_colorop_set_custom_1dlut(igt_display_t *display,
 				  const size_t lut_size)
 {
 	igt_colorop_replace_prop_blob(colorop, IGT_COLOROP_DATA, lut1d, lut_size);
+}
+
+void igt_colorop_set_3dlut(igt_display_t *display,
+			   igt_colorop_t *colorop,
+			   const igt_3dlut_norm_t *lut3d,
+			   const size_t lut_size)
+{
+	igt_colorop_replace_prop_blob(colorop, IGT_COLOROP_DATA, lut3d, lut_size);
 }
