@@ -32,6 +32,8 @@ typedef enum kms_colorop_lut1d_tf {
 	KMS_COLOROP_LUT1D_PQ_INV_EOTF,
 	KMS_COLOROP_LUT1D_PQ_125_EOTF,
 	KMS_COLOROP_LUT1D_PQ_125_INV_EOTF,
+	KMS_COLOROP_LUT1D_GAMMA_2_2_OETF,
+	KMS_COLOROP_LUT1D_GAMMA_2_2_INV_OETF,
 	KMS_COLOROP_LUT1D_NUM_ENUMS
 } kms_colorop_lut1d_tf_t;
 
@@ -44,6 +46,8 @@ const char * const kms_colorop_lut1d_tf_names[KMS_COLOROP_LUT1D_NUM_ENUMS] = {
 	[KMS_COLOROP_LUT1D_PQ_INV_EOTF] = "PQ Inverse EOTF",
 	[KMS_COLOROP_LUT1D_PQ_125_EOTF] = "PQ 125 EOTF",
 	[KMS_COLOROP_LUT1D_PQ_125_INV_EOTF] = "PQ 125 Inverse EOTF",
+	[KMS_COLOROP_LUT1D_GAMMA_2_2_OETF] = "Gamma 2.2 OETF",
+	[KMS_COLOROP_LUT1D_GAMMA_2_2_INV_OETF] = "Gamma 2.2 Inverse OETF",
 };
 
 typedef struct kms_colorop_enumerated_lut1d_info {
@@ -179,6 +183,24 @@ kms_colorop_t kms_colorop_pq_125_inv_eotf = {
 	},
 	.name = "pq_125_inv_eotf",
 	.transform = &igt_color_pq_125_inv_eotf
+};
+
+kms_colorop_t kms_colorop_gamma_22_oetf = {
+	.type = KMS_COLOROP_ENUMERATED_LUT1D,
+	.enumerated_lut1d_info = {
+		.tf = KMS_COLOROP_LUT1D_GAMMA_2_2_OETF
+	},
+	.name = "gamma_2_2_oetf",
+	.transform = &igt_color_gamma_2_2_oetf
+};
+
+kms_colorop_t kms_colorop_gamma_22_inv_oetf = {
+	.type = KMS_COLOROP_ENUMERATED_LUT1D,
+	.enumerated_lut1d_info = {
+		.tf = KMS_COLOROP_LUT1D_GAMMA_2_2_INV_OETF
+	},
+	.name = "gamma_2_2_inv_oetf",
+	.transform = &igt_color_gamma_2_2_inv_oetf
 };
 
 kms_colorop_t kms_colorop_ctm_3x4_50_desat = {
