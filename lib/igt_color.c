@@ -103,6 +103,13 @@ static void tf_pq(igt_pixel_t *pixel, const struct igt_color_tf_pq *pq)
 	pixel->b = pq_eval(pq, pixel->b);
 }
 
+static void igt_color_powf(igt_pixel_t *pixel, float power)
+{
+	pixel->r = powf(pixel->r, power);
+	pixel->g = powf(pixel->g, power);
+	pixel->b = powf(pixel->b, power);
+}
+
 void igt_color_srgb_eotf(igt_pixel_t *pixel)
 {
 	igt_color_tf(pixel, &srgb_eotf);
@@ -146,6 +153,16 @@ void igt_color_pq_125_inv_eotf(igt_pixel_t *pixel)
 {
 	igt_color_multiply(pixel, 1/125.0f);
 	igt_color_pq_inv_eotf(pixel);
+}
+
+void igt_color_gamma_2_2_oetf(igt_pixel_t *pixel)
+{
+	igt_color_powf(pixel, 1/2.2f);
+}
+
+void igt_color_gamma_2_2_inv_oetf(igt_pixel_t *pixel)
+{
+	igt_color_powf(pixel, 2.2f);
 }
 
 static void igt_color_apply_3x4_ctm(igt_pixel_t *pixel, const igt_matrix_3x4_t *matrix)
