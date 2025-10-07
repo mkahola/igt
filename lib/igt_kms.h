@@ -1264,6 +1264,10 @@ uint32_t igt_get_connected_output_count(igt_display_t *display);
 
 drmModePropertyBlobRes *igt_get_writeback_formats_blob(igt_output_t *output);
 
+uint64_t igt_get_writeback_fb_id(igt_output_t *output);
+void igt_detach_crtc(igt_display_t *display, igt_output_t *output);
+void igt_get_and_wait_out_fence(igt_output_t *output);
+
 igt_colorop_t *igt_find_colorop(igt_display_t *display, uint32_t id);
 
 #endif /* __IGT_KMS_H__ */

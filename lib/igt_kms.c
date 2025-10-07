@@ -7841,6 +7841,51 @@ drmModePropertyBlobRes *igt_get_writeback_formats_blob(igt_output_t *output)
 }
 
 /**
+ * igt_get_writeback_fb_id - Get writeback framebuffer ID
+ * @display: display structure
+ *
+ * Returns the framebuffer ID for writeback capture, or 0 if none configured.
+ */
+uint64_t igt_get_writeback_fb_id(igt_output_t *output)
+{
+	return igt_output_get_prop(output, IGT_CONNECTOR_WRITEBACK_FB_ID);
+}
+
+/**
+ * igt_detach_crtc - Detach the crtc from the output
+ * @display: display structure
+ * @output: output structure
+ *
+ * Detach the crtc from the output.
+ */
+void igt_detach_crtc(igt_display_t *display, igt_output_t *output)
+{
+	if (igt_get_writeback_fb_id(output) == 0)
+		return;
+
+	igt_output_set_pipe(output, PIPE_NONE);
+	igt_display_commit2(display, COMMIT_ATOMIC);
+}
+
+/**
+ * igt_get_and_wait_out_fence - Get and wait for the out fence
+ * @output: output structure
+ *
+ * wait for fence from the writeback.
+ */
+void igt_get_and_wait_out_fence(igt_output_t *output)
+{
+	int ret;
+
+	igt_assert(output->writeback_out_fence_fd >= 0);
+
+	ret = sync_fence_wait(output->writeback_out_fence_fd, 1000);
+	igt_assert_f(ret == 0, "sync_fence_wait failed: %s\n", strerror(-ret));
+	close(output->writeback_out_fence_fd);
+	output->writeback_out_fence_fd = -1;
+}
+
+/**
  * igt_get_connected_output_count:
  * @display: pointer to igt_display_t
  *
