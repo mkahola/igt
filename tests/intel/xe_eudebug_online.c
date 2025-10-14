@@ -40,6 +40,7 @@
 #define SHADER_PAGEFAULT_READ		(1 << 14)
 #define SHADER_PAGEFAULT_WRITE		(1 << 15)
 #define FAULTABLE_VM			(1 << 16)
+#define PAGEFAULT_STRESS_TEST		(1 << 17)
 #define TRIGGER_UFENCE_SET_BREAKPOINT	(1 << 24)
 #define TRIGGER_RESUME_SINGLE_WALK	(1 << 25)
 #define TRIGGER_RESUME_PARALLEL_WALK	(1 << 26)
@@ -127,8 +128,22 @@ static struct intel_buf *create_uc_buf(int fd, int width, int height, uint64_t r
 	return buf;
 }
 
-static int get_number_of_threads(uint64_t flags)
+static int get_maximum_number_of_threads(int fd)
 {
+	uint32_t subslices = xe_hwconfig_lookup_value_u32(fd, INTEL_HWCONFIG_MAX_SUBSLICE);
+	uint32_t eus_per_subslice =
+		xe_hwconfig_lookup_value_u32(fd, INTEL_HWCONFIG_MAX_EU_PER_SUBSLICE);
+	uint32_t threads_per_eu =
+		xe_hwconfig_lookup_value_u32(fd, INTEL_HWCONFIG_NUM_THREADS_PER_EU);
+
+	return subslices * eus_per_subslice * threads_per_eu;
+}
+
+static int get_number_of_threads(int fd, uint64_t flags)
+{
+	if (flags & (PAGEFAULT_STRESS_TEST))
+		return get_maximum_number_of_threads(fd);
+
 	if (flags & (SHADER_MIN_THREADS | SHADER_PAGEFAULT))
 		return 16;
 
@@ -156,14 +171,19 @@ static int caching_get_instruction_count(int fd, uint32_t s_dim__x, int flags)
 
 static struct gpgpu_shader *get_shader(int fd, const unsigned int flags)
 {
-	struct dim_t w_dim = walker_dimensions(get_number_of_threads(flags));
-	struct dim_t s_dim = surface_dimensions(get_number_of_threads(flags));
+	struct dim_t w_dim = walker_dimensions(get_number_of_threads(fd, flags));
+	struct dim_t s_dim = surface_dimensions(get_number_of_threads(fd, flags));
 	static struct gpgpu_shader *shader;
 
 	shader = gpgpu_shader_create(fd);
 
 	if (shader->gen_ver == 3000)
 		gpgpu_shader_set_vrt(shader, VRT_96);
+
+	shader->simd_size = SIMD_SIZE;
+
+	if (flags & PAGEFAULT_STRESS_TEST)
+		shader->num_threads_in_tg = gpgpu_shader__get_max_threads_in_tg(shader);
 
 	gpgpu_shader__write_dword(shader, SHADER_CANARY, 0);
 	if (flags & SHADER_BREAKPOINT) {
@@ -210,7 +230,7 @@ static struct gpgpu_shader *get_shader(int fd, const unsigned int flags)
 
 static struct gpgpu_shader *get_sip(int fd, const unsigned int flags)
 {
-	struct dim_t w_dim = walker_dimensions(get_number_of_threads(flags));
+	struct dim_t w_dim = walker_dimensions(get_number_of_threads(fd, flags));
 	static struct gpgpu_shader *sip;
 
 	sip = gpgpu_shader_create(fd);
@@ -673,7 +693,7 @@ static void eu_attention_resume_trigger(struct xe_eudebug_debugger *d,
 	}
 
 	if (d->flags & (SHADER_LOOP | SHADER_PAGEFAULT)) {
-		uint32_t threads = get_number_of_threads(d->flags);
+		uint32_t threads = get_number_of_threads(d->master_fd, d->flags);
 		uint32_t val = STEERING_END_LOOP;
 
 		igt_assert_eq(pwrite(data->vm_fd, &val, sizeof(uint32_t),
@@ -695,7 +715,7 @@ static void eu_attention_resume_single_step_trigger(struct xe_eudebug_debugger *
 {
 	struct drm_xe_eudebug_event_eu_attention *att = (void *) e;
 	struct online_debug_data *data = d->ptr;
-	const int threads = get_number_of_threads(d->flags);
+	const int threads = get_number_of_threads(d->fd, d->flags);
 	uint32_t val;
 	size_t sz = sizeof(uint32_t);
 
@@ -920,7 +940,7 @@ static void eu_attention_resume_caching_trigger(struct xe_eudebug_debugger *d,
 {
 	struct drm_xe_eudebug_event_eu_attention *att = (void *)e;
 	struct online_debug_data *data = d->ptr;
-	struct dim_t s_dim = surface_dimensions(get_number_of_threads(d->flags));
+	struct dim_t s_dim = surface_dimensions(get_number_of_threads(d->fd, d->flags));
 	uint32_t *kernel_offset = &data->kernel_offset;
 	int *counter = &data->att_event_counter;
 	int val;
@@ -1044,7 +1064,7 @@ static uint64_t get_memory_region(int fd, int flags, int region_bitmask)
 
 static void run_online_client(struct xe_eudebug_client *c)
 {
-	int threads = get_number_of_threads(c->flags);
+	int threads;
 	const uint64_t target_offset = 0x1a000000;
 	const uint64_t bb_offset = 0x1b000000;
 	size_t bb_size;
@@ -1061,8 +1081,8 @@ static void run_online_client(struct xe_eudebug_client *c)
 		.num_placements = 1,
 		.extensions = c->flags & DISABLE_DEBUG_MODE ? 0 : to_user_pointer(&ext)
 	};
-	struct dim_t w_dim = walker_dimensions(threads);
-	struct dim_t s_dim = surface_dimensions(threads);
+	struct dim_t w_dim;
+	struct dim_t s_dim;
 	struct timespec ts = { };
 	struct gpgpu_shader *sip, *shader;
 	uint32_t metadata_id[2];
@@ -1078,6 +1098,10 @@ static void run_online_client(struct xe_eudebug_client *c)
 	igt_assert(metadata[1]);
 
 	fd = xe_eudebug_client_open_driver(c);
+
+	threads = get_number_of_threads(fd, c->flags);
+	w_dim = walker_dimensions(threads);
+	s_dim = surface_dimensions(threads);
 
 	shader = get_shader(fd, c->flags);
 	bb_size = get_bb_size(fd, shader);
@@ -1644,6 +1668,18 @@ static void test_set_breakpoint_online_sigint_debugger(int fd,
  * Description:
  *     Check whether KMD sends pagefault event for workload in debug mode that
  *     triggers a write pagefault.
+ *
+ * SUBTEST: pagefault-read-stress
+ * Functionality: page faults
+ * Description:
+ *     Check whether KMD sends read pagefault event for workload in debug mode
+ *     with many threads.
+ *
+ * SUBTEST: pagefault-write-stress
+ * Functionality: page faults
+ * Description:
+ *     Check whether KMD sends write pagefault event for workload in debug mode
+ *     with many threads.
  */
 static void test_pagefault_online(int fd, struct drm_xe_engine_class_instance *hwe,
 				  int flags)
@@ -2678,6 +2714,11 @@ igt_main
 		test_pagefault_online(fd, hwe, SHADER_PAGEFAULT_READ);
 	test_gt_render_or_compute("pagefault-write", fd, hwe)
 		test_pagefault_online(fd, hwe, SHADER_PAGEFAULT_WRITE);
+
+	test_gt_render_or_compute("pagefault-read-stress", fd, hwe)
+		test_pagefault_online(fd, hwe, SHADER_PAGEFAULT_READ | PAGEFAULT_STRESS_TEST);
+	test_gt_render_or_compute("pagefault-write-stress", fd, hwe)
+		test_pagefault_online(fd, hwe, SHADER_PAGEFAULT_WRITE | PAGEFAULT_STRESS_TEST);
 
 	igt_fixture {
 		xe_eudebug_enable(fd, was_enabled);
