@@ -1081,6 +1081,23 @@ uint32_t *xe_hwconfig_lookup_value(int fd, enum intel_hwconfig attribute, uint32
 }
 
 /**
+ * xe_hwconfig_lookup_value_u32:
+ * @fd: xe device fd
+ * @attribute: hwconfig attribute id
+ *
+ * Returns the u32 value of the hwconfig attribute @attribute. Asserts if the
+ * attribute is not found or if its length is not 1.
+ */
+uint32_t xe_hwconfig_lookup_value_u32(int fd, enum intel_hwconfig attribute)
+{
+	uint32_t len, *val;
+
+	val = xe_hwconfig_lookup_value(fd, attribute, &len);
+	igt_assert(val && len == 1);
+	return *val;
+}
+
+/**
  * xe_query_pxp_status:
  * @fd: xe device fd
  *

@@ -142,6 +142,7 @@ bool xe_is_main_gt(int fd, int gt);
 uint16_t xe_gt_get_tile_id(int fd, int gt);
 uint16_t xe_tile_get_main_gt_id(int fd, uint8_t tile);
 uint32_t *xe_hwconfig_lookup_value(int fd, enum intel_hwconfig attribute, uint32_t *len);
+uint32_t xe_hwconfig_lookup_value_u32(int fd, enum intel_hwconfig attribute);
 int xe_query_pxp_status(int fd);
 int xe_wait_for_pxp_init(int fd);
 
