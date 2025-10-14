@@ -116,6 +116,7 @@ __xelp_gpgpu_execfunc(struct intel_bb *ibb,
 							      4 * shdr->size);
 	idd = intel_bb_ptr_get(ibb, interface_descriptor);
 	idd->desc2.illegal_opcode_exception_enable = shdr->illegal_opcode_exception_enable;
+	idd->desc6.num_threads_in_tg = shdr->num_threads_in_tg;
 
 	if (sip && sip->size)
 		sip_offset = fill_sip(ibb, sip->instr, 4 * sip->size);
@@ -178,6 +179,7 @@ __xehp_gpgpu_execfunc(struct intel_bb *ibb,
 	xehp_fill_interface_descriptor(ibb, target, shdr->instr,
 				       4 * shdr->size, &idd);
 	idd.desc2.illegal_opcode_exception_enable = shdr->illegal_opcode_exception_enable;
+	idd.desc5.num_threads_in_tg = shdr->num_threads_in_tg;
 
 	if (shdr->vrt != VRT_DISABLED)
 		idd.desc2.registers_per_thread = shdr->vrt;
@@ -279,6 +281,7 @@ struct gpgpu_shader *gpgpu_shader_create(int fd)
 	shdr->max_size = 16 * 4;
 	shdr->code = malloc(4 * shdr->max_size);
 	shdr->labels = igt_map_create(igt_map_hash_32, igt_map_equal_32);
+	shdr->num_threads_in_tg = 1;
 	shdr->vrt = VRT_DISABLED;
 	igt_assert(shdr->code);
 

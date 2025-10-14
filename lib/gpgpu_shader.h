@@ -28,6 +28,7 @@ struct gpgpu_shader {
 	};
 	struct igt_map *labels;
 	bool illegal_opcode_exception_enable;
+	uint32_t num_threads_in_tg;
 	enum gpgpu_shader_vrt_modes vrt;
 };
 
