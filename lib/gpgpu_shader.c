@@ -282,6 +282,9 @@ struct gpgpu_shader *gpgpu_shader_create(int fd)
 	shdr->code = malloc(4 * shdr->max_size);
 	shdr->labels = igt_map_create(igt_map_hash_32, igt_map_equal_32);
 	shdr->num_threads_in_tg = 1;
+	shdr->large_grf_mode = false;
+	shdr->simd_size = 16;  /* Default SIMD size */
+	shdr->hw_local_id_generation = false;
 	shdr->vrt = VRT_DISABLED;
 	igt_assert(shdr->code);
 
@@ -331,6 +334,136 @@ void gpgpu_shader_set_vrt(struct gpgpu_shader *shdr, enum gpgpu_shader_vrt_modes
 {
 	igt_assert(vrt == VRT_DISABLED || shdr->gen_ver >= 3000);
 	shdr->vrt = vrt;
+}
+
+struct max_threads_config {
+	bool large_grf_mode;
+	uint32_t simd_size;
+	bool hw_local_id_generation;
+	uint32_t max_threads;
+};
+
+static uint32_t compute_max_threads_in_tg_xe2(bool large_grf_mode,
+					      uint32_t simd_size,
+					      bool hw_local_id_generation)
+{
+	/* BSpec: 56590 */
+	static const struct max_threads_config configs[] = {
+		/* large_grf_mode, simd_size, hw_local_id_gen, max_threads */
+		{ true,  16, false, 32 },
+		{ true,  16, true,  32 },
+		{ true,  32, false, 32 },
+		{ true,  32, true,  32 },
+		{ false, 16, false, 64 },
+		{ false, 16, true,  64 },
+		{ false, 32, false, 64 },
+		{ false, 32, true,  32 },
+	};
+
+	for (int i = 0; i < ARRAY_SIZE(configs); i++) {
+		if (configs[i].large_grf_mode == large_grf_mode &&
+		    configs[i].simd_size == simd_size &&
+		    configs[i].hw_local_id_generation == hw_local_id_generation)
+			return configs[i].max_threads;
+	}
+
+	igt_warn("Unsupported configuration: large_grf=%d, simd=%d, hw_local_id=%d\n",
+		 large_grf_mode, simd_size, hw_local_id_generation);
+	return 1;
+}
+
+struct vrt_max_threads_config {
+	enum gpgpu_shader_vrt_modes register_size;
+	uint32_t simd_size;
+	bool hw_local_id_generation;
+	uint32_t max_threads;
+};
+
+static uint32_t compute_max_threads_in_tg_xe3(enum gpgpu_shader_vrt_modes register_size,
+					      uint32_t simd_size,
+					      bool hw_local_id_generation)
+{
+	/* BSpec: 56590 */
+	static const struct vrt_max_threads_config configs[] = {
+		/* register_size, simd_size, hw_local_id_gen, max_threads */
+		/* Reg-size <= 128: SIMD16 always allows 64 threads */
+		{ VRT_32,  16, false, 64 },
+		{ VRT_32,  16, true,  64 },
+		{ VRT_64,  16, false, 64 },
+		{ VRT_64,  16, true,  64 },
+		{ VRT_96,  16, false, 64 },
+		{ VRT_96,  16, true,  64 },
+		{ VRT_128, 16, false, 64 },
+		{ VRT_128, 16, true,  64 },
+		/* Reg-size <= 128: */
+		{ VRT_32,  32, false, 64 },
+		{ VRT_32,  32, true,  32 },
+		{ VRT_64,  32, false, 64 },
+		{ VRT_64,  32, true,  32 },
+		{ VRT_96,  32, false, 64 },
+		{ VRT_96,  32, true,  32 },
+		{ VRT_128, 32, false, 64 },
+		{ VRT_128, 32, true,  32 },
+		/* Reg-size 160 */
+		{ VRT_160, 16, false, 48 },
+		{ VRT_160, 16, true,  48 },
+		{ VRT_160, 32, false, 48 },
+		{ VRT_160, 32, true,  32 },
+		/* Reg-size 192 */
+		{ VRT_192, 16, false, 40 },
+		{ VRT_192, 16, true,  40 },
+		{ VRT_192, 32, false, 40 },
+		{ VRT_192, 32, true,  32 },
+		/* Reg-size 256 */
+		{ VRT_256, 16, false, 32 },
+		{ VRT_256, 16, true,  32 },
+		{ VRT_256, 32, false, 32 },
+		{ VRT_256, 32, true,  32 },
+	};
+
+	for (int i = 0; i < ARRAY_SIZE(configs); i++) {
+		if (configs[i].register_size == register_size &&
+		    configs[i].simd_size == simd_size &&
+		    configs[i].hw_local_id_generation == hw_local_id_generation)
+			return configs[i].max_threads;
+	}
+
+	igt_warn("Unsupported configuration: register_size=%d, simd=%d, hw_local_id=%d\n",
+		 register_size, simd_size, hw_local_id_generation);
+	return 1;
+}
+
+/**
+ * gpgpu__shader_get_max_threads_in_tg:
+ * @shdr: shader to query
+ *
+ * Returns the maximum number of threads in thread group for the given shader
+ * based on its current configuration (VRT mode, SIMD size, etc.) and Xe version.
+ *
+ * Returns: maximum number of threads in thread group
+ */
+uint32_t gpgpu_shader__get_max_threads_in_tg(struct gpgpu_shader *shdr)
+{
+	enum gpgpu_shader_vrt_modes register_size = shdr->vrt;
+
+	/* Not implemented for Xe platforms  */
+	if (shdr->gen_ver < 2000)
+		return 1;
+
+	/* Xe2 platforms */
+	if (shdr->gen_ver < 3000) {
+		return compute_max_threads_in_tg_xe2(shdr->large_grf_mode,
+						     shdr->simd_size,
+						     shdr->hw_local_id_generation);
+	}
+
+	/* Xe3 platforms */
+	if (shdr->vrt == VRT_DISABLED) {
+		/* BSpec: 60258 */
+		register_size = shdr->large_grf_mode ? VRT_256 : VRT_128;
+	}
+	return compute_max_threads_in_tg_xe3(register_size, shdr->simd_size,
+					     shdr->hw_local_id_generation);
 }
 
 /**
