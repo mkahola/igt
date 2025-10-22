@@ -692,13 +692,13 @@ static void engine_activity_all_fn(int fd, struct drm_xe_engine_class_instance *
 	}
 }
 
-static void engine_activity_fn(int fd, struct drm_xe_engine_class_instance *eci, int function)
+static void engine_activity_fn(int fd, struct drm_xe_engine_class_instance *eci,
+			       int function, bool sched_if_idle)
 {
 	uint64_t config, engine_active_ticks, engine_total_ticks, before[2], after[2];
 	double busy_percent, exec_quantum_ratio;
 	struct xe_cork *cork = NULL;
 	int pmu_fd[2], fn_fd;
-	bool sched_if_idle;
 	uint32_t vm;
 
 	if (function > 0) {
@@ -748,7 +748,6 @@ static void engine_activity_fn(int fd, struct drm_xe_engine_class_instance *eci,
 	if (function > 0)
 		close(fn_fd);
 
-	sched_if_idle = xe_sriov_get_sched_if_idle(fd, eci->gt_id);
 	if (sched_if_idle)
 		assert_within_epsilon(engine_active_ticks, engine_total_ticks, tolerance);
 	else
@@ -1189,13 +1188,13 @@ igt_main
 		igt_describe("Validate per-function engine activity");
 		test_each_engine("fn-engine-activity-load", fd, eci)
 			for (int fn = 0; fn < num_fns; fn++)
-				engine_activity_fn(fd, eci, fn);
+				engine_activity_fn(fd, eci, fn, false);
 
 		igt_describe("Validate per-function engine activity when sched-if-idle is set");
 		test_each_engine("fn-engine-activity-sched-if-idle", fd, eci) {
 			xe_sriov_set_sched_if_idle(fd, eci->gt_id, 1);
 			for (int fn = 0; fn < num_fns; fn++)
-				engine_activity_fn(fd, eci, fn);
+				engine_activity_fn(fd, eci, fn, true);
 		}
 
 		igt_fixture

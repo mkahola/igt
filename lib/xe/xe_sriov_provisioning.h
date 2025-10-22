@@ -134,8 +134,6 @@ int __xe_sriov_get_engine_reset(int pf, unsigned int gt_num, bool *value);
 bool xe_sriov_get_engine_reset(int pf, unsigned int gt_num);
 int __xe_sriov_set_engine_reset(int pf, unsigned int gt_num, bool value);
 void xe_sriov_set_engine_reset(int pf, unsigned int gt_num, bool value);
-int __xe_sriov_get_sched_if_idle(int pf, unsigned int gt_num, bool *value);
-bool xe_sriov_get_sched_if_idle(int pf, unsigned int gt_num);
 int __xe_sriov_set_sched_if_idle(int pf, unsigned int gt_num, bool value);
 void xe_sriov_set_sched_if_idle(int pf, unsigned int gt_num, bool value);
 int __xe_sriov_get_sched_priority(int pf, unsigned int vf_num,
