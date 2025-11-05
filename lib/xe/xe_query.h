@@ -143,8 +143,28 @@ uint16_t xe_gt_get_tile_id(int fd, int gt);
 uint16_t xe_tile_get_main_gt_id(int fd, uint8_t tile);
 uint32_t *xe_hwconfig_lookup_value(int fd, enum intel_hwconfig attribute, uint32_t *len);
 uint32_t xe_hwconfig_lookup_value_u32(int fd, enum intel_hwconfig attribute);
+void *xe_query_device_may_fail(int fd, uint32_t type, uint32_t *size);
 int xe_query_pxp_status(int fd);
 int xe_wait_for_pxp_init(int fd);
+
+/**
+ * xe_query_device:
+ * @fd: xe device fd
+ * @type: query type, one of DRM_XE_DEVICE_QUERY_* values
+ * @size: pointer to get size of returned data, can be NULL
+ *
+ * Calls DRM_IOCTL_XE_DEVICE_QUERY ioctl to query device information
+ * about specified @type. Returns pointer to malloc'ed data, which
+ * should be freed later by the user. If @query is not supported
+ * or on any other error it asserts.
+ */
+static inline void *xe_query_device(int fd, uint32_t type, uint32_t *size)
+{
+	void *data = xe_query_device_may_fail(fd, type, size);
+
+	igt_assert(data);
+	return data;
+}
 
 struct xe_device *xe_device_get(int fd);
 void xe_device_put(int fd);
