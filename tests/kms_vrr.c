@@ -1068,7 +1068,7 @@ static bool config_constraint(data_t *data, igt_output_t *output, uint32_t flags
 	}
 
 	if ((flags & (TEST_SEAMLESS_VRR | TEST_SEAMLESS_DRRS)) &&
-	    (intel_display_ver(data->drm_fd) >= 14)) {
+	    (intel_display_ver(data->drm_fd) >= 20)) {
 		igt_info("DRRS is not supported on LNL and newer platforms\n");
 		return false;
 	}
