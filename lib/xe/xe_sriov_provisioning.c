@@ -9,6 +9,8 @@
 #include "igt_core.h"
 #include "igt_debugfs.h"
 #include "igt_sriov_device.h"
+#include "igt_sysfs.h"
+#include "igt_sysfs_choice.h"
 #include "intel_chipset.h"
 #include "linux_scaffold.h"
 #include "xe/xe_query.h"
@@ -655,6 +657,51 @@ int xe_sriov_sched_priority_from_string(const char *s,
 		}
 	}
 	return -EINVAL;
+}
+
+/**
+ * xe_sriov_sched_priority_choice_to_mask - Map parsed sysfs choice to mask + selection
+ * @choice: Parsed choice (tokens + selected index)
+ * @mask: Output bitmask of known priorities present in @choice
+ * @selected_idx: Output selected priority index in the known-name table, or -1
+ *
+ * Converts an &struct igt_sysfs_choice representing the sched_priority sysfs
+ * attribute into a bitmask and an optional selected index.
+ *
+ * The bit positions in @mask correspond to &enum xe_sriov_sched_priority values
+ * (LOW/NORMAL/HIGH). Unknown tokens in @choice are ignored (best-effort), so
+ * tests can tolerate kernels that add extra choices.
+ *
+ * Return: 0 on success, -EINVAL on invalid arguments.
+ */
+int xe_sriov_sched_priority_choice_to_mask(const struct igt_sysfs_choice *choice,
+					   unsigned int *mask, int *selected_idx)
+{
+	return igt_sysfs_choice_to_mask(choice, xe_sriov_sched_priority_str,
+					ARRAY_SIZE(xe_sriov_sched_priority_str),
+					mask, selected_idx);
+}
+
+/**
+ * xe_sriov_sched_priority_mask_to_string - Format priority mask as text
+ * @buf: Output buffer.
+ * @buf_sz: Size of @buf.
+ * @mask: Priority bitmask.
+ * @selected_idx: Index to highlight with brackets, or <0 for none.
+ *
+ * Converts @mask to a space-separated string of priority names. If @selected_idx
+ * is >= 0 and present in @mask, that priority is wrapped in brackets, e.g.
+ * "low [normal] high". An empty @mask results in an empty string.
+ *
+ * Return: 0 on success, -EINVAL on invalid args, -E2BIG if @buf_sz is too small.
+ */
+int xe_sriov_sched_priority_mask_to_string(char *buf, size_t buf_sz,
+					   unsigned int mask, int selected_idx)
+{
+	return igt_sysfs_choice_format_mask(buf, buf_sz,
+					 xe_sriov_sched_priority_str,
+					 ARRAY_SIZE(xe_sriov_sched_priority_str),
+					 mask, selected_idx);
 }
 
 /**

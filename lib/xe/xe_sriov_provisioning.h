@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 struct xe_mmio;
+struct igt_sysfs_choice;
 
 /**
  * enum xe_sriov_shared_res - Shared resource types
@@ -75,6 +76,14 @@ enum xe_sriov_sched_priority {
 	XE_SRIOV_SCHED_PRIORITY_HIGH
 };
 
+#define XE_SRIOV_SCHED_PRIORITY_MASK_LOW    BIT(XE_SRIOV_SCHED_PRIORITY_LOW)
+#define XE_SRIOV_SCHED_PRIORITY_MASK_NORMAL BIT(XE_SRIOV_SCHED_PRIORITY_NORMAL)
+#define XE_SRIOV_SCHED_PRIORITY_MASK_HIGH   BIT(XE_SRIOV_SCHED_PRIORITY_HIGH)
+#define XE_SRIOV_SCHED_PRIORITY_MASK_ALL \
+	(XE_SRIOV_SCHED_PRIORITY_MASK_LOW | \
+	 XE_SRIOV_SCHED_PRIORITY_MASK_NORMAL | \
+	 XE_SRIOV_SCHED_PRIORITY_MASK_HIGH)
+
 /**
  * struct xe_sriov_provisioned_range - Provisioned range for a Virtual Function (VF)
  * @vf_id: The ID of the VF
@@ -138,6 +147,10 @@ int __xe_sriov_set_sched_if_idle(int pf, unsigned int gt_num, bool value);
 void xe_sriov_set_sched_if_idle(int pf, unsigned int gt_num, bool value);
 const char *xe_sriov_sched_priority_to_string(enum xe_sriov_sched_priority value);
 int xe_sriov_sched_priority_from_string(const char *s, enum xe_sriov_sched_priority *value);
+int xe_sriov_sched_priority_choice_to_mask(const struct igt_sysfs_choice *choice,
+					   unsigned int *mask, int *selected_idx);
+int xe_sriov_sched_priority_mask_to_string(char *buf, size_t buf_sz,
+					   unsigned int mask, int selected_idx);
 int __xe_sriov_get_sched_priority(int pf, unsigned int vf_num,
 				  unsigned int gt_num,
 				  enum xe_sriov_sched_priority *value);
