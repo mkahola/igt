@@ -5,6 +5,7 @@
 
 #include <errno.h>
 
+#include "drmtest.h"
 #include "igt_core.h"
 #include "igt_debugfs.h"
 #include "igt_sriov_device.h"
@@ -597,6 +598,63 @@ int __xe_sriov_set_sched_if_idle(int pf, unsigned int gt_num, bool value)
 void xe_sriov_set_sched_if_idle(int pf, unsigned int gt_num, bool value)
 {
 	igt_fail_on(__xe_sriov_set_sched_if_idle(pf, gt_num, value));
+}
+
+static const char * const xe_sriov_sched_priority_str[] = {
+	[XE_SRIOV_SCHED_PRIORITY_LOW]    = "low",
+	[XE_SRIOV_SCHED_PRIORITY_NORMAL] = "normal",
+	[XE_SRIOV_SCHED_PRIORITY_HIGH]   = "high",
+};
+
+_Static_assert(ARRAY_SIZE(xe_sriov_sched_priority_str) == (XE_SRIOV_SCHED_PRIORITY_HIGH + 1),
+	       "sched priority table must cover 0..HIGH");
+
+/**
+ * xe_sriov_sched_priority_to_string - Convert scheduling priority enum to string
+ * @prio: SR-IOV scheduling priority value
+ *
+ * Converts an enumeration value of type &enum xe_sriov_sched_priority
+ * into its corresponding string representation.
+ *
+ * Return: A pointer to a constant string literal ("low", "normal", or "high"),
+ * or %NULL if the value is invalid or unrecognized.
+ */
+const char *xe_sriov_sched_priority_to_string(enum xe_sriov_sched_priority prio)
+{
+	switch (prio) {
+	case XE_SRIOV_SCHED_PRIORITY_LOW:
+	case XE_SRIOV_SCHED_PRIORITY_NORMAL:
+	case XE_SRIOV_SCHED_PRIORITY_HIGH:
+		return xe_sriov_sched_priority_str[prio];
+	}
+
+	return NULL;
+}
+
+/**
+ * xe_sriov_sched_priority_from_string - Parse scheduling priority from string
+ * @s: NUL-terminated string to parse
+ * @prio: Output pointer to store parsed enum value
+ *
+ * Parses a string representing a scheduling priority ("low", "normal", "high")
+ * into the corresponding &enum xe_sriov_sched_priority value.
+ *
+ * Return: 0 on success, -EINVAL if the string is invalid or unrecognized.
+ */
+int xe_sriov_sched_priority_from_string(const char *s,
+					enum xe_sriov_sched_priority *prio)
+{
+	igt_assert(s && prio);
+
+	for (size_t i = 0; i < ARRAY_SIZE(xe_sriov_sched_priority_str); i++) {
+		const char *name = xe_sriov_sched_priority_str[i];
+
+		if (name && !strcmp(s, name)) {
+			*prio = (enum xe_sriov_sched_priority)i;
+			return 0;
+		}
+	}
+	return -EINVAL;
 }
 
 /**
