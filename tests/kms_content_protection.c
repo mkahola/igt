@@ -74,6 +74,7 @@
  * @atomic-dpms:    DPMS ON/OFF during atomic modesetting.
  * @legacy:         legacy style commit
  * @type1:          content type 1 that can be handled only through HDCP2.2.
+ * @suspend-resume: Suspend and resume the system
  */
 
 /**
@@ -86,6 +87,7 @@
  * @lic-type-1:   Type 1 with LIC.
  * @type-0:       Type 0
  * @type-1:       Type 1
+ * @suspend-resume: Suspend and resume the system
  */
 
 IGT_TEST_DESCRIPTION("Test content protection (HDCP)");
@@ -104,6 +106,7 @@ struct data {
 #define CP_MEI_RELOAD				(1 << 2)
 #define CP_TYPE_CHANGE				(1 << 3)
 #define CP_UEVENT				(1 << 4)
+#define SUSPEND_RESUME				(1 << 5)
 
 #define CP_UNDESIRED				0
 #define CP_DESIRED				1
@@ -480,6 +483,17 @@ static void test_content_protection_on_output(igt_output_t *output,
 						  content_type, false,
 						  false);
 	}
+
+	if (data.cp_tests & SUSPEND_RESUME) {
+		igt_system_suspend_autoresume(SUSPEND_STATE_MEM, SUSPEND_TEST_NONE);
+
+		ret = wait_for_prop_value(output, CP_ENABLED,
+					  KERNEL_AUTH_TIME_ALLOWED_MSEC);
+		if (!ret)
+			test_cp_enable_with_retry(output, commit_style, 2,
+						  content_type, false,
+						  false);
+	}
 }
 
 static void __debugfs_read(int fd, const char *param, char *buf, int len)
@@ -822,6 +836,17 @@ test_content_protection_mst(int content_type)
 
 	test_mst_cp_enable_with_retry(hdcp_mst_output, valid_outputs, 2, content_type);
 
+	if (data.cp_tests & SUSPEND_RESUME) {
+		igt_system_suspend_autoresume(SUSPEND_STATE_MEM, SUSPEND_TEST_NONE);
+
+		ret = wait_for_prop_value(hdcp_mst_output[0],
+						 CP_ENABLED,
+						 KERNEL_AUTH_TIME_ALLOWED_MSEC);
+		if (!ret)
+			test_mst_cp_enable_with_retry(hdcp_mst_output, valid_outputs,
+						      2, content_type);
+	}
+
 	if (data.cp_tests & CP_LIC)
 		test_cp_lic_on_mst(hdcp_mst_output, valid_outputs, 0);
 
@@ -841,6 +866,7 @@ test_content_protection_mst(int content_type)
 	if (data.cp_tests & CP_LIC)
 		test_cp_lic_on_mst(hdcp_mst_output, valid_outputs, 1);
 }
+
 
 static void test_content_protection_cleanup(void)
 {
@@ -950,6 +976,11 @@ static const struct {
 	  .cp_tests = 0,
 	  .content_type = HDCP_CONTENT_TYPE_0,
 	},
+	{.desc = "Test to verify the behaviour of HDCP after suspend resume cycles.",
+	 .name = "suspend-resume",
+	 .cp_tests = SUSPEND_RESUME,
+	 .content_type = HDCP_CONTENT_TYPE_0,
+	}
 };
 
 static const struct {
@@ -976,6 +1007,11 @@ static const struct {
 	{ .desc = "Test Content protection(Type 1) over DP MST with LIC.",
 	  .name = "dp-mst-lic-type-1",
 	  .cp_tests = CP_LIC,
+	  .content_type = HDCP_CONTENT_TYPE_1,
+	},
+	{ .desc = "Test Content protection(Type 1) over DP MST with suspend resume.",
+	  .name = "dp-mst-suspend-resume",
+	  .cp_tests = SUSPEND_RESUME,
 	  .content_type = HDCP_CONTENT_TYPE_1,
 	},
 };
