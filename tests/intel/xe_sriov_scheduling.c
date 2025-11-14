@@ -9,6 +9,7 @@
 #include "xe_drm.h"
 #include "xe/xe_ioctl.h"
 #include "xe/xe_spin.h"
+#include "xe/xe_sriov_admin.h"
 #include "xe/xe_sriov_provisioning.h"
 
 /**
@@ -374,27 +375,21 @@ struct vf_sched_params {
 static int __set_vfs_scheduling_params(int pf_fd, int num_vfs,
 				       const struct vf_sched_params *p)
 {
-	unsigned int gt;
-	int vf, ret;
+	int ret = 0;
 
-	xe_for_each_gt(pf_fd, gt) {
-		for (vf = 0; vf <= num_vfs; ++vf) {
-			ret = __xe_sriov_set_exec_quantum_ms(pf_fd, vf, gt,
-							     p->exec_quantum_ms);
-			if (igt_warn_on_f(ret,
-					  "Failed to set exec_quantum_ms=%u (VF%d GT%u): %d\n",
-					  p->exec_quantum_ms, vf, gt, ret))
-				return ret;
+	ret = __xe_sriov_admin_bulk_set_exec_quantum_ms(pf_fd, p->exec_quantum_ms);
+	if (igt_warn_on_f(ret,
+			  "Failed to bulk set exec quantum=%u: %d\n",
+			  p->exec_quantum_ms, ret))
+		return ret;
 
-			ret = __xe_sriov_set_preempt_timeout_us(pf_fd, vf, gt,
-								p->preempt_timeout_us);
-			if (igt_warn_on_f(ret,
-					  "Failed to set preempt_timeout_us=%u (VF%d GT%u): %d\n",
-					  p->preempt_timeout_us, vf, gt, ret))
-				return ret;
-		}
-	}
-	return 0;
+	ret = __xe_sriov_admin_bulk_set_preempt_timeout_us(pf_fd, p->preempt_timeout_us);
+	if (igt_warn_on_f(ret,
+			  "Failed to bulk set preempt timeout=%u: %d\n",
+			  p->preempt_timeout_us, ret))
+		return ret;
+
+	return ret;
 }
 
 static void set_vfs_scheduling_params(int pf_fd, int num_vfs,
@@ -912,6 +907,7 @@ int igt_main_args("", long_opts, help_str, subm_opts_handler, NULL)
 		pf_fd = drm_open_driver(DRIVER_XE);
 		igt_require(igt_sriov_is_pf(pf_fd));
 		igt_require(igt_sriov_get_enabled_vfs(pf_fd) == 0);
+		igt_require(xe_sriov_admin_is_present(pf_fd));
 		autoprobe = igt_sriov_is_driver_autoprobe_enabled(pf_fd);
 		xe_sriov_require_default_scheduling_attributes(pf_fd);
 	}
