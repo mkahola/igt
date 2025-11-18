@@ -35,6 +35,7 @@ void xe_spin_free(int fd, struct igt_spin *spin);
  * Used to perform memory copy with the spinner.
  */
 struct xe_spin_mem_copy {
+	int fd;
 	struct blt_mem_object *src;
 	struct blt_mem_object *dst;
 	uint64_t src_offset;

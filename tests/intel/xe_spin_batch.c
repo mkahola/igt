@@ -333,6 +333,7 @@ static void xe_spin_mem_copy_region(int fd, struct drm_xe_engine_class_instance 
 	int32_t src_handle, dst_handle;
 	struct blt_mem_object src, dst;
 	struct xe_spin_mem_copy mem_copy = {
+		.fd = fd,
 		.src = &src,
 		.dst = &dst,
 	};

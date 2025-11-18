@@ -458,6 +458,7 @@ static void mem_copy_busy(int fd, struct drm_xe_engine_class_instance *hwe, uint
 	int32_t src_handle, dst_handle;
 	struct blt_mem_object src, dst;
 	struct xe_spin_mem_copy mem_copy = {
+		.fd = fd,
 		.src = &src,
 		.dst = &dst,
 	};
