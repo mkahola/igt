@@ -53,7 +53,9 @@
 #include "intel_cmds_info.h"
 
 #define CCS_RATIO(fd) (intel_gen(intel_get_drm_devid(fd)) >= 20 ? 512 : 256)
-#define XE2_MEM_COPY_MOCS_SHIFT                     25
+#define GEN12_MEM_COPY_MOCS_SHIFT		25
+#define XE2_MEM_COPY_SRC_MOCS_SHIFT		28
+#define XE2_MEM_COPY_DST_MOCS_SHIFT		3
 
 enum blt_color_depth {
 	CD_8bit,

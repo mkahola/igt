@@ -54,6 +54,7 @@ void xe_spin_init(struct xe_spin *spin, struct xe_spin_opts *opts)
 	uint64_t pad_addr = opts->addr + offsetof(struct xe_spin, pad);
 	uint64_t timestamp_addr = opts->addr + offsetof(struct xe_spin, timestamp);
 	int b = 0;
+	uint32_t devid;
 
 	spin->start = 0;
 	spin->end = 0xffffffff;
@@ -163,8 +164,14 @@ void xe_spin_init(struct xe_spin *spin, struct xe_spin_opts *opts)
 		spin->batch[b++] = opts->mem_copy->src_offset << 32;
 		spin->batch[b++] = opts->mem_copy->dst_offset;
 		spin->batch[b++] = opts->mem_copy->dst_offset << 32;
-		spin->batch[b++] = opts->mem_copy->src->mocs_index << XE2_MEM_COPY_MOCS_SHIFT |
-				   opts->mem_copy->dst->mocs_index;
+
+		devid = intel_get_drm_devid(opts->mem_copy->fd);
+		if (intel_graphics_ver(devid) >= IP_VER(20, 0))
+			spin->batch[b++] = opts->mem_copy->src->mocs_index << XE2_MEM_COPY_SRC_MOCS_SHIFT |
+					   opts->mem_copy->dst->mocs_index << XE2_MEM_COPY_DST_MOCS_SHIFT;
+		else
+			spin->batch[b++] = opts->mem_copy->src->mocs_index << GEN12_MEM_COPY_MOCS_SHIFT |
+					   opts->mem_copy->dst->mocs_index;
 	}
 
 	spin->batch[b++] = MI_COND_BATCH_BUFFER_END | MI_DO_COMPARE | 2;
