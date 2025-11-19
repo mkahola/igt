@@ -995,22 +995,25 @@ static void reset_stress(int fd, uint64_t ahnd, const intel_ctx_t *ctx0,
  */
 static void test_reset_stress(int fd, unsigned int flags)
 {
-	const intel_ctx_t *ctx0 = context_create_safe(fd);
-	uint64_t ahnd = get_reloc_ahnd(fd, ctx0->id);
-
 	for_each_physical_ring(e, fd) {
-		struct intel_execution_engine2 engine;
+		const intel_ctx_t *ctx0 = NULL;
+		uint64_t ahnd = 0;
 
-		engine = gem_eb_flags_to_engine(eb_ring(e));
+		igt_dynamic(e->name) {
+			struct intel_execution_engine2 engine;
 
-		if (gem_engine_can_block_ggtt_binder(fd, &engine))
-			continue;
+			engine = gem_eb_flags_to_engine(eb_ring(e));
+			igt_skip_on(gem_engine_can_block_ggtt_binder(fd, &engine));
 
-		reset_stress(fd, ahnd, ctx0, e->name, eb_ring(e), flags);
+			ctx0 = context_create_safe(fd);
+			ahnd = get_reloc_ahnd(fd, ctx0->id);
+
+			reset_stress(fd, ahnd, ctx0, e->name, eb_ring(e), flags);
+		}
+
+		put_ahnd(ahnd);
+		intel_ctx_destroy(fd, ctx0);
 	}
-
-	intel_ctx_destroy(fd, ctx0);
-	put_ahnd(ahnd);
 }
 
 /*
@@ -1154,10 +1157,10 @@ igt_main
 			igt_require(gem_has_contexts(fd));
 		}
 
-		igt_subtest("reset-stress")
+		igt_subtest_with_dynamic("reset-stress")
 			test_reset_stress(fd, 0);
 
-		igt_subtest("unwedge-stress")
+		igt_subtest_with_dynamic("unwedge-stress")
 			test_reset_stress(fd, TEST_WEDGE);
 	}
 
