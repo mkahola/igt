@@ -42,6 +42,25 @@ bool igt_sriov_is_pf(int device)
 	return value > 0;
 }
 
+/**
+ * igt_sriov_func_str - Return "pf" or "vf%u" label for a function number
+ * @vf_num: 0 for PF, >0 for VF index
+ *
+ * Helper for constructing SR-IOV sysfs paths.
+ *
+ * Returns: "pf" for @vf_num == 0, otherwise "vf%u".
+ */
+const char *igt_sriov_func_str(unsigned int vf_num)
+{
+	static __thread char buf[16];
+
+	if (vf_num == 0)
+		return "pf";
+
+	snprintf(buf, sizeof(buf), "vf%u", vf_num);
+	return buf;
+}
+
 static bool __pf_attr_get_u32(int pf, const char *attr, uint32_t *value)
 {
 	int sysfs;

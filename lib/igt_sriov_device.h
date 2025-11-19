@@ -34,6 +34,7 @@ int igt_sriov_device_sysfs_open(int pf, unsigned int vf_num);
 bool igt_sriov_device_reset_exists(int pf, unsigned int vf_num);
 bool igt_sriov_device_reset(int pf, unsigned int vf_num);
 bool intel_is_vf_device(int device);
+const char *igt_sriov_func_str(unsigned int vf_num);
 
 /**
  * __is_valid_range - Helper to check VF range is valid
