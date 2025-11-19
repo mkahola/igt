@@ -44,6 +44,7 @@ lib_sources = [
 	'igt_stats.c',
 	'igt_syncobj.c',
 	'igt_sysfs.c',
+	'igt_sysfs_choice.c',
 	'igt_sysrq.c',
 	'igt_taints.c',
 	'igt_thread.c',
