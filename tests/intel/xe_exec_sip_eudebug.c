@@ -320,12 +320,12 @@ igt_main
 	bool was_enabled;
 	int fd;
 
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_XE);
 
 	/* Debugger disabled (TD_CTL not set) */
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			was_enabled = xe_eudebug_enable(fd, false);
 			igt_require(!xe_eudebug_debugger_available(fd));
 		}
@@ -336,13 +336,13 @@ igt_main
 		test_render_and_compute("breakpoint-writesip-nodebug", fd, eci)
 			test_sip(SHADER_BREAKPOINT, SIP_WRITE, eci, 0);
 
-		igt_fixture
+		igt_fixture()
 			xe_eudebug_enable(fd, was_enabled);
 	}
 
 	/* Debugger enabled (TD_CTL set) */
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			was_enabled = xe_eudebug_enable(fd, true);
 		}
 
@@ -358,10 +358,10 @@ igt_main
 		test_render_and_compute("breakpoint-waitsip-heavy", fd, eci)
 			test_sip(SHADER_BREAKPOINT, SIP_HEAVY, eci, 0);
 
-		igt_fixture
+		igt_fixture()
 			xe_eudebug_enable(fd, was_enabled);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

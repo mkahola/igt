@@ -185,7 +185,7 @@ igt_main
 	struct vmw_svga_device device;
 	int32 cid;
 
-	igt_fixture
+	igt_fixture()
 	{
 		vmw_svga_device_init(&device, vmw_svga_device_node_render);
 		igt_require(device.drm_fd != -1);
@@ -233,7 +233,7 @@ igt_main
 		vmw_ioctl_mob_close_handle(device.drm_fd, mob);
 	}
 
-	igt_fixture
+	igt_fixture()
 	{
 		vmw_svga_device_fini(&device);
 	}

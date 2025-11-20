@@ -419,7 +419,7 @@ igt_main
 	uint16_t dev_id;
 	struct drm_xe_engine *engine;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		xe_device_get(fd);
 		dev_id = intel_get_drm_devid(fd);
@@ -483,7 +483,7 @@ igt_main
 		igt_collection_destroy(set);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		xe_device_put(fd);
 		close(fd);
 	}

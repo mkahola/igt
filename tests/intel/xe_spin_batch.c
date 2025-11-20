@@ -534,7 +534,7 @@ igt_main
 	int gt, class;
 	struct igt_collection *regions;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		regions = xe_get_memory_region_set(fd, DRM_XE_MEM_REGION_CLASS_SYSMEM,
 						   DRM_XE_MEM_REGION_CLASS_VRAM);
@@ -577,6 +577,6 @@ igt_main
 				xe_spin_mem_copy(fd, hwe, regions);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

@@ -1216,7 +1216,7 @@ igt_main_args("V", NULL, help_str, opt_handler, NULL)
 	uint16_t dev_id;
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		uint32_t seed;
 
 		fd = drm_open_driver(DRIVER_XE);
@@ -1277,6 +1277,6 @@ igt_main_args("V", NULL, help_str, opt_handler, NULL)
 	igt_subtest("display-vs-wb-transient")
 		display_vs_wb_transient(fd);
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

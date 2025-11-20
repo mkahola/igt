@@ -126,7 +126,7 @@ igt_main
 
 	memset(&data, 0, sizeof(data));
 
-	igt_fixture
+	igt_fixture()
 	{
 		data.fd = drm_open_driver_master(DRIVER_AMDGPU);
 
@@ -140,7 +140,7 @@ igt_main
 	igt_describe("Tests overly high 'max bpc' should not affect 4K modes on HDMI");
 	igt_subtest("4k-mode-max-bpc") test_4k_mode_max_bpc(&data);
 
-	igt_fixture
+	igt_fixture()
 	{
 		igt_display_fini(&data.display);
 	}

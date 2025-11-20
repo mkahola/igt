@@ -157,7 +157,7 @@ igt_main
 		test_print_help();
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require_f(system(NULL), "Shell seems not to be available\n");
 		}
 

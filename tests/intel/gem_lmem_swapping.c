@@ -807,7 +807,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 	const intel_ctx_t *ctx;
 	int i915 = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		struct intel_execution_engine2 *e;
 		char *tmp;
 
@@ -864,7 +864,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 	dynamic_lmem_subtest(region, regions, "smem-oom")
 		test_smem_oom(i915, ctx, region);
 
-	igt_fixture {
+	igt_fixture() {
 		intel_allocator_multiprocess_stop();
 		intel_ctx_destroy(i915, ctx);
 		free(regions);

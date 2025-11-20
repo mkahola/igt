@@ -508,7 +508,7 @@ igt_main
 	struct gpu_process_t gpu = { 0 };
 	int second_fd_vgem = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		vmw_svga_device_init(&gpu.mdevice, vmw_svga_device_node_master);
 		vmw_svga_device_init(&gpu.rdevice, vmw_svga_device_node_render);
 		igt_require(gpu.mdevice.drm_fd != -1);
@@ -558,7 +558,7 @@ igt_main
 
 	igt_describe("VGEM subtests");
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			second_fd_vgem =
 				__drm_open_driver_another(1, DRIVER_VGEM);
 			igt_require(second_fd_vgem >= 0);
@@ -570,12 +570,12 @@ igt_main
 			test_vgem(&gpu, second_fd_vgem);
 		}
 
-		igt_fixture {
+		igt_fixture() {
 			drm_close_driver(second_fd_vgem);
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		vmw_ioctl_context_destroy(gpu.rdevice.drm_fd, gpu.cid);
 		igt_display_fini(&gpu.display);
 		vmw_svga_device_fini(&gpu.rdevice);

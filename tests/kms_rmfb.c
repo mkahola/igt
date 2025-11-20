@@ -206,7 +206,7 @@ igt_main
 	struct rmfb_data data = {};
 	int i, other_fd;
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		/*
 		 * Prevent fb from changing underneath so we can check by
@@ -227,7 +227,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 		drm_close_driver(other_fd);

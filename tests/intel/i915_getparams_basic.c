@@ -164,7 +164,7 @@ exit_handler(int sig)
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		igt_install_exit_handler(exit_handler);
 		init();
 	}

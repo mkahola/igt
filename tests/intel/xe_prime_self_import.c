@@ -532,7 +532,7 @@ igt_main
 	int i;
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 	}
 
@@ -541,6 +541,6 @@ igt_main
 			tests[i].fn();
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

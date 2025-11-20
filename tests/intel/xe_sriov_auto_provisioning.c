@@ -328,7 +328,7 @@ igt_main_args("", long_opts, help_str, opts_handler, NULL)
 		{ NULL },
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		struct xe_sriov_provisioned_range *ranges;
 		int ret;
 
@@ -432,7 +432,7 @@ igt_main_args("", long_opts, help_str, opts_handler, NULL)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_sriov_disable_vfs(pf_fd);
 		/* abort to avoid execution of next tests with enabled VFs */
 		igt_abort_on_f(igt_sriov_get_enabled_vfs(pf_fd) > 0, "Failed to disable VF(s)");

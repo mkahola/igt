@@ -133,7 +133,7 @@ igt_main
 	int fd;
 	struct drm_xe_engine *engine;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 	}
 
@@ -142,7 +142,7 @@ igt_main
 		tlb_invalidation(fd, &engine->instance);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

@@ -37,7 +37,7 @@ igt_main
 	struct amd_pci_unplug_setup setup = {0};
 	struct amd_pci_unplug unplug = {0};
 
-	igt_fixture {
+	igt_fixture() {
 		setup.minor_version_req = 46;
 	}
 
@@ -53,5 +53,5 @@ igt_main
 	igt_subtest("amdgpu_hotunplug_with_exported_fence")
 		amdgpu_hotunplug_with_exported_fence(&setup, &unplug);
 
-	igt_fixture { }
+	igt_fixture() { }
 }

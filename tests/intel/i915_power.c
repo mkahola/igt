@@ -79,7 +79,7 @@ igt_main
 {
 	int i915;
 
-	igt_fixture {
+	igt_fixture() {
 		igt_skip_on_simulation();
 		i915 = drm_open_driver_master(DRIVER_INTEL);
 	}
@@ -89,7 +89,7 @@ igt_main
 		sanity(i915);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(i915);
 	}
 }

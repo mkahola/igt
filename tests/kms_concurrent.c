@@ -389,7 +389,7 @@ static data_t data;
 
 igt_main_args("", long_options, help_str, opt_handler, NULL)
 {
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		kmstest_set_vt_graphics_mode();
 		igt_display_require(&data.display, data.drm_fd);
@@ -402,7 +402,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 
 	run_tests_for_pipe(&data);
 
-	igt_fixture {
+	igt_fixture() {
 		if (is_intel_device(data.drm_fd))
 			intel_allocator_multiprocess_stop();
 		igt_display_fini(&data.display);

@@ -250,7 +250,7 @@ igt_main
 	const intel_ctx_t *ctx;
 	int i915 = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(i915);
 		ctx = intel_ctx_create_all_physical(i915);
@@ -279,7 +279,7 @@ igt_main
 	igt_subtest("all-engines")
 		fillgtt(i915, ctx, ALL_ENGINES, 20);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 		intel_ctx_destroy(i915, ctx);
 	}
@@ -300,7 +300,7 @@ igt_main
 		igt_waitchildren();
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		intel_allocator_multiprocess_stop();
 		drm_close_driver(i915);
 	}

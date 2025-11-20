@@ -1162,7 +1162,7 @@ igt_main
 
 	int const_num_of_tests;
 
-	igt_fixture {
+	igt_fixture() {
 		uint32_t major, minor;
 		int err;
 
@@ -1255,7 +1255,7 @@ igt_main
 	if (sh_mem && (!sh_mem->sub_test_is_existed))
 		set_next_test_to_skip(sh_mem);
 
-	igt_fixture {
+	igt_fixture() {
 		if (process == PROCESS_TEST)
 			waitpid(test_child, &testExitMethod, 0);
 		waitpid(pid_background, &backgrounExitMethod, 0);

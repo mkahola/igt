@@ -815,7 +815,7 @@ igt_main
 	int fd;
 	struct allocators *a;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL | DRIVER_XE);
 		atomic_init(&next_handle, 1);
 		srandom(0xdeadbeef);
@@ -900,6 +900,6 @@ igt_main
 		gem_pool(fd);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

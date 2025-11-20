@@ -455,7 +455,7 @@ igt_main
 {
 	struct drm_info drm = { .fd = -1 };
 
-	igt_fixture
+	igt_fixture()
 		setup_environment(&drm);
 
 	igt_describe("Test the relationship between fbcon and the frontbuffer "
@@ -482,6 +482,6 @@ igt_main
 	igt_subtest("psr-suspend")
 		subtest(&drm, &psr, true);
 
-	igt_fixture
+	igt_fixture()
 		teardown_environment(&drm);
 }

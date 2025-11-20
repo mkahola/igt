@@ -327,7 +327,7 @@ igt_main
 	igt_output_t *output;
 	enum pipe pipe;
 
-	igt_fixture {
+	igt_fixture() {
 		display.drm_fd = drm_open_driver_master(DRIVER_ANY);
 
 		kmstest_set_vt_graphics_mode();
@@ -424,7 +424,7 @@ igt_main
 	}
 
 	/* TODO: legacy gamma_set/get, object set/getprop, getcrtc, getconnector */
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&display);
 		drm_close_driver(display.drm_fd);
 	}

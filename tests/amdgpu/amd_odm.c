@@ -166,7 +166,7 @@ igt_main
 
 	memset(&data, 0, sizeof(data));
 
-	igt_fixture
+	igt_fixture()
 	{
 		data.fd = drm_open_driver_master(DRIVER_ANY);
 
@@ -181,7 +181,7 @@ igt_main
 	igt_subtest_f("odm-combine-2-to-1-%s", test_mode[TEST_MODE_IDX_ODMC_2_TO_1].name)
 		run_test_odmc(&data, ODMC_2_TO_1, &test_mode[TEST_MODE_IDX_ODMC_2_TO_1]);
 
-	igt_fixture
+	igt_fixture()
 	{
 		igt_display_fini(&data.display);
 	}

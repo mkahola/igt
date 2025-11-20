@@ -189,7 +189,7 @@ igt_main
 {
 	igt_fd_t(fd);
 
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_INTEL);
 
 	igt_describe("Check if gem object can be exported to global namespace"

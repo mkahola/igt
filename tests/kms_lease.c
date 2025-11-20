@@ -1245,7 +1245,7 @@ igt_main
 	igt_output_t *output;
 	igt_display_t *display = &data.master.display;
 
-	igt_fixture {
+	igt_fixture() {
 		data.master.fd = drm_open_driver_master(DRIVER_ANY);
 		kmstest_set_vt_graphics_mode();
 		igt_display_require(display, data.master.fd);
@@ -1282,7 +1282,7 @@ igt_main
 			{ }
 		}, *f;
 
-		igt_fixture
+		igt_fixture()
 			igt_display_require_output(display);
 
 		for (f = funcs; f->name; f++) {
@@ -1343,7 +1343,7 @@ igt_main
 			lease_uevent(&data);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(display);
 		drm_close_driver(data.master.fd);
 	}

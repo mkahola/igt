@@ -652,7 +652,7 @@ igt_main_args("e:g:o:r:u:w:", long_options, help_str, opt_handler, NULL)
 	uint32_t devid;
 	struct stat sb;
 
-	igt_fixture {
+	igt_fixture() {
 		drm_fd = drm_open_driver(DRIVER_XE);
 		igt_require_fd(drm_fd);
 		devid = intel_get_drm_devid(drm_fd);
@@ -712,7 +712,7 @@ igt_main_args("e:g:o:r:u:w:", long_options, help_str, opt_handler, NULL)
 	igt_subtest("invalid-event-report-count")
 		test_invalid_event_report_count(drm_fd);
 
-	igt_fixture {
+	igt_fixture() {
 		free(user_buf);
 		if (output)
 			fclose(output);

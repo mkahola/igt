@@ -1594,7 +1594,7 @@ igt_main
 	if (igt_run_in_simulation())
 		OBJECT_SIZE = 1 * 1024 * 1024;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 
 		/*
@@ -1822,6 +1822,6 @@ igt_main
 	}
 
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

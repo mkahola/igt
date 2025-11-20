@@ -414,7 +414,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 	igt_skip_on_simulation();
 	memset(&data, 0, sizeof(data));
 
-	igt_fixture
+	igt_fixture()
 	{
 		data.fd = drm_open_driver_master(DRIVER_AMDGPU);
 
@@ -449,7 +449,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 	igt_describe("Test whether Panel Replay can be enabled after resume from suspend");
 	igt_subtest("replay_suspend") run_check_replay_suspend(&data);
 
-	igt_fixture
+	igt_fixture()
 	{
 		if (opt.visual_confirm) {
 			igt_skip_on(!igt_amd_has_visual_confirm(data.fd));

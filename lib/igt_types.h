@@ -23,7 +23,7 @@
  * 	igt_subtest_group() {
  * 		igt_fd_t(fd);
  *
- * 		igt_fixture {
+ * 		igt_fixture() {
  * 			fd = drm_open_driver();
  * 		}
  *

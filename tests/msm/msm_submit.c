@@ -30,7 +30,7 @@ igt_main
 	struct msm_pipe *pipe = NULL;
 	struct msm_bo *a = NULL, *b = NULL;
 
-	igt_fixture {
+	igt_fixture() {
 		dev = igt_msm_dev_open();
 		pipe = igt_msm_pipe_open(dev, 0);
 		a = igt_msm_bo_new(dev, 0x1000, MSM_BO_WC);
@@ -185,7 +185,7 @@ igt_main
 		do_ioctl(dev->fd, DRM_IOCTL_MSM_GEM_SUBMIT, &req);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_msm_bo_free(a);
 		igt_msm_bo_free(b);
 		igt_msm_pipe_close(pipe);

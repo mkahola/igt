@@ -96,7 +96,7 @@ static bool chdir_to_tools_dir(void)
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		char *path;
 
 		igt_require_f(chdir_to_tools_dir(),

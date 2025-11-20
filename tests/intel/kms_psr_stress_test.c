@@ -352,7 +352,7 @@ igt_main
 {
 	data_t data = {};
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
 		data.debugfs_fd = igt_debugfs_dir(data.drm_fd);
 		data.bops = buf_ops_create(data.drm_fd);
@@ -396,7 +396,7 @@ igt_main
 		cleanup(&data);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		buf_ops_destroy(data.bops);
 		igt_display_fini(&data.display);
 		close(data.debugfs_fd);

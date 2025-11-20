@@ -244,7 +244,7 @@ igt_main
 	igt_subtest_group {
 		igt_fd_t(master);
 
-		igt_fixture
+		igt_fixture()
 			master = drm_open_driver_master(DRIVER_ANY);
 	
 		igt_describe("Test magic numbers for master and slave.");

@@ -1221,7 +1221,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 
 	int gen = 0;
 
-	igt_fixture {
+	igt_fixture() {
 		data.gfx_fd = drm_open_driver_master(DRIVER_ANY);
 		if (is_intel_device(data.gfx_fd)) {
 			data.devid = intel_get_drm_devid(data.gfx_fd);
@@ -1287,7 +1287,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 
 	igt_describe("Tiling and Rotation test for gen 10+ for primary plane");
 	for (reflect_x = reflect_x_subtests; reflect_x->modifier; reflect_x++) {
-		igt_fixture
+		igt_fixture()
 			igt_require_intel(data.gfx_fd);
 
 		igt_subtest_f("primary-%s-tiled-reflect-x-%s",
@@ -1360,7 +1360,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.gfx_fd);
 	}

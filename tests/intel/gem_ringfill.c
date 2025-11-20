@@ -420,7 +420,7 @@ igt_main
 	const intel_ctx_t *ctx;
 	int fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		int gen;
 
 		fd = drm_open_driver(DRIVER_INTEL);
@@ -499,7 +499,7 @@ igt_main
 		igt_waitchildren();
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		intel_allocator_multiprocess_stop();
 		intel_ctx_destroy(fd, ctx);
 		drm_close_driver(fd);

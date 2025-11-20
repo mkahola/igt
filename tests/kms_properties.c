@@ -926,7 +926,7 @@ igt_main
 		  "Tests colorop properties with atomic commit" },
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		display.drm_fd = drm_open_driver_master(DRIVER_ANY);
 
 		kmstest_set_vt_graphics_mode();
@@ -970,7 +970,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture
+		igt_fixture()
 			igt_require(display.is_atomic);
 
 		igt_describe("Test validates the properties of all planes, crtc and connectors with atomic commit");
@@ -978,7 +978,7 @@ igt_main
 			get_prop_sanity(&display, true);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&display);
 		drm_close_driver(display.drm_fd);
 	}

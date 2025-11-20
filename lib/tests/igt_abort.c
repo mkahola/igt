@@ -44,7 +44,7 @@ __noreturn static void fake_fixture_test(void)
 {
 	igt_subtest_init(fake_argc, fake_argv);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_abort_on_f(true, "I'm out!\n");
 	}
 

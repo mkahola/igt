@@ -2676,7 +2676,7 @@ igt_main
 	uint16_t engine_class = 0xFFFF;
 	uint32_t preempt_timeout = 0xFFFFFFFF;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		intel_allocator_multiprocess_start();
 		igt_srandom();
@@ -2728,7 +2728,7 @@ igt_main
 			test_interrupt_other(fd, hwe, SHADER_LOOP | DISABLE_DEBUG_MODE);
 		}
 
-		igt_fixture {
+		igt_fixture() {
 			if ((uint16_t)~engine_class && ~preempt_timeout)
 				if (!restore_preempt_timeout(fd, engine_class, preempt_timeout))
 					igt_warn("Cleanup of preempt_timeout failed!\n");
@@ -2802,7 +2802,7 @@ igt_main
 	test_gt_render_or_compute("pagefault-one-of-many", fd, hwe)
 		test_pagefault_online(fd, hwe, SHADER_PAGEFAULT_ONE_OF_MANY);
 
-	igt_fixture {
+	igt_fixture() {
 		xe_eudebug_enable(fd, was_enabled);
 
 		intel_allocator_multiprocess_stop();

@@ -281,7 +281,7 @@ igt_main
 {
 	int fd = -1, i;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_ANY);
 		igt_require(has_syncobj_eventfd(fd));
 		igt_require_sw_sync();
@@ -320,7 +320,7 @@ igt_main
 			test_wait_signaled(fd, use_timeline);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

@@ -65,7 +65,7 @@ __noreturn static void fake_test(void)
 		}
 
 		if (in_fixture) {
-			igt_fixture
+			igt_fixture()
 				igt_skip_on_simulation();
 		} if (in_subtest) {
 			igt_subtest("sim")

@@ -97,13 +97,13 @@ static int fd;
 IGT_TEST_DESCRIPTION("Expose compute VM's unnecessary rebinds");
 igt_main
 {
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_XE);
 
 	igt_describe("Check for unnnecessary rebinds");
 	igt_subtest("basic")
 		test_ping_pong(fd, xe_engine(fd, 0));
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

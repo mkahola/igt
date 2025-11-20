@@ -101,7 +101,7 @@ igt_main
 	uint32_t *map;
 	int fd, ret;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_VC4);
 		igt_require(igt_vc4_get_param(fd, DRM_VC4_PARAM_SUPPORTS_MADVISE));
 		IGT_INIT_LIST_HEAD(&list);
@@ -248,6 +248,6 @@ igt_main
 		free(bo);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

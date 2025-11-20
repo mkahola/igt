@@ -990,7 +990,7 @@ igt_main_args("dpib", NULL, help_str, opt_handler, NULL)
 	struct buf_ops *bops;
 	uint32_t width;
 
-	igt_fixture {
+	igt_fixture() {
 		xe = drm_open_driver(DRIVER_XE);
 		bops = buf_ops_create(xe);
 	}
@@ -1068,7 +1068,7 @@ igt_main_args("dpib", NULL, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		buf_ops_destroy(bops);
 		drm_close_driver(xe);
 	}

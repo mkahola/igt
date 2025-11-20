@@ -279,7 +279,7 @@ igt_main
 {
 	int fd;
 
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_XE);
 
 	igt_subtest("reltime")
@@ -300,6 +300,6 @@ igt_main
 	igt_subtest("exec_queue-reset-wait")
 		exec_queue_reset_wait(fd);
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

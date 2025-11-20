@@ -435,7 +435,7 @@ igt_main
 
 	igt_skip_on_simulation();
 
-	igt_fixture {
+	igt_fixture() {
 		uint32_t major, minor;
 		int err;
 
@@ -459,7 +459,7 @@ igt_main
 	igt_subtest("shrink")
 		shrink(i915, amd, device);
 
-	igt_fixture {
+	igt_fixture() {
 		amdgpu_device_deinitialize(device);
 		drm_close_driver(amd);
 		drm_close_driver(i915);

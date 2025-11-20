@@ -880,7 +880,7 @@ static void test_sync_random_merge(void)
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		igt_require_sw_sync();
 		multi_consumer_threads =
 			min_t(multi_consumer_threads,

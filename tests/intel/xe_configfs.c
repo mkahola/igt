@@ -315,7 +315,7 @@ igt_main
 	uint32_t devid;
 	bool is_vf_device;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		devid = intel_get_drm_devid(fd);
 		is_vf_device = intel_is_vf_device(fd);
@@ -359,7 +359,7 @@ igt_main
 	igt_subtest("ctx-restore-mid-bb")
 		test_ctx_restore(configfs_device_fd, "mid");
 
-	igt_fixture {
+	igt_fixture() {
 		close(configfs_device_fd);
 		close(configfs_fd);
 	}

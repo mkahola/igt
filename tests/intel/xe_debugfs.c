@@ -392,7 +392,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 	unsigned int t;
 	int fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_XE);
 		xe_dev = xe_device_get(fd);
 		igt_assert_f(xe_dev, "Failed to get xe device\n");
@@ -412,7 +412,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 	igt_describe("Check info debugfs devnode contents.");
 	igt_subtest("info-read")
 		test_info_read(xe_dev);
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 

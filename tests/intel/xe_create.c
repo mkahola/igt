@@ -531,7 +531,7 @@ igt_main_args("Q:p:", NULL, help_str, opt_handler, NULL)
 {
 	int xe;
 
-	igt_fixture
+	igt_fixture()
 		xe = drm_open_driver(DRIVER_XE);
 
 	igt_subtest("valid-flag")
@@ -613,6 +613,6 @@ igt_main_args("Q:p:", NULL, help_str, opt_handler, NULL)
 		igt_waitchildren();
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(xe);
 }

@@ -257,7 +257,7 @@ igt_main
 	int ring_size = 0;
 	igt_fd_t(device);
 
-	igt_fixture {
+	igt_fixture() {
 
 		device = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(device);
@@ -280,7 +280,7 @@ igt_main
 		wide(device, &cfg, ring_size, TIMEOUT, CONTEXTS);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 	}
 }

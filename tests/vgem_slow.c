@@ -89,14 +89,14 @@ igt_main
 {
 	int fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_VGEM);
 	}
 
 	igt_subtest_f("nohang")
 		test_nohang(fd);
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

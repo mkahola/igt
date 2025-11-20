@@ -2502,7 +2502,7 @@ igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 	int size = sizeof(linear);
 	igt_fd_t(fd);
 
-	igt_fixture {
+	igt_fixture() {
 		unsigned int mmo_max = 0;
 
 		fd = drm_open_driver(DRIVER_INTEL);
@@ -2533,7 +2533,7 @@ igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			/* Either mode will do for parameter checking */
 			gem_userptr_test_synchronized();
 			if (!has_userptr(fd))
@@ -2580,7 +2580,7 @@ igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 	igt_subtest_group {
 		gem_userptr_test_unsynchronized();
 
-		igt_fixture {
+		igt_fixture() {
 			igt_require(has_userptr(fd));
 		}
 
@@ -2644,7 +2644,7 @@ igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 			test_major_evictions(fd, size, count);
 		}
 
-		igt_fixture {
+		igt_fixture() {
 			size = sizeof(linear);
 			count = 2 * gem_aperture_size(fd) / (1024*1024) / 3;
 			if (count > total_ram * 3 / 4)
@@ -2674,7 +2674,7 @@ igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 	igt_subtest_group {
 		gem_userptr_test_synchronized();
 
-		igt_fixture {
+		igt_fixture() {
 			igt_require(has_userptr(fd));
 			size = sizeof(linear);
 			count = 2 * gem_aperture_size(fd) / (1024*1024) / 3;
@@ -2770,7 +2770,7 @@ igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 			test_major_evictions(fd, size, count);
 		}
 
-		igt_fixture {
+		igt_fixture() {
 			size = 1024 * 1024;
 			count = 2 * gem_aperture_size(fd) / (1024*1024) / 3;
 			if (count > total_ram * 3 / 4)
@@ -2798,7 +2798,7 @@ igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			gem_userptr_test_synchronized();
 			if (!has_userptr(fd))
 				gem_userptr_test_unsynchronized();

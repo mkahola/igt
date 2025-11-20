@@ -12,7 +12,7 @@ igt_main
 {
 	int fd;
 
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_V3D);
 
 	igt_describe("Make sure a BO cannot be created with flags different than zero.");
@@ -66,6 +66,6 @@ igt_main
 		drm_close_driver(fd2);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

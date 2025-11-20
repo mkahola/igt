@@ -37,12 +37,12 @@ igt_main
 	volatile int t2 = 0;
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(true);
 		}
 
 		igt_subtest_group {
-			igt_fixture {
+			igt_fixture() {
 				igt_require(false);
 			}
 
@@ -67,7 +67,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			internal_assert(t2 == 0);
 			t2 = 1;
 		}
@@ -77,7 +77,7 @@ igt_main
 			t2 = 2;
 		}
 
-		igt_fixture {
+		igt_fixture() {
 			internal_assert(t2 == 2);
 			t2 = 3;
 

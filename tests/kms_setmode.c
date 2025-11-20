@@ -1053,7 +1053,7 @@ igt_main_args("det:", NULL, help_str, opt_handler, NULL)
 	igt_assert_f(!(dry_run && filter_test_id),
 		     "only one of -d and -t is accepted\n");
 
-	igt_fixture {
+	igt_fixture() {
 		drm_fd = drm_open_driver_master(DRIVER_ANY);
 		if (!dry_run)
 			kmstest_set_vt_graphics_mode();
@@ -1076,7 +1076,7 @@ igt_main_args("det:", NULL, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drmModeFreeResources(drm_resources);
 		drm_close_driver(drm_fd);
 	}

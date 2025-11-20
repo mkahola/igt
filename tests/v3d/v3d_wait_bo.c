@@ -29,7 +29,7 @@ igt_main
 	int fd;
 	struct v3d_bo *bo;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_V3D);
 		bo = igt_v3d_create_bo(fd, PAGE_SIZE);
 	}
@@ -120,7 +120,7 @@ igt_main
 		igt_v3d_free_cl_job(fd, job);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_v3d_free_bo(fd, bo);
 		drm_close_driver(fd);
 	}

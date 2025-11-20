@@ -226,7 +226,7 @@ igt_main
 		{ "fade-with-suspend", "test the fade with suspend.", test_fade, TEST_SUSPEND },
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		bool found = false;
 		char full_name[32] = {};
 		char *name;
@@ -307,7 +307,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		/* Restore old brightness */
 		for (i = 0; i < (dual_edp ? 2 : 1); i++)
 			igt_backlight_write(contexts[i].old, "brightness", &contexts[i]);

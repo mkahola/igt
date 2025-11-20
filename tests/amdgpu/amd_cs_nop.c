@@ -179,7 +179,7 @@ igt_main
 	enable_test = env && atoi(env);
 #endif
 
-	igt_fixture {
+	igt_fixture() {
 		uint32_t major, minor;
 		int err;
 
@@ -222,7 +222,7 @@ igt_main
 	}
 #endif
 
-	igt_fixture {
+	igt_fixture() {
 		amdgpu_cs_ctx_free(context);
 		amdgpu_device_deinitialize(device);
 		drm_close_driver(fd);

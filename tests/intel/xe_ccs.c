@@ -866,7 +866,7 @@ igt_main_args("bf:pst:W:H:", NULL, help_str, opt_handler, NULL)
 	struct igt_collection *set;
 	int xe;
 
-	igt_fixture {
+	igt_fixture() {
 		xe = drm_open_driver(DRIVER_XE);
 		igt_require(blt_has_block_copy(xe));
 
@@ -969,7 +969,7 @@ igt_main_args("bf:pst:W:H:", NULL, help_str, opt_handler, NULL)
 		block_copy_test(xe, &config, set, BLOCK_COPY);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		xe_device_put(xe);
 		close(xe);
 	}

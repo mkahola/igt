@@ -30,7 +30,7 @@ igt_main
 {
 	int fd;
 
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_V3D);
 
 	igt_describe("Make sure the offset returned by the creation of the BO is "
@@ -66,6 +66,6 @@ igt_main
 		do_ioctl_err(fd, DRM_IOCTL_V3D_GET_BO_OFFSET, &get, ENOENT);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

@@ -1110,7 +1110,7 @@ static bool has_ctx_cfg(struct intel_bb *ibb)
  *
  * Notes:
  *
- * intel_bb must not be created in igt_fixture. The reason is intel_bb
+ * intel_bb must not be created in igt_fixture(). The reason is intel_bb
  * "opens" connection to the allocator and when test completes it can
  * leave the allocator in unknown state (mostly for failed tests).
  * As igt_core was armed to reset the allocator infrastructure

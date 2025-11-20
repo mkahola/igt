@@ -42,7 +42,7 @@ igt_main
 	int drm_fd;
 	struct igt_fb fb;
 
-	igt_fixture {
+	igt_fixture() {
 		drm_fd = drm_open_driver_master(DRIVER_INTEL);
 		igt_require(gem_available_fences(drm_fd) > 0);
 	}
@@ -64,6 +64,6 @@ igt_main
 		igt_assert_eq(ret2, -EBUSY);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(drm_fd);
 }

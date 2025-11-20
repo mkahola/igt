@@ -1404,7 +1404,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_output_t *output = NULL;
 	data_t data = { 0 };
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		kmstest_set_vt_graphics_mode();
 		igt_display_require(&data.display, data.drm_fd);
@@ -1638,7 +1638,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

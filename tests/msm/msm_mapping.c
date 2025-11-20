@@ -267,7 +267,7 @@ igt_main
 	struct msm_device *dev = NULL;
 	struct msm_pipe *pipe = NULL;
 
-	igt_fixture {
+	igt_fixture() {
 		dev = igt_msm_dev_open();
 		pipe = igt_msm_pipe_open(dev, 0);
 	}
@@ -319,7 +319,7 @@ igt_main
 		do_mapping_test(pipe, "preempt_smmu_info ring0", false);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_msm_pipe_close(pipe);
 		igt_msm_dev_close(dev);
 	}

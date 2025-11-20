@@ -1149,7 +1149,7 @@ igt_main
 {
 	int i915;
 
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require(has_mmap_offset(i915));
 	}
@@ -1244,7 +1244,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(i915);
 	}
 }

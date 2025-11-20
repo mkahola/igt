@@ -3207,7 +3207,7 @@ igt_main
 	int fd = -1;
 	const intel_ctx_t *ctx = NULL;
 
-	igt_fixture {
+	igt_fixture() {
 		igt_require_sw_sync();
 
 		fd = drm_open_driver_master(DRIVER_INTEL);
@@ -3247,7 +3247,7 @@ igt_main
 	igt_subtest_group {
 		const struct intel_execution_engine2 *e;
 
-		igt_fixture {
+		igt_fixture() {
 			igt_require(gem_scheduler_enabled(fd));
 			igt_require(gem_scheduler_has_ctx_priority(fd));
 		}
@@ -3267,7 +3267,7 @@ igt_main
 			lateslice(fd, &ctx->cfg, e->flags, IGT_SPIN_USERPTR);
 
 		igt_subtest_group {
-			igt_fixture {
+			igt_fixture() {
 				igt_require(gem_scheduler_has_timeslicing(fd));
 				igt_require(intel_gen(intel_get_drm_devid(fd)) >= 8);
 			}
@@ -3278,7 +3278,7 @@ igt_main
 			test_each_engine("u-fairslice", fd, ctx, e)
 				fairslice(fd, &ctx->cfg, e, IGT_SPIN_USERPTR, 2);
 
-			igt_fixture {
+			igt_fixture() {
 				intel_allocator_multiprocess_start();
 			}
 			igt_subtest("fairslice-all")  {
@@ -3297,7 +3297,7 @@ igt_main
 				}
 				igt_waitchildren();
 			}
-			igt_fixture {
+			igt_fixture() {
 				intel_allocator_multiprocess_stop();
 			}
 		}
@@ -3346,7 +3346,7 @@ igt_main
 			promotion(fd, &ctx->cfg, e->flags);
 
 		igt_subtest_group {
-			igt_fixture {
+			igt_fixture() {
 				igt_require(gem_scheduler_has_preemption(fd));
 			}
 
@@ -3372,7 +3372,7 @@ igt_main
 				preempt_engines(fd, e, 0);
 
 			igt_subtest_group {
-				igt_fixture {
+				igt_fixture() {
 					igt_require(!gem_scheduler_has_static_priority(fd));
 				}
 
@@ -3391,7 +3391,7 @@ igt_main
 			igt_subtest_group {
 				igt_hang_t hang;
 
-				igt_fixture {
+				igt_fixture() {
 					igt_stop_hang_detector();
 					hang = igt_allow_hang(fd, ctx->id, 0);
 				}
@@ -3402,7 +3402,7 @@ igt_main
 				test_each_engine_store("preemptive-hang", fd, ctx, e)
 					preemptive_hang(fd, &ctx->cfg, e);
 
-				igt_fixture {
+				igt_fixture() {
 					igt_disallow_hang(fd, hang);
 					igt_fork_hang_detector(fd);
 				}
@@ -3432,7 +3432,7 @@ igt_main
 			smoketest(fd, &ctx->cfg, e->flags, 5);
 
 		igt_subtest_group {
-			igt_fixture {
+			igt_fixture() {
 				igt_require(!gem_scheduler_has_static_priority(fd));
 			}
 
@@ -3444,7 +3444,7 @@ igt_main
 	igt_subtest_group {
 		const struct intel_execution_engine2 *e;
 
-		igt_fixture {
+		igt_fixture() {
 			igt_require(gem_scheduler_enabled(fd));
 			igt_require(gem_scheduler_has_ctx_priority(fd));
 			igt_require(gem_scheduler_has_preemption(fd));
@@ -3467,7 +3467,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(gem_scheduler_enabled(fd));
 			igt_require(gem_scheduler_has_semaphores(fd));
 		}
@@ -3476,7 +3476,7 @@ igt_main
 			measure_semaphore_power(fd, ctx);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 		intel_ctx_destroy(fd, ctx);
 		drm_close_driver(fd);

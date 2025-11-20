@@ -221,7 +221,7 @@ igt_main
 {
 	data_t data = {0, };
 
-	igt_fixture {
+	igt_fixture() {
 		data_init(&data);
 		igt_require_gem(data.fd);
 	}
@@ -254,7 +254,7 @@ igt_main
 		igt_stop_signal_helper();
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		data_fini(&data);
 	}
 }

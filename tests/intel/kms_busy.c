@@ -431,7 +431,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	};
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_INTEL);
 
 		igt_require_gem(fd);
@@ -508,7 +508,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		struct gem_engine_properties saved_gpu_timeouts[GEM_MAX_ENGINES];
 		int num_engines;
 
-		igt_fixture {
+		igt_fixture() {
 			igt_require(display.is_atomic);
 			if (tests[i].reset)
 				gpu_engines_init_timeouts(display.drm_fd,
@@ -545,13 +545,13 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 			igt_disallow_hang(display.drm_fd, hang);
 		}
 
-		igt_fixture {
+		igt_fixture() {
 			if (tests[i].reset)
 				gpu_engines_restore_timeouts(display.drm_fd, num_engines, saved_gpu_timeouts);
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&display);
 		drm_close_driver(display.drm_fd);
 	}

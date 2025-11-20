@@ -354,7 +354,7 @@ static void test_i915_blt_fill_nv_read(void)
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		igt_assert(find_and_open_devices() == 0);
 
 		igt_require(nouveau_fd != -1);
@@ -380,7 +380,7 @@ igt_main
 	xtest(i915_import_pread_pwrite);
 	xtest(i915_blt_fill_nv_read);
 
-	igt_fixture {
+	igt_fixture() {
 		nouveau_device_del(&ndev);
 
 		buf_ops_destroy(bops);

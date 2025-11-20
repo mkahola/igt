@@ -905,7 +905,7 @@ igt_main
 		{ NULL },
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		memset(&device, 0, sizeof(device));
 		device.fd_xe = drm_open_driver(DRIVER_XE);
 		device.pci_xe = igt_device_get_pci_device(device.fd_xe);
@@ -966,7 +966,7 @@ igt_main
 			test_mocs_suspend_resume(device, s->state, NO_RPM);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_install_exit_handler(close_fw_handle);
 	}
 
@@ -1052,7 +1052,7 @@ igt_main
 		test_vram_d3cold_threshold(device, sysfs_fd);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		close(sysfs_fd);
 		igt_pm_set_d3cold_allowed(device.pci_slot_name, d3cold_allowed);
 		if (has_runtime_pm)

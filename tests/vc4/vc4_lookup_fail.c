@@ -29,7 +29,7 @@ igt_main
 {
 	int fd;
 
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_VC4);
 
 	igt_subtest("bad-color-write") {
@@ -66,6 +66,6 @@ igt_main
 		do_ioctl_err(fd, DRM_IOCTL_VC4_SUBMIT_CL, &submit, EINVAL);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

@@ -459,7 +459,7 @@ igt_main
 	};
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		struct timespec tv = {};
 		bool supports_faults;
 		int ret = 0;
@@ -508,7 +508,7 @@ igt_main
 		xe_for_each_engine(fd, hwe)
 			test_exec(fd, hwe, 1, 1, ENABLE_SCRATCH | INVALID_VA);
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

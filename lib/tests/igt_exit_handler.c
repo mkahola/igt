@@ -76,7 +76,7 @@ static int testfunc(enum test_type test_type)
 	if (pid == 0) {
 		igt_subtest_init(fake_argc, fake_argv);
 
-		igt_fixture {
+		igt_fixture() {
 			/* register twice, should only be called once */
 			igt_install_exit_handler(exit_handler1);
 			igt_install_exit_handler(exit_handler1);

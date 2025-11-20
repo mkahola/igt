@@ -393,7 +393,7 @@ igt_main
 {
 	int fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_ANY);
 	}
 
@@ -415,7 +415,7 @@ igt_main
 	igt_subtest("create-clear")
 		always_clear(fd, 30);
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

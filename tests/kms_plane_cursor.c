@@ -303,7 +303,7 @@ igt_main
 		  "with buffer larger than viewport used for display" },
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		int ret;
 
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
@@ -357,7 +357,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

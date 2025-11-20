@@ -1755,7 +1755,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 		basic_subtest();
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_require(setup_environment());
 	}
 
@@ -1850,7 +1850,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 	igt_subtest("package-g7")
 		test_package_g7();
 
-	igt_fixture {
+	igt_fixture() {
 		teardown_environment();
 		forcewake_put(&ms_data);
 	}

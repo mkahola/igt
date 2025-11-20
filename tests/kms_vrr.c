@@ -1146,7 +1146,7 @@ static data_t data;
 
 igt_main_args("drs:", long_opts, help_str, opt_handler, &data)
 {
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 
 		kmstest_set_vt_graphics_mode();
@@ -1185,7 +1185,7 @@ igt_main_args("drs:", long_opts, help_str, opt_handler, &data)
 		run_vrr_test(&data, test_basic, TEST_MAXMIN);
 
 	igt_subtest_group {
-		igt_fixture
+		igt_fixture()
 			igt_require_intel(data.drm_fd);
 
 		igt_describe("Test to switch RR seamlessly without modeset.");
@@ -1222,7 +1222,7 @@ igt_main_args("drs:", long_opts, help_str, opt_handler, &data)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

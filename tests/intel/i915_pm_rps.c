@@ -1205,7 +1205,7 @@ igt_main
 {
 	int tmp, gt;
 
-	igt_fixture {
+	igt_fixture() {
 		char sysfs_path[80];
 
 		/* Use drm_open_driver to verify device existence */
@@ -1319,6 +1319,6 @@ igt_main
 		}
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(drm_fd);
 }

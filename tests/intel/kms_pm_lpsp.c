@@ -196,7 +196,7 @@ igt_main
 {
 	data_t data = {};
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
 		igt_require(data.drm_fd >= 0);
 		data.debugfs_fd = igt_debugfs_dir(data.drm_fd);
@@ -256,7 +256,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		free(data.pwr_dmn_info);
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);

@@ -464,7 +464,7 @@ igt_main
 
 	memset(&data, 0, sizeof(data));
 
-	igt_fixture
+	igt_fixture()
 	{
 		data.fd = drm_open_driver_master(DRIVER_AMDGPU);
 
@@ -487,7 +487,7 @@ igt_main
 	igt_describe("Freesync range from display after suspend");
 	igt_subtest("freesync-range-suspend") test_freesync_range_suspend(&data);
 
-	igt_fixture
+	igt_fixture()
 	{
 		igt_display_fini(&data.display);
 		drm_close_driver(data.fd);

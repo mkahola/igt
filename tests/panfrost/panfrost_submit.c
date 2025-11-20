@@ -66,7 +66,7 @@ igt_main
 {
         int fd;
 
-        igt_fixture {
+        igt_fixture() {
                 fd = drm_open_driver(DRIVER_PANFROST);
         }
 
@@ -196,7 +196,7 @@ igt_main
                 igt_panfrost_free_job(fd, submit);
         }
 
-        igt_fixture {
+        igt_fixture() {
                 drm_close_driver(fd);
         }
 }

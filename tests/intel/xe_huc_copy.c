@@ -195,7 +195,7 @@ igt_main
 {
 	int xe;
 
-	igt_fixture
+	igt_fixture()
 		xe = drm_open_driver(DRIVER_XE);
 
 	igt_subtest("huc_copy") {
@@ -207,6 +207,6 @@ igt_main
 		test_huc_copy(xe);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(xe);
 }

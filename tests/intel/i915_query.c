@@ -1441,7 +1441,7 @@ igt_main
 	int fd = -1;
 	int devid;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require(has_query_supports(fd));
 		devid = intel_get_drm_devid(fd);
@@ -1516,7 +1516,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(query_engine_info_supported(fd));
 		}
 
@@ -1533,7 +1533,7 @@ igt_main
 	igt_subtest("hwconfig_table")
 		query_parse_and_validate_hwconfig_table(fd);
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

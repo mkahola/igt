@@ -1069,7 +1069,7 @@ igt_main
 {
 	int i;
 
-	igt_fixture {
+	igt_fixture() {
 		int ret;
 
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
@@ -1088,7 +1088,7 @@ igt_main
 
 	igt_describe("Verify the async flip functionality and the fps during async flips");
 	igt_subtest_group {
-		igt_fixture
+		igt_fixture()
 			require_monotonic_timestamp(data.drm_fd);
 
 		igt_describe("Wait for page flip events in between successive asynchronous flips");
@@ -1272,7 +1272,7 @@ igt_main
 		data.single_pipe = false;
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		for (i = 0; i < NUM_FBS; i++) {
 			igt_remove_fb(data.drm_fd, &data.bufs[i]);
 			igt_remove_fb(data.drm_fd, &data.bufs_overlay[i]);

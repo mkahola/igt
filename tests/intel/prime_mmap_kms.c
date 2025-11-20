@@ -261,7 +261,7 @@ igt_main
 {
 	gpu_process_t gpu;
 
-	igt_fixture {
+	igt_fixture() {
 		gpu.drm_fd = drm_open_driver_master(DRIVER_INTEL);
 		igt_skip_on((check_for_dma_buf_mmap(gpu.drm_fd) != 0));
 		kmstest_set_vt_graphics_mode();
@@ -274,7 +274,7 @@ igt_main
 	igt_subtest("buffer-sharing")
 		run_test(&gpu);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&gpu.display);
 		drm_close_driver(gpu.drm_fd);
 	}

@@ -12,7 +12,7 @@ igt_main
 {
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_VC4);
 		igt_require(igt_vc4_is_v3d(fd));
 		igt_require(igt_vc4_get_param(fd, DRM_VC4_PARAM_SUPPORTS_PERFMON));
@@ -134,6 +134,6 @@ igt_main
 		do_ioctl_err(fd, DRM_IOCTL_VC4_PERFMON_GET_VALUES, &get, EINVAL);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

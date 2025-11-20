@@ -285,7 +285,7 @@ igt_main
 {
 	data_t data = {};
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		igt_display_require(&data.display, data.drm_fd);
 		igt_display_require_output(&data.display);
@@ -295,14 +295,14 @@ igt_main
 	igt_subtest_with_dynamic("legacy")
 		test_panel_fitting(&data, TEST_LEGACY);
 
-	igt_fixture
+	igt_fixture()
 		igt_require(&data.display.is_atomic);
 
 	igt_describe("Tests panel fitting usages with atomic fastset.");
 	igt_subtest_with_dynamic("atomic-fastset")
 		test_panel_fitting(&data, TEST_ATOMIC);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

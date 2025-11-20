@@ -487,7 +487,7 @@ igt_main
 	uint32_t handle;
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(fd);
 
@@ -607,7 +607,7 @@ igt_main
 		};
 #undef REG
 
-		igt_fixture {
+		igt_fixture() {
 			intel_register_access_init(&mmio_data, igt_device_get_pci_device(fd), 0);
 		}
 
@@ -620,7 +620,7 @@ igt_main
 			}
 		}
 
-		igt_fixture {
+		igt_fixture() {
 			intel_register_access_fini(&mmio_data);
 		}
 	}
@@ -747,7 +747,7 @@ igt_main
 	igt_subtest("load-register-reg")
 		hsw_load_register_reg();
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 		gem_close(fd, handle);
 

@@ -3413,7 +3413,7 @@ igt_main
 {
 	igt_fd_t(i915);
 
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(i915);
 
@@ -3484,7 +3484,7 @@ igt_main
 		bonded_semaphore(i915);
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			intel_allocator_multiprocess_start();
 		}
 
@@ -3500,17 +3500,17 @@ igt_main
 		igt_subtest("bonded-sync")
 			bonded_runner(i915, __bonded_sync);
 
-		igt_fixture {
+		igt_fixture() {
 			intel_allocator_multiprocess_stop();
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(has_logical_mapping(i915));
 			igt_require(has_parallel_execbuf(i915));
 		}
@@ -3549,7 +3549,7 @@ igt_main
 	igt_subtest_group {
 		igt_hang_t  hang;
 
-		igt_fixture
+		igt_fixture()
 			hang = igt_allow_hang(i915, 0, 0);
 
 		igt_subtest("bonded-false-hang")
@@ -3558,7 +3558,7 @@ igt_main
 		igt_subtest("bonded-true-hang")
 			bonded_nohang(i915, 0);
 
-		igt_fixture
+		igt_fixture()
 			igt_disallow_hang(i915, hang);
 
 		igt_subtest("hang")
@@ -3566,7 +3566,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require_gem(i915); /* reset parameters */
 			igt_require(has_persistence(i915));
 		}

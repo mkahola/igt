@@ -248,7 +248,7 @@ igt_main
 	const intel_ctx_t *ctx;
 	int fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(fd);
 		ctx = intel_ctx_create_all_physical(fd);
@@ -303,7 +303,7 @@ igt_main
 #undef test_each_engine
 
 	igt_subtest_group {
-		igt_fixture
+		igt_fixture()
 			intel_allocator_multiprocess_start();
 
 		igt_subtest("spin-each")
@@ -314,11 +314,11 @@ igt_main
 			spin_on_all_engines(fd, ctx, IGT_SPIN_USERPTR, 3);
 		}
 
-		igt_fixture
+		igt_fixture()
 			intel_allocator_multiprocess_stop();
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 		intel_ctx_destroy(fd, ctx);
 		drm_close_driver(fd);

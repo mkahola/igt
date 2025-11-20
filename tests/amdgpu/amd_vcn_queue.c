@@ -67,7 +67,7 @@ igt_main
 	struct pci_addr pci;
 	int err;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_AMDGPU);
 		err = amdgpu_device_initialize(fd, &major, &minor, &device);
 		igt_require(err == 0);
@@ -92,7 +92,7 @@ igt_main
 		mm_queue_test_helper(device, &shared_context, vcn_queue_test, err, &pci);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		mmd_context_clean(device, &context);
 		amdgpu_device_deinitialize(device);
 		drm_close_driver(fd);

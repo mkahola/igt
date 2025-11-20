@@ -249,7 +249,7 @@ igt_main
 	size = count = 0;
 	fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(fd);
 		gem_require_blitter(fd);
@@ -293,7 +293,7 @@ igt_main
 		test_major_evictions(fd, size, count);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		size = 1024 * 1024;
 		count = gem_aperture_size(fd);
 		if (count >> 32)
@@ -321,7 +321,7 @@ igt_main
 		test_major_evictions(fd, size, count);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 		igt_fork_hang_helper();
 
@@ -352,7 +352,7 @@ igt_main
 
 	igt_stop_signal_helper();
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_helper();
 		drm_close_driver(fd);
 	}

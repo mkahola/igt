@@ -294,7 +294,7 @@ igt_main
 		{ }
 	}, *m;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_ANY);
 		kmstest_set_vt_graphics_mode();
 		igt_display_require(&data.display, fd);
@@ -327,7 +327,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

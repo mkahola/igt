@@ -950,7 +950,7 @@ igt_main
 {
 	igt_fd_t(fd);
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 	}
 
@@ -985,7 +985,7 @@ igt_main
 
 	igt_describe("Create buffer objects while GPU is busy.");
 	igt_subtest_group {
-		igt_fixture
+		igt_fixture()
 			igt_fork_hang_detector(fd);
 
 		igt_subtest_with_dynamic("busy-create") {
@@ -1002,7 +1002,7 @@ igt_main
 			}
 		}
 
-		igt_fixture
+		igt_fixture()
 			igt_stop_hang_detector();
 	}
 

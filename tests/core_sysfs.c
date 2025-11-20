@@ -29,7 +29,7 @@ igt_main
 	int fd = -1;
 	int sysfs = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_ANY);
 		sysfs = igt_sysfs_open(fd);
 		igt_require(sysfs >= 0);
@@ -41,7 +41,7 @@ igt_main
 	igt_subtest("read-all-entries")
 		igt_dir_process_files_simple(sysfs);
 
-	igt_fixture {
+	igt_fixture() {
 		close(sysfs);
 		drm_close_driver(fd);
 	}

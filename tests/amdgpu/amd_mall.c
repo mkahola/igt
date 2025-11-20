@@ -136,7 +136,7 @@ igt_main
 
 	memset(&data, 0, sizeof(data));
 
-	igt_fixture
+	igt_fixture()
 	{
 		data.fd = drm_open_driver_master(DRIVER_AMDGPU);
 
@@ -151,7 +151,7 @@ igt_main
 		     "of GPU VRAM when screen contents are idle");
 	igt_subtest("static-screen") test_mall_ss(&data);
 
-	igt_fixture
+	igt_fixture()
 	{
 		igt_display_fini(&data.display);
 	}

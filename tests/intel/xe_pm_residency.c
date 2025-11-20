@@ -377,7 +377,7 @@ igt_main
 	char pci_slot_name[NAME_MAX];
 	struct drm_xe_engine_class_instance *hwe;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 
 		igt_require(!IS_PONTEVECCHIO(xe_dev_id(fd)));
@@ -444,7 +444,7 @@ igt_main
 		cpg_gt_toggle(fd);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		close(fd);
 	}
 }

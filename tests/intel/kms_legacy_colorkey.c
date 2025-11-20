@@ -60,7 +60,7 @@ static void test_plane(uint32_t plane_id, int expected_ret)
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		drm_fd = drm_open_driver_master(DRIVER_INTEL);
 
 		kmstest_set_vt_graphics_mode();
@@ -100,7 +100,7 @@ igt_main
 			test_plane(max_id + 1, -ENOENT);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&display);
 		drm_close_driver(drm_fd);
 	}

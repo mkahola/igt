@@ -614,7 +614,7 @@ igt_main
 	const struct intel_execution_engine2 *e;
 	igt_fd_t(i915);
 
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(i915);
 
@@ -654,6 +654,6 @@ igt_main
 			independent_all(i915, ctx);
 	}
 
-	igt_fixture
+	igt_fixture()
 		igt_stop_hang_detector();
 }

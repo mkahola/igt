@@ -497,7 +497,7 @@ igt_main
 	igt_subtest("unload")
 		test_unload();
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_VGEM);
 	}
 
@@ -560,7 +560,7 @@ igt_main
 		test_busy_fence(fd);
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(has_prime_export(fd));
 		}
 
@@ -575,7 +575,7 @@ igt_main
 			test_dmabuf_mmap(fd);
 
 		igt_subtest_group {
-			igt_fixture {
+			igt_fixture() {
 				igt_require(vgem_has_fences(fd));
 			}
 
@@ -598,7 +598,7 @@ igt_main
 	igt_subtest("debugfs")
 		test_debugfs_read(fd);
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

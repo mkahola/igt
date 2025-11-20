@@ -559,7 +559,7 @@ igt_main
 	const intel_ctx_t *ctx;
 	int i915 = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		const unsigned int timeout = 1;
 		char *tmp;
 
@@ -608,7 +608,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		intel_ctx_destroy(i915, ctx);
 		drm_close_driver(i915);
 	}

@@ -801,7 +801,7 @@ igt_main
 	uint64_t system_size;
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		igt_require(xe_has_vram(fd));
 		vram_size = xe_visible_vram_size(fd, 0);
@@ -863,6 +863,6 @@ igt_main
 		}
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

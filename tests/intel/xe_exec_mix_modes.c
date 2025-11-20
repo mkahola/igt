@@ -271,7 +271,7 @@ igt_main
 	};
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		bool supports_faults;
 		int ret = 0;
 
@@ -288,7 +288,7 @@ igt_main
 					test_exec(fd, hwe, s->flags);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

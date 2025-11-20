@@ -144,7 +144,7 @@ static void test_handle_input(struct igt_display *display)
 {
 	struct igt_fb fb;
 
-	igt_fixture {
+	igt_fixture() {
 		igt_create_fb(display->drm_fd, 1024, 1024,
 			      DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR,
 			      &fb);
@@ -192,7 +192,7 @@ static void test_handle_input(struct igt_display *display)
 			     ENOENT);
 	}
 
-	igt_fixture
+	igt_fixture()
 		igt_remove_fb(display->drm_fd, &fb);
 }
 
@@ -200,7 +200,7 @@ static void test_duplicate_handles(struct igt_display *display)
 {
 	struct igt_fb fb;
 
-	igt_fixture {
+	igt_fixture() {
 		igt_create_fb(display->drm_fd, 1024, 1024,
 			      DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR,
 			      &fb);
@@ -252,7 +252,7 @@ static void test_duplicate_handles(struct igt_display *display)
 		igt_remove_fb(display->drm_fd, &nv12_fb);
 	}
 
-	igt_fixture
+	igt_fixture()
 		igt_remove_fb(display->drm_fd, &fb);
 }
 
@@ -260,7 +260,7 @@ static void test_getfb2(struct igt_display *display)
 {
 	struct igt_fb fb;
 
-	igt_fixture {
+	igt_fixture() {
 		struct drm_mode_fb_cmd2 get = {};
 
 		igt_create_fb(display->drm_fd, 1024, 1024,
@@ -363,7 +363,7 @@ static void test_getfb2(struct igt_display *display)
 		gem_close(display->drm_fd, cmd.handles[0]);
 	}
 
-	igt_fixture
+	igt_fixture()
 		igt_remove_fb(display->drm_fd, &fb);
 }
 
@@ -371,7 +371,7 @@ static void test_handle_protection(void) {
 	int non_master_fd;
 	struct drm_mode_fb_cmd2 non_master_add = {};
 
-	igt_fixture {
+	igt_fixture() {
 		non_master_fd = drm_open_driver(DRIVER_ANY);
 
 		non_master_add.width = 1024;
@@ -417,7 +417,7 @@ static void test_handle_protection(void) {
 		igt_waitchildren();
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		do_ioctl(non_master_fd, DRM_IOCTL_MODE_RMFB, &non_master_add.fb_id);
 		gem_close(non_master_fd, non_master_add.handles[0]);
 
@@ -430,7 +430,7 @@ igt_main
 	int fd;
 	igt_display_t display;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_ANY);
 		igt_require(has_getfb_iface(fd));
 		igt_display_require(&display, fd);
@@ -448,7 +448,7 @@ igt_main
 	igt_subtest_group
 		test_handle_protection();
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&display);
 		drm_close_driver(fd);
 	}

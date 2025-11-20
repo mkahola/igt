@@ -277,7 +277,7 @@ igt_main
 	enum pipe pipe;
 	igt_fd_t(fd);
 
-	igt_fixture {
+	igt_fixture() {
 		struct sigaction alarm_action = {};
 		igt_output_t *output;
 

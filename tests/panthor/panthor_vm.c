@@ -9,7 +9,7 @@
 igt_main {
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_PANTHOR);
 	}
 
@@ -78,7 +78,7 @@ igt_main {
 		igt_panthor_vm_destroy(fd, vm_id, 0);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

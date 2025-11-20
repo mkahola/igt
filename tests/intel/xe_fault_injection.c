@@ -626,7 +626,7 @@ igt_main_args("I:", NULL, help_str, opt_handler, NULL)
 		{ }
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		igt_require(fail_function_injection_enabled());
 		fd = drm_open_driver(DRIVER_XE);
 		devid = intel_get_drm_devid(fd);
@@ -663,7 +663,7 @@ igt_main_args("I:", NULL, help_str, opt_handler, NULL)
 		igt_subtest_f("oa-add-config-fail-%s", s->name)
 			oa_add_config_fail(fd, sysfs, devid, pci_slot, s->name);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_kmod_unbind("xe", pci_slot);
 	}
 
@@ -685,7 +685,7 @@ igt_main_args("I:", NULL, help_str, opt_handler, NULL)
 			probe_fail_guc(fd, pci_slot, s->name, &fault_params);
 		}
 
-	igt_fixture {
+	igt_fixture() {
 		close(sysfs);
 		drm_close_driver(fd);
 		injection_list_clear();

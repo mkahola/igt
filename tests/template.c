@@ -47,7 +47,7 @@ static void test_B(int fd)
 }
 
 /*
- * Variables which are written to in igt_fixtures/subtest blocks need to be
+ * Variables which are written to in igt_fixture()s/subtest blocks need to be
  * allocated outside of the relevant function scope, otherwise gcc will wreak
  * havoc (since these magic blocks use setjmp/longjmp internally).
  *
@@ -60,7 +60,7 @@ int drm_fd;
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		drm_fd = drm_open_driver(DRIVER_ANY);
 
 		/* Set up other interesting stuff shared by all tests. */
@@ -75,7 +75,7 @@ igt_main
 	 * various uses of igt_subtest_f for a few neat ideas.
 	 */
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(drm_fd);
 	}
 }

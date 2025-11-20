@@ -92,7 +92,7 @@ igt_main
 	const uint32 size = sizeof(data);
 	SVGA3dSize surface_size = { .width = size, .height = 1, .depth = 1 };
 
-	igt_fixture
+	igt_fixture()
 	{
 		fd1 = drm_open_driver_render(DRIVER_VMWGFX);
 		fd2 = drm_open_driver_render(DRIVER_VMWGFX);
@@ -445,7 +445,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd1);
 		drm_close_driver(fd2);
 	}

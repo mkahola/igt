@@ -147,7 +147,7 @@ igt_main
 {
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_render(DRIVER_INTEL);
 		igt_require_gem(fd);
 	}
@@ -169,6 +169,6 @@ igt_main
 		}
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

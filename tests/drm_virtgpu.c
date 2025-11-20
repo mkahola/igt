@@ -159,7 +159,7 @@ static void create_resource_if_needed(void)
 igt_main {
 	void *caps_buf = NULL;
 
-	igt_fixture {
+	igt_fixture() {
 		drm_fd = open_virtgpu_device();
 		igt_require(drm_fd >= 0);
 
@@ -424,7 +424,7 @@ igt_main {
 			     "No GETPARAM query returned a value.");
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		free(caps_buf);
 		close(drm_fd);
 	}

@@ -219,7 +219,7 @@ igt_main
 {
 	static struct msm_pipe *pipe = NULL;
 
-	igt_fixture {
+	igt_fixture() {
 		dev = igt_msm_dev_open();
 		pipe = igt_msm_pipe_open(dev, 0);
 		scratch_bo = igt_msm_bo_new(dev, 0x1000, MSM_BO_WC);
@@ -270,7 +270,7 @@ igt_main
 		do_fault_test(pipe, true);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_msm_bo_free(scratch_bo);
 		igt_msm_pipe_close(pipe);
 		igt_msm_dev_close(dev);

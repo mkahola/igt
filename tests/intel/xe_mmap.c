@@ -444,7 +444,7 @@ igt_main
 {
 	int fd;
 
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_XE);
 
 	igt_subtest("system")
@@ -492,7 +492,7 @@ igt_main
 			test_bad_object_for_pcimem(fd);
 		}
 
-		igt_fixture
+		igt_fixture()
 			close(fw_handle);
 	}
 
@@ -515,6 +515,6 @@ igt_main
 	igt_subtest("cpu-caching")
 		test_cpu_caching(fd);
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

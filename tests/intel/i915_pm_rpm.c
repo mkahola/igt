@@ -1349,7 +1349,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 	/* Skip instead of failing in case the machine is not prepared to reach
 	 * PC8+. We don't want bug reports from cases where the machine is just
 	 * not properly configured. */
-	igt_fixture {
+	igt_fixture() {
 		igt_require(setup_environment(true));
 	}
 
@@ -1420,7 +1420,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 	igt_subtest("gem-execbuf-stress-pc8")
 		gem_execbuf_stress_subtest(rounds, WAIT_PC8_RES, 0);
 
-	igt_fixture {
+	igt_fixture() {
 		teardown_environment(true);
 		forcewake_put(&ms_data);
 	}

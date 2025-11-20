@@ -451,7 +451,7 @@ int fd;
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(fd);
 
@@ -720,7 +720,7 @@ igt_main
 
 #undef RUN_FAIL
 
-	igt_fixture {
+	igt_fixture() {
 		gem_close(fd, handle);
 
 		drm_close_driver(fd);

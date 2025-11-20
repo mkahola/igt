@@ -213,7 +213,7 @@ igt_main
 	int xe;
 	int gt;
 
-	igt_fixture {
+	igt_fixture() {
 		xe = drm_open_driver(DRIVER_XE);
 	}
 
@@ -238,7 +238,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			int sys_fd = igt_sysfs_open(xe);
 
 			if (sys_fd != -1) {
@@ -283,7 +283,7 @@ igt_main
 	igt_subtest("invalid-property")
 		invalid_property(xe);
 
-	igt_fixture {
+	igt_fixture() {
 		xe_device_put(xe);
 		drm_close_driver(xe);
 	}

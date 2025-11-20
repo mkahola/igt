@@ -1104,7 +1104,7 @@ exit_handler(int sig)
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_device_drop_master(fd);
 
@@ -1153,7 +1153,7 @@ igt_main
 		test_inflight_suspend(fd);
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(gem_has_contexts(fd));
 		}
 
@@ -1198,7 +1198,7 @@ igt_main
 			.drm_fd = -1, .n_pipes = IGT_MAX_PIPES
 		};
 
-		igt_fixture {
+		igt_fixture() {
 			igt_device_set_master(fd);
 
 			igt_display_require(&display, fd);
@@ -1209,11 +1209,11 @@ igt_main
 		igt_subtest("kms")
 			test_kms(fd, &display);
 
-		igt_fixture {
+		igt_fixture() {
 			intel_allocator_multiprocess_stop();
 		}
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

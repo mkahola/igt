@@ -345,7 +345,7 @@ igt_main
 	};
 	int fd;
 
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_XE);
 
 	for (const struct section *s = sections; s->name; s++) {
@@ -383,7 +383,7 @@ igt_main
 				test_exec(fd, hwe, 1, 0, 1, s->flags);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 
 	for (const struct section *s = sections; s->name; s++) {

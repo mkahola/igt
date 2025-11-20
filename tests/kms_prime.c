@@ -558,7 +558,7 @@ igt_main
 	int second_fd_hybrid = -1;
 	bool first_output, second_output;
 
-	igt_fixture {
+	igt_fixture() {
 		kmstest_set_vt_graphics_mode();
 		/* ANY = anything that is not VGEM */
 		first_fd = __drm_open_driver_another(0, DRIVER_ANY);
@@ -568,7 +568,7 @@ igt_main
 
 	igt_describe("Hybrid GPU subtests");
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			second_fd_hybrid = __drm_open_driver_another(1, DRIVER_ANY);
 			igt_require(second_fd_hybrid >= 0);
 			second_output = has_connected_output(second_fd_hybrid);
@@ -621,7 +621,7 @@ igt_main
 			validate_d3_hot(second_fd_hybrid);
 		}
 
-		igt_fixture {
+		igt_fixture() {
 			if (kms_poll_disabled)
 				kms_poll_state_restore();
 
@@ -631,7 +631,7 @@ igt_main
 
 	igt_describe("VGEM subtests");
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			second_fd_vgem = __drm_open_driver_another(1, DRIVER_VGEM);
 			igt_require(second_fd_vgem >= 0);
 			if (is_i915_device(first_fd))
@@ -649,10 +649,10 @@ igt_main
 					test_crc(second_fd_vgem, first_fd);
 		}
 
-		igt_fixture
+		igt_fixture()
 			drm_close_driver(second_fd_vgem);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(first_fd);
 }

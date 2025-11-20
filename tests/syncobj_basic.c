@@ -223,7 +223,7 @@ igt_main
 {
 	int fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_ANY);
 		igt_require(has_syncobj(fd));
 	}
@@ -265,7 +265,7 @@ igt_main
 	igt_subtest("test-valid-cycle")
 		test_valid_cycle(fd);
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 

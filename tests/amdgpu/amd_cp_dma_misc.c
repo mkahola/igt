@@ -41,7 +41,7 @@ igt_main
 	}, *e;
 
 
-	igt_fixture {
+	igt_fixture() {
 		num_devices = amdgpu_open_devices(true, MAX_CARDS_SUPPORTED, drm_amdgpu_fds);
 		igt_require(num_devices > 0);
 		r = amdgpu_device_initialize(drm_amdgpu_fds[0], &major,
@@ -97,7 +97,7 @@ igt_main
 				gpu_info2.family_id);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		amdgpu_device_deinitialize(device);
 		close(drm_amdgpu_fds[0]);
 		if (num_devices > 1) {

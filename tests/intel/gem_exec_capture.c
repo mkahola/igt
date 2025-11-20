@@ -967,7 +967,7 @@ igt_main
 	char *sub_name;
 	uint32_t region;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 
 		if (gem_store_dword_needs_secure(fd))
@@ -1060,7 +1060,7 @@ igt_main
 		igt_dynamic_f("%s", (e)->name)
 			prioinv(fd, dir, ctx, e);
 
-	igt_fixture {
+	igt_fixture() {
 		close(dir);
 		igt_disallow_hang(fd, hang);
 		intel_ctx_destroy(fd, ctx);

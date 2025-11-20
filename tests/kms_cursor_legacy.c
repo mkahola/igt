@@ -1839,7 +1839,7 @@ igt_main
 		"atomic-transitions-varying-size"
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		unsigned int debug_mask_if_ci = DRM_UT_KMS;
 		display.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		kmstest_set_vt_graphics_mode();
@@ -1892,7 +1892,7 @@ igt_main
 	igt_describe("Test checks how many cursor updates we can fit between vblanks "
 		    "on all pipes with different modes, priority and number of processes");
 	igt_subtest_group {
-		igt_fixture
+		igt_fixture()
 			igt_display_require_output(&display);
 
 		igt_subtest("nonblocking-modeset-vs-cursor-atomic")
@@ -1905,7 +1905,7 @@ igt_main
 	igt_describe("Test changes the cursor hotspot and checks that the "
 		      "property is updated accordignly");
 	igt_subtest_group {
-		igt_fixture
+		igt_fixture()
 			igt_display_require_output(&display);
 
 		igt_subtest("modeset-atomic-cursor-hotspot") {
@@ -1930,7 +1930,7 @@ igt_main
 			{ "2x-long-nonblocking-modeset-vs-cursor-atomic", 15, true, true },
 		};
 
-		igt_fixture
+		igt_fixture()
 			igt_display_require_output(&display);
 
 		for (i = 0; i < ARRAY_SIZE(tests); i++) {
@@ -1956,7 +1956,7 @@ igt_main
 			{ "2x-long-cursor-vs-flip-atomic", 50, true },
 		};
 
-		igt_fixture
+		igt_fixture()
 			igt_display_require_output(&display);
 
 		for (i = 0; i < ARRAY_SIZE(tests); i++) {
@@ -1969,7 +1969,7 @@ igt_main
 
 	igt_describe("Test will first does a page flip and then cursor update");
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require_pipe_crc(display.drm_fd);
 			igt_display_require_output(&display);
 		}
@@ -1983,7 +1983,7 @@ igt_main
 
 	igt_describe("this test perform a busy bo update followed by a cursor update");
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require_intel(display.drm_fd);
 			igt_require_pipe_crc(display.drm_fd);
 			igt_display_require_output(&display);
@@ -2013,7 +2013,7 @@ igt_main
 		};
 		int t;
 
-		igt_fixture
+		igt_fixture()
 			igt_display_require_output(&display);
 
 		for (i = 0; i <= flip_test_last; i++) {
@@ -2056,7 +2056,7 @@ igt_main
 			{ "cursorB-vs-flipB", 1, 1, 10 },
 		};
 
-		igt_fixture
+		igt_fixture()
 			igt_display_require_output(&display);
 
 		for (i = 0; i <= flip_test_last; i++) {
@@ -2076,7 +2076,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		if (intel_psr2_restore)
 			i915_psr2_sel_fetch_restore(display.drm_fd, NULL);
 		igt_display_fini(&display);

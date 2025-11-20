@@ -1029,14 +1029,14 @@ igt_main
 	intel_ctx_cfg_t cfg;
 	igt_fd_t(i915);
 
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(i915);
 		cfg = intel_ctx_cfg_all_physical(i915);
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(gem_has_vm(i915));
 			igt_fork_hang_detector(i915);
 		}
@@ -1072,7 +1072,7 @@ igt_main
 		 * and so rely on gem_exec_schedule to prove the rest.
 		 */
 		igt_subtest_group {
-			igt_fixture {
+			igt_fixture() {
 				igt_require(gem_scheduler_enabled(i915));
 				igt_require(gem_scheduler_has_ctx_priority(i915));
 				igt_require(gem_has_vm(i915));
@@ -1101,7 +1101,7 @@ igt_main
 		}
 
 		igt_subtest_group {
-			igt_fixture {
+			igt_fixture() {
 				igt_require(gem_scheduler_enabled(i915));
 				igt_require(gem_scheduler_has_ctx_priority(i915));
 				igt_require(gem_has_vm(i915));
@@ -1117,7 +1117,7 @@ igt_main
 			igt_subtest("Q-smoketest-all")
 				smoketest(i915, &cfg, -1, 30);
 
-			igt_fixture {
+			igt_fixture() {
 				intel_allocator_multiprocess_stop();
 			}
 		}
@@ -1129,7 +1129,7 @@ igt_main
 		igt_subtest("exhaust-shared-gtt-lrc")
 			exhaust_shared_gtt(i915, EXHAUST_LRC);
 
-		igt_fixture {
+		igt_fixture() {
 			igt_stop_hang_detector();
 		}
 	}

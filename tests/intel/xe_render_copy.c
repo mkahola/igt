@@ -696,7 +696,7 @@ igt_main_args("dpiW:H:", NULL, help_str, opt_handler, NULL)
 		{ NULL },
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		xe = drm_open_driver(DRIVER_XE);
 
 		/* As some cards don't have render, we should skip these. */
@@ -730,7 +730,7 @@ igt_main_args("dpiW:H:", NULL, help_str, opt_handler, NULL)
 			render_stress_copy(xe, set, s->nparallel_copies_per_engine);
 		}
 
-	igt_fixture {
+	igt_fixture() {
 		buf_ops_destroy(bops);
 		drm_close_driver(xe);
 	}

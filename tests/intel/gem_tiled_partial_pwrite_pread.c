@@ -290,7 +290,7 @@ igt_main
 {
 	srandom(0xdeadbeef);
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(fd);
 		gem_require_mappable_ggtt(fd);
@@ -327,7 +327,7 @@ igt_main
 	igt_subtest("writes-after-reads")
 		test_partial_read_writes();
 
-	igt_fixture {
+	igt_fixture() {
 		intel_buf_destroy(scratch_buf);
 		intel_buf_destroy(staging_buf);
 		intel_buf_destroy(tiled_staging_buf);

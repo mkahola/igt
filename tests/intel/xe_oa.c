@@ -4949,7 +4949,7 @@ igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 	const struct drm_xe_oa_unit *oau;
 	struct xe_device *xe_dev;
 
-	igt_fixture {
+	igt_fixture() {
 		struct stat sb;
 
 		/*
@@ -4965,7 +4965,7 @@ igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 	igt_subtest("sysctl-defaults")
 		test_sysctl_defaults();
 
-	igt_fixture {
+	igt_fixture() {
 		/* We expect that the ref count test before these fixtures
 		 * should have closed drm_fd...
 		 */
@@ -5170,7 +5170,7 @@ igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			perf_init_whitelist();
 		}
 
@@ -5192,7 +5192,7 @@ igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(oau->capabilities & DRM_XE_OA_CAPS_SYNCS);
 		}
 
@@ -5204,7 +5204,7 @@ igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		/* leave sysctl options in their default state... */
 		write_u64_file("/proc/sys/dev/xe/observation_paranoid", 1);
 

@@ -1211,7 +1211,7 @@ igt_main
 	uint32_t handle;
 	int i915;
 
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(i915);
 		gem_require_blitter(i915);
@@ -1298,7 +1298,7 @@ igt_main
 	igt_subtest("shadow-peek")
 		test_shadow_peek(i915);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 		gem_close(i915, handle);
 

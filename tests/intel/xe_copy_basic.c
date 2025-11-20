@@ -273,7 +273,7 @@ igt_main_args("b", NULL, help_str, opt_handler, NULL)
 			       { 0, 17, 1, MODE_PAGE }};
 	struct rect matrix[] = { { 4, 2, 2 }, { 256, 200, 127 } };
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		dev_id = intel_get_drm_devid(fd);
 		xe_device_get(fd);
@@ -330,7 +330,7 @@ igt_main_args("b", NULL, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

@@ -1124,7 +1124,7 @@ static void test_each_engine(const char *name, int vgem, int i915,
 	const struct intel_execution_engine2 *e;
 	const intel_ctx_t *ctx;
 
-	igt_fixture
+	igt_fixture()
 		ctx = intel_ctx_create_all_physical(i915);
 
 	igt_subtest_with_dynamic(name) {
@@ -1142,7 +1142,7 @@ static void test_each_engine(const char *name, int vgem, int i915,
 		}
 	}
 
-	igt_fixture
+	igt_fixture()
 		intel_ctx_destroy(i915, ctx);
 }
 
@@ -1151,7 +1151,7 @@ igt_main
 	int i915 = -1;
 	int vgem = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		vgem = drm_open_driver(DRIVER_VGEM);
 		igt_require(has_prime_export(vgem));
 
@@ -1214,7 +1214,7 @@ igt_main
 
 	/* Fence testing */
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(vgem_has_fences(vgem));
 		}
 
@@ -1237,7 +1237,7 @@ igt_main
 			test_flip(i915, vgem, 0);
 
 		igt_subtest_group {
-			igt_fixture {
+			igt_fixture() {
 				igt_require(vgem_fence_has_flag(vgem, WIP_VGEM_FENCE_NOTIMEOUT));
 			}
 
@@ -1258,7 +1258,7 @@ igt_main
 
 	/* Fence testing, requires multiprocess allocator */
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(vgem_has_fences(vgem));
 			intel_allocator_multiprocess_start();
 		}
@@ -1266,13 +1266,13 @@ igt_main
 		igt_describe("Examine basic dma-buf fence interop.");
 		test_each_engine("fence-wait", vgem, i915, test_fence_wait);
 
-		igt_fixture {
+		igt_fixture() {
 			intel_allocator_multiprocess_stop();
 		}
 	}
 
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(i915);
 		drm_close_driver(vgem);
 	}

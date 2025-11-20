@@ -553,7 +553,7 @@ igt_main
 	drmModeModeInfo mode;
 	data_t data;
 
-	igt_fixture {
+	igt_fixture() {
 		ultra_joiner_supported = false;
 		data.big_joiner_output_count = 0;
 		data.ultra_joiner_output_count = 0;
@@ -628,7 +628,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(data.big_joiner_output_count > 0);
 			igt_require(data.n_pipes > 1);
 		}
@@ -658,7 +658,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(data.non_big_joiner_output_count > 0);
 			igt_require(data.n_pipes > 1);
 		}
@@ -700,7 +700,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(data.ultra_joiner_output_count > 0);
 			igt_require(data.n_pipes > 3);
 		}
@@ -724,7 +724,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(ultra_joiner_supported);
 			igt_require(data.non_ultra_joiner_output_count > 0);
 			igt_require(data.n_pipes > 3);
@@ -775,7 +775,7 @@ igt_main
 			test_basic_max_non_joiner(&data);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 		igt_reset_connectors();

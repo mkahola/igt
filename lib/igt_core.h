@@ -149,16 +149,16 @@ bool __igt_fixture(void);
 void __igt_fixture_complete(void);
 __noreturn void __igt_fixture_end(void);
 /**
- * igt_fixture:
+ * igt_fixture():
  *
  * Annotate global test fixture code
  *
  * Testcase with subtests often need to set up a bunch of global state as the
  * common test fixture. To avoid such code interfering with the subtest
  * enumeration (e.g. when enumerating on systems without an intel gpu) such
- * blocks should be annotated with igt_fixture.
+ * blocks should be annotated with igt_fixture().
  */
-#define igt_fixture for (volatile int igt_unique(__tmpint) = 0; \
+#define igt_fixture() for (volatile int igt_unique(__tmpint) = 0; \
 			 igt_unique(__tmpint) < 1 && \
 			 (STATIC_ANALYSIS_BUILD || \
 			 (__igt_fixture() && \
@@ -398,7 +398,7 @@ void __igt_subtest_group_restore(int, int);
  * e.g. igt_require() would result in all subsequent tests skipping. Even those
  * from a different group.
  *
- * This macro allows to group together a set of #igt_fixture and #igt_subtest
+ * This macro allows to group together a set of #igt_fixture() and #igt_subtest
  * clauses. If any common setup in a fixture fails, only the subtests in this
  * group will fail or skip. Subtest groups can be arbitrarily nested.
  */

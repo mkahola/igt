@@ -340,7 +340,7 @@ igt_main
 {
 	int gpu_count;
 
-	igt_fixture {
+	igt_fixture() {
 		int fd;
 
 		fd = drm_open_driver(DRIVER_INTEL);
@@ -422,6 +422,6 @@ igt_main
 	igt_subtest("gem-close-race")
 		threads(150, 0);
 
-	igt_fixture
+	igt_fixture()
 	    igt_stop_hang_detector();
 }

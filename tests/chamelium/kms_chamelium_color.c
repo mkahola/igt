@@ -718,7 +718,7 @@ igt_main
 	int i;
 	data_t data = {};
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		if (is_intel_device(data.drm_fd))
 			data.devid = intel_get_drm_devid(data.drm_fd);
@@ -766,7 +766,7 @@ igt_main
 	igt_subtest_group
 		run_tests_for_pipe(&data);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 	}
 }

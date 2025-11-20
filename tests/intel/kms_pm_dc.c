@@ -734,7 +734,7 @@ igt_main
 {
 	data_t data = {};
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
 		data.debugfs_fd = igt_debugfs_dir(data.drm_fd);
 		igt_require(data.debugfs_fd != -1);
@@ -839,7 +839,7 @@ igt_main
 		test_dc9_dpms(&data);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		free(data.debugfs_dump);
 		close(data.debugfs_fd);
 		close(data.debugfs_root_fd);

@@ -865,7 +865,7 @@ igt_main {
 
 	memset(&data, 0, sizeof(data));
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_AMDGPU);
 		if (data.drm_fd == -1) {
 			igt_skip("Not an amdgpu driver.\n");
@@ -898,7 +898,7 @@ igt_main {
 
 	igt_info("end of test\n");
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 		if (data.modes)

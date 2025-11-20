@@ -86,7 +86,7 @@ igt_main
 	char info[256];
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = __drm_open_driver(DRIVER_ANY);
 		igt_assert_fd(fd);
 	}
@@ -101,6 +101,6 @@ igt_main
 	igt_subtest("all-cards")
 		check_all_drm();
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

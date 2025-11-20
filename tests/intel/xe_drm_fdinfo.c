@@ -741,7 +741,7 @@ igt_main
 	struct drm_xe_engine_class_instance *hwe;
 	int xe, gt, class;
 
-	igt_fixture {
+	igt_fixture() {
 		struct drm_client_fdinfo info = { };
 
 		xe = drm_open_driver(DRIVER_XE);
@@ -849,7 +849,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(xe);
 	}
 }

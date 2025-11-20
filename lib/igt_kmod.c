@@ -1199,7 +1199,7 @@ void igt_kunit(const char *module_name, const char *suite, const char *opts)
 	igt_ignore_warn(igt_kmod_load("kunit", NULL));
 	kunit_debugfs_path(debugfs_path);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_require(subtest);
 		igt_require(*debugfs_path);
 
@@ -1222,7 +1222,7 @@ void igt_kunit(const char *module_name, const char *suite, const char *opts)
 		__igt_kunit(&tst, subtest, opts, debugfs_path, &tests, &ktap);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		char *suite_name = NULL, *case_name = NULL;
 
 		igt_ktap_free(&ktap);
@@ -1365,7 +1365,7 @@ void igt_kselftests(const char *module_name,
 	if (igt_ktest_init(&tst, module_name) != 0)
 		return;
 
-	igt_fixture
+	igt_fixture()
 		igt_require(igt_ktest_begin(&tst) == 0);
 
 	igt_kselftest_get_tests(tst.kmod, filter, &tests);
@@ -1390,7 +1390,7 @@ void igt_kselftests(const char *module_name,
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_ktest_end(&tst);
 		igt_require(!igt_list_empty(&tests));
 	}

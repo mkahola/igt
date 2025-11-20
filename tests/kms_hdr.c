@@ -803,7 +803,7 @@ igt_main
 {
 	data_t data = {};
 
-	igt_fixture {
+	igt_fixture() {
 		data.fd = drm_open_driver_master(DRIVER_ANY);
 
 		kmstest_set_vt_graphics_mode();
@@ -850,7 +850,7 @@ igt_main
 	igt_subtest_with_dynamic("invalid-hdr")
 		test_hdr(&data, TEST_INVALID_HDR);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.fd);
 	}

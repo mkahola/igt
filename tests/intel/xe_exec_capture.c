@@ -410,7 +410,7 @@ igt_main
 	struct drm_xe_engine_class_instance *hwe;
 	u64 timeouts[DRM_XE_ENGINE_CLASS_VM_BIND] = {0};
 
-	igt_fixture {
+	igt_fixture() {
 		xe = drm_open_driver(DRIVER_XE);
 		xe_for_each_engine(xe, hwe) {
 			/* Skip kernel only classes */
@@ -433,7 +433,7 @@ igt_main
 	igt_subtest("reset")
 		test_card(xe);
 
-	igt_fixture {
+	igt_fixture() {
 		xe_for_each_engine(xe, hwe) {
 			u64 store, timeout;
 

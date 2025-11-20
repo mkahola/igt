@@ -1018,7 +1018,7 @@ static const struct {
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		igt_display_require(&data.display, data.drm_fd);
 		igt_display_require_output(&data.display);
@@ -1032,7 +1032,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture
+		igt_fixture()
 			igt_require(data.display.is_atomic);
 
 		for (int i = 0; i < ARRAY_SIZE(subtests); i++) {
@@ -1055,7 +1055,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture
+		igt_fixture()
 			igt_require(data.display.is_atomic);
 
 		for (int i = 0; i < ARRAY_SIZE(mst_subtests); i++) {
@@ -1068,7 +1068,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		test_content_protection_cleanup();
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);

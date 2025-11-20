@@ -859,7 +859,7 @@ struct data data = {
 igt_main {
 	uint8_t format_idx = 0, tiling_idx = 0;
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = data.display.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
 
 		kmstest_set_vt_graphics_mode();
@@ -895,7 +895,7 @@ igt_main {
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 	}
 }

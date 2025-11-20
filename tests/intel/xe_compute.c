@@ -515,7 +515,7 @@ igt_main
 	int xe, ccs_mode[4];
 	unsigned int ip_ver;
 
-	igt_fixture {
+	igt_fixture() {
 		xe = drm_open_driver(DRIVER_XE);
 		sriov_enabled = is_sriov_mode(xe);
 		ip_ver = intel_graphics_ver(intel_get_drm_devid(xe));
@@ -525,7 +525,7 @@ igt_main
 	igt_subtest("compute-square")
 		test_compute_square(xe);
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(xe);
 
 	/* ccs mode tests should be run without open gpu file handles */
@@ -565,7 +565,7 @@ igt_main
 		test_eu_busy(5 * LOOP_DURATION_2s);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		if (!sriov_enabled)
 			igt_restore_ccs_mode(ccs_mode, ARRAY_SIZE(ccs_mode));
 	}

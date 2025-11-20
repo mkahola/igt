@@ -1109,7 +1109,7 @@ igt_main
 	}, *f;
 	int xe, gpu_count;
 
-	igt_fixture
+	igt_fixture()
 		xe = drm_open_driver(DRIVER_XE);
 
 	for (f = funcs; f->name; f++) {
@@ -1117,7 +1117,7 @@ igt_main
 			f->func(xe);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(xe);
 		gpu_count = drm_prepare_filtered_multigpu(DRIVER_XE);
 	}

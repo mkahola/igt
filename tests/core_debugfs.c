@@ -28,7 +28,7 @@ igt_main
 	int debugfs = -1;
 	int fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_ANY);
 		debugfs = igt_debugfs_dir(fd);
 		igt_require(debugfs >= 0);
@@ -41,7 +41,7 @@ igt_main
 		igt_dir_process_files_simple(debugfs);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		close(debugfs);
 		drm_close_driver(fd);
 	}

@@ -209,7 +209,7 @@ igt_main
 	uint8_t buf[OBJECT_SIZE];
 	uint8_t *addr;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require(gem_has_legacy_mmap(fd));
 	}
@@ -365,6 +365,6 @@ igt_main
 	igt_subtest("swap-bo")
 		test_huge_bo(2);
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

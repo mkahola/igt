@@ -165,7 +165,7 @@ igt_main
 	uint8_t *cpu_ptr;
 	uint8_t *gtt_ptr;
 
-	igt_fixture {
+	igt_fixture() {
 		srandom(0xdeadbeef);
 
 		data.fd = drm_open_driver(DRIVER_INTEL);
@@ -352,7 +352,7 @@ igt_main
 		intel_bb_destroy(ibb);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		intel_buf_destroy(scratch_buf);
 		intel_buf_destroy(staging_buf);
 		buf_ops_destroy(data.bops);

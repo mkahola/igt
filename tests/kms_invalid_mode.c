@@ -340,7 +340,7 @@ igt_main
 	enum pipe pipe;
 	igt_output_t *output;
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 
 		kmstest_set_vt_graphics_mode();
@@ -373,7 +373,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		igt_reset_connectors();
 		drmModeFreeResources(data.res);

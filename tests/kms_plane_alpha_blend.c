@@ -736,7 +736,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 {
 	data_t data = {};
 
-	igt_fixture {
+	igt_fixture() {
 		enum pipe pipe;
 
 		last_pipe = 0;
@@ -756,7 +756,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 	run_subtests(&data);
 
-	igt_fixture {
+	igt_fixture() {
 		remove_fbs(&data);
 		igt_display_reset(&data.display);
 		igt_display_commit2(&data.display, data.display.is_atomic ?

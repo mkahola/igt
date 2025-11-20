@@ -2,7 +2,7 @@
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		igt_require_f(false, "Skipping from fixture\n");
 	}
 

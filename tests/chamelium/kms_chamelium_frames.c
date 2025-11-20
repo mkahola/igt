@@ -990,13 +990,13 @@ igt_main
 	struct chamelium_port *port;
 	int p;
 
-	igt_fixture {
+	igt_fixture() {
 		chamelium_init_test(&data);
 	}
 
 	igt_describe("DisplayPort tests");
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			chamelium_require_connector_present(
 				data.ports, DRM_MODE_CONNECTOR_DisplayPort,
 				data.port_count, 1);
@@ -1024,7 +1024,7 @@ igt_main
 
 	igt_describe("HDMI tests");
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			chamelium_require_connector_present(
 				data.ports, DRM_MODE_CONNECTOR_HDMIA,
 				data.port_count, 1);
@@ -1137,7 +1137,7 @@ igt_main
 
 	igt_describe("VGA tests");
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			chamelium_require_connector_present(
 				data.ports, DRM_MODE_CONNECTOR_VGA,
 				data.port_count, 1);
@@ -1149,7 +1149,7 @@ igt_main
 					       CHAMELIUM_CHECK_ANALOG, 1);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

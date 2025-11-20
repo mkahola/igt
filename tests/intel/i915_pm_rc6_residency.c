@@ -608,7 +608,7 @@ igt_main
 	const intel_ctx_t *ctx;
 
 	/* Use drm_open_driver to verify device existence */
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 	}
 
@@ -651,7 +651,7 @@ igt_main
 		unsigned int rc6_enabled = 0;
 		unsigned int devid = 0;
 
-		igt_fixture {
+		igt_fixture() {
 			devid = intel_get_drm_devid(i915);
 			sysfs = igt_sysfs_open(i915);
 			igt_assert(sysfs != 1);
@@ -683,11 +683,11 @@ igt_main
 			residency_accuracy(res.media_rc6, res.duration, "media_rc6");
 		}
 
-		igt_fixture
+		igt_fixture()
 			close(sysfs);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		free(drpc);
 		drm_close_driver(i915);
 	}

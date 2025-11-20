@@ -141,7 +141,7 @@ igt_main
 {
 	igt_fd_t(fd);
 
-	igt_fixture {
+	igt_fixture() {
 		/* Create an flink requires DRM_AUTH */
 		fd = drm_open_driver_master(DRIVER_INTEL);
 		igt_require_gem(fd);

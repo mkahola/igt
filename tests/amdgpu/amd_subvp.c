@@ -160,7 +160,7 @@ igt_main
 
 	memset(&data, 0, sizeof(data));
 
-	igt_fixture
+	igt_fixture()
 	{
 		data.fd = drm_open_driver_master(DRIVER_AMDGPU);
 		igt_display_require(&data.display, data.fd);
@@ -173,7 +173,7 @@ igt_main
 	igt_describe("Tests whether system enables sub-viewport when a specific mode is committed");
 	igt_subtest("dual-4k60") test_subvp(&data);
 
-	igt_fixture
+	igt_fixture()
 	{
 		igt_display_fini(&data.display);
 	}

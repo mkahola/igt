@@ -528,7 +528,7 @@ igt_main_args("bdDn:p:s:S:V", NULL, help_str, opt_handler, NULL)
 	bool has_flatccs;
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		igt_require(xe_has_vram(fd));
 		vram_size = xe_visible_vram_size(fd, 0);
@@ -541,7 +541,7 @@ igt_main_args("bdDn:p:s:S:V", NULL, help_str, opt_handler, NULL)
 		has_flatccs = HAS_FLATCCS(intel_get_drm_devid(fd));
 	}
 
-	igt_fixture
+	igt_fixture()
 		intel_allocator_multiprocess_start();
 
 	for (const struct ccs *s = ccs; s->name; s++) {
@@ -554,7 +554,7 @@ igt_main_args("bdDn:p:s:S:V", NULL, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		intel_allocator_multiprocess_stop();
 		drm_close_driver(fd);
 	}

@@ -384,7 +384,7 @@ igt_main
 {
 	int i915 = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(i915);
 		igt_require(has_vm(i915));
@@ -397,7 +397,7 @@ igt_main
 		invalid_destroy(i915);
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			gem_context_require_param(i915, I915_CONTEXT_PARAM_VM);
 		}
 
@@ -411,7 +411,7 @@ igt_main
 			create_ext(i915);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(i915);
 	}
 }

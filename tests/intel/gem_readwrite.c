@@ -101,7 +101,7 @@ igt_main
 	uint8_t buf[OBJECT_SIZE];
 	int ret;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		gem_require_pread_pwrite(fd);
 
@@ -160,6 +160,6 @@ igt_main
 		igt_assert(ret == -1 && errno == ENOENT);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

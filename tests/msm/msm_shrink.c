@@ -249,7 +249,7 @@ igt_main
 	uint64_t alloc_size_mb = 0;
 	int num_processes = 0;
 
-	igt_fixture {
+	igt_fixture() {
 		int params, ncpus;
 		uint64_t mem_size;
 		uint64_t swap_size;
@@ -306,7 +306,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_msm_dev_close(dev);
 	}
 }

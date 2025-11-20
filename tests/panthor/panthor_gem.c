@@ -10,7 +10,7 @@
 igt_main {
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_PANTHOR);
 	}
 
@@ -77,7 +77,7 @@ igt_main {
 		igt_panthor_free_bo(fd, &bo);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

@@ -48,7 +48,7 @@ igt_main
 	const struct edid *edid;
 	int mode_count, connector_id;
 
-	igt_fixture {
+	igt_fixture() {
 		drm_fd = drm_open_driver_master(DRIVER_ANY);
 
 		res = drmModeGetResources(drm_fd);
@@ -127,7 +127,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		if (connector) {
 			kmstest_force_connector(drm_fd, connector, FORCE_CONNECTOR_UNSPECIFIED);
 			kmstest_force_edid(drm_fd, connector, NULL);

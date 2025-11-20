@@ -43,7 +43,7 @@ issue_store_multiple(uint8_t *cs, uint64_t kernel_va, uint32_t constant)
 igt_main {
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_PANTHOR);
 	}
 
@@ -117,7 +117,7 @@ igt_main {
 		igt_panthor_free_bo(fd, &result_bo);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

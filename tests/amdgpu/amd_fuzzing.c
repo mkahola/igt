@@ -164,7 +164,7 @@ igt_main
 			AMD_IP_VCN_JPEG, AMD_IP_VPE
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_AMDGPU);
 		igt_require(fd != -1);
 	}
@@ -181,7 +181,7 @@ igt_main
 	igt_subtest("gem-create-fuzzing")
 		amd_gem_create_fuzzing(fd);
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

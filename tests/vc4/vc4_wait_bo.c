@@ -62,7 +62,7 @@ igt_main
 	int fd;
 	int bo_handle;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_VC4);
 		igt_require(igt_vc4_is_v3d(fd));
 		bo_handle = igt_vc4_create_bo(fd, VC4_GPU_PAGE_SIZE);
@@ -110,6 +110,6 @@ igt_main
 	igt_subtest("used-bo")
 		test_used_bo(fd, ~0ull);
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

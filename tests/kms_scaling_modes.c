@@ -134,7 +134,7 @@ igt_main
 {
 	data_t data = {};
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		igt_require(data.drm_fd >= 0);
 
@@ -159,7 +159,7 @@ igt_main
 	igt_subtest_with_dynamic("scaling-mode-none")
 		test_scaling_mode(&data, DRM_MODE_SCALE_NONE);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

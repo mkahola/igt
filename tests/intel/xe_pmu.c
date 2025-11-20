@@ -1060,7 +1060,7 @@ igt_main
 	int fd, gt, num_engines;
 	struct drm_xe_engine_class_instance *eci;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		xe_perf_device(fd, xe_device, sizeof(xe_device));
 		num_engines = xe_number_engines(fd);
@@ -1154,7 +1154,7 @@ igt_main
 	igt_subtest_group {
 		int render_fd;
 
-		igt_fixture {
+		igt_fixture() {
 			render_fd = __drm_open_driver_render(DRIVER_XE);
 			igt_require(render_fd);
 		}
@@ -1171,14 +1171,14 @@ igt_main
 		test_each_engine("engine-activity-render-node-load-idle", render_fd, eci)
 			engine_activity(render_fd, eci, TEST_LOAD | TEST_TRAILING_IDLE);
 
-		igt_fixture
+		igt_fixture()
 			drm_close_driver(render_fd);
 	}
 
 	igt_subtest_group {
 		unsigned int num_fns;
 
-		igt_fixture
+		igt_fixture()
 			num_fns = enable_and_provision_vfs(fd) + 1;
 
 		igt_describe("Validate engine activity on all functions");
@@ -1197,7 +1197,7 @@ igt_main
 				engine_activity_fn(fd, eci, fn, true);
 		}
 
-		igt_fixture
+		igt_fixture()
 			unprovision_and_disable_vfs(fd);
 	}
 
@@ -1205,7 +1205,7 @@ igt_main
 		bool has_freq0_node, needs_freq_restore = false;
 		uint32_t *stash_min, *stash_max;
 
-		igt_fixture {
+		igt_fixture() {
 			has_freq0_node = xe_sysfs_gt_has_node(fd, 0, "freq0");
 		}
 
@@ -1225,13 +1225,13 @@ igt_main
 			}
 		}
 
-		igt_fixture {
+		igt_fixture() {
 			if (needs_freq_restore)
 				restore_gt_freq(fd, stash_min, stash_max);
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		close(fd);
 	}
 }

@@ -183,7 +183,7 @@ igt_main
 	static int fd = 0;
 	int count=0;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(fd);
 	}

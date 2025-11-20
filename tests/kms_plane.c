@@ -1453,7 +1453,7 @@ static data_t data;
 
 igt_main_args("", long_opts, help_str, opt_handler, &data)
 {
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 
 		kmstest_set_vt_graphics_mode();
@@ -1464,7 +1464,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 
 	run_tests_for_pipe_plane(&data);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

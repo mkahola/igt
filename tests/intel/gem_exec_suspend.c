@@ -398,7 +398,7 @@ igt_main
 	struct drm_i915_query_memory_regions *query_info;
 	struct igt_collection *set, *regions;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_INTEL);
 		igt_require_gem(fd);
 		igt_require(gem_can_store_dword(fd, 0));
@@ -462,7 +462,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 		hang = igt_allow_hang(fd, 0, 0);
 	}
@@ -472,7 +472,7 @@ igt_main
 		subtest_for_each_combination(test->name, intel_ctx_0(fd), test->flags, test->fn);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		free(query_info);
 		igt_collection_destroy(set);
 		igt_disallow_hang(fd, hang);

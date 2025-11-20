@@ -789,7 +789,7 @@ igt_main
 	bool fbc_chipset_support;
 	int disp_ver;
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
 		data.debugfs_fd = igt_debugfs_dir(data.drm_fd);
 		kmstest_set_vt_graphics_mode();
@@ -963,7 +963,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 
 		close(data.debugfs_fd);
 		buf_ops_destroy(data.bops);

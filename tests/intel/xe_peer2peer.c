@@ -368,7 +368,7 @@ igt_main_args("", NULL, NULL, NULL, NULL)
 	struct gpu_info gpus[2];
 	int gpu_cnt;
 
-	igt_fixture {
+	igt_fixture() {
 		gpu_cnt = get_device_info(gpus, ARRAY_SIZE(gpus));
 		igt_skip_on(gpu_cnt < 2);
 	}
@@ -381,7 +381,7 @@ igt_main_args("", NULL, NULL, NULL, NULL)
 	igt_subtest_with_dynamic_f("write")
 		gpu_write(&gpus[0], &gpus[1]);
 
-	igt_fixture {
+	igt_fixture() {
 		int cnt;
 
 		for (cnt = 0; cnt < gpu_cnt; cnt++)

@@ -31,7 +31,7 @@ igt_main
 {
 	int fd;
 
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_V3D);
 
 	igt_describe("Make sure a submission cannot be accepted with a pad different than zero.");
@@ -375,6 +375,6 @@ igt_main
 		igt_v3d_perfmon_destroy(fd, id);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

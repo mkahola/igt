@@ -1011,7 +1011,7 @@ igt_main
 	intel_ctx_cfg_t cfg;
 	igt_fd_t(i915);
 
-	igt_fixture {
+	igt_fixture() {
 		int gen;
 
 		i915 = drm_open_driver(DRIVER_INTEL);
@@ -1029,7 +1029,7 @@ igt_main
 		igt_skip_on(gen > LAST_KNOWN_GEN);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_fork_hang_detector(i915);
 	}
 
@@ -1073,7 +1073,7 @@ igt_main
 			preservation(i915, &cfg, e, S4);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 	}
 

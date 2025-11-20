@@ -934,7 +934,7 @@ igt_main
 	const intel_ctx_t *ctx;
 	int device = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		device = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(device);
 		gem_require_mmap_wc(device);
@@ -957,7 +957,7 @@ igt_main
 	}
 
 	igt_subtest_group {
-		igt_fixture
+		igt_fixture()
 			igt_require(intel_gen(intel_get_drm_devid(device)) >= 7);
 
 		test_each_engine("rthog-submit", device, ctx, e)
@@ -987,7 +987,7 @@ igt_main
 			wakeup_latency(device, ctx, e);
 
 		igt_subtest_group {
-			igt_fixture {
+			igt_fixture() {
 				gem_require_contexts(device);
 				igt_require(gem_scheduler_has_preemption(device));
 			}
@@ -1001,7 +1001,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		intel_register_access_fini(&mmio_data);
 		intel_ctx_destroy(device, ctx);
 		drm_close_driver(device);

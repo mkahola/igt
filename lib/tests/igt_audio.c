@@ -181,7 +181,7 @@ igt_main
 	size_t i;
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			signal = audio_signal_init(CHANNELS, SAMPLING_RATE);
 
 			for (i = 0; i < test_freqs_len; i++) {
@@ -215,7 +215,7 @@ igt_main
 		igt_subtest("signal-detect-phaseshift")
 			test_signal_detect_phaseshift(signal);
 
-		igt_fixture {
+		igt_fixture() {
 			audio_signal_fini(signal);
 		}
 	}

@@ -245,7 +245,7 @@ igt_main
 	struct buf_ops *bops;
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(fd);
 		gem_require_pread_pwrite(fd);
@@ -274,7 +274,7 @@ igt_main
 			do_test(bops, t->cache, src, start, dst, 1, bcs_hang);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		intel_buf_destroy(src[0]);
 		intel_buf_destroy(src[1]);
 		intel_buf_destroy(dst[0]);
@@ -283,6 +283,6 @@ igt_main
 		buf_ops_destroy(bops);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

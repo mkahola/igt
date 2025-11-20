@@ -390,7 +390,7 @@ igt_main_args("b:pst:W:H:", NULL, help_str, opt_handler, NULL)
 	struct igt_collection *set;
 	int xe;
 
-	igt_fixture {
+	igt_fixture() {
 		xe = drm_open_driver(DRIVER_XE);
 		igt_require(blt_has_fast_copy(xe));
 
@@ -421,7 +421,7 @@ igt_main_args("b:pst:W:H:", NULL, help_str, opt_handler, NULL)
 		fast_copy_test(xe, set, FAST_COPY_EMIT);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(xe);
 	}
 }

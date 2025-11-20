@@ -220,7 +220,7 @@ igt_main
 	int resdirfd;
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		/* resdirfd is used by runner_kmemleak() to store results */
 		igt_assert(resdirfd = open(runner_kmemleak_unit_testing_resdir,
 					   O_DIRECTORY | O_RDONLY));
@@ -258,10 +258,10 @@ igt_main
 			igt_assert(runner_kmemleak("test_name_3", resdirfd,
 						   true, false));
 		}
-		igt_fixture {
+		igt_fixture() {
 			close(resdirfd);
 		}
 	}
-	igt_fixture
+	igt_fixture()
 		unlinkat(resdirfd, KMEMLEAK_RESFILENAME, 0);
 }

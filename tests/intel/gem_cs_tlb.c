@@ -160,7 +160,7 @@ igt_main
 	const intel_ctx_t *ctx;
 	int fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(fd);
 		ctx = intel_ctx_create_all_physical(fd);
@@ -173,6 +173,6 @@ igt_main
 		}
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

@@ -1942,7 +1942,7 @@ igt_main
 		{ "enabled-connector-hot-plug", test_enabled_connector_hot_plug },
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		drm_load_module(DRIVER_VKMS);
 		igt_require_vkms();
 		igt_require_vkms_configfs();
@@ -1954,7 +1954,7 @@ igt_main
 			tests[i].fn();
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_require_vkms();
 		igt_require_vkms_configfs();
 		igt_vkms_destroy_all_devices();

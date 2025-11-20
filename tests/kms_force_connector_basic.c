@@ -336,7 +336,7 @@ igt_main_args("", long_opts, help_str, opt_handler, NULL)
 		  prune_stale_modes }
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		unsigned connector_id = 0;
 
 		drm_fd = drm_open_driver_master(DRIVER_ANY);
@@ -407,7 +407,7 @@ end:
 			tests[i].func(drm_fd, connector);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drmModeFreeConnector(connector);
 		drm_close_driver(drm_fd);
 

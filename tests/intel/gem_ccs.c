@@ -774,7 +774,7 @@ igt_main_args("bf:pst:W:H:", NULL, help_str, opt_handler, NULL)
 	int i915;
 	igt_hang_t hang;
 
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(i915);
 		igt_require(blt_has_block_copy(i915));
@@ -853,7 +853,7 @@ igt_main_args("bf:pst:W:H:", NULL, help_str, opt_handler, NULL)
 		block_copy_test(i915, &config, ctx, set, BLOCK_COPY);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_disallow_hang(i915, hang);
 		drm_close_driver(i915);
 	}

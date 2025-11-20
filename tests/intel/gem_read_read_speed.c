@@ -248,7 +248,7 @@ igt_main
 	struct buf_ops *bops = NULL;
 	int fd, i;
 
-	igt_fixture {
+	igt_fixture() {
 		int devid;
 
 		fd = drm_open_driver(DRIVER_INTEL);
@@ -276,7 +276,7 @@ igt_main
 			run(bops, sizes[i], sizes[i], true, true);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		buf_ops_destroy(bops);
 		drm_close_driver(fd);
 	}

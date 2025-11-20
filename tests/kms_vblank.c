@@ -627,7 +627,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	int fd;
 	data_t data;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_ANY);
 		kmstest_set_vt_graphics_mode();
 		igt_display_require(&data.display, fd);
@@ -671,7 +671,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 	run_subtests(&data);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(fd);
 	}

@@ -2394,7 +2394,7 @@ igt_main
 
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		struct xe_device *xe;
 
 		fd = drm_open_driver(DRIVER_XE);
@@ -2612,7 +2612,7 @@ igt_main
 		xe_for_each_engine(fd, hwe)
 			test_compute(fd, hwe, SZ_2M);
 
-	igt_fixture {
+	igt_fixture() {
 		xe_device_put(fd);
 		drm_close_driver(fd);
 		close_sync_file();

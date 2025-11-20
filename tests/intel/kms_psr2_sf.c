@@ -1196,7 +1196,7 @@ igt_main
 	bool fbc_chipset_support;
 	int disp_ver;
 
-	igt_fixture {
+	igt_fixture() {
 		drmModeResPtr res;
 
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
@@ -1546,7 +1546,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		close(data.debugfs_fd);
 		display_fini(&data);
 		drm_close_driver(data.drm_fd);

@@ -62,7 +62,7 @@ igt_main
 	const intel_ctx_t *ctx;
 	int fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		ctx = intel_ctx_create_all_physical(fd);
 
@@ -107,7 +107,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		free(query_info);
 		igt_collection_destroy(set);
 		igt_stop_hang_detector();

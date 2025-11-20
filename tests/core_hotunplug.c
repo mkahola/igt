@@ -683,7 +683,7 @@ igt_main
 		.chipset	= DRIVER_ANY,
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		int fd_drm;
 		char driver[32] = {};
 
@@ -720,11 +720,11 @@ igt_main
 		igt_subtest("unbind-rebind")
 			unbind_rebind(&priv);
 
-		igt_fixture
+		igt_fixture()
 			recover(&priv);
 	}
 
-	igt_fixture
+	igt_fixture()
 		post_healthcheck(&priv);
 
 	igt_subtest_group {
@@ -732,11 +732,11 @@ igt_main
 		igt_subtest("unplug-rescan")
 			unplug_rescan(&priv);
 
-		igt_fixture
+		igt_fixture()
 			recover(&priv);
 	}
 
-	igt_fixture
+	igt_fixture()
 		post_healthcheck(&priv);
 
 	igt_subtest_group {
@@ -744,11 +744,11 @@ igt_main
 		igt_subtest("hotunbind-rebind")
 			hotunbind_rebind(&priv);
 
-		igt_fixture
+		igt_fixture()
 			recover(&priv);
 	}
 
-	igt_fixture
+	igt_fixture()
 		post_healthcheck(&priv);
 
 	igt_subtest_group {
@@ -756,11 +756,11 @@ igt_main
 		igt_subtest("hotunplug-rescan")
 			hotunplug_rescan(&priv);
 
-		igt_fixture
+		igt_fixture()
 			recover(&priv);
 	}
 
-	igt_fixture
+	igt_fixture()
 		post_healthcheck(&priv);
 
 	igt_subtest_group {
@@ -768,11 +768,11 @@ igt_main
 		igt_subtest("hotrebind")
 			hotrebind(&priv);
 
-		igt_fixture
+		igt_fixture()
 			recover(&priv);
 	}
 
-	igt_fixture
+	igt_fixture()
 		post_healthcheck(&priv);
 
 	igt_subtest_group {
@@ -780,11 +780,11 @@ igt_main
 		igt_subtest("hotreplug")
 			hotreplug(&priv);
 
-		igt_fixture
+		igt_fixture()
 			recover(&priv);
 	}
 
-	igt_fixture
+	igt_fixture()
 		post_healthcheck(&priv);
 
 	igt_subtest_group {
@@ -792,11 +792,11 @@ igt_main
 		igt_subtest("hotrebind-lateclose")
 			hotrebind_lateclose(&priv);
 
-		igt_fixture
+		igt_fixture()
 			recover(&priv);
 	}
 
-	igt_fixture
+	igt_fixture()
 		post_healthcheck(&priv);
 
 	igt_subtest_group {
@@ -804,11 +804,11 @@ igt_main
 		igt_subtest("hotreplug-lateclose")
 			hotreplug_lateclose(&priv);
 
-		igt_fixture
+		igt_fixture()
 			recover(&priv);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		post_healthcheck(&priv);
 
 		igt_ignore_warn(close(priv.fd.sysfs_bus));

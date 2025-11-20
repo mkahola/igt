@@ -483,7 +483,7 @@ void igt_fork_hang_helper(void)
  * Stops the child process spawned with igt_fork_hang_helper().
  *
  * In tests with subtests this function can be called outside of failure
- * catching code blocks like #igt_fixture or #igt_subtest.
+ * catching code blocks like #igt_fixture() or #igt_subtest.
  */
 void igt_stop_hang_helper(void)
 {

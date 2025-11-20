@@ -348,7 +348,7 @@ igt_main
 
 	igt_skip_on_simulation();
 
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(i915);
 	}
@@ -357,7 +357,7 @@ igt_main
 		struct intel_mmio_data mmio;
 		int sysfs;
 
-		igt_fixture {
+		igt_fixture() {
 			igt_require(gem_scheduler_enabled(i915));
 			igt_require(gem_scheduler_has_preemption(i915));
 
@@ -372,7 +372,7 @@ igt_main
 		test_each_engine("dispatch", i915, e)
 				endless_dispatch(i915, e);
 
-		igt_fixture {
+		igt_fixture() {
 			unpin_rps(sysfs);
 			close(sysfs);
 			intel_register_access_fini(&mmio);

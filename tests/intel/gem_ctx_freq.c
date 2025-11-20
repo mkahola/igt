@@ -262,7 +262,7 @@ static void disable_boost(void)
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(i915);
 
@@ -281,7 +281,7 @@ igt_main
 				sysfs_range(dirfd, gt);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		close(sysfs);
 		drm_close_driver(i915);
 	}

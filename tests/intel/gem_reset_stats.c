@@ -1084,7 +1084,7 @@ igt_main
 {
 	const struct intel_execution_ring *e;
 
-	igt_fixture {
+	igt_fixture() {
 		bool has_reset_stats;
 		bool using_full_reset;
 		char *tmp;
@@ -1160,7 +1160,7 @@ igt_main
 		const struct intel_execution_engine2 *e2;
 		intel_ctx_cfg_t cfg = {};
 
-		igt_fixture {
+		igt_fixture() {
 			gem_require_contexts(device);
 			cfg = intel_ctx_cfg_all_physical(device);
 
@@ -1174,11 +1174,11 @@ igt_main
 					test_shared_reset_domain(&cfg, e2);
 			}
 		}
-		igt_fixture {
+		igt_fixture() {
 			enable_hangcheck(device, true);
 		}
 	}
-	igt_fixture {
+	igt_fixture() {
 		igt_assert(igt_params_set(device, "reset", "%d", INT_MAX /* any reset method */));
 		drm_close_driver(device);
 	}

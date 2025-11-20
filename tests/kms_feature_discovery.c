@@ -75,13 +75,13 @@ igt_main {
 	igt_fd_t(debugfs_fd);
 	igt_fd_t(fd);
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_ANY);
 		debugfs_fd = igt_debugfs_dir(fd);
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_display_require(&display, fd);
 		}
 
@@ -95,7 +95,7 @@ igt_main {
 			igt_output_t *output;
 			enum pipe pipe;
 
-			igt_fixture {
+			igt_fixture() {
 				/* this is what most of the 2x tests are doing */
 				for_each_pipe(&display, pipe) {
 					for_each_valid_output_on_pipe(&display, pipe, output) {

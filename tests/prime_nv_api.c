@@ -348,7 +348,7 @@ static void test_nv_self_import_to_different_fd(void)
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		find_and_open_devices();
 
 		igt_require(nouveau_fd != -1);
@@ -383,7 +383,7 @@ igt_main
 	xtest(i915_self_import_to_different_fd);
 	xtest(nv_self_import_to_different_fd);
 	
-	igt_fixture {
+	igt_fixture() {
 		nouveau_device_del(&ndev);
 
 		close(intel_fd);

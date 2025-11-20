@@ -414,7 +414,7 @@ igt_main
 
 	memset(&data, 0, sizeof(data));
 
-	igt_fixture
+	igt_fixture()
 	{
 		data.fd = drm_open_driver_master(DRIVER_AMDGPU);
 
@@ -433,7 +433,7 @@ igt_main
 		multiple_display_test(&data, DISPLAY_ENABLE_DISABLE);
 
 
-	igt_fixture
+	igt_fixture()
 	{
 		igt_display_fini(&data.display);
 		drm_close_driver(data.fd);

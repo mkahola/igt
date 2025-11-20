@@ -249,7 +249,7 @@ igt_main
 	int i;
 	data_t data = { 0 };
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		kmstest_set_vt_graphics_mode();
 
@@ -271,7 +271,7 @@ igt_main
 					tests[i].output_bpc);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

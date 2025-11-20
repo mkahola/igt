@@ -862,7 +862,7 @@ static void test_semaphore(void)
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		find_and_open_devices();
 
 		igt_require(nouveau_fd != -1);
@@ -887,7 +887,7 @@ igt_main
 	xtest(test3_5);
 	xtest(test_semaphore);
 
-	igt_fixture {
+	igt_fixture() {
 		nouveau_bo_ref(NULL, &query_bo);
 		nouveau_object_del(&pcopy);
 		nouveau_bufctx_del(&nbufctx);

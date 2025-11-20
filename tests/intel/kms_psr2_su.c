@@ -318,7 +318,7 @@ igt_main
 	int pipes[IGT_MAX_PIPES * IGT_MAX_PIPES];
 	int n_pipes = 0;
 
-	igt_fixture {
+	igt_fixture() {
 		struct itimerspec interval;
 
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
@@ -395,7 +395,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		close(data.debugfs_fd);
 		display_fini(&data);
 		drm_close_driver(data.drm_fd);

@@ -2292,7 +2292,7 @@ igt_main
 	 * Including all the I915_PMU_OTHER(x).
 	 */
 
-	igt_fixture {
+	igt_fixture() {
 		fd = __drm_open_driver(DRIVER_INTEL);
 
 		igt_require_gem(fd);
@@ -2424,7 +2424,7 @@ igt_main
 	 * enabled after two batches are running.
 	 */
 	igt_subtest_group {
-		igt_fixture gem_require_contexts(fd);
+		igt_fixture() gem_require_contexts(fd);
 
 		test_each_engine("busy-double-start", fd, ctx, e)
 			busy_double_start(fd, ctx, e);
@@ -2541,7 +2541,7 @@ igt_main
 		int render_fd = -1;
 		const intel_ctx_t *render_ctx = NULL;
 
-		igt_fixture {
+		igt_fixture() {
 			render_fd = __drm_open_driver_render(DRIVER_INTEL);
 			igt_require_gem(render_fd);
 			render_ctx = intel_ctx_create_all_physical(render_fd);
@@ -2554,13 +2554,13 @@ igt_main
 		test_each_engine("render-node-busy-idle", render_fd, render_ctx, e)
 			single(render_fd, render_ctx, e, TEST_BUSY | TEST_TRAILING_IDLE);
 
-		igt_fixture {
+		igt_fixture() {
 			intel_ctx_destroy(render_fd, render_ctx);
 			drm_close_driver(render_fd);
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		intel_ctx_destroy(fd, ctx);
 		drm_close_driver(fd);
 		free(drpc);

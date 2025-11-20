@@ -1180,7 +1180,7 @@ static void invalid_parameter_tests(data_t *d)
 		},
 	};
 
-	igt_fixture {
+	igt_fixture() {
 		output = igt_get_single_output_for_pipe(&d->display, pipe);
 		igt_require(output);
 
@@ -1217,7 +1217,7 @@ static void invalid_parameter_tests(data_t *d)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_remove_fb(d->drm_fd, &fb);
 		igt_output_set_pipe(output, PIPE_NONE);
 	}
@@ -1359,7 +1359,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 	enum pipe pipe;
 	uint32_t ret = -EINVAL;
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		igt_display_require(&data.display, data.drm_fd);
 		data.devid = is_intel_device(data.drm_fd) ?
@@ -1607,7 +1607,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 	igt_subtest_f("2x-scaler-multi-pipe")
 		test_scaler_with_multi_pipe_plane(&data);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

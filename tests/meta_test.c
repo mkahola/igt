@@ -120,7 +120,7 @@ static void test_panic(void)
 igt_main
 {
 
-	igt_fixture {
+	igt_fixture() {
 		igt_skip_on_f(!getenv("IGT_CI_META_TEST"),
 			      "Only for meta-testing of CI systems");
 	}

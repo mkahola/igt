@@ -52,7 +52,7 @@ igt_main
 	uint64 max_mob_mem;
 	uint64 max_mob_size;
 
-	igt_fixture
+	igt_fixture()
 	{
 		vmw_svga_device_init(&device, vmw_svga_device_node_render);
 		igt_require(device.drm_fd != -1);
@@ -97,7 +97,7 @@ igt_main
 		free(mob_objs);
 	}
 
-	igt_fixture
+	igt_fixture()
 	{
 		vmw_ioctl_context_destroy(device.drm_fd, cid);
 		vmw_svga_device_fini(&device);

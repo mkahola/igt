@@ -588,7 +588,7 @@ igt_main
 	int class;
 	int fd;
 
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_XE);
 
 	igt_subtest("virtual-all-active")
@@ -663,6 +663,6 @@ igt_main
 					test_cm(fd, gt, class, 1, 0, s->flags);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

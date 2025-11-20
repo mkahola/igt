@@ -60,7 +60,7 @@ static void *create_csd_jobs(void *args)
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_V3D);
 		igt_require(igt_v3d_get_param(fd, DRM_V3D_PARAM_SUPPORTS_CSD));
 		igt_require(igt_v3d_get_param(fd, DRM_V3D_PARAM_SUPPORTS_MULTISYNC_EXT));
@@ -218,6 +218,6 @@ igt_main
 		free(csd_jobs);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

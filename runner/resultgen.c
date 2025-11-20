@@ -524,7 +524,7 @@ static const char *find_subtest_begin_limit_limited(struct matches matches,
 	if (begin_idx < first_idx) {
 		/*
 		 * Subtest didn't start, but we have the
-		 * result. Probably because an igt_fixture
+		 * result. Probably because an igt_fixture()
 		 * made it fail/skip.
 		 *
 		 * We go backwards one match from the result match,

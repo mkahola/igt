@@ -606,7 +606,7 @@ igt_main_args("d", long_options, help_str, opt_handler, NULL)
 	igt_display_t display;
 	int i, j, ret;
 
-	igt_fixture {
+	igt_fixture() {
 		display.drm_fd = drm_open_driver_master(DRIVER_ANY);
 
 		if (drmSetClientCap(display.drm_fd, DRM_CLIENT_CAP_ATOMIC, 1) == 0)
@@ -641,7 +641,7 @@ igt_main_args("d", long_options, help_str, opt_handler, NULL)
 		drmModeModeInfo mode;
 
 		igt_subtest_group {
-			igt_fixture {
+			igt_fixture() {
 				output = kms_writeback_get_output(&display,
 								  formats[j].fourcc_in,
 								  formats[j].fourcc_out);
@@ -688,7 +688,7 @@ igt_main_args("d", long_options, help_str, opt_handler, NULL)
 							tests[i].colorops);
 			}
 
-			igt_fixture {
+			igt_fixture() {
 				igt_detach_crtc(&display, output);
 				igt_remove_fb(display.drm_fd, &input_fb);
 				igt_remove_fb(display.drm_fd, &output_fb);
@@ -697,7 +697,7 @@ igt_main_args("d", long_options, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&display);
 		drm_close_driver(display.drm_fd);
 	}

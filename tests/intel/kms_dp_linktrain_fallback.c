@@ -601,7 +601,7 @@ igt_main
 {
 	data_t data = {};
 
-	igt_fixture {
+	igt_fixture() {
 		unsigned int debug_mask_if_ci = DRM_UT_KMS;
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL |
 						     DRIVER_XE);
@@ -631,7 +631,7 @@ igt_main
 			      "Skipping test as DSC fallback conditions not met.\n");
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_remove_fb(data.drm_fd, &data.fb);
 		igt_display_fini(&data.display);
 		close(data.drm_fd);

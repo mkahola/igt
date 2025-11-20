@@ -344,7 +344,7 @@ static void test_partial_read_writes(data_t *data)
 
 static void do_tests(data_t *data, int cache_level, const char *suffix)
 {
-	igt_fixture {
+	igt_fixture() {
 		if (cache_level != -1)
 			gem_set_caching(data->drm_fd, scratch_buf->handle, cache_level);
 	}
@@ -370,7 +370,7 @@ igt_main
 	data_t data = {0, };
 	srandom(0xdeadbeef);
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(data.drm_fd);
 		gem_require_blitter(data.drm_fd);
@@ -391,7 +391,7 @@ igt_main
 	do_tests(&data, 1, "-snoop");
 	do_tests(&data, 2, "-display");
 
-	igt_fixture {
+	igt_fixture() {
 		intel_buf_destroy(scratch_buf);
 		intel_buf_destroy(staging_buf);
 		buf_ops_destroy(data.bops);

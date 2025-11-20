@@ -215,7 +215,7 @@ static void invalid_tests(int fd)
 	f.pixel_format = DRM_FORMAT_XRGB8888;
 	f.pitches[0] = 512*4;
 
-	igt_fixture {
+	igt_fixture() {
 		gem_bo = igt_create_bo_with_dimensions(fd, 1024, 1024,
 			DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, 0, NULL, NULL, NULL);
 		igt_assert(gem_bo);
@@ -413,7 +413,7 @@ static void invalid_tests(int fd)
 			 count);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		gem_close(fd, gem_bo);
 		gem_close(fd, gem_bo_small);
 	}
@@ -430,7 +430,7 @@ static void pitch_tests(int fd)
 	f.pixel_format = DRM_FORMAT_XRGB8888;
 	f.pitches[0] = 1024*4;
 
-	igt_fixture {
+	igt_fixture() {
 		gem_bo = igt_create_bo_with_dimensions(fd, 1024, 1024,
 			DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, 0, NULL, NULL, NULL);
 		igt_assert(gem_bo);
@@ -462,7 +462,7 @@ static void pitch_tests(int fd)
 		}
 	}
 
-	igt_fixture
+	igt_fixture()
 		gem_close(fd, gem_bo);
 }
 
@@ -478,7 +478,7 @@ static void tiling_tests(int fd)
 	f.pitches[0] = 1024*4;
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require_intel(fd);
 			tiled_x_bo = igt_create_bo_with_dimensions(fd, 1024, 1024,
 				DRM_FORMAT_XRGB8888, I915_FORMAT_MOD_X_TILED,
@@ -543,7 +543,7 @@ static void tiling_tests(int fd)
 			do_ioctl_err(fd, DRM_IOCTL_MODE_ADDFB2, &f, EINVAL);
 		}
 
-		igt_fixture {
+		igt_fixture() {
 			gem_close(fd, tiled_x_bo);
 			gem_close(fd, tiled_y_bo);
 		}
@@ -573,7 +573,7 @@ static void size_tests(int fd)
 	f_8.pixel_format = DRM_FORMAT_C8;
 	f_8.pitches[0] = 1024*2;
 
-	igt_fixture {
+	igt_fixture() {
 		gem_bo = igt_create_bo_with_dimensions(fd, 1024, 1024,
 			DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, 0, NULL, NULL, NULL);
 		igt_assert(gem_bo);
@@ -659,7 +659,7 @@ static void size_tests(int fd)
 	}
 
 
-	igt_fixture {
+	igt_fixture() {
 		gem_close(fd, gem_bo);
 		gem_close(fd, gem_bo_small);
 	}
@@ -669,7 +669,7 @@ static void addfb25_tests(int fd)
 {
 	struct drm_mode_fb_cmd2 f = {};
 
-	igt_fixture {
+	igt_fixture() {
 		gem_bo = igt_create_bo_with_dimensions(fd, 1024, 1024,
 			DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, 0, NULL, NULL, NULL);
 		igt_assert(gem_bo);
@@ -693,7 +693,7 @@ static void addfb25_tests(int fd)
 		do_ioctl_err(fd, DRM_IOCTL_MODE_ADDFB2, &f, EINVAL);
 	}
 
-	igt_fixture
+	igt_fixture()
 		f.flags = DRM_MODE_FB_MODIFIERS;
 
 	igt_describe("Test that addfb2 call fails correctly for irrelevant modifier");
@@ -705,7 +705,7 @@ static void addfb25_tests(int fd)
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require_intel(fd);
 			if (is_i915_device(fd)) {
 				igt_require(gem_available_fences(fd) > 0);
@@ -743,7 +743,7 @@ static void addfb25_tests(int fd)
 		}
 	}
 
-	igt_fixture
+	igt_fixture()
 		gem_close(fd, gem_bo);
 }
 
@@ -751,7 +751,7 @@ static void addfb25_ytile(int fd)
 {
 	struct drm_mode_fb_cmd2 f = {};
 
-	igt_fixture {
+	igt_fixture() {
 		gem_bo = igt_create_bo_with_dimensions(fd, 1024, 1024,
 			DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, 0, NULL, NULL, NULL);
 		igt_assert(gem_bo);
@@ -807,7 +807,7 @@ static void addfb25_ytile(int fd)
 		f.fb_id = 0;
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		gem_close(fd, gem_bo);
 		gem_close(fd, gem_bo_small);
 	}
@@ -817,7 +817,7 @@ static void addfb25_4tile(int fd)
 {
 	struct drm_mode_fb_cmd2 f = {};
 
-	igt_fixture {
+	igt_fixture() {
 		gem_bo = igt_create_bo_with_dimensions(fd, 1024, 1024,
 				DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, 0, NULL, NULL, NULL);
 		igt_assert(gem_bo);
@@ -847,7 +847,7 @@ static void addfb25_4tile(int fd)
 		f.fb_id = 0;
 	}
 
-	igt_fixture
+	igt_fixture()
 		gem_close(fd, gem_bo);
 }
 
@@ -863,7 +863,7 @@ static void prop_tests(int fd)
 	f.pixel_format = DRM_FORMAT_XRGB8888;
 	f.pitches[0] = 1024*4;
 
-	igt_fixture {
+	igt_fixture() {
 		gem_bo = igt_create_bo_with_dimensions(fd, 1024, 1024,
 			DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, 0, NULL, NULL, NULL);
 		igt_assert(gem_bo);
@@ -910,7 +910,7 @@ static void prop_tests(int fd)
 		do_ioctl_err(fd, DRM_IOCTL_MODE_OBJ_SETPROPERTY, &set_prop, EINVAL);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		do_ioctl(fd, DRM_IOCTL_MODE_RMFB, &f.fb_id);
 		gem_close(fd, gem_bo);
 	}
@@ -925,7 +925,7 @@ static void master_tests(int fd)
 	f.pixel_format = DRM_FORMAT_XRGB8888;
 	f.pitches[0] = 1024*4;
 
-	igt_fixture {
+	igt_fixture() {
 		gem_bo = igt_create_bo_with_dimensions(fd, 1024, 1024,
 			DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, 0, NULL, NULL, NULL);
 		igt_assert(gem_bo);
@@ -951,7 +951,7 @@ static void master_tests(int fd)
 		igt_device_set_master(fd);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		do_ioctl(fd, DRM_IOCTL_MODE_RMFB, &f.fb_id);
 		gem_close(fd, gem_bo);
 	}
@@ -984,7 +984,7 @@ int fd;
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_ANY);
 		igt_require(has_addfb2_iface(fd));
 	}
@@ -1005,24 +1005,24 @@ igt_main
 		tiling_tests(fd);
 
 	igt_subtest_group {
-		igt_fixture
+		igt_fixture()
 			igt_display_require(&display, fd);
 
 		size_tests(fd);
 
 		addfb25_tests(fd);
 
-		igt_fixture
+		igt_fixture()
 			igt_require_intel(fd);
 
 		addfb25_ytile(fd);
 
 		addfb25_4tile(fd);
 
-		igt_fixture
+		igt_fixture()
 			igt_display_fini(&display);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

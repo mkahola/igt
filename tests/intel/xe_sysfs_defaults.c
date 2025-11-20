@@ -63,7 +63,7 @@ igt_main
 	int xe, sys_fd;
 	int gt;
 
-	igt_fixture {
+	igt_fixture() {
 		xe = drm_open_driver(DRIVER_XE);
 		xe_device_get(xe);
 
@@ -89,7 +89,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		xe_device_put(xe);
 		close(xe);
 	}

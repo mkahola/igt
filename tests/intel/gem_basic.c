@@ -110,7 +110,7 @@ igt_main
 	igt_fd_t(fd);
 	int gpu_count;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		gpu_count = igt_device_filter_count();
 	}

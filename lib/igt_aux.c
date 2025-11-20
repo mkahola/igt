@@ -313,7 +313,7 @@ static void sig_handler(int i)
  * helper can also be used from children spawned with #igt_fork.
  *
  * In tests with subtests this function can be called outside of failure
- * catching code blocks like #igt_fixture or #igt_subtest.
+ * catching code blocks like #igt_fixture() or #igt_subtest.
  *
  * Note that this just spews signals at the current process unconditionally and
  * hence incurs quite a bit of overhead. For a more focused approach, with less
@@ -350,7 +350,7 @@ void igt_fork_signal_helper(void)
  * Stops the child process spawned with igt_fork_signal_helper() again.
  *
  * In tests with subtests this function can be called outside of failure
- * catching code blocks like #igt_fixture or #igt_subtest.
+ * catching code blocks like #igt_fixture() or #igt_subtest.
  */
 void igt_stop_signal_helper(void)
 {
@@ -419,7 +419,7 @@ __noreturn static void shrink_helper_process(int fd, pid_t pid)
  *
  * This is useful to exercise swapping paths, without requiring us to hit swap.
  *
- * This should only be used from an igt_fixture.
+ * This should only be used from an igt_fixture().
  */
 void igt_fork_shrink_helper(int drm_fd)
 {

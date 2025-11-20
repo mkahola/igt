@@ -644,7 +644,7 @@ igt_main {
 	struct pci_addr pci_addr;
 	int ret;
 
-	igt_fixture {
+	igt_fixture() {
 		memset(fds, -1, sizeof(fds));
 
 		/* Use amdgpu_open_devices from IGT lib to open AMD GPU devices */
@@ -675,7 +675,7 @@ igt_main {
 		map_unmap_to_nodes_test(devices, fd_count);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		for (i = 0; i < fd_count; i++) {
 			if (devices[i]) {
 			amdgpu_device_deinitialize(devices[i]);

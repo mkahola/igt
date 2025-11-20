@@ -2800,7 +2800,7 @@ igt_main
 	bool *multigpu_was_enabled;
 	int fd, gpu_count;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		was_enabled = xe_eudebug_enable(fd, true);
 
@@ -2921,13 +2921,13 @@ igt_main
 	igt_subtest("discovery-empty-clients")
 		test_empty_discovery(fd, DISCOVERY_DESTROY_RESOURCES, 16);
 
-	igt_fixture {
+	igt_fixture() {
 		xe_eudebug_enable(fd, was_enabled);
 		drm_close_driver(fd);
 	}
 
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			gpu_count = drm_prepare_filtered_multigpu(DRIVER_XE);
 
 			multigpu_was_enabled = malloc(gpu_count * sizeof(bool));
@@ -2967,7 +2967,7 @@ igt_main
 			igt_waitchildren();
 		}
 
-		igt_fixture {
+		igt_fixture() {
 			for (int i = 0; i < gpu_count; i++) {
 				fd = drm_open_filtered_card(i);
 				xe_eudebug_enable(fd, multigpu_was_enabled[i]);

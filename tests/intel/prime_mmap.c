@@ -563,7 +563,7 @@ igt_main
 	char *ext;
 	int i;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 
 		query_info = gem_get_query_memory_regions(fd);
@@ -590,7 +590,7 @@ igt_main
 			}
 		}
 
-	igt_fixture {
+	igt_fixture() {
 		free(query_info);
 		igt_collection_destroy(set);
 		igt_collection_destroy(dma_buf_set);

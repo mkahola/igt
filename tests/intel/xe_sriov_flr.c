@@ -1028,7 +1028,7 @@ igt_main
 	int pf_fd;
 	bool autoprobe;
 
-	igt_fixture {
+	igt_fixture() {
 		pf_fd = drm_open_driver(DRIVER_XE);
 		igt_require(igt_sriov_is_pf(pf_fd));
 		igt_require(igt_sriov_get_enabled_vfs(pf_fd) == 0);
@@ -1063,7 +1063,7 @@ igt_main
 		clear_tests(pf_fd, 1, execute_parallel_flr_twice);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_sriov_disable_vfs(pf_fd);
 		/* abort to avoid execution of next tests with enabled VFs */
 		igt_abort_on_f(igt_sriov_get_enabled_vfs(pf_fd) > 0, "Failed to disable VF(s)");

@@ -213,7 +213,7 @@ igt_main
 	struct pci_device *pci_xe;
 	bool vf_device;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		igt_require(IS_BATTLEMAGE(intel_get_drm_devid(fd)));
 		vf_device = intel_is_vf_device(fd);
@@ -258,7 +258,7 @@ igt_main
 		igt_debugfs_write(fd, "inject_csc_hw_error/times", "1");
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_fs_remove_dir(configfs_fd, bus_addr);
 		close(configfs_device_fd);
 		close(configfs_fd);

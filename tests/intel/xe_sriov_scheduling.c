@@ -889,7 +889,7 @@ igt_main_args("", long_opts, help_str, subm_opts_handler, NULL)
 	int pf_fd;
 	bool autoprobe;
 
-	igt_fixture {
+	igt_fixture() {
 		pf_fd = drm_open_driver(DRIVER_XE);
 		igt_require(igt_sriov_is_pf(pf_fd));
 		igt_require(igt_sriov_get_enabled_vfs(pf_fd) == 0);
@@ -922,7 +922,7 @@ igt_main_args("", long_opts, help_str, subm_opts_handler, NULL)
 				nonpreempt_engine_resets(pf_fd, vf, &subm_opts);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		set_vfs_scheduling_params(pf_fd, igt_sriov_get_total_vfs(pf_fd),
 					  &(struct vf_sched_params){});
 		xe_sriov_disable_vfs_restore_auto_provisioning(pf_fd);

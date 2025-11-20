@@ -80,7 +80,7 @@ igt_main
 {
 	int fd, hwm;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
 		hwm = igt_hwmon_open(fd);
 		igt_require(hwm >= 0);
@@ -96,7 +96,7 @@ igt_main
 		hwmon_write(hwm);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		close(hwm);
 		drm_close_driver(fd);
 	}

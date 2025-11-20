@@ -969,7 +969,7 @@ static bool test_requirements(data_t *input_data, int l)
 
 igt_main
 {
-	igt_fixture {
+	igt_fixture() {
 		drmModeResPtr res;
 
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
@@ -1075,7 +1075,7 @@ igt_main
 					test_scanout(&data);
 			}
 
-			igt_fixture
+			igt_fixture()
 				test_cleanup(&data);
 		}
 	}
@@ -1133,7 +1133,7 @@ igt_main
 					}
 					data.async_flip_test = false;
 
-					igt_fixture
+					igt_fixture()
 						test_cleanup(&data);
 				}
 			}
@@ -1141,7 +1141,7 @@ igt_main
 	}
 	data.max_hw_stride_test = false;
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		buf_ops_destroy(data.bops);
 		drm_close_driver(data.drm_fd);

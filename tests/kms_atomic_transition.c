@@ -1174,7 +1174,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 	int i, j, count = 0;
 	int pipe_count = 0;
 
-	igt_fixture {
+	igt_fixture() {
 		unsigned int debug_mask_if_ci = DRM_UT_KMS;
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 
@@ -1267,7 +1267,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

@@ -75,7 +75,7 @@ igt_main
 		igt_amdgpu_driver_unload();
 	}
 
-	igt_fixture
+	igt_fixture()
 	{
 		/* load the module back in */
 		igt_amdgpu_driver_load(NULL);

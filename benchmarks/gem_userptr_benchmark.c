@@ -454,7 +454,7 @@ igt_main
 {
 	int fd = -1, ret;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_assert(fd >= 0);
 
@@ -472,7 +472,7 @@ igt_main
 	igt_subtest("userptr-impact-sync-overlap")
 		test_impact_overlap(fd, "sync-");
 
-	igt_fixture {
+	igt_fixture() {
 		close(fd);
 	}
 }

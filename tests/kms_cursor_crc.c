@@ -989,7 +989,7 @@ static void run_size_tests(data_t *data, int w, int h)
 		snprintf(name, sizeof(name), "%dx%d", w, h);
 	}
 
-	igt_fixture
+	igt_fixture()
 		create_cursor_fb(data, w, h);
 
 	for (i = 0; i < ARRAY_SIZE(size_tests); i++) {
@@ -1028,7 +1028,7 @@ static void run_size_tests(data_t *data, int w, int h)
 		}
 	}
 
-	igt_fixture
+	igt_fixture()
 		igt_remove_fb(data->drm_fd, &data->fb);
 }
 
@@ -1037,7 +1037,7 @@ static void run_tests_on_pipe(data_t *data)
 	enum pipe pipe;
 	int cursor_size;
 
-	igt_fixture {
+	igt_fixture() {
 		data->alpha = 1.0;
 		data->flags = 0;
 	}
@@ -1103,7 +1103,7 @@ static void run_tests_on_pipe(data_t *data)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_create_color_fb(data->drm_fd, data->cursor_max_w, data->cursor_max_h,
 				DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_LINEAR,
 				1.f, 1.f, 1.f, &data->timed_fb[0]);
@@ -1151,7 +1151,7 @@ static void run_tests_on_pipe(data_t *data)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_remove_fb(data->drm_fd, &data->timed_fb[0]);
 		igt_remove_fb(data->drm_fd, &data->timed_fb[1]);
 
@@ -1200,7 +1200,7 @@ static void run_tests_on_pipe(data_t *data)
 		data->flags = 0;
 	}
 
-	igt_fixture
+	igt_fixture()
 		igt_remove_fb(data->drm_fd, &data->fb);
 
 	igt_describe("Check that sizes declared in SIZE_HINTS are accepted.");
@@ -1266,7 +1266,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	uint64_t cursor_width = 64, cursor_height = 64;
 	int ret;
 
-	igt_fixture {
+	igt_fixture() {
 		enum pipe pipe;
 
 		last_pipe = 0;
@@ -1303,7 +1303,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_subtest_group
 		run_tests_on_pipe(&data);
 
-	igt_fixture {
+	igt_fixture() {
 		if (data.pipe_crc != NULL) {
 			igt_pipe_crc_stop(data.pipe_crc);
 			igt_pipe_crc_free(data.pipe_crc);

@@ -857,7 +857,7 @@ igt_main_args("dac", NULL, help_str, opt_handler, NULL)
 
 	data_t data = {0, };
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_render(DRIVER_INTEL);
 		data.devid = intel_get_drm_devid(data.drm_fd);
 		igt_require_gem(data.drm_fd);
@@ -942,7 +942,7 @@ igt_main_args("dac", NULL, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 		buf_ops_destroy(data.bops);
 		igt_collection_destroy(set);

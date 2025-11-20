@@ -294,7 +294,7 @@ static void prop_tests(int fd)
 	struct drm_mode_obj_set_property set_prop = {};
 	uint64_t prop, prop_val, blob_id;
 
-	igt_fixture
+	igt_fixture()
 		blob_id = create_prop(fd);
 
 	get_props.props_ptr = (uintptr_t) &prop;
@@ -341,7 +341,7 @@ static void prop_tests(int fd)
 				    &set_prop) == -1 && errno == EINVAL);
 	}
 
-	igt_fixture
+	igt_fixture()
 		destroy_prop(fd, blob_id);
 }
 
@@ -349,7 +349,7 @@ igt_main
 {
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_ANY);
 		igt_require(fd >= 0);
 		igt_require_propblob(fd);
@@ -377,6 +377,6 @@ igt_main
 
 	prop_tests(fd);
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

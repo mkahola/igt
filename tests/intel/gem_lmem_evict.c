@@ -98,7 +98,7 @@ igt_main
 	struct drm_i915_query_memory_regions *regions;
 	int i915 = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		char *tmp;
 
 		if (igt_kmod_is_loaded("i915")) {
@@ -144,7 +144,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(i915);
 		igt_i915_driver_unload();
 	}

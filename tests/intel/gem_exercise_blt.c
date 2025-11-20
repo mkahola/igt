@@ -373,7 +373,7 @@ igt_main_args("b:pst:W:H:", NULL, help_str, opt_handler, NULL)
 	const intel_ctx_t *ctx;
 	int i915;
 
-	igt_fixture {
+	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(i915);
 		igt_require(blt_has_fast_copy(i915));
@@ -399,7 +399,7 @@ igt_main_args("b:pst:W:H:", NULL, help_str, opt_handler, NULL)
 		fast_copy_test(i915, ctx, set, FAST_COPY_EMIT);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(i915);
 	}
 }

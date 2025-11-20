@@ -355,7 +355,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 	};
 	int i;
 
-	igt_fixture {
+	igt_fixture() {
 		int ret;
 		enum pipe pipe;
 
@@ -387,7 +387,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
 		for (data.curw = 64; data.curw <= 256; data.curw *= 2) {
 			data.curh = data.curw;
-			igt_fixture
+			igt_fixture()
 				igt_require(data.curw <= max_curw && data.curh <= max_curh);
 
 			igt_describe_f("Checking cursor size %dx%d by walking %s of screen",
@@ -415,7 +415,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

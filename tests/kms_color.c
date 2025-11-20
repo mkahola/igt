@@ -1157,7 +1157,7 @@ run_tests_for_pipe(data_t *data)
 		}
 	}
 
-	igt_fixture
+	igt_fixture()
 		igt_require(data->display.is_atomic);
 
 	igt_describe("Verify that deep color works correctly");
@@ -1175,7 +1175,7 @@ igt_main
 {
 	data_t data = {};
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		if (is_intel_device(data.drm_fd))
 			data.devid = intel_get_drm_devid(data.drm_fd);
@@ -1190,7 +1190,7 @@ igt_main
 	igt_subtest_group
 		run_invalid_tests_for_pipe(&data);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

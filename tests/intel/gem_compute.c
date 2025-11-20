@@ -35,12 +35,12 @@ igt_main
 {
 	int i915;
 
-	igt_fixture
+	igt_fixture()
 		i915 = drm_open_driver(DRIVER_INTEL);
 
 	igt_subtest("compute-square")
 		test_compute_square(i915);
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(i915);
 }

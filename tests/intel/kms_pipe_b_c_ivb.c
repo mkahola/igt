@@ -293,7 +293,7 @@ igt_main
 {
 	int devid;
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL);
 		devid = intel_get_drm_devid(data.drm_fd);
 		igt_skip_on(!IS_IVYBRIDGE(devid));
@@ -328,7 +328,7 @@ igt_main
 	igt_subtest("enable-pipe-C-while-B-has-3-lanes")
 		test_fail_enable_pipe_C_while_B_has_3_lanes(&data);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

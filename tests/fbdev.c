@@ -116,7 +116,7 @@ static void mode_tests(int fd)
 	struct fb_var_screeninfo var_info;
 	struct fb_fix_screeninfo fix_info;
 
-	igt_fixture {
+	igt_fixture() {
 		igt_require(ioctl(fd, FBIOGET_VSCREENINFO, &var_info) == 0);
 		igt_require(ioctl(fd, FBIOGET_FSCREENINFO, &fix_info) == 0);
 	}
@@ -233,7 +233,7 @@ static void mode_tests(int fd)
 		pan_var.vmode &= ~FB_VMODE_YWRAP;
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		/* restore original panning offsets */
 		ioctl(fd, FBIOPAN_DISPLAY, &var_info);
 	}
@@ -247,7 +247,7 @@ static void framebuffer_tests(int fd)
 	unsigned char * volatile buf;
 	volatile size_t pagesize;
 
-	igt_fixture {
+	igt_fixture() {
 		long ret;
 
 		igt_require(ioctl(fd, FBIOGET_FSCREENINFO, &fix_info) == 0);
@@ -444,7 +444,7 @@ static void framebuffer_tests(int fd)
 			     ret);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		free(buf);
 		/* don't leave garbage on the screen */
 		memset(map, 0, fix_info.smem_len);
@@ -460,7 +460,7 @@ igt_main
 	 * Should this test focus on the fbdev independent of any drm driver,
 	 * or should it look for fbdev of a particular device?
 	 */
-	igt_fixture {
+	igt_fixture() {
 		fd = open("/dev/fb0", O_RDWR);
 		if (fd < 0) {
 			drm_load_module(DRIVER_ANY);
@@ -479,7 +479,7 @@ igt_main
 		framebuffer_tests(fd);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		close(fd);
 	}
 }

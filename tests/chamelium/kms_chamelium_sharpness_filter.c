@@ -245,7 +245,7 @@ igt_main
 {
 	data_t data = {};
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_XE);
 
 		igt_display_require(&data.display, data.drm_fd);
@@ -289,7 +289,7 @@ igt_main
 
 	run_sharpness_filter_test(&data);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}

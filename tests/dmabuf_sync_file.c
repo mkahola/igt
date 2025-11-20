@@ -358,7 +358,7 @@ igt_main
 {
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_VGEM);
 	}
 
@@ -399,6 +399,6 @@ igt_main
 	igt_subtest("import-multiple-read-write")
 		test_import_multiple(fd, true);
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

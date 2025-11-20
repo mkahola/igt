@@ -184,7 +184,7 @@ igt_main
 	uint32_t region;
 	int device = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		device = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(device);
 
@@ -251,7 +251,7 @@ igt_main
 			free(sub_name);
 		}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 		drm_close_driver(device);
 	}

@@ -164,7 +164,7 @@ igt_main
 	uint64_t val = 0;
 	int fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		is_x86_64 = check_kernel_x86_64();
 		has_proper_timestamp = check_timestamp(fd);
@@ -183,7 +183,7 @@ igt_main
 		test_timestamp_monotonic(fd);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 	}
 }

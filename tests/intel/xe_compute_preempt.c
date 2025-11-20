@@ -68,7 +68,7 @@ igt_main
 	struct drm_xe_engine_class_instance *hwe;
 	uint64_t ram_mb, swap_mb, vram_mb;
 
-	igt_fixture {
+	igt_fixture() {
 		xe = drm_open_driver(DRIVER_XE);
 		ram_mb = igt_get_avail_ram_mb();
 		swap_mb = igt_get_total_swap_mb();
@@ -203,7 +203,7 @@ igt_main
 		}
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(xe);
 
 }

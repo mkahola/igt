@@ -404,7 +404,7 @@ igt_main
 
 	igt_skip_on_simulation();
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_AMDGPU);
 		if (data.drm_fd == -1)
 			igt_skip("Not an amdgpu driver.\n");
@@ -420,7 +420,7 @@ igt_main
 	igt_subtest("8bpc-bypass-mode")
 		bypass_8bpc_test(&data);
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&data.display);
 	}
 }

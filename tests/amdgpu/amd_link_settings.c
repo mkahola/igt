@@ -253,7 +253,7 @@ igt_main
 
 	igt_skip_on_simulation();
 
-	igt_fixture
+	igt_fixture()
 	{
 		data.drm_fd = drm_open_driver_master(DRIVER_AMDGPU);
 		if (data.drm_fd == -1)
@@ -272,7 +272,7 @@ igt_main
 	igt_subtest("link-training-configs")
 		test_link_training_configs(&data);
 
-	igt_fixture
+	igt_fixture()
 	{
 		igt_display_fini(&data.display);
 	}

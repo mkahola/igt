@@ -312,7 +312,7 @@ igt_main
 	struct igt_collection *set, *dma_buf_set;
 	struct drm_i915_query_memory_regions *query_info;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(fd);
 
@@ -361,7 +361,7 @@ igt_main
 		intel_bb_destroy(batch);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		buf_ops_destroy(bops);
 
 		drm_close_driver(fd);

@@ -2092,7 +2092,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	};
 	int i;
 
-	igt_fixture {
+	igt_fixture() {
 		drm_fd = drm_open_driver_master(DRIVER_ANY);
 
 		igt_display_require(&display, drm_fd);
@@ -2167,7 +2167,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	}
 	igt_stop_signal_helper();
 
-	igt_fixture {
+	igt_fixture() {
 		igt_display_fini(&display);
 		drm_close_driver(drm_fd);
 	}

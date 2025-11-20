@@ -205,7 +205,7 @@ igt_main_args("dW:H:X:Y:", NULL, help_str, opt_handler, NULL)
 	struct drm_i915_query_memory_regions *region_info;
 	struct igt_collection *region_set;
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_render(DRIVER_INTEL);
 		data.devid = intel_get_drm_devid(data.drm_fd);
 		igt_require_gem(data.drm_fd);
@@ -251,7 +251,7 @@ igt_main_args("dW:H:X:Y:", NULL, help_str, opt_handler, NULL)
 			   surfheight / 2);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_collection_destroy(region_set);
 		free(region_info);
 		buf_ops_destroy(data.bops);

@@ -217,7 +217,7 @@ igt_main
 	drmModeRes *res;
 	drmModeConnector *connector;
 
-	igt_fixture {
+	igt_fixture() {
 		drm_fd = drm_open_driver_master(DRIVER_ANY);
 
 		res = drmModeGetResources(drm_fd);
@@ -239,7 +239,7 @@ igt_main
 	igt_subtest("inject-audio")
 		hdmi_inject_audio(drm_fd, connector);
 
-	igt_fixture {
+	igt_fixture() {
 		drmModeFreeConnector(connector);
 		drmModeFreeResources(res);
 		drm_close_driver(drm_fd);

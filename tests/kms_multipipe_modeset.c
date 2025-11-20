@@ -147,7 +147,7 @@ igt_main
 	data_t data;
 	drmModeResPtr res;
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		kmstest_set_vt_graphics_mode();
 
@@ -163,7 +163,7 @@ igt_main
 	igt_subtest("basic-max-pipe-crc-check")
 		test_multipipe(&data, res->count_crtcs);
 
-	igt_fixture {
+	igt_fixture() {
 		drmModeFreeResources(res);
 		igt_display_fini(&data.display);
 	}

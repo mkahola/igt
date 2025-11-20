@@ -59,7 +59,7 @@ igt_main
 {
 	int fd, kms_fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_PANFROST);
 		kms_fd = __drm_open_driver_another(1, DRIVER_ANY);
 	}
@@ -95,7 +95,7 @@ igt_main
 		igt_panfrost_free_bo(fd, bo);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drm_close_driver(fd);
 		drm_close_driver(kms_fd);
 	}

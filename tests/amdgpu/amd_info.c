@@ -124,7 +124,7 @@ igt_main
 	int fd = -1;
 	int r = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		uint32_t major, minor;
 		int err;
 
@@ -155,7 +155,7 @@ igt_main
 		query_timestamp_test(device, 7000000, 1);
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		amdgpu_device_deinitialize(device);
 		drm_close_driver(fd);
 	}

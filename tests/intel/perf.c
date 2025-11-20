@@ -5862,7 +5862,7 @@ igt_main
 	const intel_ctx_t *ctx;
 	const struct intel_execution_engine2 *e;
 
-	igt_fixture {
+	igt_fixture() {
 		struct stat sb;
 
 		/*
@@ -5884,7 +5884,7 @@ igt_main
 	igt_subtest("sysctl-defaults")
 		test_sysctl_defaults();
 
-	igt_fixture {
+	igt_fixture() {
 		/* We expect that the ref count test before these fixtures
 		 * should have closed drm_fd...
 		 */
@@ -6149,7 +6149,7 @@ igt_main
 	igt_subtest("whitelisted-registers-userspace-config")
 		test_whitelisted_registers_userspace_config();
 
-	igt_fixture {
+	igt_fixture() {
 		/* leave sysctl options in their default state... */
 		write_u64_file("/proc/sys/dev/i915/oa_max_sample_rate", 100000);
 		write_u64_file("/proc/sys/dev/i915/perf_stream_paranoid", 1);

@@ -240,7 +240,7 @@ igt_main
 	uint32_t tiling, tiling_after;
 	struct buf_ops *bops;
 
-	igt_fixture {
+	igt_fixture() {
 		for (i = 0; i < 1024*256; i++)
 			data[i] = i;
 
@@ -278,7 +278,7 @@ igt_main
 		igt_assert(tiling_after == I915_TILING_X);
 	}
 
-	igt_fixture{
+	igt_fixture(){
 		buf_ops_destroy(bops);
 		drm_close_driver(fd);
 	}

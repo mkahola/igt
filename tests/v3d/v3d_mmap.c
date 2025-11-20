@@ -30,7 +30,7 @@ igt_main
 {
 	int fd;
 
-	igt_fixture
+	igt_fixture()
 		fd = drm_open_driver(DRIVER_V3D);
 
 	igt_describe("Make sure that flags is equal to zero.");
@@ -74,6 +74,6 @@ igt_main
 		free(bo);
 	}
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

@@ -721,7 +721,7 @@ igt_main
 	igt_output_t *output;
 	drmModeModeInfoPtr modetoset = NULL;
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
 		data.gen = intel_display_ver(intel_get_drm_devid(data.drm_fd));
 		igt_require(data.gen >= 9);
@@ -778,7 +778,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		free_fbs(&data);
 		if (data.pipe_crc) {
 			igt_pipe_crc_stop(data.pipe_crc);

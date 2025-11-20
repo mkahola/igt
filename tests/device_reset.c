@@ -443,7 +443,7 @@ igt_main
 {
 	struct device_fds dev = { .fds = {-1, -1, -1}, .dev_bus_addr = {0}, };
 
-	igt_fixture {
+	igt_fixture() {
 		char dev_path[PATH_MAX];
 
 		igt_debug("opening device\n");
@@ -496,7 +496,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		cleanup_device_fds(&dev);
 	}
 }

@@ -380,7 +380,7 @@ igt_main
 
 	memset(&arg, 0, sizeof(arg));
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver_render(DRIVER_INTEL);
 
 		gem_require_contexts(fd);
@@ -483,7 +483,7 @@ igt_main
 
 	igt_describe("Test performed with context param set to priority");
 	igt_subtest_group {
-		igt_fixture {
+		igt_fixture() {
 			igt_require(gem_scheduler_has_ctx_priority(fd));
 		}
 
@@ -549,6 +549,6 @@ igt_main
 	igt_subtest("invalid-get-engines")
 		test_get_invalid_param(fd, I915_CONTEXT_PARAM_ENGINES);
 
-	igt_fixture
+	igt_fixture()
 		drm_close_driver(fd);
 }

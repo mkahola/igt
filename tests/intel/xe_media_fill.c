@@ -120,7 +120,7 @@ igt_main
 	struct data_t data = {0, };
 	igt_fillfunc_t fill_fn = NULL;
 
-	igt_fixture {
+	igt_fixture() {
 		data.drm_fd = drm_open_driver_render(DRIVER_XE);
 		data.devid = intel_get_drm_devid(data.drm_fd);
 		data.bops = buf_ops_create(data.drm_fd);
@@ -133,7 +133,7 @@ igt_main
 	igt_subtest("media-fill")
 		media_fill(&data, fill_fn);
 
-	igt_fixture {
+	igt_fixture() {
 		buf_ops_destroy(data.bops);
 		drm_close_driver(data.drm_fd);
 	}

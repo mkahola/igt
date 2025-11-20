@@ -1308,7 +1308,7 @@ igt_main
 	uint32_t devid = 0;
 	igt_display_t display;
 
-	igt_fixture
+	igt_fixture()
 	{
 		i915 = drm_open_driver(DRIVER_INTEL);
 		igt_require(i915);
@@ -1436,7 +1436,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		if (pm.debugfsdir != -1)
 			close(pm.debugfsdir);
 

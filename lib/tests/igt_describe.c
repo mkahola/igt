@@ -42,7 +42,7 @@ __noreturn static void fake_main(void)
 	igt_subtest("A")
 		;
 
-	igt_fixture
+	igt_fixture()
 		printf("should not be executed!\n");
 
 	igt_describe("Group with B, C & D");

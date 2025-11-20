@@ -2105,7 +2105,7 @@ igt_main
 	unsigned cpu = x86_64_features();
 	int fd = -1;
 
-	igt_fixture {
+	igt_fixture() {
 		igt_require(igt_setup_clflush());
 		fd = drm_open_driver(DRIVER_INTEL);
 		igt_require_gem(fd);
@@ -2127,7 +2127,7 @@ igt_main
 		unsigned ring = eb_ring(e);
 		unsigned timeout = 5 + 120*!!e->exec_id;
 
-		igt_fixture {
+		igt_fixture() {
 			gem_require_ring(fd, ring);
 			igt_require(gem_can_store_dword(fd, ring));
 		}
@@ -2208,7 +2208,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		igt_stop_hang_detector();
 		drm_close_driver(fd);
 	}

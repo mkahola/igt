@@ -208,7 +208,7 @@ igt_main
 
 	memset(&data, 0, sizeof(data));
 
-	igt_fixture
+	igt_fixture()
 	{
 		data.fd = drm_open_driver_master(DRIVER_AMDGPU);
 
@@ -227,7 +227,7 @@ igt_main
 	igt_describe("Tests HPD on each connected output after a suspend sequence");
 	igt_subtest("basic-suspend") test_hotplug_basic(&data, true);
 
-	igt_fixture
+	igt_fixture()
 	{
 		igt_display_fini(&data.display);
 	}

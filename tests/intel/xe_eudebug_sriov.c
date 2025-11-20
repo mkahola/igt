@@ -132,7 +132,7 @@ igt_main
 	bool vf_autoprobe;
 	int fd;
 
-	igt_fixture {
+	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		igt_require(igt_sriov_is_pf(fd));
 		igt_require(igt_sriov_vfs_supported(fd));
@@ -147,7 +147,7 @@ igt_main
 	igt_subtest("deny-sriov")
 		test_deny_sriov(fd);
 
-	igt_fixture {
+	igt_fixture() {
 		restore_initial_driver_state(fd, eudebug_enabled, vf_autoprobe);
 		close(fd);
 	}

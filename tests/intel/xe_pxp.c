@@ -1107,7 +1107,7 @@ igt_main
 	bool pxp_supported = true;
 	drmModeResPtr res;
 
-	igt_fixture {
+	igt_fixture() {
 		xe_fd = drm_open_driver(DRIVER_XE);
 		igt_require(xe_has_engine_class(xe_fd, DRM_XE_ENGINE_CLASS_RENDER));
 		pxp_supported = is_pxp_hw_supported(xe_fd);
@@ -1176,7 +1176,7 @@ igt_main
 		}
 	}
 
-	igt_fixture {
+	igt_fixture() {
 		drmModeFreeResources(res);
 		if (!pxp_supported)
 			drm_close_driver(xe_fd);

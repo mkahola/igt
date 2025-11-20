@@ -4093,7 +4093,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 	enum pipe pipe;
 	igt_output_t *output;
 
-	igt_fixture {
+	igt_fixture() {
 		setup_drm();
 		drm.devid = intel_get_drm_devid(drm.fd);
 		drm.display_ver = intel_display_ver(drm.devid);
@@ -4195,7 +4195,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 			}
 		}
 
-		igt_fixture
+		igt_fixture()
 			init_modeset_cached_params();
 	}
 
@@ -4459,6 +4459,6 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 		basic_subtest(&t);
 	}
 
-	igt_fixture
+	igt_fixture()
 		teardown_environment();
 }
