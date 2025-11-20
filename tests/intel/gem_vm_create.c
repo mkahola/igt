@@ -396,7 +396,7 @@ igt_main
 	igt_subtest("invalid-destroy")
 		invalid_destroy(i915);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			gem_context_require_param(i915, I915_CONTEXT_PARAM_VM);
 		}

@@ -956,7 +956,7 @@ igt_main
 		rcs_clock = 1e9 / rcs_clock;
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			igt_require(intel_gen(intel_get_drm_devid(device)) >= 7);
 
@@ -986,7 +986,7 @@ igt_main
 		test_each_engine("wakeup-latency", device, ctx, e)
 			wakeup_latency(device, ctx, e);
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				gem_require_contexts(device);
 				igt_require(gem_scheduler_has_preemption(device));

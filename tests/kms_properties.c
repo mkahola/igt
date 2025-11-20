@@ -944,7 +944,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_describe("Checks each property of any type with combination of mode object "
 			     "with legacy commit and make sure only valid properties are set to "
 			     "mode object else return with relevant error");
@@ -958,7 +958,7 @@ igt_main
 			invalid_properties(&display, true);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_describe("Test validates the properties of all planes, crtc and connectors with legacy commit");
 		igt_subtest("get_properties-sanity-non-atomic") {
 			if (display.is_atomic)
@@ -969,7 +969,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			igt_require(display.is_atomic);
 

@@ -302,7 +302,7 @@ igt_main
 
 #undef test_each_engine
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			intel_allocator_multiprocess_start();
 

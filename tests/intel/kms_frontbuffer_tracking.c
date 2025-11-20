@@ -4148,7 +4148,7 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 		plane_fbc_rte_subtest(&t);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_subtest_with_dynamic("pipe-fbc-rte") {
 
 			enum pipe default_pipe = prim_mode_params.pipe;

@@ -1156,7 +1156,7 @@ igt_main
 			RUN_TEST(defer_hangcheck(e));
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const struct intel_execution_engine2 *e2;
 		intel_ctx_cfg_t cfg = {};
 

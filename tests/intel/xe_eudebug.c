@@ -2830,7 +2830,7 @@ igt_main
 		test_basic_sessions_th(fd, 0, 1, true);
 
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		uint32_t flags[] = {0, TEST_FAULTABLE};
 		const char *suffix[] = {"", "-faultable"};
 
@@ -2926,7 +2926,7 @@ igt_main
 		drm_close_driver(fd);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			gpu_count = drm_prepare_filtered_multigpu(DRIVER_XE);
 

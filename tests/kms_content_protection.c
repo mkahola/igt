@@ -1031,7 +1031,7 @@ igt_main
 		test_content_protection(COMMIT_LEGACY, HDCP_CONTENT_TYPE_0);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			igt_require(data.display.is_atomic);
 
@@ -1054,7 +1054,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			igt_require(data.display.is_atomic);
 

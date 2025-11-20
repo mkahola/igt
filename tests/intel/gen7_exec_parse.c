@@ -579,7 +579,7 @@ igt_main
 		test_allocations(fd);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 #define REG(R, MSK, INI, V, OK, MIN_V) { #R, R, MSK, INI, V, OK, MIN_V }
 		struct test_lri lris[] = {
 			/* dummy head pointer */

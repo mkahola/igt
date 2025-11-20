@@ -1087,7 +1087,7 @@ igt_main
 	}
 
 	igt_describe("Verify the async flip functionality and the fps during async flips");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			require_monotonic_timestamp(data.drm_fd);
 

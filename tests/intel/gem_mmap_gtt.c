@@ -1750,7 +1750,7 @@ igt_main
 	igt_subtest("huge-bo-tiledY")
 		test_huge_bo(fd, 1, I915_TILING_Y);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const struct copy_size {
 			const char *prefix;
 			int size;

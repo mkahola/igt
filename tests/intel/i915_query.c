@@ -1515,7 +1515,7 @@ igt_main
 		test_query_regions_unallocated(fd);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(query_engine_info_supported(fd));
 		}

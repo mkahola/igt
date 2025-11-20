@@ -1077,7 +1077,7 @@ igt_main
 	igt_subtest("context-sequential")
 		sequential(device, handle, ctx, FORKED | CONTEXT, 20);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			gem_require_contexts(device);
 			igt_require(gem_scheduler_has_ctx_priority(device));
@@ -1091,7 +1091,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_device_set_master(device);
 		}

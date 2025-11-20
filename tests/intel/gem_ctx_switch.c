@@ -737,7 +737,7 @@ igt_main
 		e2 = &e2__;
 
 		for (typeof(*phases) *p = phases; p->name; p++) {
-			igt_subtest_group {
+			igt_subtest_group() {
 				igt_fixture() {
 					gem_require_ring(fd, e2->flags);
 					if (p->require)
@@ -766,7 +766,7 @@ igt_main
 	/* Must come after legacy subtests. */
 	for_each_ctx_cfg_engine(fd, &engines_cfg, e2) {
 		for (typeof(*phases) *p = phases; p->name; p++) {
-			igt_subtest_group {
+			igt_subtest_group() {
 				igt_fixture() {
 					if (p->require)
 						igt_require(p->require(fd));
@@ -794,7 +794,7 @@ igt_main
 	igt_subtest("all-heavy")
 		all(fd, heavy, &engines_cfg, 0, 2);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			gem_require_vm(fd);
 		}

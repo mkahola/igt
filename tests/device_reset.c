@@ -470,7 +470,7 @@ igt_main
 	}
 
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_describe("Unbinds driver from device, initiates cold reset"
 			     " then rebinds driver to device");
 		igt_subtest("unbind-cold-reset-rebind") {

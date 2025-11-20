@@ -1367,7 +1367,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 		igt_require(data.display.is_atomic);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_output_t *output;
 
 		for (int index = 0; index < ARRAY_SIZE(scaler_with_pixel_format_tests); index++) {
@@ -1600,7 +1600,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 		}
 	}
 
-	igt_subtest_group
+	igt_subtest_group()
 		invalid_parameter_tests(&data);
 
 	igt_describe("Tests scaling with multi-pipe.");

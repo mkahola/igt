@@ -3171,7 +3171,7 @@ igt_main
 		gem_submission_print_method(i915);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_hang_t hang;
 
 		igt_fixture() {
@@ -3207,13 +3207,13 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		for_each_ctx_engine(i915, ctx, e) {
 			igt_fixture() {
 				igt_require(gem_class_can_store_dword(i915, e->class));
 			}
 		}
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				igt_fork_hang_detector(i915);
 				intel_allocator_multiprocess_start();
@@ -3336,7 +3336,7 @@ igt_main
 			}
 		}
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_hang_t hang;
 
 			igt_fixture() {
@@ -3383,7 +3383,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		long ring_size = 0;
 
 		igt_fixture() {
@@ -3404,7 +3404,7 @@ igt_main
 			test_long_history(i915, ctx, ring_size, EXPIRED);
 	}
 
-	igt_subtest_group { /* syncobj */
+	igt_subtest_group() { /* syncobj */
 		igt_fixture() {
 			igt_require(exec_has_fence_array(i915));
 			igt_assert(has_syncobj(i915));
@@ -3462,7 +3462,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group { /* syncobj timeline */
+	igt_subtest_group() { /* syncobj timeline */
 		igt_fixture() {
 			igt_require(exec_has_timeline_fences(i915));
 			igt_require(has_syncobj_timeline(i915));
@@ -3505,7 +3505,7 @@ igt_main
 		igt_subtest("syncobj-timeline-multiple-ext-nodes")
 			test_syncobj_timeline_multiple_ext_nodes(i915);
 
-		igt_subtest_group { /* syncobj timeline engine chaining */
+		igt_subtest_group() { /* syncobj timeline engine chaining */
 			igt_fixture() {
 				/*
 				 * We need support for MI_ALU on all

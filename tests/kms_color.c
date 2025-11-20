@@ -1184,10 +1184,10 @@ igt_main
 		igt_display_require(&data.display, data.drm_fd);
 	}
 
-	igt_subtest_group
+	igt_subtest_group()
 		run_tests_for_pipe(&data);
 
-	igt_subtest_group
+	igt_subtest_group()
 		run_invalid_tests_for_pipe(&data);
 
 	igt_fixture() {

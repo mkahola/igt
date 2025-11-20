@@ -150,7 +150,7 @@ igt_main
 	}
 
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		uint8_t saved_perm;
 		char buf[255];
 

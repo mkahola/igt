@@ -627,7 +627,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(data.big_joiner_output_count > 0);
 			igt_require(data.n_pipes > 1);
@@ -657,7 +657,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(data.non_big_joiner_output_count > 0);
 			igt_require(data.n_pipes > 1);
@@ -699,7 +699,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(data.ultra_joiner_output_count > 0);
 			igt_require(data.n_pipes > 3);
@@ -723,7 +723,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(ultra_joiner_supported);
 			igt_require(data.non_ultra_joiner_output_count > 0);

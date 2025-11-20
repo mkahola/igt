@@ -122,7 +122,7 @@
  * of subtests and automatically skips the subtest code blocks themselves. For
  * special cases igt_only_list_subtests() is also provided. For setup code only
  * shared by a group of subtest encapsulate the #igt_fixture() block and all the
- * subtestest in a #igt_subtest_group block.
+ * subtestest in a #igt_subtest_group() block.
  *
  * # Magic Control Blocks
  *
@@ -1500,7 +1500,7 @@ bool __igt_run_subtest(const char *subtest_name, const char *file, const int lin
 {
 	internal_assert(!igt_can_fail(),
 			"igt_subtest can be nested only in igt_main"
-			" or igt_subtest_group\n");
+			" or igt_subtest_group()\n");
 
 	if (!valid_name_for_subtest(subtest_name)) {
 		igt_critical("Invalid subtest name \"%s\".\n",
@@ -1627,7 +1627,7 @@ bool igt_only_list_subtests(void)
 void __igt_subtest_group_save(int *save, int *desc)
 {
 	internal_assert(test_with_subtests,
-			"igt_subtest_group is not allowed in igt_simple_main\n");
+			"igt_subtest_group() is not allowed in igt_simple_main\n");
 
 	if (__current_description[0] != '\0') {
 		struct description_node *new = calloc(1, sizeof(*new));
@@ -1992,7 +1992,7 @@ bool igt_can_fail(void)
  * @fmt: format string containing description
  * @...: argument used by the format string
  *
- * Attach a description to the following #igt_subtest or #igt_subtest_group
+ * Attach a description to the following #igt_subtest or #igt_subtest_group()
  * block.
  *
  * Check #igt_describe for more details.

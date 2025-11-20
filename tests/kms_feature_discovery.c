@@ -80,7 +80,7 @@ igt_main {
 		debugfs_fd = igt_debugfs_dir(fd);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_display_require(&display, fd);
 		}
@@ -90,7 +90,7 @@ igt_main {
 			/* will skip because of the fixture */
 		}
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			volatile int output_count = 0;
 			igt_output_t *output;
 			enum pipe pipe;

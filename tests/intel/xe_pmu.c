@@ -1129,7 +1129,7 @@ igt_main
 		engine_activity_load_all(fd, num_engines, TEST_LOAD);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const unsigned int percent[] = { 2, 50, 90 };
 
 		for (unsigned int i = 0; i < ARRAY_SIZE(percent); i++) {
@@ -1151,7 +1151,7 @@ igt_main
 	test_each_engine("engine-activity-multi-client", fd, eci)
 		engine_activity_multi_client(fd, eci);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		int render_fd;
 
 		igt_fixture() {
@@ -1175,7 +1175,7 @@ igt_main
 			drm_close_driver(render_fd);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		unsigned int num_fns;
 
 		igt_fixture()
@@ -1201,7 +1201,7 @@ igt_main
 			unprovision_and_disable_vfs(fd);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		bool has_freq0_node, needs_freq_restore = false;
 		uint32_t *stash_min, *stash_max;
 

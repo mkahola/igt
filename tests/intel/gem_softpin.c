@@ -1484,7 +1484,7 @@ igt_main
 	igt_subtest("invalid")
 		test_invalid(fd);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		/* Under full-ppgtt, we have complete control of the GTT */
 
 		igt_fixture() {
@@ -1553,7 +1553,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(gem_uses_full_ppgtt(fd));
 			intel_allocator_multiprocess_start();

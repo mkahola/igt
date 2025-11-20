@@ -470,12 +470,12 @@ igt_main
 	}
 
 	igt_describe("Check modesetting");
-	igt_subtest_group {
+	igt_subtest_group() {
 		mode_tests(fd);
 	}
 
 	igt_describe("Check framebuffer access");
-	igt_subtest_group {
+	igt_subtest_group() {
 		framebuffer_tests(fd);
 	}
 

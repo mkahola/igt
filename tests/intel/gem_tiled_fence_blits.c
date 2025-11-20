@@ -325,7 +325,7 @@ igt_main
 	igt_subtest("basic")
 		run_test(fd, 2, end);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			intel_allocator_multiprocess_start();
 		}

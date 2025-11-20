@@ -2123,7 +2123,7 @@ igt_main
 		igt_fork_hang_detector(fd);
 	}
 
-	for (e = intel_execution_rings; e->name; e++) igt_subtest_group {
+	for (e = intel_execution_rings; e->name; e++) igt_subtest_group() {
 		unsigned ring = eb_ring(e);
 		unsigned timeout = 5 + 120*!!e->exec_id;
 

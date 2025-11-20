@@ -159,7 +159,7 @@ igt_main
 		ctx = intel_ctx_create_all_physical(fd);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const struct mode {
 			const char *name;
 			unsigned int flags;

@@ -557,7 +557,7 @@ igt_main
 	}
 
 	igt_describe("VGEM subtests");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			second_fd_vgem =
 				__drm_open_driver_another(1, DRIVER_VGEM);

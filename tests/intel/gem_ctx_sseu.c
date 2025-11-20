@@ -528,7 +528,7 @@ igt_main
 		igt_require(kernel_has_per_context_sseu_support(fd));
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			drm_i915_getparam_t gp;
 

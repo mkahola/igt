@@ -248,7 +248,7 @@ igt_main
 	igt_subtest("invalid-buf")
 		invalid_buf(fd);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		static const struct {
 			const char *name;
 			unsigned int flags;
@@ -278,7 +278,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		static const struct {
 			const char *name;
 			unsigned int flags;

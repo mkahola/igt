@@ -1226,7 +1226,7 @@ static void run_tests_on_pipe(data_t *data)
 		int w = cursor_size;
 		int h = cursor_size;
 
-		igt_subtest_group
+		igt_subtest_group()
 			run_size_tests(data, w, h);
 
 		/*
@@ -1236,7 +1236,7 @@ static void run_tests_on_pipe(data_t *data)
 		 */
 		h /= 3;
 
-		igt_subtest_group
+		igt_subtest_group()
 			run_size_tests(data, w, h);
 	}
 
@@ -1300,7 +1300,7 @@ igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	data.cursor_max_w = cursor_width;
 	data.cursor_max_h = cursor_height;
 
-	igt_subtest_group
+	igt_subtest_group()
 		run_tests_on_pipe(&data);
 
 	igt_fixture() {

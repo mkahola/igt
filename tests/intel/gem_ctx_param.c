@@ -482,7 +482,7 @@ igt_main
 	}
 
 	igt_describe("Test performed with context param set to priority");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(gem_scheduler_has_ctx_priority(fd));
 		}

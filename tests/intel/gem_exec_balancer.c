@@ -3440,7 +3440,7 @@ igt_main
 	igt_subtest("busy")
 		busy(i915);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		static const struct {
 			const char *name;
 			unsigned int flags;
@@ -3483,7 +3483,7 @@ igt_main
 	igt_subtest("bonded-semaphore")
 		bonded_semaphore(i915);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			intel_allocator_multiprocess_start();
 		}
@@ -3509,7 +3509,7 @@ igt_main
 		igt_stop_hang_detector();
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(has_logical_mapping(i915));
 			igt_require(has_parallel_execbuf(i915));
@@ -3546,7 +3546,7 @@ igt_main
 			parallel_balancer(i915, 0);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_hang_t  hang;
 
 		igt_fixture()
@@ -3565,7 +3565,7 @@ igt_main
 			hangme(i915);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require_gem(i915); /* reset parameters */
 			igt_require(has_persistence(i915));

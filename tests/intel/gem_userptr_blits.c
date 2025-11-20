@@ -2532,7 +2532,7 @@ igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			/* Either mode will do for parameter checking */
 			gem_userptr_test_synchronized();
@@ -2577,7 +2577,7 @@ igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		gem_userptr_test_unsynchronized();
 
 		igt_fixture() {
@@ -2671,7 +2671,7 @@ igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 		igt_stop_signal_helper();
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		gem_userptr_test_synchronized();
 
 		igt_fixture() {
@@ -2797,7 +2797,7 @@ igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 		igt_stop_signal_helper();
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			gem_userptr_test_synchronized();
 			if (!has_userptr(fd))

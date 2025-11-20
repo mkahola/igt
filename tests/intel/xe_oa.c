@@ -5084,7 +5084,7 @@ igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 	igt_subtest("short-reads")
 		test_short_reads();
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_subtest_with_dynamic("mi-rpc")
 			__for_oa_unit_by_type(DRM_XE_OA_UNIT_TYPE_OAG)
 				test_mi_rpc(oau);
@@ -5103,7 +5103,7 @@ igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_subtest("oa-unit-exclusive-stream")
 			test_oa_unit_exclusive_stream();
 
@@ -5135,7 +5135,7 @@ igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 	igt_subtest("whitelisted-registers-userspace-config")
 		test_whitelisted_registers_userspace_config();
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_subtest_with_dynamic("map-oa-buffer")
 			__for_oa_unit_by_type(DRM_XE_OA_UNIT_TYPE_OAG)
 				test_mapped_oa_buffer(check_reports_from_mapped_buffer, oau);
@@ -5169,7 +5169,7 @@ igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 			test_tail_address_wrap(oau, buf_sizes[k].size);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			perf_init_whitelist();
 		}
@@ -5191,7 +5191,7 @@ igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(oau->capabilities & DRM_XE_OA_CAPS_SYNCS);
 		}

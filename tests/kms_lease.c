@@ -1252,7 +1252,7 @@ igt_main
 	}
 
 	//Display dependent subtests
-	igt_subtest_group {
+	igt_subtest_group() {
 
 		const struct {
 			const char *name;
@@ -1312,7 +1312,7 @@ igt_main
 	}
 
 	//Display independent subtests
-	igt_subtest_group {
+	igt_subtest_group() {
 
 		igt_describe("Tests error handling while creating invalid corner-cases for "
 			     "create-lease ioctl");

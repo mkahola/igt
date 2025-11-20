@@ -16,7 +16,7 @@
 
 /*
  * NOTE: this test is using a lot of variables that are changed in igt_fixture(),
- * igt_subtest_group and igt_subtests blocks but defined outside of them.
+ * igt_subtest_group() and igt_subtests blocks but defined outside of them.
  *
  * Such variables have to be either non-local or volatile, otherwise their
  * contents is undefined due to longjmps the framework performs.
@@ -323,7 +323,7 @@ igt_main
 		igt_assert_eq(settings->dmesg_warn_level, 4);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char *cwd;
 		char *path;
 
@@ -355,7 +355,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const char tmptestlist[] = "tmp.testlist";
 		char dirname[] = "tmpdirXXXXXX";
 		char pathtotestlist[64];
@@ -757,7 +757,7 @@ igt_main
 		igt_assert(settings->sync);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char filename[] = "tmplistXXXXXX";
 
 		igt_fixture() {
@@ -798,7 +798,7 @@ igt_main
 		igt_assert(!validate_settings(settings));
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char dirname[] = "tmpdirXXXXXX";
 		struct job_list *list = malloc(sizeof(*list));
 
@@ -833,7 +833,7 @@ igt_main
 	job_list_filter_test("piglit-names", "-t", "igt@successtest", 2, 1);
 	job_list_filter_test("piglit-names-subtest", "-t", "igt@successtest@first", 1, 1);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char filename[] = "tmplistXXXXXX";
 		const char testlisttext[] = "igt@successtest@first-subtest\n"
 			"igt@successtest@second-subtest\n"
@@ -903,7 +903,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char filename[] = "tmplistXXXXXX";
 		const char testlisttext[] = "igt@dynamic@dynamic-subtest@passing\n"
 			"igt@dynamic@dynamic-subtest@failing\n"
@@ -963,7 +963,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char dirname[] = "tmpdirXXXXXX";
 		volatile int dirfd = -1, fd = -1;
 		struct settings *cmp_settings = malloc(sizeof(*cmp_settings));
@@ -1028,7 +1028,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char dirname[] = "tmpdirXXXXXX";
 		volatile int dirfd = -1, fd = -1;
 		struct job_list *list, *cmp_list;
@@ -1086,7 +1086,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char dirname[] = "tmpdirXXXXXX";
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1, subdirfd = -1, fd = -1;
@@ -1170,7 +1170,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char dirname[] = "tmpdirXXXXXX";
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1, fd = -1;
@@ -1219,7 +1219,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char dirname[] = "tmpdirXXXXXX";
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1, subdirfd = -1, fd = -1;
@@ -1276,7 +1276,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char dirname[] = "tmpdirXXXXXX";
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1, subdirfd = -1, fd = -1;
@@ -1332,7 +1332,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char dirname[] = "tmpdirXXXXXX";
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1, subdirfd = -1, fd = -1;
@@ -1388,7 +1388,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char dirname[] = "tmpdirXXXXXX";
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1, subdirfd = -1, fd = -1;
@@ -1444,7 +1444,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char dirname[] = "tmpdirXXXXXX";
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1, subdirfd = -1, fd = -1;
@@ -1503,7 +1503,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		char dirname[] = "tmpdirXXXXXX";
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1, subdirfd = -1, fd = -1;
@@ -1563,7 +1563,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1, subdirfd = -1, fd = -1;
 		int multiple;
@@ -1633,7 +1633,7 @@ igt_main
 			free(list);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_subtest("metadata-read-old-style-infer-dmesg-warn-piglit-style") {
 			char metadata[] = "piglit_style_dmesg : 1\n";
 			FILE *f = fmemopen(metadata, strlen(metadata), "r");
@@ -1699,7 +1699,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1, subdirfd = -1, fd = -1;
 		int multiple;
@@ -1786,7 +1786,7 @@ igt_main
 			free(list);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const char testlisttext[] = "igt@dynamic@dynamic-subtest@passing\n";
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1;
@@ -1849,7 +1849,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const char testlisttext[] = "igt@successtest";
 		const char blocktext[] = "igt@successtest@first";
 		const char blocktext_upper[] = "igt@successTEST@first";
@@ -1944,7 +1944,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1;
 		char dirname[] = "tmpdirXXXXXX";
@@ -1990,7 +1990,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1;
 		char dirname[] = "tmpdirXXXXXX";
@@ -2036,7 +2036,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1;
 
@@ -2092,7 +2092,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1;
 
@@ -2152,7 +2152,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1;
 
@@ -2215,7 +2215,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct job_list *list = malloc(sizeof(*list));
 		volatile int dirfd = -1;
 

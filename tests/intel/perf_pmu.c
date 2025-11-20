@@ -2423,7 +2423,7 @@ igt_main
 	 * Check that reported usage is correct when PMU is
 	 * enabled after two batches are running.
 	 */
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() gem_require_contexts(fd);
 
 		test_each_engine("busy-double-start", fd, ctx, e)
@@ -2437,7 +2437,7 @@ igt_main
 	test_each_engine("enable-race", fd, ctx, e)
 		test_enable_race(fd, ctx, e);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const unsigned int pct[] = { 2, 50, 98 };
 
 		/**
@@ -2537,7 +2537,7 @@ igt_main
 	/**
 	 * Check render nodes are counted.
 	 */
-	igt_subtest_group {
+	igt_subtest_group() {
 		int render_fd = -1;
 		const intel_ctx_t *render_ctx = NULL;
 

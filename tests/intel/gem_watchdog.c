@@ -592,7 +592,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_subtest("default-physical")
 			physical(i915, ctx);
 

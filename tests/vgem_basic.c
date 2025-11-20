@@ -559,7 +559,7 @@ igt_main
 	igt_subtest("busy-fence")
 		test_busy_fence(fd);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(has_prime_export(fd));
 		}
@@ -574,7 +574,7 @@ igt_main
 		igt_subtest("dmabuf-mmap")
 			test_dmabuf_mmap(fd);
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				igt_require(vgem_has_fences(fd));
 			}

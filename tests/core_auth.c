@@ -241,7 +241,7 @@ igt_main
 	}
 
 	/* above tests require that no drm fd is open */
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fd_t(master);
 
 		igt_fixture()

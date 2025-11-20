@@ -1035,7 +1035,7 @@ igt_main
 		cfg = intel_ctx_cfg_all_physical(i915);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(gem_has_vm(i915));
 			igt_fork_hang_detector(i915);
@@ -1071,7 +1071,7 @@ igt_main
 		 * enough to reduce the queue into just another context,
 		 * and so rely on gem_exec_schedule to prove the rest.
 		 */
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				igt_require(gem_scheduler_enabled(i915));
 				igt_require(gem_scheduler_has_ctx_priority(i915));
@@ -1100,7 +1100,7 @@ igt_main
 			}
 		}
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				igt_require(gem_scheduler_enabled(i915));
 				igt_require(gem_scheduler_has_ctx_priority(i915));

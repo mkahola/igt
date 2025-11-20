@@ -1677,7 +1677,7 @@ igt_main
 	for (f = flags; f->name; f++) {
 		igt_hang_t hang;
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				if (f->flags & HANG)
 					hang = igt_allow_hang(fd, 0, 0);
@@ -1752,7 +1752,7 @@ igt_main
 	igt_subtest("invalid-domains")
 		invalid_domains(fd);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_display_t display = {
 			.drm_fd = fd,
 			.n_pipes = IGT_MAX_PIPES

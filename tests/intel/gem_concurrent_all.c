@@ -1577,7 +1577,7 @@ run_mode(const char *prefix,
 				igt_fork_hang_detector(fd);
 
 		for (p = all ? pipelines : pskip; p->prefix; p++) {
-			igt_subtest_group  {
+			igt_subtest_group()  {
 				igt_fixture() p->require();
 
 				igt_subtest_f("%s-%s-%s-sanitycheck0%s%s", prefix, mode->name, p->prefix, suffix, h->suffix) {
@@ -1735,7 +1735,7 @@ run_modes(const char *style,
 	};
 
 	while (mode->name) {
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				if (mode->require)
 					mode->require(create, num);
@@ -1920,7 +1920,7 @@ igt_main
 			/* Minimum test set */
 			snprintf(name, sizeof(name), "%s%s-%s",
 				 c->name, s->name, "tiny");
-			igt_subtest_group {
+			igt_subtest_group() {
 				igt_fixture() {
 					count = num_buffers(0, s, c, CHECK_RAM);
 				}
@@ -1930,7 +1930,7 @@ igt_main
 			/* "Average" test set */
 			snprintf(name, sizeof(name), "%s%s-%s",
 				 c->name, s->name, "small");
-			igt_subtest_group {
+			igt_subtest_group() {
 				igt_fixture() {
 					count = num_buffers(gem_mappable_aperture_size(fd)/4,
 							    s, c, CHECK_RAM);
@@ -1941,7 +1941,7 @@ igt_main
 			/* Use the entire mappable aperture */
 			snprintf(name, sizeof(name), "%s%s-%s",
 				 c->name, s->name, "thrash");
-			igt_subtest_group {
+			igt_subtest_group() {
 				igt_fixture() {
 					count = num_buffers(gem_mappable_aperture_size(fd),
 							    s, c, CHECK_RAM);
@@ -1952,7 +1952,7 @@ igt_main
 			/* Use the entire global GTT */
 			snprintf(name, sizeof(name), "%s%s-%s",
 				 c->name, s->name, "global");
-			igt_subtest_group {
+			igt_subtest_group() {
 				igt_fixture() {
 					count = num_buffers(gem_global_aperture_size(fd),
 							    s, c, CHECK_RAM);
@@ -1963,7 +1963,7 @@ igt_main
 			/* Use the entire per-process GTT */
 			snprintf(name, sizeof(name), "%s%s-%s",
 				 c->name, s->name, "full");
-			igt_subtest_group {
+			igt_subtest_group() {
 				igt_fixture() {
 					count = num_buffers(gem_aperture_size(fd),
 							    s, c, CHECK_RAM);
@@ -1973,7 +1973,7 @@ igt_main
 
 			snprintf(name, sizeof(name), "%s%s-%s",
 				 c->name, s->name, "shrink");
-			igt_subtest_group {
+			igt_subtest_group() {
 				igt_fixture() {
 					count = num_buffers(gem_mappable_aperture_size(fd),
 							    s, c, CHECK_RAM);
@@ -1989,7 +1989,7 @@ igt_main
 			/* Use the entire mappable aperture, force swapping */
 			snprintf(name, sizeof(name), "%s%s-%s",
 				 c->name, s->name, "swap");
-			igt_subtest_group {
+			igt_subtest_group() {
 				igt_fixture() {
 					if (igt_get_avail_ram_mb() > gem_mappable_aperture_size(fd)/(1024*1024)) {
 						pin_sz = igt_get_avail_ram_mb() - gem_mappable_aperture_size(fd)/(1024*1024);

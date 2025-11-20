@@ -540,7 +540,7 @@ igt_main
 
 	igt_describe("Race the execution and interrupt handlers along a context,"
 	             " while closing it at a random time.");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			intel_allocator_multiprocess_start();
 		}

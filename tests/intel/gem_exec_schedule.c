@@ -3222,7 +3222,7 @@ igt_main
 		igt_fork_hang_detector(fd);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const struct intel_execution_engine2 *e;
 
 		test_each_ggtt_binder_nonblocking_engine("fifo", fd, ctx, e)
@@ -3244,7 +3244,7 @@ igt_main
 			independent(fd, ctx, e->flags, IGT_SPIN_USERPTR);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const struct intel_execution_engine2 *e;
 
 		igt_fixture() {
@@ -3266,7 +3266,7 @@ igt_main
 		test_each_engine("u-lateslice", fd, ctx, e)
 			lateslice(fd, &ctx->cfg, e->flags, IGT_SPIN_USERPTR);
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				igt_require(gem_scheduler_has_timeslicing(fd));
 				igt_require(intel_gen(intel_get_drm_devid(fd)) >= 8);
@@ -3345,7 +3345,7 @@ igt_main
 		test_each_ggtt_binder_nonblocking_engine("promotion", fd, ctx, e)
 			promotion(fd, &ctx->cfg, e->flags);
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				igt_require(gem_scheduler_has_preemption(fd));
 			}
@@ -3371,7 +3371,7 @@ igt_main
 			test_each_engine_store("preempt-engines", fd, ctx, e)
 				preempt_engines(fd, e, 0);
 
-			igt_subtest_group {
+			igt_subtest_group() {
 				igt_fixture() {
 					igt_require(!gem_scheduler_has_static_priority(fd));
 				}
@@ -3388,7 +3388,7 @@ igt_main
 					preempt_queue(fd, &ctx->cfg, e->flags, CONTEXTS | CHAIN);
 			}
 
-			igt_subtest_group {
+			igt_subtest_group() {
 				igt_hang_t hang;
 
 				igt_fixture() {
@@ -3431,7 +3431,7 @@ igt_main
 		test_each_engine_store("smoketest", fd, ctx, e)
 			smoketest(fd, &ctx->cfg, e->flags, 5);
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				igt_require(!gem_scheduler_has_static_priority(fd));
 			}
@@ -3441,7 +3441,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const struct intel_execution_engine2 *e;
 
 		igt_fixture() {
@@ -3466,7 +3466,7 @@ igt_main
 			test_pi_iova(fd, &ctx->cfg, e->flags, SHARED);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(gem_scheduler_enabled(fd));
 			igt_require(gem_scheduler_has_semaphores(fd));

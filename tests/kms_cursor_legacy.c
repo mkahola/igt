@@ -1858,7 +1858,7 @@ igt_main
 
 	igt_describe("Test checks how many cursor updates we can fit between vblanks "
 		     "on single/all pipes with different modes, priority and number of processes");
-	igt_subtest_group {
+	igt_subtest_group() {
 		enum pipe n;
 		struct {
 			const char *name;
@@ -1891,7 +1891,7 @@ igt_main
 
 	igt_describe("Test checks how many cursor updates we can fit between vblanks "
 		    "on all pipes with different modes, priority and number of processes");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			igt_display_require_output(&display);
 
@@ -1904,7 +1904,7 @@ igt_main
 
 	igt_describe("Test changes the cursor hotspot and checks that the "
 		      "property is updated accordignly");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			igt_display_require_output(&display);
 
@@ -1915,7 +1915,7 @@ igt_main
 
 	igt_describe("This test executes flips on both CRTCs "
 		     "while running cursor updates in parallel");
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct {
 			const char *name;
 			int nloops;
@@ -1944,7 +1944,7 @@ igt_main
 
 	igt_describe("This test executes flips on both CRTCs "
 		     "while running cursor updates in parallel");
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct {
 			const char *name;
 			int nloops;
@@ -1968,7 +1968,7 @@ igt_main
 	}
 
 	igt_describe("Test will first does a page flip and then cursor update");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require_pipe_crc(display.drm_fd);
 			igt_display_require_output(&display);
@@ -1982,7 +1982,7 @@ igt_main
 	}
 
 	igt_describe("this test perform a busy bo update followed by a cursor update");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require_intel(display.drm_fd);
 			igt_require_pipe_crc(display.drm_fd);
@@ -2001,7 +2001,7 @@ igt_main
 		"* atomic-transition: alternates between a full screen sprite plane "
 			"and full screen primary plane.\n"
 		"* toggle: which toggles cursor visibility and make sure cursor moves between updates.");
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct {
 			const char *name;
 			enum basic_flip_cursor order;
@@ -2043,7 +2043,7 @@ igt_main
 
 	igt_describe("The essence of the basic test is that neither the cursor nor the "
 		     "nonblocking flip stall the application of the next");
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct {
 			const char *name;
 			int cursor_pipe;

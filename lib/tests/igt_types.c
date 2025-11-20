@@ -73,7 +73,7 @@ igt_main
 
 	/* But not before we go out of scope! */
 	cleanup_called = 0;
-	igt_subtest_group {
+	igt_subtest_group() {
 		scoped_int_t(x);
 
 		igt_fixture() {
@@ -112,7 +112,7 @@ igt_main
 	 * will get cleanup on the outer scope.
 	 */
 	cleanup_called = 0;
-	igt_subtest_group {
+	igt_subtest_group() {
 		scoped_int_t(x);
 
 		igt_describe("Check skipping a subtest group");
@@ -131,7 +131,7 @@ igt_main
 		igt_assert(cleanup_called);
 
 	cleanup_called = 0;
-	igt_subtest_group
+	igt_subtest_group()
 		delegate();
 	igt_describe("Check cleanup after group delegation");
 	igt_subtest("cleanup-after-group-delegation")
@@ -145,7 +145,7 @@ igt_main
 		igt_assert(cleanup_called);
 
 	cleanup_called = 0;
-	igt_subtest_group
+	igt_subtest_group()
 		skip_delegate();
 	igt_describe("Check cleanup after skipping group delegation");
 	igt_subtest("cleanup-after-group-skipped-delegation")

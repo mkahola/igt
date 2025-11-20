@@ -984,7 +984,7 @@ igt_main
 	}
 
 	igt_describe("Create buffer objects while GPU is busy.");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			igt_fork_hang_detector(fd);
 

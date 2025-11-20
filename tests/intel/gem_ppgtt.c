@@ -474,7 +474,7 @@ igt_main
 		flink_and_close();
 
 	igt_describe("Regression test to verify GTT eviction can't randomly fail due to object lock contention");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_subtest("shrink-vs-evict-any")
 			shrink_vs_evict(IGT_USE_ANY);
 		igt_subtest("shrink-vs-evict-pinned")

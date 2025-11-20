@@ -640,7 +640,7 @@ igt_main_args("d", long_options, help_str, opt_handler, NULL)
 		unsigned int fb_id;
 		drmModeModeInfo mode;
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				output = kms_writeback_get_output(&display,
 								  formats[j].fourcc_in,

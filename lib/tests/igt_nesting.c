@@ -47,8 +47,8 @@ __noreturn static void all_valid(void)
 	igt_fixture() {
 	}
 
-	igt_subtest_group {
-		igt_subtest_group {
+	igt_subtest_group() {
+		igt_subtest_group() {
 		}
 
 		igt_fixture() {
@@ -101,7 +101,7 @@ __noreturn static void invalid_subtest_group_in_simple_test(void)
 {
 	igt_simple_init(fake_argc, fake_argv);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 	}
 
 	igt_exit();

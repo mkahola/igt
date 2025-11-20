@@ -353,7 +353,7 @@ igt_main
 		igt_require_gem(i915);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		struct intel_mmio_data mmio;
 		int sysfs;
 

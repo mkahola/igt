@@ -477,7 +477,7 @@ static void tiling_tests(int fd)
 	f.pixel_format = DRM_FORMAT_XRGB8888;
 	f.pitches[0] = 1024*4;
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require_intel(fd);
 			tiled_x_bo = igt_create_bo_with_dimensions(fd, 1024, 1024,
@@ -704,7 +704,7 @@ static void addfb25_tests(int fd)
 		do_ioctl_err(fd, DRM_IOCTL_MODE_ADDFB2, &f, EINVAL);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require_intel(fd);
 			if (is_i915_device(fd)) {
@@ -989,22 +989,22 @@ igt_main
 		igt_require(has_addfb2_iface(fd));
 	}
 
-	igt_subtest_group
+	igt_subtest_group()
 		invalid_tests(fd);
 
-	igt_subtest_group
+	igt_subtest_group()
 		pitch_tests(fd);
 
-	igt_subtest_group
+	igt_subtest_group()
 		prop_tests(fd);
 
-	igt_subtest_group
+	igt_subtest_group()
 		master_tests(fd);
 
-	igt_subtest_group
+	igt_subtest_group()
 		tiling_tests(fd);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			igt_display_require(&display, fd);
 

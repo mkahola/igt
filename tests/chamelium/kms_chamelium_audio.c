@@ -859,7 +859,7 @@ igt_main
 	}
 
 	igt_describe("DisplayPort tests");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			chamelium_require_connector_present(
 				data.ports, DRM_MODE_CONNECTOR_DisplayPort,
@@ -877,7 +877,7 @@ igt_main
 	}
 
 	igt_describe("HDMI tests");
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			chamelium_require_connector_present(
 				data.ports, DRM_MODE_CONNECTOR_HDMIA,

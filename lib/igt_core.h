@@ -388,7 +388,7 @@ bool igt_only_list_subtests(void);
 void __igt_subtest_group_save(int *, int *);
 void __igt_subtest_group_restore(int, int);
 /**
- * igt_subtest_group:
+ * igt_subtest_group():
  *
  * Group a set of subtests together with their common setup code
  *
@@ -402,7 +402,7 @@ void __igt_subtest_group_restore(int, int);
  * clauses. If any common setup in a fixture fails, only the subtests in this
  * group will fail or skip. Subtest groups can be arbitrarily nested.
  */
-#define igt_subtest_group for (int igt_unique(__tmpint) = 0, \
+#define igt_subtest_group() for (int igt_unique(__tmpint) = 0, \
 			       igt_unique(__save) = 0, \
 			       igt_unique(__desc) = 0; \
 			       igt_unique(__tmpint) < 1 && \
@@ -556,7 +556,7 @@ void igt_describe_f(const char *fmt, ...);
  * igt_describe:
  * @dsc: string containing description
  *
- * Attach a description to the following #igt_subtest or #igt_subtest_group
+ * Attach a description to the following #igt_subtest or #igt_subtest_group()
  * block.
  *
  * The description should complement the test/subtest name and provide more
@@ -588,7 +588,7 @@ void igt_describe_f(const char *fmt, ...);
  *
  *
  * Resulting #igt_subtest documentation is a concatenation of its own
- * description and all the parenting #igt_subtest_group descriptions, starting
+ * description and all the parenting #igt_subtest_group() descriptions, starting
  * from the outermost one. Example:
  *
  * |[<!-- language="C" -->
@@ -598,7 +598,7 @@ void igt_describe_f(const char *fmt, ...);
  * igt_main
  * {
  * 	igt_describe("Desc of the subgroup with A and B");
- * 	igt_subtest_group {
+ * 	igt_subtest_group() {
  * 		igt_describe("Desc of the subtest A");
  * 		igt_subtest("subtest-a") {
  * 			...
@@ -638,7 +638,7 @@ void igt_describe_f(const char *fmt, ...);
  * ]|
  *
  * Every single #igt_subtest does not have to be preceded with a #igt_describe
- * as long as it has good-enough explanation provided on the #igt_subtest_group
+ * as long as it has good-enough explanation provided on the #igt_subtest_group()
  * level.
  *
  * Example:
@@ -649,7 +649,7 @@ void igt_describe_f(const char *fmt, ...);
  * igt_main
  * {
  * 	igt_describe("check xyz with different tilings");
- * 	igt_subtest_group {
+ * 	igt_subtest_group() {
  * 		// no need for extra description, group is enough and tiling is
  * 		// obvious from the test name
  * 		igt_subtest("foo-tiling-x") {

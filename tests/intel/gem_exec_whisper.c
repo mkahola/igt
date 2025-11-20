@@ -756,7 +756,7 @@ igt_main
 		igt_stop_hang_detector();
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		for (const struct mode *m = modes; m->name; m++) {
 			if (m->flags & INTERRUPTIBLE)
 				continue;

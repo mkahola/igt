@@ -1213,7 +1213,7 @@ igt_main
 	}
 
 	/* Fence testing */
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(vgem_has_fences(vgem));
 		}
@@ -1236,7 +1236,7 @@ igt_main
 		igt_subtest("basic-fence-flip")
 			test_flip(i915, vgem, 0);
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				igt_require(vgem_fence_has_flag(vgem, WIP_VGEM_FENCE_NOTIMEOUT));
 			}
@@ -1257,7 +1257,7 @@ igt_main
 	}
 
 	/* Fence testing, requires multiprocess allocator */
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(vgem_has_fences(vgem));
 			intel_allocator_multiprocess_start();

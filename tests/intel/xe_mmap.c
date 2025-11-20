@@ -458,7 +458,7 @@ igt_main
 		test_mmap(fd, vram_memory(fd, 0) | system_memory(fd),
 			  DRM_XE_GEM_CREATE_FLAG_NEEDS_VISIBLE_VRAM);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		int fw_handle = -1;
 
 		igt_subtest("pci-membarrier") {

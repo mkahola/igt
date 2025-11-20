@@ -763,7 +763,7 @@ igt_main
 		kmstest_set_vt_graphics_mode();
 	}
 
-	igt_subtest_group
+	igt_subtest_group()
 		run_tests_for_pipe(&data);
 
 	igt_fixture() {

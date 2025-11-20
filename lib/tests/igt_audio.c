@@ -180,7 +180,7 @@ igt_main
 	int ret;
 	size_t i;
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			signal = audio_signal_init(CHANNELS, SAMPLING_RATE);
 

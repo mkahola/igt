@@ -637,7 +637,7 @@ igt_main
 	igt_subtest("write-cpu-read-wc-unflushed")
 		test_write_cpu_read_wc(fd, 0);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() gem_require_mappable_ggtt(fd);
 		igt_subtest("write-wc-read-gtt")
 			test_write_wc_read_gtt(fd);

@@ -1184,7 +1184,7 @@ igt_main_args("drs:", long_opts, help_str, opt_handler, &data)
 	igt_subtest_with_dynamic("max-min")
 		run_vrr_test(&data, test_basic, TEST_MAXMIN);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			igt_require_intel(data.drm_fd);
 

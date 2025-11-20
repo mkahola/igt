@@ -349,7 +349,7 @@ igt_main
 	}
 
 	for (op = ops; op->name; op++) {
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_hang_t hang = {};
 
 			igt_fixture() {

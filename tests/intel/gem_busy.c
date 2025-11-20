@@ -481,7 +481,7 @@ igt_main
 		ctx = intel_ctx_create_all_physical(fd);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			intel_allocator_multiprocess_start();
 			igt_fork_hang_detector(fd);
@@ -514,12 +514,12 @@ igt_main
 	}
 
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_fork_hang_detector(fd);
 		}
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				igt_require(has_extended_busy_ioctl(fd));
 				gem_require_mmap_device_coherent(fd);
@@ -543,7 +543,7 @@ igt_main
 			}
 		}
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				igt_require(has_extended_busy_ioctl(fd));
 				igt_require(has_semaphores(fd));
@@ -564,7 +564,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_hang_t hang;
 
 		igt_fixture() {
@@ -579,7 +579,7 @@ igt_main
 			gem_quiescent_gpu(fd);
 		}
 
-		igt_subtest_group {
+		igt_subtest_group() {
 			igt_fixture() {
 				igt_require(has_extended_busy_ioctl(fd));
 				gem_require_mmap_device_coherent(fd);

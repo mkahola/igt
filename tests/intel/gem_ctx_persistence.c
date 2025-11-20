@@ -1400,7 +1400,7 @@ igt_main
 	igt_subtest("heartbeat-hostile")
 		test_noheartbeat_close(i915, IGT_SPIN_NO_PREEMPTION);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture()
 			gem_require_contexts(i915);
 
@@ -1420,7 +1420,7 @@ igt_main
 
 	/* New way of selecting engines. */
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const struct intel_execution_engine2 *e;
 
 		igt_fixture()
@@ -1456,7 +1456,7 @@ igt_main
 			many_contexts(i915, &ctx->cfg);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			gem_require_contexts(i915);
 			intel_allocator_multiprocess_start();

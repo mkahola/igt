@@ -647,7 +647,7 @@ igt_main
 				rc6_fence(i915, gt);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		unsigned int rc6_enabled = 0;
 		unsigned int devid = 0;
 

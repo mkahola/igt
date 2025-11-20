@@ -436,16 +436,16 @@ igt_main
 		igt_display_require(&display, fd);
 	}
 
-	igt_subtest_group
+	igt_subtest_group()
 		test_handle_input(&display);
 
-	igt_subtest_group
+	igt_subtest_group()
 		test_duplicate_handles(&display);
 
-	igt_subtest_group
+	igt_subtest_group()
 		test_getfb2(&display);
 
-	igt_subtest_group
+	igt_subtest_group()
 		test_handle_protection();
 
 	igt_fixture() {

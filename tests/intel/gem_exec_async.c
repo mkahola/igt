@@ -209,7 +209,7 @@ igt_main
 	test_each_engine("concurrent-writes", fd, ctx, e)
 		one(fd, ctx, e->flags, 0);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			intel_allocator_multiprocess_start();
 		}

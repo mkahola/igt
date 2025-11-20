@@ -237,7 +237,7 @@ igt_main
 		igt_waitchildren();
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			int sys_fd = igt_sysfs_open(xe);
 

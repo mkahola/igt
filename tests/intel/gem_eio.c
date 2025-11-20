@@ -1152,7 +1152,7 @@ igt_main
 	igt_subtest("in-flight-suspend")
 		test_inflight_suspend(fd);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_fixture() {
 			igt_require(gem_has_contexts(fd));
 		}
@@ -1164,7 +1164,7 @@ igt_main
 			test_reset_stress(fd, TEST_WEDGE);
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		const struct {
 			unsigned int wait;
 			const char *name;
@@ -1193,7 +1193,7 @@ igt_main
 		}
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_display_t display = {
 			.drm_fd = -1, .n_pipes = IGT_MAX_PIPES
 		};

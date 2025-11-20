@@ -246,7 +246,7 @@ igt_main
 		igt_assert(runner_kmemleak_init(unit_testing_kmemleak_filepath));
 	}
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		igt_subtest("test_runner_kmemleak_once")
 			igt_assert(runner_kmemleak(NULL, resdirfd, false, true));
 

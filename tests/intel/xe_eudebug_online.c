@@ -2718,7 +2718,7 @@ igt_main
 	test_gt_render_or_compute("interrupt-other-debuggable", fd, hwe)
 		test_interrupt_other(fd, hwe, SHADER_LOOP);
 
-	igt_subtest_group {
+	igt_subtest_group() {
 		test_gt_render_or_compute("interrupt-other", fd, hwe) {
 			engine_class = hwe->engine_class;
 
