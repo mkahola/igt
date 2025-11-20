@@ -213,26 +213,6 @@ struct kmstest_connector_config {
 	char *connector_path;
 };
 
-struct kmstest_plane {
-	int id;
-	int index;
-	int type;
-	int pos_x;
-	int pos_y;
-	int width;
-	int height;
-};
-
-struct kmstest_crtc {
-	int id;
-	int pipe;
-	bool active;
-	int width;
-	int height;
-	int n_planes;
-	struct kmstest_plane *planes;
-};
-
 /**
  * kmstest_force_connector_state:
  * @FORCE_CONNECTOR_UNSPECIFIED: Unspecified
