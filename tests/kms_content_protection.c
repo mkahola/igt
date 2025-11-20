@@ -1016,7 +1016,7 @@ static const struct {
 	},
 };
 
-igt_main
+igt_main()
 {
 	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);

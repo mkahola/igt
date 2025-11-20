@@ -148,7 +148,7 @@ static void test_mode(int fd, const intel_ctx_t *ctx, unsigned int flags)
 		igt_disallow_hang(fd, hang);
 }
 
-igt_main
+igt_main()
 {
 	const intel_ctx_t *ctx;
 	int fd = -1;

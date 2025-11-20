@@ -123,7 +123,7 @@ static bool has_atomics(int fd, uint32_t region)
 	return true;
 }
 
-igt_main
+igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe;
 	int fd;

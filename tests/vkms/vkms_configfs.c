@@ -1895,7 +1895,7 @@ static void test_enabled_connector_hot_plug(void)
 	igt_vkms_device_destroy(dev);
 }
 
-igt_main
+igt_main()
 {
 	struct {
 		const char *name;

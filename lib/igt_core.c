@@ -1499,7 +1499,7 @@ static bool valid_name_for_subtest(const char *subtest_name)
 bool __igt_run_subtest(const char *subtest_name, const char *file, const int line)
 {
 	internal_assert(!igt_can_fail(),
-			"igt_subtest can be nested only in igt_main"
+			"igt_subtest can be nested only in igt_main()"
 			" or igt_subtest_group()\n");
 
 	if (!valid_name_for_subtest(subtest_name)) {
@@ -2362,7 +2362,7 @@ void __igt_abort(const char *domain, const char *file, const int line,
  *
  * It is an error to normally exit a test calling igt_exit() - without it the
  * result reporting will be wrong. To avoid such issues it is highly recommended
- * to use #igt_main or #igt_simple_main instead of a hand-rolled main() function.
+ * to use #igt_main() or #igt_simple_main instead of a hand-rolled main() function.
  */
 void igt_exit(void)
 {
@@ -3122,7 +3122,7 @@ bool igt_run_in_simulation(void)
  * it is allowed to use this outside of an #igt_fixture() block in a test with
  * subtests. This is because in contrast to most other test requirements,
  * checking for simulation mode doesn't depend upon the present hardware and it
- * so makes a lot of sense to have this check in the outermost #igt_main block.
+ * so makes a lot of sense to have this check in the outermost #igt_main() block.
  */
 void igt_skip_on_simulation(void)
 {

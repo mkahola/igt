@@ -95,7 +95,7 @@ static void test_ping_pong(int fd, struct drm_xe_engine *engine)
 static int fd;
 
 IGT_TEST_DESCRIPTION("Expose compute VM's unnecessary rebinds");
-igt_main
+igt_main()
 {
 	igt_fixture()
 		fd = drm_open_driver(DRIVER_XE);

@@ -401,7 +401,7 @@ static void lr_mode_workload(int fd)
 	put_ahnd(ahnd);
 }
 
-igt_main
+igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe;
 	const struct section {

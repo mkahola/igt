@@ -118,7 +118,7 @@ static void bind_unbind_vf(int pf_fd, unsigned int vf_num)
 	igt_sriov_disable_vfs(pf_fd);
 }
 
-igt_main
+igt_main()
 {
 	int pf_fd;
 	bool autoprobe;

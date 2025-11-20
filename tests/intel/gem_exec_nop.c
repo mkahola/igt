@@ -1000,7 +1000,7 @@ static void preempt(int fd, uint32_t handle,
 		 e->name, count, elapsed(&start, &now)*1e6 / count);
 }
 
-igt_main
+igt_main()
 {
 	const struct intel_execution_engine2 *e;
 	const intel_ctx_t *ctx;

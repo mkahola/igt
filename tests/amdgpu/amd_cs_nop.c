@@ -146,7 +146,7 @@ static void nop_cs(amdgpu_device_handle device,
 	free(ring_context);
 }
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	amdgpu_context_handle context;

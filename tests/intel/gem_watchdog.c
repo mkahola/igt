@@ -553,7 +553,7 @@ far_fence(int i915, int timeout, const intel_ctx_t *ctx,
 	close(fence);
 }
 
-igt_main
+igt_main()
 {
 	const struct intel_execution_engine2 *e;
 	const intel_ctx_t *ctx;

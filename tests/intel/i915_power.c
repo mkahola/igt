@@ -75,7 +75,7 @@ static void sanity(int i915)
 	igt_assert(idle >= 0 && busy > 0 && busy > idle);
 }
 
-igt_main
+igt_main()
 {
 	int i915;
 

@@ -3155,7 +3155,7 @@ static void test_syncobj_backward_timeline_chain_engines(int fd, const intel_ctx
 	teardown_timeline_chain_engines(&ctx);
 }
 
-igt_main
+igt_main()
 {
 	const struct intel_execution_engine2 *e;
 	const intel_ctx_t *ctx;

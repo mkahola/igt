@@ -47,7 +47,7 @@
 
 IGT_TEST_DESCRIPTION("Tests the DRM_IOCTL_GET_CLIENT ioctl.");
 
-igt_main
+igt_main()
 {
 	int fd, ret;
 	drm_client_t client;

@@ -428,7 +428,7 @@ static void shrink(int i915, int amd, amdgpu_device_handle device)
 	gem_close(i915, handle);
 }
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	int i915 = -1, amd = -1;

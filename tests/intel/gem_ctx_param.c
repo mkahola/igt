@@ -372,7 +372,7 @@ static void test_get_invalid_param(int fd, uint64_t param)
 	igt_assert_eq(err, -EINVAL);
 }
 
-igt_main
+igt_main()
 {
 	struct drm_i915_gem_context_param arg;
 	int fd;

@@ -159,7 +159,7 @@ retry:
 
 }
 
-igt_main
+igt_main()
 {
 	uint64_t val = 0;
 	int fd = -1;

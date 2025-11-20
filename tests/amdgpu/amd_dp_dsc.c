@@ -537,7 +537,7 @@ static void test_dsc_bpc(data_t *data)
 	test_fini(data);
 }
 
-igt_main {
+igt_main() {
 	data_t data = { 0 };
 
 	igt_skip_on_simulation();

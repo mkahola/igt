@@ -1055,7 +1055,7 @@ static void restore_gt_freq(int fd, uint32_t *stash_min, uint32_t *stash_max)
 	free(stash_max);
 }
 
-igt_main
+igt_main()
 {
 	int fd, gt, num_engines;
 	struct drm_xe_engine_class_instance *eci;

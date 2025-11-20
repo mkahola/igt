@@ -456,7 +456,7 @@ static inline void test_freesync_range_suspend(data_t *data)
 	test_freesync_range_base(data, TEST_SUSPEND);
 }
 
-igt_main
+igt_main()
 {
 	data_t data;
 

@@ -1146,7 +1146,7 @@ static void test_each_engine(const char *name, int vgem, int i915,
 		intel_ctx_destroy(i915, ctx);
 }
 
-igt_main
+igt_main()
 {
 	int i915 = -1;
 	int vgem = -1;

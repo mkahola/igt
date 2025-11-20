@@ -270,7 +270,7 @@ static void test_short_buffer_wakeup(int in, enum pipe pipe)
 	close(w.fd);
 }
 
-igt_main
+igt_main()
 {
 	igt_display_t display;
 	struct igt_fb fb;

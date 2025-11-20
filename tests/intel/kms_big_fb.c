@@ -967,7 +967,7 @@ static bool test_requirements(data_t *input_data, int l)
 	return true;
 }
 
-igt_main
+igt_main()
 {
 	igt_fixture() {
 		drmModeResPtr res;

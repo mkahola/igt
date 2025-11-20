@@ -214,7 +214,7 @@ static void amdgpu_cs_vpe_blit(amdgpu_device_handle device_handle,
 	free_resource(&dst_plane_bo);
 }
 
-igt_main
+igt_main()
 {
 	struct mmd_context context = {};
 	struct mmd_shared_context shared_context = {};

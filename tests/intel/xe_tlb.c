@@ -128,7 +128,7 @@ static void tlb_invalidation(int fd, struct drm_xe_engine_class_instance *eci)
 	xe_vm_destroy(fd, vm);
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 	struct drm_xe_engine *engine;

@@ -211,7 +211,7 @@ hdmi_inject_audio(int drm_fd, drmModeConnector *connector)
 	kmstest_force_edid(drm_fd, connector, NULL);
 }
 
-igt_main
+igt_main()
 {
 	int drm_fd;
 	drmModeRes *res;

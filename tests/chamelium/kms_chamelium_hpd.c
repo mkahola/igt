@@ -460,7 +460,7 @@ static void test_hpd_storm_disable(chamelium_data_t *data,
 }
 
 IGT_TEST_DESCRIPTION("Testing HPD with a Chamelium board");
-igt_main
+igt_main()
 {
 	chamelium_data_t data;
 	struct chamelium_port *port;

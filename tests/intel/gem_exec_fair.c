@@ -1289,7 +1289,7 @@ static bool set_heartbeat(int i915, const char *name, unsigned int value)
 	return true;
 }
 
-igt_main
+igt_main()
 {
 	static const struct {
 		const char *name;

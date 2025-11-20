@@ -275,7 +275,7 @@ exec_queue_reset_wait(int fd)
 	}
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 

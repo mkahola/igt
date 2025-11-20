@@ -503,7 +503,7 @@ static void test_vgem(struct gpu_process_t *gpu, int vgem_fd)
 	gem_close(gpu->mdevice.drm_fd, vmw_buffer_handle);
 }
 
-igt_main
+igt_main()
 {
 	struct gpu_process_t gpu = { 0 };
 	int second_fd_vgem = -1;

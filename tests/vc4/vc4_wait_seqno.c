@@ -24,7 +24,7 @@
 #include "igt.h"
 #include "igt_vc4.h"
 
-igt_main
+igt_main()
 {
 	int fd;
 

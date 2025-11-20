@@ -23,7 +23,7 @@
 
 #include "igt.h"
 
-igt_main
+igt_main()
 {
 	igt_subtest_with_dynamic("a-subtest") {
 		igt_dynamic("dynamic-1")

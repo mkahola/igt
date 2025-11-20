@@ -217,7 +217,7 @@ static void copy_flink(data_t *data)
 	data_fini(&local);
 }
 
-igt_main
+igt_main()
 {
 	data_t data = {0, };
 

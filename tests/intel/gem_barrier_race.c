@@ -143,7 +143,7 @@ static void test_remote_request(int fd, uint64_t engine, unsigned int timeout)
 	munmap(done, 4096);
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 

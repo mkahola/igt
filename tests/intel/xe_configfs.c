@@ -309,7 +309,7 @@ static int create_device_configfs_group(int configfs_fd)
 	return configfs_device_fd;
 }
 
-igt_main
+igt_main()
 {
 	int fd, configfs_fd, configfs_device_fd;
 	uint32_t devid;

@@ -140,7 +140,7 @@ static void media_fill(data_t *data, igt_fillfunc_t fill,
 	munmap(ptr, buf->surface[0].size);
 }
 
-igt_main
+igt_main()
 {
 	data_t data = {0, };
 	igt_fillfunc_t fill_fn = NULL;

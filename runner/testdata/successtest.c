@@ -1,6 +1,6 @@
 #include "igt.h"
 
-igt_main
+igt_main()
 {
 	igt_subtest("first-subtest")
 		igt_debug("Running first subtest\n");

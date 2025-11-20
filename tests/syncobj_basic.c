@@ -219,7 +219,7 @@ static bool has_syncobj(int fd)
 	return value ? true : false;
 }
 
-igt_main
+igt_main()
 {
 	int fd = -1;
 

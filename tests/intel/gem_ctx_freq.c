@@ -260,7 +260,7 @@ static void disable_boost(void)
 		__disable_boost(dirfd);
 }
 
-igt_main
+igt_main()
 {
 	igt_fixture() {
 		i915 = drm_open_driver(DRIVER_INTEL);

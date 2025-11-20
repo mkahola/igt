@@ -514,7 +514,7 @@ out:
 	gem_context_destroy(fd, arg.ctx_id);
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 

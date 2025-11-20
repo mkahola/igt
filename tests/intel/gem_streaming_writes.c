@@ -419,7 +419,7 @@ static void test_batch(int fd, int mode, int reverse)
 	gem_close(fd, dst);
 }
 
-igt_main
+igt_main()
 {
 	int fd, sync;
 

@@ -1171,7 +1171,7 @@ run_tests_for_pipe(data_t *data)
 	}
 }
 
-igt_main
+igt_main()
 {
 	data_t data = {};
 

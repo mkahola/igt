@@ -1239,7 +1239,7 @@ static void lease_uevent(data_t *data)
 	igt_cleanup_uevents(uevent_monitor);
 }
 
-igt_main
+igt_main()
 {
 	data_t data;
 	igt_output_t *output;

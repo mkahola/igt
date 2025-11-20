@@ -241,7 +241,7 @@ static bool has_userptr(int fd)
 	return err == EFAULT;
 }
 
-igt_main
+igt_main()
 {
 	const struct intel_execution_engine2 *e2;
 	const struct intel_execution_ring *e;

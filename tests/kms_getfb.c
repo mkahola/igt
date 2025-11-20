@@ -425,7 +425,7 @@ static void test_handle_protection(void) {
 	}
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 	igt_display_t display;

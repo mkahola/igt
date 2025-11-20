@@ -58,7 +58,7 @@ IGT_TEST_DESCRIPTION("Negative test cases for destroy contexts.");
 uint32_t ctx_id;
 int fd;
 
-igt_main
+igt_main()
 {
 	igt_fixture() {
 		fd = drm_open_driver_render(DRIVER_INTEL);

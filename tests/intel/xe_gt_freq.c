@@ -393,7 +393,7 @@ static void test_spin(int fd, struct drm_xe_engine_class_instance *eci, bool fix
 	xe_vm_destroy(fd, vm);
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 	int gt;

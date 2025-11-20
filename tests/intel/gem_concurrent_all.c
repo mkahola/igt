@@ -1775,7 +1775,7 @@ num_buffers(uint64_t max,
 	return n;
 }
 
-igt_main
+igt_main()
 {
 	const struct access_mode modes[] = {
 		{

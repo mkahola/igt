@@ -45,7 +45,7 @@ static void test_triangle_render(struct vmw_svga_device *device, int32 cid)
 	vmw_destroy_default_objects(device, &objects);
 }
 
-igt_main
+igt_main()
 {
 	struct vmw_svga_device device;
 	int32 cid;

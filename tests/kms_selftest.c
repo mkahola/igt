@@ -49,7 +49,7 @@
 
 IGT_TEST_DESCRIPTION("Basic sanity check of KMS selftests.");
 
-igt_main
+igt_main()
 {
 	static const char *kunit_subtests[] = {
 		"drm_cmdline_parser_test",

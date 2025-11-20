@@ -309,7 +309,7 @@ static int check_psr2_support(data_t *data, enum pipe pipe)
 	return status;
 }
 
-igt_main
+igt_main()
 {
 	data_t data = {};
 	enum pipe pipe;

@@ -8,7 +8,7 @@
 #include "lib/amdgpu/amd_cp_dma.h"
 #include "lib/amdgpu/amd_ip_blocks.h"
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	amdgpu_device_handle device2;

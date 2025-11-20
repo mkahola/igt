@@ -37,7 +37,7 @@
 
 IGT_TEST_DESCRIPTION("Object tiling must be fixed after framebuffer creation.");
 
-igt_main
+igt_main()
 {
 	int drm_fd;
 	struct igt_fb fb;

@@ -57,7 +57,7 @@ vcn_queue_test(amdgpu_device_handle device_handle,
 	return 0;
 }
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	struct mmd_context context = {};

@@ -340,7 +340,7 @@ static void run_cdclk_test(data_t *data, uint32_t flags)
 	}
 }
 
-igt_main
+igt_main()
 {
 	data_t data = {};
 

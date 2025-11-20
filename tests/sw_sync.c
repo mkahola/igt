@@ -878,7 +878,7 @@ static void test_sync_random_merge(void)
 		close(timeline_arr[i]);
 }
 
-igt_main
+igt_main()
 {
 	igt_fixture() {
 		igt_require_sw_sync();

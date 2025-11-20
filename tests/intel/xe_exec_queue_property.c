@@ -199,7 +199,7 @@ static void invalid_property(int xe)
 					     to_user_pointer(&ext), &exec_queue_id), 0);
 }
 
-igt_main
+igt_main()
 {
 	static const struct {
 		const char *name;

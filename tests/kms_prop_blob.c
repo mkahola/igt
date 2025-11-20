@@ -345,7 +345,7 @@ static void prop_tests(int fd)
 		destroy_prop(fd, blob_id);
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 

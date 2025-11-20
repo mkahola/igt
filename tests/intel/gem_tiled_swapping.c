@@ -176,7 +176,7 @@ static void check_memory_layout(int fd)
 	igt_debug("normal memory configuration detected, continuing\n");
 }
 
-igt_main
+igt_main()
 {
 	unsigned long n, count;
 	struct thread *threads;

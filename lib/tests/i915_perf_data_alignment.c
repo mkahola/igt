@@ -30,7 +30,7 @@
 
 #define is_aligned(s) ((sizeof(s) % 8) == 0)
 
-igt_main
+igt_main()
 {
 	igt_subtest("alignment") {
 		internal_assert(is_aligned(struct intel_perf_record_version));

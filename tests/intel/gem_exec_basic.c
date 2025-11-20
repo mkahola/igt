@@ -53,7 +53,7 @@ static uint32_t batch_create(int fd, uint64_t *batch_size, uint32_t region)
 	return handle;
 }
 
-igt_main
+igt_main()
 {
 	const struct intel_execution_engine2 *e;
 	struct drm_i915_query_memory_regions *query_info;

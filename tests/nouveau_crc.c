@@ -318,7 +318,7 @@ static void test_source_outp_inactive(data_t *data)
 data_t data = {0};
 
 #define pipe_test(name) igt_subtest_f("pipe-%s-" name, kmstest_pipe_name(pipe))
-igt_main
+igt_main()
 {
 	int pipe;
 

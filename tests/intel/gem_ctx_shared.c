@@ -1023,7 +1023,7 @@ static void smoketest(int i915, const intel_ctx_cfg_t *cfg,
 			    !gem_engine_can_block_ggtt_binder(i915, e)) \
 			igt_dynamic_f("%s", e->name)
 
-igt_main
+igt_main()
 {
 	const struct intel_execution_engine2 *e;
 	intel_ctx_cfg_t cfg;

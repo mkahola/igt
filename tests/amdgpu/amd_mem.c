@@ -4153,7 +4153,7 @@ static void test_llvm_assembler_basic(amdgpu_device_handle device)
 		 total_count - success_count, total_count);
 }
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	struct amdgpu_gpu_info gpu_info = {0};

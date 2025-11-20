@@ -234,7 +234,7 @@ static void select_valid_pipe_output_combo(data_t *data)
 	igt_skip("no valid crtc/connector combinations found\n");
 }
 
-igt_main
+igt_main()
 {
 	data_t data;
 

@@ -346,7 +346,7 @@ static void test_nv_self_import_to_different_fd(void)
 	nouveau_bo_ref(NULL, &nvbo2);
 }
 
-igt_main
+igt_main()
 {
 	igt_fixture() {
 		find_and_open_devices();

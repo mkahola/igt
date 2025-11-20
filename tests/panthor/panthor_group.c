@@ -40,7 +40,7 @@ issue_store_multiple(uint8_t *cs, uint64_t kernel_va, uint32_t constant)
 	return sizeof(instrs);
 }
 
-igt_main {
+igt_main() {
 	int fd;
 
 	igt_fixture() {

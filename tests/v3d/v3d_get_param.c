@@ -26,7 +26,7 @@
 
 IGT_TEST_DESCRIPTION("Tests for the V3D's get params IOCTL");
 
-igt_main
+igt_main()
 {
 	int fd;
 

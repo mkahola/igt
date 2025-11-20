@@ -117,7 +117,7 @@ time_stamp_test_enable(struct amdgpu_gpu_info *gpu_info)
 	return true;
 }
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	struct amdgpu_gpu_info gpu_info = {};

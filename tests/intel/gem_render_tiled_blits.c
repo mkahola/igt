@@ -229,7 +229,7 @@ static void run_test (int fd, int count)
 }
 
 
-igt_main
+igt_main()
 {
 	int fd = 0;
 	int count = 0;

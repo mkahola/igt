@@ -127,7 +127,7 @@ static void test_hotplug(data_t *data)
 	test_fini(data);
 }
 
-igt_main
+igt_main()
 {
 	data_t data;
 

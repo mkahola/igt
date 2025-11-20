@@ -248,7 +248,7 @@ amdgpu_bo_find_by_cpu_mapping(amdgpu_device_handle device_handle)
 				     bo_mc_address, 4096);
 }
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	struct bo_data bo;

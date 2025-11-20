@@ -214,7 +214,7 @@ static void test_basic_auth(int master)
 	drm_close_driver(slave);
 }
 
-igt_main
+igt_main()
 {
 	/* root (which we run igt as) should always be authenticated */
 	igt_describe("Check drm client is always authenticated.");

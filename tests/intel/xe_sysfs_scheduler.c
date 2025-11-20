@@ -219,7 +219,7 @@ static void test_invalid_large_string(int xe, int engine, const char **property,
 }
 
 #define MAX_GTS 8
-igt_main
+igt_main()
 {
 	static const struct {
 		const char *name;

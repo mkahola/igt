@@ -228,7 +228,7 @@ static void do_test(struct buf_ops *bops, int cache_level,
 	intel_bb_destroy(ibb);
 }
 
-igt_main
+igt_main()
 {
 	const uint32_t start[2] = {0, 1024 * 1024 / 4};
 	const struct {

@@ -891,7 +891,7 @@ run_tests(data_t *data)
 	}
 }
 
-igt_main
+igt_main()
 {
 	data_t data;
 

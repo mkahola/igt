@@ -292,7 +292,7 @@ static void run_test(int fd, int count, uint64_t end)
 
 #define MAX_32b ((1ull << 32) - 4096)
 
-igt_main
+igt_main()
 {
 	/*
 	 * For machines with many cpu cores buffer verification can take

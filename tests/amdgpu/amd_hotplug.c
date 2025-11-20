@@ -200,7 +200,7 @@ static void test_hotplug_basic(data_t *data, bool suspend)
 	test_fini(data);
 }
 
-igt_main
+igt_main()
 {
 	data_t data;
 

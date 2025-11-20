@@ -365,7 +365,7 @@ static void do_tests(data_t *data, int cache_level, const char *suffix)
 		test_partial_read_writes(data);
 }
 
-igt_main
+igt_main()
 {
 	data_t data = {0, };
 	srandom(0xdeadbeef);

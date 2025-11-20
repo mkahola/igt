@@ -95,7 +95,7 @@ do_write(int fd, int handle, void *buf, int offset, int size)
 int fd;
 uint32_t handle;
 
-igt_main
+igt_main()
 {
 	uint8_t expected[OBJECT_SIZE];
 	uint8_t buf[OBJECT_SIZE];

@@ -1589,7 +1589,7 @@ static int mmap_ioctl(int i915, struct drm_i915_gem_mmap_gtt *arg)
 
 int fd;
 
-igt_main
+igt_main()
 {
 	if (igt_run_in_simulation())
 		OBJECT_SIZE = 1 * 1024 * 1024;

@@ -276,7 +276,7 @@ static void check_workarounds(int fd, enum operation op, unsigned int flags)
 		drm_close_driver(fd);
 }
 
-igt_main
+igt_main()
 {
 	struct intel_mmio_data mmio_data;
 	const struct {

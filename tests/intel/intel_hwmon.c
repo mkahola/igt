@@ -76,7 +76,7 @@ static void hwmon_write(int hwm)
 	closedir(dir);
 }
 
-igt_main
+igt_main()
 {
 	int fd, hwm;
 

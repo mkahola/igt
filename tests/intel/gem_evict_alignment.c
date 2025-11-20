@@ -209,7 +209,7 @@ static void major_evictions(int fd, uint64_t size, uint64_t count)
 
 #define MAX_32b ((1ull << 32) - 4096)
 
-igt_main
+igt_main()
 {
 	uint64_t size, count;
 	int fd = -1;

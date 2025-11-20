@@ -193,7 +193,7 @@ int igt_subtest_init_parse_opts(int *argc, char **argv,
  * igt_subtest_init_parse_opts().
  *
  * If there's not a reason to the contrary it's less error prone to just use an
- * #igt_main block instead of stitching the test's main() function together
+ * #igt_main() block instead of stitching the test's main() function together
  * manually.
  */
 #define igt_subtest_init(argc, argv) \
@@ -318,7 +318,7 @@ bool __igt_run_dynamic_subtest(const char *dynamic_subtest_name);
  * allowed. Example:
  *
  * |[<!-- language="C" -->
- * igt_main
+ * igt_main()
  * {
  *     igt_subtest_with_dynamic("engine-tests") {
  *               igt_require(is_awesome(fd)); // requires ok here
@@ -438,12 +438,12 @@ void __igt_subtest_group_restore(int, int);
 
 
 /**
- * igt_main:
+ * igt_main():
  *
  * This is a magic control flow block used instead of a main() function for
  * tests with subtests. Open-coding the main() function is not recommended.
  */
-#define igt_main igt_main_args(NULL, NULL, NULL, NULL, NULL)
+#define igt_main() igt_main_args(NULL, NULL, NULL, NULL, NULL)
 
 const char *igt_test_name(void);
 void igt_simple_init_parse_opts(int *argc, char **argv,
@@ -595,7 +595,7 @@ void igt_describe_f(const char *fmt, ...);
  * #include "igt.h"
  *
  * IGT_TEST_DESCRIPTION("Global description of the whole binary");
- * igt_main
+ * igt_main()
  * {
  * 	igt_describe("Desc of the subgroup with A and B");
  * 	igt_subtest_group() {
@@ -646,7 +646,7 @@ void igt_describe_f(const char *fmt, ...);
  * |[<!-- language="C" -->
  * #include "igt.h"
  *
- * igt_main
+ * igt_main()
  * {
  * 	igt_describe("check xyz with different tilings");
  * 	igt_subtest_group() {

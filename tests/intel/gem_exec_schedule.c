@@ -3202,7 +3202,7 @@ static void fairslice(int i915, const intel_ctx_cfg_t *cfg,
 			    !gem_engine_can_block_ggtt_binder(i915, e)) \
 		igt_dynamic_f("%s", e->name)
 
-igt_main
+igt_main()
 {
 	int fd = -1;
 	const intel_ctx_t *ctx = NULL;

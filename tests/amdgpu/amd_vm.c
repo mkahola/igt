@@ -197,7 +197,7 @@ amdgpu_vm_mapping_test(amdgpu_device_handle device_handle)
 	amdgpu_bo_free(buf);
 }
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	struct amdgpu_gpu_info gpu_info = {};

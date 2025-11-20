@@ -1102,7 +1102,7 @@ exit_handler(int sig)
 	igt_force_gpu_reset(fd);
 }
 
-igt_main
+igt_main()
 {
 	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);

@@ -8,7 +8,7 @@
 
 IGT_TEST_DESCRIPTION("Tests for the VC4's mmap IOCTL");
 
-igt_main
+igt_main()
 {
 	int fd;
 

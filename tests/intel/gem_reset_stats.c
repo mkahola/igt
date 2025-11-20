@@ -1080,7 +1080,7 @@ static void test_shared_reset_domain(const intel_ctx_cfg_t *base_cfg,
 #define RUN_TEST(...) do { sync_gpu(); __VA_ARGS__; sync_gpu(); } while (0)
 #define RUN_CTX_TEST(...) do { check_context(e); RUN_TEST(__VA_ARGS__); } while (0)
 
-igt_main
+igt_main()
 {
 	const struct intel_execution_ring *e;
 

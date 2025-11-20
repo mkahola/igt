@@ -392,7 +392,7 @@ static void test_crtc_lut_accuracy(data_t *data)
 	lut_free(&lut_degamma);
 }
 
-igt_main
+igt_main()
 {
 	data_t data;
 

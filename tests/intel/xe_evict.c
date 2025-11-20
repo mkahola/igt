@@ -676,7 +676,7 @@ static unsigned int working_set(uint64_t vram_size, uint64_t system_size,
  * sections exists which cover multiple compute VM, multiple non-compute VMs,
  * and mixing of VMs.
  */
-igt_main
+igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe;
 	const struct section {

@@ -3409,7 +3409,7 @@ static bool has_parallel_execbuf(int i915)
 	return false;
 }
 
-igt_main
+igt_main()
 {
 	igt_fd_t(i915);
 

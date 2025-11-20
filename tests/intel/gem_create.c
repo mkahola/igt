@@ -946,7 +946,7 @@ static void create_ext_cpu_access_big(int fd)
 	free(regions);
 }
 
-igt_main
+igt_main()
 {
 	igt_fd_t(fd);
 

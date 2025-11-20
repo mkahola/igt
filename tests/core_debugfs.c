@@ -23,7 +23,7 @@
 
 IGT_TEST_DESCRIPTION("Read entries from debugfs");
 
-igt_main
+igt_main()
 {
 	int debugfs = -1;
 	int fd = -1;

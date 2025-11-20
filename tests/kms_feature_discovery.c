@@ -71,7 +71,7 @@ static igt_display_t display;
 IGT_TEST_DESCRIPTION("A metatest that checks for \"features\" presence. "
 		     "The subtests here should only skip or pass, "
 		     "anything else means we have a serious problem.");
-igt_main {
+igt_main() {
 	igt_fd_t(debugfs_fd);
 	igt_fd_t(fd);
 

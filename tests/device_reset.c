@@ -439,7 +439,7 @@ static void unbind_reset_rebind(struct device_fds *dev, enum reset type)
 	driver_bind(dev);
 }
 
-igt_main
+igt_main()
 {
 	struct device_fds dev = { .fds = {-1, -1, -1}, .dev_bus_addr = {0}, };
 

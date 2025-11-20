@@ -226,7 +226,7 @@ test_export_dma_buf(struct drm_xe_engine_class_instance *hwe0,
 		drm_close_driver(fd[i]);
 }
 
-igt_main
+igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe, *hwe0 = NULL, *hwe1;
 	int fd;

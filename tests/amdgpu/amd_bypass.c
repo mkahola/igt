@@ -397,7 +397,7 @@ static void bypass_8bpc_test(data_t *data)
 	}
 }
 
-igt_main
+igt_main()
 {
 	data_t data;
 	memset(&data, 0, sizeof(data));

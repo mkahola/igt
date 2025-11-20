@@ -1212,7 +1212,7 @@ void igt_kunit(const char *module_name, const char *suite, const char *opts)
 	/*
 	 * We need to use igt_subtest here, as otherwise it may crash with:
 	 * "skipping is allowed only in fixtures, subtests or igt_simple_main"
-	 * if used on igt_main. This is also needed in order to provide
+	 * if used on igt_main(). This is also needed in order to provide
 	 * proper namespace for dynamic subtests, with is required for CI
 	 * and for documentation.
 	 */

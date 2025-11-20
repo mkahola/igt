@@ -180,7 +180,7 @@ static void draw_triangle_on_coherent_rt(struct vmw_svga_device *device,
 	vmw_destroy_default_objects(device, &objects);
 }
 
-igt_main
+igt_main()
 {
 	struct vmw_svga_device device;
 	int32 cid;

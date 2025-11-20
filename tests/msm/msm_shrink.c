@@ -243,7 +243,7 @@ static void run_test(int nchildren, uint64_t alloc_size_mb, unsigned num_bos,
 
 static const unsigned num_bos[] = { 8, 32 };
 
-igt_main
+igt_main()
 {
 	struct msm_device *dev = NULL;
 	uint64_t alloc_size_mb = 0;

@@ -1109,7 +1109,7 @@ static void threads(int fd, int flags)
 	pthread_barrier_destroy(&barrier);
 }
 
-igt_main
+igt_main()
 {
 	const struct section {
 		const char *name;

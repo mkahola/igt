@@ -1625,7 +1625,7 @@ static void invalid_domains(int fd)
 	gem_close(fd, obj[0].handle);
 }
 
-igt_main
+igt_main()
 {
 	const intel_ctx_t *ctx;
 	const struct intel_execution_engine2 *e;

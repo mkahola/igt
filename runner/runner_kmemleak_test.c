@@ -213,7 +213,7 @@ const char *kmemleak_file_example =
 
 static const char *runner_kmemleak_unit_testing_resdir = "/tmp";
 
-igt_main
+igt_main()
 {
 	char unit_testing_kmemleak_filepath[256] = "/tmp/runner_kmemleak_test_XXXXXX";
 	int written_bytes;

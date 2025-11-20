@@ -334,7 +334,7 @@ static const struct {
 
 static data_t data;
 
-igt_main
+igt_main()
 {
 
 	enum pipe pipe;

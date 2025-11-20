@@ -190,7 +190,7 @@ run_rmfb_test(struct rmfb_data *data, bool reopen)
 	}
 }
 
-igt_main
+igt_main()
 {
 	const struct {
 		bool reopen;

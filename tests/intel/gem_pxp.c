@@ -1299,7 +1299,7 @@ static void require_init_powermgt(int i915, struct powermgt_data *pm)
 		init_powermgt_resources(i915, pm);
 }
 
-igt_main
+igt_main()
 {
 	int i915 = -1;
 	bool pxp_supported = false;

@@ -370,7 +370,7 @@ static void cpg_gt_toggle(int fd)
 		powergate_status(fd, gt, "down");
 }
 
-igt_main
+igt_main()
 {
 	uint32_t d3cold_allowed;
 	int fd, gt;

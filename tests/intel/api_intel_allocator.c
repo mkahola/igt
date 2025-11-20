@@ -810,7 +810,7 @@ struct allocators {
 	{NULL, 0},
 };
 
-igt_main
+igt_main()
 {
 	int fd;
 	struct allocators *a;

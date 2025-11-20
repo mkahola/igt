@@ -208,7 +208,7 @@ simple_hang(int fd, struct drm_xe_sync *sync)
  * SUBTEST: basic-wedged-read
  * Description: Read wedged_mode debugfs
  */
-igt_main
+igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe;
 	int fd;

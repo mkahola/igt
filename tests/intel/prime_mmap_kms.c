@@ -257,7 +257,7 @@ check_for_dma_buf_mmap(int fd)
 	return ret;
 }
 
-igt_main
+igt_main()
 {
 	gpu_process_t gpu;
 

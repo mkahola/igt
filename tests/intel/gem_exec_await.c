@@ -251,7 +251,7 @@ static void wide(int fd, intel_ctx_cfg_t *cfg, int ring_size,
 
 #define TIMEOUT 20
 
-igt_main
+igt_main()
 {
 	intel_ctx_cfg_t cfg;
 	int ring_size = 0;

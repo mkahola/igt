@@ -450,7 +450,7 @@ static void test_userptr(int fd)
 	test_multiple(fd, 100, 1);
 }
 
-igt_main
+igt_main()
 {
 	int fd = -1, ret;
 

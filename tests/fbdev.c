@@ -452,7 +452,7 @@ static void framebuffer_tests(int fd)
 	}
 }
 
-igt_main
+igt_main()
 {
 	volatile int fd = -1;
 

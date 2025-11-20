@@ -234,7 +234,7 @@ static void do_test(struct buf_ops *bops, uint32_t tiling, unsigned stride,
 	igt_info("done\n");
 }
 
-igt_main
+igt_main()
 {
 	int fd, i;
 	uint32_t tiling, tiling_after;

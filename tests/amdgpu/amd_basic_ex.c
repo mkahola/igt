@@ -21,7 +21,7 @@ amdgpu_ce_write_after_fence(amdgpu_device_handle device_handle)
 	amdgpu_cs_ctx_free(context_handle);
 }
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	struct amdgpu_gpu_info gpu_info = {0};

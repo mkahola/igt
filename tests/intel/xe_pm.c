@@ -871,7 +871,7 @@ static void i2c_test(device_t device, int sysfs_fd, enum igt_acpi_d_state d_stat
 	close(i2c_fd);
 }
 
-igt_main
+igt_main()
 {
 	device_t device;
 	uint32_t d3cold_allowed;

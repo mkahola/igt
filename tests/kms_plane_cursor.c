@@ -281,7 +281,7 @@ static void test_cursor(data_t *data, int size, unsigned int flags)
 	test_cursor_spots(data, size, flags);
 }
 
-igt_main
+igt_main()
 {
 	static const int cursor_sizes[] = { 64, 128, 256 };
 	data_t data = { .max_curw = 64, .max_curh = 64 };

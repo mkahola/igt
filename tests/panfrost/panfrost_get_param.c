@@ -36,7 +36,7 @@
 #include <poll.h>
 #include "panfrost_drm.h"
 
-igt_main
+igt_main()
 {
 	int fd;
 

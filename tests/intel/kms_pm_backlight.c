@@ -202,7 +202,7 @@ static void test_setup(igt_display_t display, igt_output_t *output)
 	}
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 	int i = 0;

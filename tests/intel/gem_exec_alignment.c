@@ -548,7 +548,7 @@ static void single(int fd)
 	gem_close(fd, execobj.handle);
 }
 
-igt_main
+igt_main()
 {
 	igt_fd_t(fd);
 

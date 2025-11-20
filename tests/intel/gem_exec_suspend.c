@@ -351,7 +351,7 @@ static void power_test(int i915, const intel_ctx_t *ctx,
 		 d_charge(&after, &before) * 3600 / d_time(&after, &before));
 }
 
-igt_main
+igt_main()
 {
 	const struct {
 		const char *suffix;

@@ -175,7 +175,7 @@ store_pipe_control_loop(bool preuse_buffer, int timeout)
 int fd;
 uint32_t devid;
 
-igt_main
+igt_main()
 {
 	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);

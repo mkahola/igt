@@ -332,7 +332,7 @@ static void test_off(int i915, int engine)
 	set_preempt_timeout(engine, saved);
 }
 
-igt_main
+igt_main()
 {
 	static const struct {
 		const char *name;

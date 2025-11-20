@@ -58,7 +58,7 @@ static void *create_csd_jobs(void *args)
 	return NULL;
 }
 
-igt_main
+igt_main()
 {
 	igt_fixture() {
 		fd = drm_open_driver(DRIVER_V3D);

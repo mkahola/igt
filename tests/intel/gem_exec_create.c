@@ -176,7 +176,7 @@ static void all(int fd, unsigned flags, int timeout, int ncpus, uint32_t region)
 	intel_ctx_destroy(fd, ctx);
 }
 
-igt_main
+igt_main()
 {
 	const int ncpus = sysconf(_SC_NPROCESSORS_ONLN);
 	struct drm_i915_query_memory_regions *query_info;

@@ -306,7 +306,7 @@ static void test_invalid_copies_3d(int fd, int32 cid)
 	vmw_ioctl_surface_unref(fd, s2);
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 	int32 cid;

@@ -217,7 +217,7 @@ amdgpu_cs_jpeg_decode(amdgpu_device_handle device_handle,
 	mmd_context_clean(device_handle, context);
 }
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	struct mmd_shared_context shared_context = {};

@@ -1201,7 +1201,7 @@ static void read_sysfs_freq(char *sysfs_path)
 	}
 }
 
-igt_main
+igt_main()
 {
 	int tmp, gt;
 

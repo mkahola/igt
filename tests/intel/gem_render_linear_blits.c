@@ -178,7 +178,7 @@ static void run_test (int fd, int count)
 	buf_ops_destroy(bops);
 }
 
-igt_main
+igt_main()
 {
 	static int fd = 0;
 	int count=0;

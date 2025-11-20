@@ -982,7 +982,7 @@ static bool has_addfb2_iface(int fd)
 
 int fd;
 
-igt_main
+igt_main()
 {
 	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_ANY);

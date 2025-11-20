@@ -407,7 +407,7 @@ static void wc_contention(void)
 	igt_assert(tiled[1] > 0.75 * tiled[0]);
 }
 
-igt_main
+igt_main()
 {
 	igt_subtest("performance")
 		performance();

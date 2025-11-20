@@ -55,7 +55,7 @@ static bool igt_has_prime(int fd, uint64_t flags)
 	return (value & flags) == flags;
 }
 
-igt_main
+igt_main()
 {
 	int fd, kms_fd;
 

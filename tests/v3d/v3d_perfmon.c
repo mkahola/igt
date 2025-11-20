@@ -8,7 +8,7 @@
 
 IGT_TEST_DESCRIPTION("Tests for the V3D's performance monitors");
 
-igt_main
+igt_main()
 {
 	int fd;
 

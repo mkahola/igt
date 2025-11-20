@@ -1172,7 +1172,7 @@ static void run_plane_update_continuous(data_t data, int i, int coexist_features
 	}
 }
 
-igt_main
+igt_main()
 {
 	bool output_supports_pr_psr2_sel_fetch = false;
 	bool pr_psr2_sel_fetch_supported = false;

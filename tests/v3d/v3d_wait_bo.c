@@ -24,7 +24,7 @@ static void test_used_bo(int fd, struct v3d_bo *bo, uint64_t timeout)
 	igt_assert(ret == 0 || (ret == -1 && errno == ETIME));
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 	struct v3d_bo *bo;

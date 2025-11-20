@@ -537,7 +537,7 @@ static bool check_skip(uint32_t skip, uint32_t region)
 	return false;
 }
 
-igt_main
+igt_main()
 {
 	struct igt_collection *set, *regions, *dma_buf_set;
 	struct drm_i915_query_memory_regions *query_info;

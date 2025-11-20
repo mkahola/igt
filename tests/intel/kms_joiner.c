@@ -545,7 +545,7 @@ static void test_basic_max_non_joiner(data_t *data)
 	}
 }
 
-igt_main
+igt_main()
 {
 	bool ultra_joiner_supported, is_dgfx;
 	int i, j, display_ver;

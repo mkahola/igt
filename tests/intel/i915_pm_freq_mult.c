@@ -164,7 +164,7 @@ static void media_freq(int gt, int dir)
 	cleanup(dir);
 }
 
-igt_main
+igt_main()
 {
 	int dir, gt;
 

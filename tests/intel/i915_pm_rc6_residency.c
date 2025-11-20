@@ -601,7 +601,7 @@ static unsigned int rc6_enabled_mask(int i915, int dirfd)
 	return get_rc6_enabled_mask(dirfd);
 }
 
-igt_main
+igt_main()
 {
 	int i915 = -1;
 	unsigned int dirfd, gt;

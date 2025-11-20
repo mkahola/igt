@@ -896,7 +896,7 @@ static void test_mpo_swizzle_toggle(data_t *data)
 }
 
 
-igt_main
+igt_main()
 {
 	data_t data;
 

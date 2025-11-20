@@ -551,7 +551,7 @@ static void kms_poll_disable(void)
 	close(sysfs_fd);
 }
 
-igt_main
+igt_main()
 {
 	int first_fd = -1;
 	int second_fd_vgem = -1;

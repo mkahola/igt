@@ -679,7 +679,7 @@ static void whisper(int fd, const intel_ctx_t *ctx,
 	close(debugfs);
 }
 
-igt_main
+igt_main()
 {
 	const struct mode {
 		const char *name;

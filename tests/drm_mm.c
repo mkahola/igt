@@ -78,7 +78,7 @@
 
 IGT_TEST_DESCRIPTION("Basic sanity check of DRM's range manager (struct drm_mm)");
 
-igt_main
+igt_main()
 {
 	igt_kunit("drm_mm_test", NULL, NULL);
 }

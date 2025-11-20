@@ -354,7 +354,7 @@ static void test_import_multiple(int fd, bool write)
 	igt_assert(!sync_file_busy(write_sync_file));
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 

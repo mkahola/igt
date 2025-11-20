@@ -53,7 +53,7 @@ static const char *live_tests[] = {
 	"xe_eudebug",
 };
 
-igt_main
+igt_main()
 {
 	int i;
 

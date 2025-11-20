@@ -142,7 +142,7 @@ static void test_multipipe(data_t *data, int num_pipes)
 	run_test(data, valid_outputs);
 }
 
-igt_main
+igt_main()
 {
 	data_t data;
 	drmModeResPtr res;

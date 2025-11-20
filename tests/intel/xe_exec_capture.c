@@ -404,7 +404,7 @@ static void test_card(int fd)
 	regfree(&regex);
 }
 
-igt_main
+igt_main()
 {
 	int xe;
 	struct drm_xe_engine_class_instance *hwe;

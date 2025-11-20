@@ -6,7 +6,7 @@
 #include "igt_panthor.h"
 #include "panthor_drm.h"
 
-igt_main {
+igt_main() {
 	int fd;
 
 	igt_fixture() {

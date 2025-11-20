@@ -336,7 +336,7 @@ static void threads(int timeout, unsigned int flags)
 	drm_close_driver(fd);
 }
 
-igt_main
+igt_main()
 {
 	int gpu_count;
 

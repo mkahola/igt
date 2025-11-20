@@ -229,7 +229,7 @@ static void test_all_engines(const char *name, int i915, const intel_ctx_t *ctx,
 	}
 }
 
-igt_main
+igt_main()
 {
 	const intel_ctx_t *ctx;
 	int fd = -1;

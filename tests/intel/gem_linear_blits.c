@@ -269,7 +269,7 @@ static void run_test(int fd, int count, bool do_relocs)
 
 #define MAX_32b ((1ull << 32) - 4096)
 
-igt_main
+igt_main()
 {
 	const int ncpus = sysconf(_SC_NPROCESSORS_ONLN);
 	uint64_t count = 0;

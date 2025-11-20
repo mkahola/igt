@@ -238,7 +238,7 @@ amdgpu_cs_gang(amdgpu_device_handle device, uint32_t ring, bool is_vmid)
 	free(ring_context);
 }
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	struct amdgpu_gpu_info gpu_info = {0};

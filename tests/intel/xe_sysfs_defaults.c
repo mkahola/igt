@@ -58,7 +58,7 @@ static void test_defaults(int xe, int engine, const char **property,
 	closedir(dir);
 }
 
-igt_main
+igt_main()
 {
 	int xe, sys_fd;
 	int gt;

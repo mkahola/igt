@@ -160,7 +160,7 @@ static void run_test_odmc(struct data *data, enum odmc_mode m, const drmModeMode
 	test_fini(data);
 }
 
-igt_main
+igt_main()
 {
 	struct data data;
 

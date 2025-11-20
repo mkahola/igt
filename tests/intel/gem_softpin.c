@@ -1464,7 +1464,7 @@ static void safe_alignment(int i915)
 	igt_subtest_with_dynamic(T) for_each_ctx_engine(i915, ctx, e) \
 		igt_dynamic_f("%s", e->name)
 
-igt_main
+igt_main()
 {
 	const struct intel_execution_engine2 *e;
 	int fd = -1;

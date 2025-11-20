@@ -57,7 +57,7 @@ test_used_bo(int fd, uint64_t timeout)
 	gem_close(fd, handle);
 }
 
-igt_main
+igt_main()
 {
 	int fd;
 	int bo_handle;

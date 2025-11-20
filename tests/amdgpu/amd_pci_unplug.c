@@ -31,7 +31,7 @@
 #include "lib/amdgpu/amd_ip_blocks.h"
 
 
-igt_main
+igt_main()
 {
 
 	struct amd_pci_unplug_setup setup = {0};

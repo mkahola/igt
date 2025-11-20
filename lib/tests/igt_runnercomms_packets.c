@@ -214,7 +214,7 @@ struct {
 		      { NULL, NULL }
 };
 
-igt_main
+igt_main()
 {
 	igt_subtest("create-and-parse-normal") {
 		for (typeof (*basic_creation) *t = basic_creation; t->create; t++) {

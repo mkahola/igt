@@ -152,7 +152,7 @@ static void test_subvp(struct data *data)
 	test_fini(data);
 }
 
-igt_main
+igt_main()
 {
 	struct data data;
 

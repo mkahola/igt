@@ -176,7 +176,7 @@ static void run_mode_switch_first_last(data_t *data, int num_pipes)
 }
 
 IGT_TEST_DESCRIPTION("Test switching between supported modes");
-igt_main
+igt_main()
 {
 	data_t data;
 	int i = 0;

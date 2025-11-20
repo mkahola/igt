@@ -93,7 +93,7 @@ static void test_dontneed_evict_race(int fd,
 	gem_close(fd, handle1);
 }
 
-igt_main
+igt_main()
 {
 	struct drm_i915_query_memory_regions *regions;
 	int i915 = -1;

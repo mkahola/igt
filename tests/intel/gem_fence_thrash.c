@@ -252,7 +252,7 @@ static int run_test(int threads_per_fence, void *f, int tiling,
 	return 0;
 }
 
-igt_main
+igt_main()
 {
 	igt_subtest("bo-write-verify-none")
 		igt_assert(run_test(0, bo_write_verify, I915_TILING_NONE, 80) == 0);

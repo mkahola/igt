@@ -567,7 +567,7 @@ static void do_tests(const char *name, const char *prefix,
 	}
 }
 
-igt_main
+igt_main()
 {
 	const intel_ctx_t *ctx;
 	igt_hang_t hang = {};

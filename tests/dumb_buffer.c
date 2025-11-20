@@ -389,7 +389,7 @@ static void always_clear(int fd, int timeout)
 	igt_info("Checked %'lu page allocations\n", checked);
 }
 
-igt_main
+igt_main()
 {
 	int fd = -1;
 

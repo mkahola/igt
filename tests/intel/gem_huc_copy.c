@@ -98,7 +98,7 @@ static void test_huc_load(int fd)
 	igt_fail_on_f(status == 0, "HuC firmware is not running!\n");
 }
 
-igt_main
+igt_main()
 {
 	int drm_fd = -1;
 	uint32_t devid;

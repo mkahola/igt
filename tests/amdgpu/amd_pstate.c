@@ -40,7 +40,7 @@ amdgpu_stable_pstate_test(amdgpu_device_handle device_handle)
 
 }
 
-igt_main
+igt_main()
 {
 	amdgpu_device_handle device;
 	int fd = -1;
