@@ -127,7 +127,7 @@ calculate_expected(int offset, struct offset *dbg)
 	return (dbg->base_y + dbg->tile_y) * WIDTH + dbg->base_x + dbg->tile_x;
 }
 
-igt_simple_main
+igt_simple_main()
 {
 	int fd;
 	int i, iter = 100;

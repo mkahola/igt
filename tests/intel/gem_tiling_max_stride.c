@@ -68,7 +68,7 @@ static void test_invalid_tiling(int fd, uint32_t handle, int stride)
  * Testcase: Check that max fence stride works
  */
 
-igt_simple_main
+igt_simple_main()
 {
 	int fd;
 	uint32_t *ptr;

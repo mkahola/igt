@@ -76,7 +76,7 @@ static uint32_t create_tiled(int i915)
 	return handle;
 }
 
-igt_simple_main
+igt_simple_main()
 {
 	int i915, num_fences;
 	igt_spin_t *spin;

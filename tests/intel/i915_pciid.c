@@ -71,7 +71,7 @@ static bool has_known_intel_chipset(int fd)
 	return true;
 }
 
-igt_simple_main
+igt_simple_main()
 {
 	int intel = drm_open_driver(DRIVER_INTEL);
 

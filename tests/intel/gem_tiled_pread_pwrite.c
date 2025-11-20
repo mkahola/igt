@@ -117,7 +117,7 @@ static void copy_wc_page(void *dst, const void *src)
 	igt_memcpy_from_wc(dst, src, PAGE_SIZE);
 }
 
-igt_simple_main
+igt_simple_main()
 {
 	uint32_t tiling, swizzle;
 	int count;

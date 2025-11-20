@@ -227,7 +227,7 @@ static void run_test(data_t *data)
 	igt_skip("no valid crtc/connector combinations found\n");
 }
 
-igt_simple_main
+igt_simple_main()
 {
 	data_t data = {};
 

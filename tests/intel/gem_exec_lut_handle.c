@@ -88,7 +88,7 @@ static int has_exec_lut(int fd)
 }
 
 #define ELAPSED(a,b) (1e6*((b)->tv_sec - (a)->tv_sec) + ((b)->tv_usec - (a)->tv_usec))
-igt_simple_main
+igt_simple_main()
 {
 	uint32_t batch[2] = {MI_BATCH_BUFFER_END};
 	uint32_t cycle[16];

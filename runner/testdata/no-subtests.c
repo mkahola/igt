@@ -1,6 +1,6 @@
 #include "igt.h"
 
-igt_simple_main
+igt_simple_main()
 {
 
 }

@@ -146,7 +146,7 @@ get_tiling(int fd, uint32_t handle, uint32_t *tiling, uint32_t *swizzle)
 	*swizzle = arg.swizzle_mode;
 }
 
-igt_simple_main
+igt_simple_main()
 {
 	int fd;
 	int i, iter = 100;

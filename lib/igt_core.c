@@ -772,7 +772,7 @@ bool __igt_fixture(void)
 	internal_assert(!in_subtest,
 			"nesting igt_fixture() in igt_subtest is invalid\n");
 	internal_assert(test_with_subtests,
-			"igt_fixture() in igt_simple_main is invalid\n");
+			"igt_fixture() in igt_simple_main() is invalid\n");
 
 	if (igt_only_list_subtests())
 		return false;
@@ -1627,7 +1627,7 @@ bool igt_only_list_subtests(void)
 void __igt_subtest_group_save(int *save, int *desc)
 {
 	internal_assert(test_with_subtests,
-			"igt_subtest_group() is not allowed in igt_simple_main\n");
+			"igt_subtest_group() is not allowed in igt_simple_main()\n");
 
 	if (__current_description[0] != '\0') {
 		struct description_node *new = calloc(1, sizeof(*new));
@@ -1805,7 +1805,7 @@ void igt_skip(const char *f, ...)
 		skip_subtests_henceforth = SKIP;
 		internal_assert(in_fixture,
 			"skipping is allowed only in fixtures, subtests"
-			" or igt_simple_main\n");
+			" or igt_simple_main()\n");
 		__igt_fixture_end();
 	} else {
 		igt_exitcode = IGT_EXIT_SKIP;
@@ -1938,7 +1938,7 @@ void igt_fail(int exitcode)
 		exit_subtest("FAIL");
 	} else {
 		internal_assert(igt_can_fail(), "failing test is only allowed"
-				" in fixtures, subtests and igt_simple_main\n");
+				" in fixtures, subtests and igt_simple_main()\n");
 
 		if (in_fixture) {
 			skip_subtests_henceforth = FAIL;
@@ -1975,7 +1975,7 @@ void igt_fatal_error(void)
  * igt_can_fail:
  *
  * Returns true if called from either an #igt_fixture(), #igt_subtest or a
- * testcase without subtests, i.e. #igt_simple_main. Returns false otherwise. In
+ * testcase without subtests, i.e. #igt_simple_main(). Returns false otherwise. In
  * other words, it checks whether it's legal to call igt_fail(), igt_skip_on()
  * and all the convenience macros build around those.
  *
@@ -2362,7 +2362,7 @@ void __igt_abort(const char *domain, const char *file, const int line,
  *
  * It is an error to normally exit a test calling igt_exit() - without it the
  * result reporting will be wrong. To avoid such issues it is highly recommended
- * to use #igt_main() or #igt_simple_main instead of a hand-rolled main() function.
+ * to use #igt_main() or #igt_simple_main() instead of a hand-rolled main() function.
  */
 void igt_exit(void)
 {
@@ -2598,7 +2598,7 @@ static pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
 bool __igt_fork(void)
 {
 	internal_assert(!test_with_subtests || in_subtest,
-			"forking is only allowed in subtests or igt_simple_main\n");
+			"forking is only allowed in subtests or igt_simple_main()\n");
 	internal_assert(!test_child,
 			"forking is not allowed from already forked children\n");
 
@@ -2654,7 +2654,7 @@ static void dyn_children_exit_handler(int sig)
 bool __igt_multi_fork(void)
 {
 	internal_assert(!test_with_subtests || in_subtest,
-			"multi-forking is only allowed in subtests or igt_simple_main\n");
+			"multi-forking is only allowed in subtests or igt_simple_main()\n");
 	internal_assert(!test_child,
 			"multi-forking is not allowed from already forked children\n");
 	internal_assert(!test_multi_fork_child,

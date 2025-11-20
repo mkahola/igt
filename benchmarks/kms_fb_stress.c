@@ -139,7 +139,7 @@ static struct kms_t default_kms = {
 };
 
 
-igt_simple_main
+igt_simple_main()
 {
 	struct data_t data = {0};
 	enum pipe pipe = PIPE_NONE;

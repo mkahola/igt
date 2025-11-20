@@ -461,7 +461,7 @@ void igt_simple_init_parse_opts(int *argc, char **argv,
  * This initializes a simple test without any support for subtests.
  *
  * If there's not a reason to the contrary it's less error prone to just use an
- * #igt_simple_main block instead of stitching the test's main() function together
+ * #igt_simple_main() block instead of stitching the test's main() function together
  * manually.
  */
 #define igt_simple_init(argc, argv) \
@@ -494,12 +494,12 @@ void igt_simple_init_parse_opts(int *argc, char **argv,
 
 
 /**
- * igt_simple_main:
+ * igt_simple_main():
  *
  * This is a magic control flow block used instead of a main() function for
  * simple tests. Open-coding the main() function is not recommended.
  */
-#define igt_simple_main igt_simple_main_args(NULL, NULL, NULL, NULL, NULL)
+#define igt_simple_main() igt_simple_main_args(NULL, NULL, NULL, NULL, NULL)
 
 /**
  * igt_constructor:

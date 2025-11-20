@@ -190,7 +190,7 @@ static void run_test(data_t *data)
 
 static data_t data;
 
-igt_simple_main
+igt_simple_main()
 {
 	data.drm_fd = drm_open_driver_master(DRIVER_INTEL);
 	kmstest_set_vt_graphics_mode();

@@ -228,7 +228,7 @@ static void test_reallocation(void)
 	igt_stats_fini(&stats);
 }
 
-igt_simple_main
+igt_simple_main()
 {
 	test_init_zero();
 	test_init();

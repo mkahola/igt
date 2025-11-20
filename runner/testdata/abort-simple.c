@@ -23,7 +23,7 @@
 
 #include "igt.h"
 
-igt_simple_main
+igt_simple_main()
 {
 	igt_abort_on_f(true, "I'm out!\n");
 }

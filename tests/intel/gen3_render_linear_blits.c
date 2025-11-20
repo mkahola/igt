@@ -327,7 +327,7 @@ check_bo(int fd, uint32_t handle, uint32_t val)
 	}
 }
 
-igt_simple_main
+igt_simple_main()
 {
 	uint32_t *handle, *start_val;
 	uint32_t start = 0;

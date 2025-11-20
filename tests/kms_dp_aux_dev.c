@@ -144,7 +144,7 @@ static bool test(int drm_fd, uint32_t connector_id)
 	return false;
 }
 
-igt_simple_main
+igt_simple_main()
 {
 	int valid_connectors = 0;
 	drmModeRes *res;

@@ -57,7 +57,7 @@
 IGT_TEST_DESCRIPTION("Check that drop/setMaster correctly transfer master "
 		     "state");
 
-igt_simple_main
+igt_simple_main()
 {
 	int master1, master2, client;
 	drm_magic_t magic;

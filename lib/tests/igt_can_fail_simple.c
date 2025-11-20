@@ -26,7 +26,7 @@
 
 #include "igt_tests_common.h"
 
-igt_simple_main
+igt_simple_main()
 {
 	internal_assert(igt_can_fail());
 }
