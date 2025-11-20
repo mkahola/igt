@@ -928,42 +928,6 @@ igt_pipe_obj_has_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties prop)
 uint64_t igt_pipe_obj_get_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties prop);
 
 /**
- * igt_pipe_get_prop:
- * @display: Pointer to display.
- * @pipe: Target pipe.
- * @prop: Property to return.
- *
- * Return current value on a pipe for a given property.
- *
- * Returns: The value the property is set to, if this
- * is a blob, the blob id is returned. This can be passed
- * to drmModeGetPropertyBlob() to get the contents of the blob.
- */
-static inline uint64_t
-igt_pipe_get_prop(igt_display_t *display, enum pipe pipe,
-		  enum igt_atomic_crtc_properties prop)
-{
-	return igt_pipe_obj_get_prop(&display->pipes[pipe], prop);
-}
-
-/**
- * igt_pipe_has_prop:
- * @display: Pointer to display.
- * @pipe: Pipe to check.
- * @prop: Property to check.
- *
- * Check whether pipe supports a given property.
- *
- * Returns: True if the property is supported, otherwise false.
- */
-static inline bool
-igt_pipe_has_prop(igt_display_t *display, enum pipe pipe,
-		  enum igt_atomic_crtc_properties prop)
-{
-	return display->pipes[pipe].props[prop];
-}
-
-/**
  * igt_pipe_obj_is_prop_changed:
  * @pipe_obj: Pipe object to check.
  * @prop: Property to check.
@@ -994,16 +958,6 @@ igt_pipe_has_prop(igt_display_t *display, enum pipe pipe,
 	(pipe_obj)->changed |= 1 << (prop)
 
 /**
- * igt_pipe_set_prop_changed:
- * @pipe: Pipe object to check.
- * @prop: Property to check.
- *
- * Sets the given @prop for the @pipe.
- */
-#define igt_pipe_set_prop_changed(display, pipe, prop) \
-	igt_pipe_obj_set_prop_changed(&(display)->pipes[(pipe)], prop)
-
-/**
  * igt_pipe_obj_clear_prop_changed:
  * @pipe_obj: Pipe object to check.
  * @prop: Property to check.
@@ -1012,16 +966,6 @@ igt_pipe_has_prop(igt_display_t *display, enum pipe pipe,
  */
 #define igt_pipe_obj_clear_prop_changed(pipe_obj, prop) \
 	(pipe_obj)->changed &= ~(1 << (prop))
-
-/**
- * igt_pipe_clear_prop_changed:
- * @pipe: Pipe object to check.
- * @prop: Property to check.
- *
- * Clears the given @prop for the @pipe.
- */
-#define igt_pipe_clear_prop_changed(display, pipe, prop) \
-	igt_pipe_obj_clear_prop_changed(&(display)->pipes[(pipe)], prop)
 
 /**
  * igt_pipe_obj_set_prop_value:
@@ -1055,54 +999,9 @@ extern bool igt_pipe_obj_try_prop_enum(igt_pipe_t *pipe,
 extern void igt_pipe_obj_set_prop_enum(igt_pipe_t *pipe,
 				       enum igt_atomic_crtc_properties prop,
 				       const char *val);
-
-/**
- * igt_pipe_try_prop_enum:
- * @pipe: Target pipe.
- * @prop: Property to check.
- * @val: Value to set.
- *
- * Returns: False if the given @pipe doesn't have the enum @prop or
- * failed to set the enum property @val else True.
- */
-#define igt_pipe_try_prop_enum(display, pipe, prop, val) \
-	igt_pipe_obj_try_prop_enum(&(display)->pipes[(pipe)], prop, val)
-
-/**
- * igt_pipe_set_prop_enum:
- * @pipe: Target pipe.
- * @prop: Property to check.
- * @val: Value to set.
- *
- * This function tries to set given enum property @prop value @val to
- * the given @pipe, and terminate the execution if its failed.
- */
-#define igt_pipe_set_prop_enum(display, pipe, prop, val) \
-	igt_pipe_obj_set_prop_enum(&(display)->pipes[(pipe)], prop, val)
-
 extern void igt_pipe_obj_replace_prop_blob(igt_pipe_t *pipe,
 					   enum igt_atomic_crtc_properties prop,
 					   const void *ptr, size_t length);
-
-/**
- * igt_pipe_replace_prop_blob:
- * @pipe: pipe to set property on.
- * @prop: property for which the blob will be replaced.
- * @ptr: Pointer to contents for the property.
- * @length: Length of contents.
- *
- * This function will destroy the old property blob for the given property,
- * and will create a new property blob with the values passed to this function.
- *
- * The new property blob will be committed when you call igt_display_commit(),
- * igt_display_commit2() or igt_display_commit_atomic().
- *
- * Please use igt_output_override_mode() if you want to set #IGT_CRTC_MODE_ID,
- * it works better with legacy commit.
- */
-#define igt_pipe_replace_prop_blob(display, pipe, prop, ptr, length) \
-	igt_pipe_obj_replace_prop_blob(&(display)->pipes[(pipe)], prop, ptr, length)
-
 void igt_pipe_refresh(igt_display_t *display, enum pipe pipe, bool force);
 
 void igt_enable_connectors(int drm_fd);
