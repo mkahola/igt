@@ -26,7 +26,7 @@
 
 #include "igt_tests_common.h"
 
-igt_main()
+int igt_main()
 {
 	/*
 	 * local variables have to be volatile here otherwise they end up being

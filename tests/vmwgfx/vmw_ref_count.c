@@ -86,7 +86,7 @@ static bool ref_surface_and_check_contents(int32 fd, uint32 surface_handle)
 	return data_valid;
 }
 
-igt_main()
+int igt_main()
 {
 	int32 fd1, fd2;
 	const uint32 size = sizeof(data);

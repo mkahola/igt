@@ -94,7 +94,7 @@ static bool chdir_to_tools_dir(void)
 	return chdir(TOOLS) == 0 || chdir("../../bin") == 0;
 }
 
-igt_main()
+int igt_main()
 {
 	igt_fixture() {
 		char *path;

@@ -189,7 +189,7 @@ static bool has_async_execbuf(int fd)
 	igt_subtest_with_dynamic(T) for_each_ctx_engine(i915, ctx, e) \
 		igt_dynamic_f("%s", (e)->name)
 
-igt_main()
+int igt_main()
 {
 	const struct intel_execution_engine2 *e;
 	const intel_ctx_t *ctx;

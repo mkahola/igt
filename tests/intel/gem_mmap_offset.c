@@ -1145,7 +1145,7 @@ static bool has_mmap_offset(int i915)
 	return mmap_gtt_version(i915) >= 4;
 }
 
-igt_main()
+int igt_main()
 {
 	int i915;
 

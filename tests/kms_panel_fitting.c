@@ -281,7 +281,7 @@ static void test_panel_fitting(data_t *data, enum test_type type)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 

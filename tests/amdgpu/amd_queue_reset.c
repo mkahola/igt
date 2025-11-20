@@ -1100,7 +1100,7 @@ get_num_of_tests(struct dynamic_test *arr_err, enum amd_ip_block_type *ip_tests,
 	return cnt;
 }
 
-igt_main()
+int igt_main()
 {
 	char cmdline[2048];
 	int argc = 0;

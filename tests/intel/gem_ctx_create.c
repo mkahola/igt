@@ -614,7 +614,7 @@ static void iris_pipeline(int i915)
 #endif /* I915_DEFINE_CONTEXT_PARAM_ENGINES */
 }
 
-igt_main()
+int igt_main()
 {
 	const int ncpus = sysconf(_SC_NPROCESSORS_ONLN);
 	struct drm_i915_gem_context_create create;

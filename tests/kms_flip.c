@@ -2042,7 +2042,7 @@ static int opt_handler(int opt, int opt_index, void *data)
 const char *help_str =
 	"  -e \tRun on all pipes. (By default subtests will run on two pipes)\n";
 
-igt_main_args("e", NULL, help_str, opt_handler, NULL)
+int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 {
 	struct {
 		int duration;

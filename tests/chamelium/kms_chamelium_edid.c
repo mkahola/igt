@@ -519,7 +519,7 @@ const char *help_str =
 	"  -e \tExtended tests.\n";
 
 IGT_TEST_DESCRIPTION("Testing EDID with a Chamelium board");
-igt_main_args("e", NULL, help_str, opt_handler, NULL)
+int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 {
 	chamelium_data_t data;
 	struct chamelium_port *port;

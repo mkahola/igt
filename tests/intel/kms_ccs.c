@@ -1225,7 +1225,7 @@ static const char *help_str =
 "  -r\t\tOn suspend test do full hibernate with reboot\n"
 ;
 
-igt_main_args("csr:", NULL, help_str, opt_handler, &data)
+int igt_main_args("csr:", NULL, help_str, opt_handler, &data)
 {
 	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);

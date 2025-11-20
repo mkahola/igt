@@ -40,7 +40,7 @@
 
 IGT_TEST_DESCRIPTION("Tests 3D mode setting.");
 
-igt_main()
+int igt_main()
 {
 	int drm_fd;
 	drmModeRes *res;

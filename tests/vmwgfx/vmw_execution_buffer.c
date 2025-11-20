@@ -248,7 +248,7 @@ static void execbuf_stress_test(int fd)
 	pthread_join(threads[1], &status);
 }
 
-igt_main_args("st:", long_options, NULL, parse_options, NULL)
+int igt_main_args("st:", long_options, NULL, parse_options, NULL)
 {
 	int fd;
 

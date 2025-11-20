@@ -1206,7 +1206,7 @@ static void test_shadow_peek(int fd)
 		gem_close(fd, exec[i].handle);
 }
 
-igt_main()
+int igt_main()
 {
 	uint32_t handle;
 	int i915;

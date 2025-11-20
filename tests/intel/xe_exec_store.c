@@ -412,7 +412,7 @@ static void long_shader(int fd, struct drm_xe_engine_class_instance *hwe,
 	free(buf);
 }
 
-igt_main()
+int igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe;
 	int fd;

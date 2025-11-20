@@ -94,7 +94,7 @@ static void igt_display_all_off(igt_display_t *display)
 
 IGT_TEST_DESCRIPTION("Read entries from debugfs with display on/off.");
 
-igt_main()
+int igt_main()
 {
 	int debugfs = -1;
 	igt_display_t display;

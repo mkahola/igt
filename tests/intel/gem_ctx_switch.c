@@ -686,7 +686,7 @@ has_queues(int fd)
 	return gem_has_vm(fd) && gem_context_has_single_timeline(fd);
 }
 
-igt_main()
+int igt_main()
 {
 	const int ncpus = sysconf(_SC_NPROCESSORS_ONLN);
 	const struct intel_execution_engine2 *e2;

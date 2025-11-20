@@ -1398,7 +1398,7 @@ static int opt_handler(int opt, int opt_index, void *_data)
 static const char *help_str =
 	"  -e \tRun on all pipes. (By default subtests will run only on one pipe)\n";
 
-igt_main_args("e", NULL, help_str, opt_handler, NULL)
+int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 {
 	enum pipe pipe = PIPE_NONE;
 	igt_output_t *output = NULL;

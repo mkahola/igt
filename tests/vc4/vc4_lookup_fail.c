@@ -25,7 +25,7 @@
 #include "igt_vc4.h"
 #include "vc4_packet.h"
 
-igt_main()
+int igt_main()
 {
 	int fd;
 

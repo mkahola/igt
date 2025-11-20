@@ -556,7 +556,7 @@ static void test_off(int i915, int engine)
 	set_timeslice(engine, saved);
 }
 
-igt_main()
+int igt_main()
 {
 	static const struct {
 		const char *name;

@@ -2450,7 +2450,7 @@ static void test_oom(int fd)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe, *hwe_non_copy = NULL;
 	uint64_t bind_size;

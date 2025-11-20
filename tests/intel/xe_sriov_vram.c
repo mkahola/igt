@@ -331,7 +331,7 @@ static const char help_str[] =
 	"  --extended\tRun the extended test scope\n"
 	"  --verbose\tEnable verbose logging\n";
 
-igt_main_args("", long_opts, help_str, opts_handler, NULL)
+int igt_main_args("", long_opts, help_str, opts_handler, NULL)
 {
 	bool autoprobe;
 	int pf_fd;

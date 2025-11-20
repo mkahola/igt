@@ -860,7 +860,7 @@ run_test(data_t *data, uint32_t scene)
 		igt_skip("No vrr capable outputs found.\n");
 }
 
-igt_main() {
+int igt_main() {
 	data_t data = {};
 
 	memset(&data, 0, sizeof(data));

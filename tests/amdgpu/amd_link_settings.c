@@ -246,7 +246,7 @@ static void test_link_training_configs(data_t *data)
 	test_fini(data);
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data;
 	memset(&data, 0, sizeof(data));

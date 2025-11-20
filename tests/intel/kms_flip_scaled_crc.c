@@ -714,7 +714,7 @@ static void run_tests(data_t *data, uint32_t index, enum pipe pipe,
 		test_flip_to_scaled(data, index, pipe, output, modetoset, 1);
 }
 
-igt_main()
+int igt_main()
 {
 	enum pipe pipe;
 	data_t data = {};

@@ -92,7 +92,7 @@ static int wrapper(const char *dynamic_name,
 	return igt_kselftest_execute(tst, tl, NULL, NULL);
 }
 
-igt_main()
+int igt_main()
 {
 	igt_kselftests("dmabuf_selftests", NULL, NULL, NULL, wrapper);
 }

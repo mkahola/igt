@@ -133,7 +133,7 @@ static void tweak_perm(uint8_t *saved_perm, char *path, bool save)
 	igt_assert_f(!ret, "chmod failed with %d path=%s\n", errno, path);
 }
 
-igt_main()
+int igt_main()
 {
 	igt_fixture() {
 		/*

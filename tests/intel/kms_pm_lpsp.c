@@ -192,7 +192,7 @@ static void test_lpsp(data_t *data)
 }
 
 IGT_TEST_DESCRIPTION("These tests validates display Low Power Single Pipe configurations");
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 

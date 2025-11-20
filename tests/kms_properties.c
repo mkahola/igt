@@ -898,7 +898,7 @@ static void invalid_properties(igt_display_t *display, bool atomic)
 		test_object_invalid_properties(display, output->id, DRM_MODE_OBJECT_CONNECTOR, atomic);
 }
 
-igt_main()
+int igt_main()
 {
 	igt_display_t display;
 	int i;

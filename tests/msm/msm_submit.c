@@ -24,7 +24,7 @@
 #include "igt.h"
 #include "igt_msm.h"
 
-igt_main()
+int igt_main()
 {
 	struct msm_device *dev = NULL;
 	struct msm_pipe *pipe = NULL;

@@ -298,7 +298,7 @@ static bool test_link_rate(data_t *data, bool mst, bool uhbr)
 IGT_TEST_DESCRIPTION("Test to validate link training on SST/MST with "
 		     "UHBR/NON_UHBR rates");
 
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 

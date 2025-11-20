@@ -510,7 +510,7 @@ test_compute_square(int fd)
 		      "GPU not supported\n");
 }
 
-igt_main()
+int igt_main()
 {
 	int xe, ccs_mode[4];
 	unsigned int ip_ver;

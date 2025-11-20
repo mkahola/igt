@@ -91,7 +91,7 @@ static void test_writable(int i915, int engine)
 	closedir(dir);
 }
 
-igt_main()
+int igt_main()
 {
 	int i915 = -1, engines = -1;
 

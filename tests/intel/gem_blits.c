@@ -820,7 +820,7 @@ static bool blit_supports_tiling(int fd, enum blt_tiling_type tiling)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	struct device device;
 

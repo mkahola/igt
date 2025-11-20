@@ -884,7 +884,7 @@ static const char help_str[] =
 	"  --pt_us\tpreempt_timeout_us\n"
 	"  --inflight\tNumber of submissions kept in flight per VF (0=auto)\n";
 
-igt_main_args("", long_opts, help_str, subm_opts_handler, NULL)
+int igt_main_args("", long_opts, help_str, subm_opts_handler, NULL)
 {
 	int pf_fd;
 	bool autoprobe;

@@ -27,7 +27,7 @@ short_timeout(void)
 	return gettime_ns() + SHORT_TIME_NSEC;
 }
 
-igt_main()
+int igt_main()
 {
 	int fd;
 

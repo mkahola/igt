@@ -391,7 +391,7 @@ static bool has_lut_handle(int i915)
 	return result;
 }
 
-igt_main()
+int igt_main()
 {
 	const struct {
 		const char *suffix;

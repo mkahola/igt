@@ -513,7 +513,7 @@ static void reclaim(unsigned engine, int timeout)
 	drm_close_driver(fd);
 }
 
-igt_main()
+int igt_main()
 {
 	const struct test {
 		const char *name;

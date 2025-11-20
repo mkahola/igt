@@ -566,7 +566,7 @@ static void basic_test(data_t *data, drmEventContext *drm_event, struct pollfd *
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {0};
 	struct pollfd pfd = {0};

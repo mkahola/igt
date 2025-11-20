@@ -155,7 +155,7 @@ blt_bo_fill(data_t *data, struct intel_bb *ibb, struct intel_buf *tmp_bo,
 #define TEST_READ 0x1
 #define TEST_WRITE 0x2
 #define TEST_BOTH (TEST_READ | TEST_WRITE)
-igt_main()
+int igt_main()
 {
 	struct intel_buf *scratch_buf, *staging_buf;
 	struct intel_bb *ibb;

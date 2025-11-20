@@ -1065,7 +1065,7 @@ static void run_test_with_modifiers(data_t *data, void (*test)(data_t *))
 
 static data_t data;
 
-igt_main()
+int igt_main()
 {
 	int i;
 

@@ -313,7 +313,7 @@ static const struct option long_opts[] = {
 static const char help_str[] =
 	"  --extended\tRun the extended test scope\n";
 
-igt_main_args("", long_opts, help_str, opts_handler, NULL)
+int igt_main_args("", long_opts, help_str, opts_handler, NULL)
 {
 	enum xe_sriov_shared_res res;
 	unsigned int gt, total_vfs;

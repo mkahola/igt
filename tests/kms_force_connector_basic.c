@@ -314,7 +314,7 @@ struct option long_opts[] = {
 const char *help_str =
 	"  --reset\t\tReset all connector force states and edid.\n";
 
-igt_main_args("", long_opts, help_str, opt_handler, NULL)
+int igt_main_args("", long_opts, help_str, opt_handler, NULL)
 {
 	/* Force the VGA output and test that it worked. */
 	int i, drm_fd = 0;

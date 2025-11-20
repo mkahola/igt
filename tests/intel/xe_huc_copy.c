@@ -191,7 +191,7 @@ is_huc_running(int fd)
 	return false;
 }
 
-igt_main()
+int igt_main()
 {
 	int xe;
 

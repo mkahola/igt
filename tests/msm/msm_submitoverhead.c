@@ -14,7 +14,7 @@
 
 #define MAX_BOS 1000
 
-igt_main()
+int igt_main()
 {
 	struct msm_device *dev = NULL;
 	struct msm_pipe *pipe = NULL;

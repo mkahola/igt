@@ -31,7 +31,7 @@ test_compute_square(int fd)
 		      "GPU not supported\n");
 }
 
-igt_main()
+int igt_main()
 {
 	int i915;
 

@@ -259,7 +259,7 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 	test_fini(data);
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data;
 	int i = 0, j = 0;

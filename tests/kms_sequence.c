@@ -268,7 +268,7 @@ static void sequence_queue(data_t *data, int fd, int nchildren)
 		 frame_time * 1000.0, 1.0/frame_time);
 }
 
-igt_main()
+int igt_main()
 {
 	int fd;
 	igt_output_t *output;

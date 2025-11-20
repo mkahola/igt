@@ -342,7 +342,7 @@ static const char *help_str =
 	"  --jump\t\tJump the cursor to middle of the screen between each step)\n"
 	"  --extended\t\tRun on all pipes.(Default it will Run only two pipes)\n";
 
-igt_main_args("", long_opts, help_str, opt_handler, &data)
+int igt_main_args("", long_opts, help_str, opt_handler, &data)
 {
 	struct {
 		const char *name;

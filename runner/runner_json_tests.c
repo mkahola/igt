@@ -172,7 +172,7 @@ static const char *dirnames[] = {
 	"graceful-notrun",
 };
 
-igt_main()
+int igt_main()
 {
 	int dirfd = open(testdatadir, O_RDONLY | O_DIRECTORY);
 	size_t i;

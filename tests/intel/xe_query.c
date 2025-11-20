@@ -1082,7 +1082,7 @@ static void test_query_pxp_status(int fd)
 	free(qpxp);
 }
 
-igt_main()
+int igt_main()
 {
 	const struct {
 		const char *name;

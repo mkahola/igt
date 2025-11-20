@@ -267,7 +267,7 @@ static void test_assr_links(data_t *data, uint32_t test_flags)
 
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data;
 

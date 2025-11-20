@@ -799,7 +799,7 @@ static void test_hdr(data_t *data, uint32_t flags)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 

@@ -230,7 +230,7 @@ static void ktap_top_version(void)
 	igt_ktap_free(&ktap);
 }
 
-igt_main()
+int igt_main()
 {
 	igt_subtest("list")
 		ktap_list();

@@ -81,7 +81,7 @@ static void check_all_drm(void)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	char info[256];
 	int fd;

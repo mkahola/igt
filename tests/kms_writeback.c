@@ -528,7 +528,7 @@ static const struct option long_options[] = {
 	{}
 };
 
-igt_main_args("b:c:f:dl", long_options, help_str, opt_handler, NULL)
+int igt_main_args("b:c:f:dl", long_options, help_str, opt_handler, NULL)
 {
 	igt_display_t display;
 	igt_output_t *output;

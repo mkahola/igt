@@ -672,7 +672,7 @@ static void hotreplug_lateclose(struct hotunplug *priv)
 
 /* Main */
 
-igt_main()
+int igt_main()
 {
 	struct hotunplug priv = {
 		.fd		= { .drm = -1, .drm_hc = -1, .sysfs_dev = -1, },

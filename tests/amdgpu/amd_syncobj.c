@@ -234,7 +234,7 @@ amdgpu_syncobj_timeline(amdgpu_device_handle device_handle)
 
 }
 
-igt_main()
+int igt_main()
 {
 	amdgpu_device_handle device;
 	int fd = -1;

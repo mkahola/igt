@@ -62,7 +62,7 @@ test_compute_preempt(int fd, struct drm_xe_engine_class_instance *hwe, bool thre
 
 #define CONTEXT_MB 100
 
-igt_main()
+int igt_main()
 {
 	int xe;
 	struct drm_xe_engine_class_instance *hwe;

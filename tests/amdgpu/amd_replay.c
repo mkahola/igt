@@ -407,7 +407,7 @@ static int opt_handler(int option, int option_index, void *data)
 	return IGT_OPT_HANDLER_SUCCESS;
 }
 
-igt_main_args("", long_options, help_str, opt_handler, NULL)
+int igt_main_args("", long_options, help_str, opt_handler, NULL)
 {
 	struct test_data data;
 

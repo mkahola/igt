@@ -277,7 +277,7 @@ test_wait_signaled(int fd, bool use_timeline)
 	syncobj_destroy(fd, syncobj);
 }
 
-igt_main()
+int igt_main()
 {
 	int fd = -1, i;
 

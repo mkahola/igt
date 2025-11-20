@@ -213,7 +213,7 @@ static void test_flink_close(void)
 	igt_assert_eq(obj_count, 0);
 }
 
-igt_main()
+int igt_main()
 {
 	igt_subtest("flink_name")
 		test_flink_name(5);

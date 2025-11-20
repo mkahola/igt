@@ -315,7 +315,7 @@ static void test_flow(data_t *data, enum sub_test option)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data;
 	memset(&data, 0, sizeof(data));

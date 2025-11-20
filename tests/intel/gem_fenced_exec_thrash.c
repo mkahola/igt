@@ -191,7 +191,7 @@ static void run_test(int fd, int num_fences, int expected_errno,
 	put_ahnd(ahnd);
 }
 
-igt_main()
+int igt_main()
 {
 	uint32_t devid = 0;
 	unsigned int num_fences = 0;

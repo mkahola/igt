@@ -489,7 +489,7 @@ static bool has_prime_export(int fd)
 	return value & DRM_PRIME_CAP_EXPORT;
 }
 
-igt_main()
+int igt_main()
 {
 	int fd = -1;
 

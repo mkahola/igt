@@ -215,7 +215,7 @@ dontneed_before_exec(void)
 	drm_close_driver(fd);
 }
 
-igt_main()
+int igt_main()
 {
 	igt_describe("Check signal for Segmentation Fault and bus error before"
 		     " obtaining a purgeable object and calling for sighandler.");

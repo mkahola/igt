@@ -1030,7 +1030,7 @@ const char *help_str =
 	"  -e \t\tExtend to run on all pipes. (By default tests will run on two pipes only)\n";
 
 
-igt_main_args("det:", NULL, help_str, opt_handler, NULL)
+int igt_main_args("det:", NULL, help_str, opt_handler, NULL)
 {
 	const struct {
 		enum test_flags flags;

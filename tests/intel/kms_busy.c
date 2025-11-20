@@ -408,7 +408,7 @@ static void gpu_engines_restore_timeouts(int fd, int num_engines, const struct g
 const char *help_str =
 	"  -e \tRun on all pipes. (By default subtests will run on two pipes)\n";
 
-igt_main_args("e", NULL, help_str, opt_handler, NULL)
+int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 {
 	igt_display_t display = { .drm_fd = -1, .n_pipes = IGT_MAX_PIPES };
 

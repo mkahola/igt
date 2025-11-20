@@ -1231,7 +1231,7 @@ amdgpu_cs_vcn_enc_destroy(amdgpu_device_handle device_handle,
 	free_resource(&v_context->enc_buf);
 }
 
-igt_main()
+int igt_main()
 {
 	amdgpu_device_handle device;
 	struct mmd_context context = {};

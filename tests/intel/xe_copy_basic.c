@@ -258,7 +258,7 @@ const char *help_str =
 	"  -b\tPrint bb"
 	;
 
-igt_main_args("b", NULL, help_str, opt_handler, NULL)
+int igt_main_args("b", NULL, help_str, opt_handler, NULL)
 {
 	int fd;
 	uint16_t dev_id;

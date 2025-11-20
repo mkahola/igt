@@ -215,7 +215,7 @@ do_fault_test(struct msm_pipe *pipe, bool stress)
  * Tests for drm/msm hangcheck, recovery, and fault handling
  */
 
-igt_main()
+int igt_main()
 {
 	static struct msm_pipe *pipe = NULL;
 

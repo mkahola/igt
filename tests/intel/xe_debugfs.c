@@ -386,7 +386,7 @@ static int opt_handler(int option, int option_index, void *input)
 	return IGT_OPT_HANDLER_SUCCESS;
 }
 
-igt_main_args("", long_options, help_str, opt_handler, NULL)
+int igt_main_args("", long_options, help_str, opt_handler, NULL)
 {
 	struct xe_device *xe_dev;
 	unsigned int t;

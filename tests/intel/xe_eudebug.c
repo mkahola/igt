@@ -2794,7 +2794,7 @@ static void test_basic_exec_queues_enable(int fd)
 	xe_vm_destroy(fd, vm_non_lr);
 }
 
-igt_main()
+int igt_main()
 {
 	bool was_enabled;
 	bool *multigpu_was_enabled;

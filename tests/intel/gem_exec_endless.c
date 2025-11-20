@@ -341,7 +341,7 @@ static void unpin_rps(int sysfs)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	const struct intel_execution_engine2 *e;
 	igt_fd_t(i915);

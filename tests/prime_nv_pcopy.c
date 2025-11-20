@@ -860,7 +860,7 @@ static void test_semaphore(void)
 	gem_close(intel_fd, intel_handle);
 }
 
-igt_main()
+int igt_main()
 {
 	igt_fixture() {
 		find_and_open_devices();

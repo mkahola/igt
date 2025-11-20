@@ -155,7 +155,7 @@ amd_gem_create_fuzzing(int fd)
 
 }
 
-igt_main()
+int igt_main()
 {
 	int fd = -1;
 	const enum amd_ip_block_type arr_types[] = {

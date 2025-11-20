@@ -2074,7 +2074,7 @@ static const char *yesno(bool x)
 	return x ? "yes" : "no";
 }
 
-igt_main()
+int igt_main()
 {
 	const struct intel_execution_ring *e;
 	const int ncpus = sysconf(_SC_NPROCESSORS_ONLN);

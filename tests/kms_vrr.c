@@ -1144,7 +1144,7 @@ static const char help_str[] =
 
 static data_t data;
 
-igt_main_args("drs:", long_opts, help_str, opt_handler, &data)
+int igt_main_args("drs:", long_opts, help_str, opt_handler, &data)
 {
 	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);

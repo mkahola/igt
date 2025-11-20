@@ -553,7 +553,7 @@ const char *help_str =
 	If not set, an error will be injected in every possible function call\
 	starting from first up to 100.";
 
-igt_main_args("I:", NULL, help_str, opt_handler, NULL)
+int igt_main_args("I:", NULL, help_str, opt_handler, NULL)
 {
 	int fd, sysfs;
 	struct drm_xe_engine_class_instance *hwe;

@@ -309,7 +309,7 @@ amdgpu_uvd_enc_test(amdgpu_device_handle device, struct mmd_shared_context *shar
 
 }
 
-igt_main()
+int igt_main()
 {
 	amdgpu_device_handle device;
 	struct mmd_shared_context shared_context = {};

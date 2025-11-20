@@ -597,7 +597,7 @@ static bool run_dsc_sst_fallaback_test(data_t *data)
 	return ran;
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 

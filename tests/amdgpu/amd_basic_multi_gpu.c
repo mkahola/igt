@@ -157,7 +157,7 @@ static void amdgpu_command_submission_multi_fence(amdgpu_device_handle device)
 	amdgpu_command_submission_multi_fence_wait_all(device, false);
 }
 
-igt_main()
+int igt_main()
 {
 	amdgpu_device_handle device;
 	int fd = -1;

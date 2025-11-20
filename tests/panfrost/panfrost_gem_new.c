@@ -35,7 +35,7 @@
 #include <sys/ioctl.h>
 #include "panfrost_drm.h"
 
-igt_main()
+int igt_main()
 {
 	int fd;
 

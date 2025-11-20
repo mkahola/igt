@@ -39,7 +39,7 @@ set_label(int fd, int handle, const char *name, int err)
 		do_ioctl(fd, DRM_IOCTL_VC4_LABEL_BO, &label);
 }
 
-igt_main()
+int igt_main()
 {
 	int fd;
 

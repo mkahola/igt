@@ -294,7 +294,7 @@ amdgpu_uvd_dec_destroy(amdgpu_device_handle device_handle, struct mmd_context *c
 	igt_assert_eq(r, 0);
 }
 
-igt_main()
+int igt_main()
 {
 	amdgpu_device_handle device;
 	struct mmd_context context = {};

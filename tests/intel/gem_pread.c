@@ -298,7 +298,7 @@ static int opt_handler(int opt, int opt_index, void *data)
 
 const char *help_str = "  -s\tObject size in bytes\n";
 
-igt_main_args("s:", NULL, help_str, opt_handler, NULL)
+int igt_main_args("s:", NULL, help_str, opt_handler, NULL)
 {
 	double usecs;
 	char buf[100];

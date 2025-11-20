@@ -426,6 +426,7 @@ void __igt_subtest_group_restore(int, int);
  * #igt_subtest_init_parse_opts.
  */
 #define igt_main_args(short_opts, long_opts, help_str, opt_handler, handler_data) \
+	main(int argc, char **argv); \
 	static void igt_unique(__real_main)(void); \
 	int main(int argc, char **argv) { \
 		igt_subtest_init_parse_opts(&argc, argv, \

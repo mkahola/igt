@@ -117,7 +117,7 @@ static void test_panic(void)
 	system("echo c > /proc/sysrq-trigger");
 }
 
-igt_main()
+int igt_main()
 {
 
 	igt_fixture() {

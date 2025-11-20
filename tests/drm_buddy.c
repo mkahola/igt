@@ -8,7 +8,7 @@
 
 IGT_TEST_DESCRIPTION("Basic sanity check of DRM's buddy allocator (struct drm_buddy)");
 
-igt_main()
+int igt_main()
 {
 	igt_kunit("drm_buddy_test", NULL, NULL);
 }

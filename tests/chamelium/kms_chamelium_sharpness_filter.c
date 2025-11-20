@@ -241,7 +241,7 @@ run_sharpness_filter_test(data_t *data)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 

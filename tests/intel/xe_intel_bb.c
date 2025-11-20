@@ -984,7 +984,7 @@ const char *help_str =
 	"  -b\tDump to base64 (bb and images)\n"
 	;
 
-igt_main_args("dpib", NULL, help_str, opt_handler, NULL)
+int igt_main_args("dpib", NULL, help_str, opt_handler, NULL)
 {
 	int xe;
 	struct buf_ops *bops;

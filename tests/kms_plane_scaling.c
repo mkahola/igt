@@ -1354,7 +1354,7 @@ static const char help_str[] =
 
 static data_t data;
 
-igt_main_args("", long_opts, help_str, opt_handler, &data)
+int igt_main_args("", long_opts, help_str, opt_handler, &data)
 {
 	enum pipe pipe;
 	uint32_t ret = -EINVAL;

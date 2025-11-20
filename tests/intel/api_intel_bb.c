@@ -1579,7 +1579,7 @@ const char *help_str =
 	"  -c n\tCalculate crc up to (1 << n)\n"
 	;
 
-igt_main_args("dpibc:", NULL, help_str, opt_handler, NULL)
+int igt_main_args("dpibc:", NULL, help_str, opt_handler, NULL)
 {
 	int i915, i, gen;
 	struct buf_ops *bops;

@@ -7,7 +7,7 @@
 #include "igt_core.h"
 #include "igt_panthor.h"
 
-igt_main() {
+int igt_main() {
 	int fd;
 
 	igt_fixture() {

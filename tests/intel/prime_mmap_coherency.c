@@ -307,7 +307,7 @@ static void test_ioctl_errors(void)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	struct igt_collection *set, *dma_buf_set;
 	struct drm_i915_query_memory_regions *query_info;

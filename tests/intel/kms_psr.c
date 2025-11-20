@@ -769,7 +769,7 @@ static void dpms_off_on(data_t *data)
 
 data_t data = {};
 
-igt_main()
+int igt_main()
 {
 	int z, y;
 	enum operations op;

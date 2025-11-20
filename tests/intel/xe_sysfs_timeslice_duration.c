@@ -149,7 +149,7 @@ static void test_timeout(int fd, int engine, const char **property, uint16_t cla
 }
 
 #define	MAX_GTS	8
-igt_main()
+int igt_main()
 {
 	static const struct {
 		const char *name;

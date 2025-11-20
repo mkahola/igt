@@ -348,7 +348,7 @@ static void run(data_t *data)
 	psr_sink_error_check(data->debugfs_fd, data->initial_state, data->output);
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 

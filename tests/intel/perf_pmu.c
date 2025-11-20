@@ -2278,7 +2278,7 @@ static void restore_sysfs_freq(int i915)
 	free(stash_boost);
 }
 
-igt_main()
+int igt_main()
 {
 	const struct intel_execution_engine2 *e;
 	unsigned int num_engines = 0;

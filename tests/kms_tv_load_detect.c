@@ -39,7 +39,7 @@
 
 IGT_TEST_DESCRIPTION("Check tv load detection works correctly.");
 
-igt_main()
+int igt_main()
 {
 	/* force the VGA output and test that it worked */
 	int drm_fd = 0;

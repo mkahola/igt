@@ -1120,7 +1120,7 @@ static const char help_str[] =
 
 static data_t data;
 
-igt_main_args("", long_opts, help_str, opt_handler, &data)
+int igt_main_args("", long_opts, help_str, opt_handler, &data)
 {
 	igt_output_t *output;
 	enum pipe pipe;

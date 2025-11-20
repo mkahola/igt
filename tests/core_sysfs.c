@@ -24,7 +24,7 @@
 
 IGT_TEST_DESCRIPTION("Read entries from sysfs paths.");
 
-igt_main()
+int igt_main()
 {
 	int fd = -1;
 	int sysfs = -1;

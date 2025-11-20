@@ -118,7 +118,7 @@ static void test_4k_mode_max_bpc(data_t *data)
 	test_fini(data);
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data;
 

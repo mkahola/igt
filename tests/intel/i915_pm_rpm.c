@@ -1344,7 +1344,7 @@ static struct option long_options[] = {
 	{ 0, 0, 0, 0 }
 };
 
-igt_main_args("", long_options, help_str, opt_handler, NULL)
+int igt_main_args("", long_options, help_str, opt_handler, NULL)
 {
 	/* Skip instead of failing in case the machine is not prepared to reach
 	 * PC8+. We don't want bug reports from cases where the machine is just

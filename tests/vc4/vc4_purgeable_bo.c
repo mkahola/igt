@@ -94,7 +94,7 @@ static void igt_vc4_purgeable_subtest_prepare(int fd, struct igt_list_head *list
 	igt_assert(!igt_list_empty(list));
 }
 
-igt_main()
+int igt_main()
 {
 	struct igt_vc4_bo *bo;
 	struct igt_list_head list;

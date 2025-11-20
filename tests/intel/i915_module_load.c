@@ -361,7 +361,7 @@ static uint32_t  driver_load_with_lmem_bar_size(uint32_t lmem_bar_size, bool che
 	return lmem_bar_size;
 }
 
-igt_main()
+int igt_main()
 {
 	igt_describe("Check if i915 and friends are not yet loaded, then load them.");
 	igt_subtest("load") {

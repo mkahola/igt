@@ -149,7 +149,7 @@ static void test_all_env_vars(void)
 	free(line);
 }
 
-igt_main()
+int igt_main()
 {
 	test_invalid_hook_descriptors();
 

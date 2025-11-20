@@ -728,7 +728,7 @@ utilization_multi(int fd, int gt, int class, unsigned int flags)
 	xe_vm_destroy(fd, vm);
 }
 
-igt_main()
+int igt_main()
 {
 	const struct section {
 		const char *name;

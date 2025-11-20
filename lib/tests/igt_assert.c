@@ -125,7 +125,7 @@ static void test_fd(void)
 	igt_assert_fd(INT_MAX);
 }
 
-igt_main()
+int igt_main()
 {
 	int ret;
 

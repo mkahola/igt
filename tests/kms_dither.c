@@ -236,7 +236,7 @@ run_dither_test(data_t *data, int fb_bpc, int fb_format, int output_bpc)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	struct {
 		int fb_bpc;

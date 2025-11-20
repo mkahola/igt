@@ -55,7 +55,7 @@
 
 IGT_TEST_DESCRIPTION("Tests the DRM_IOCTL_GET_STATS ioctl.");
 
-igt_main()
+int igt_main()
 {
 	int fd, ret;
 	drm_stats_t stats;

@@ -848,7 +848,7 @@ static void test_display_audio_edid(chamelium_data_t *data,
 }
 
 IGT_TEST_DESCRIPTION("Testing Audio with a Chamelium board");
-igt_main()
+int igt_main()
 {
 	chamelium_data_t data;
 	struct chamelium_port *port;

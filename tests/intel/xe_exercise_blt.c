@@ -385,7 +385,7 @@ const char *help_str =
 	"  -H\tHeight (default 512)"
 	;
 
-igt_main_args("b:pst:W:H:", NULL, help_str, opt_handler, NULL)
+int igt_main_args("b:pst:W:H:", NULL, help_str, opt_handler, NULL)
 {
 	struct igt_collection *set;
 	int xe;

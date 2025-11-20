@@ -408,7 +408,7 @@ static bool has_contexts(void)
 	return result;
 }
 
-igt_main()
+int igt_main()
 {
 	const int ncpus = sysconf(_SC_NPROCESSORS_ONLN);
 

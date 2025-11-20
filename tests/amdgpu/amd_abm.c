@@ -498,7 +498,7 @@ static void abm_gradual(data_t *data)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {0};
 	igt_skip_on_simulation();

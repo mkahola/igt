@@ -59,7 +59,7 @@ static void skip_delegate(void)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	/* Basic check that scopes will call their destructor */
 	cleanup_called = 0;

@@ -527,7 +527,7 @@ static void xe_spin_timestamp_check(int fd, struct drm_xe_engine_class_instance 
 	run_spinner(fd, eci);
 }
 
-igt_main()
+int igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe;
 	int fd;

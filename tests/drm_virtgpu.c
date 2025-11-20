@@ -156,7 +156,7 @@ static void create_resource_if_needed(void)
 		 args.res_handle, args.bo_handle);
 }
 
-igt_main() {
+int igt_main() {
 	void *caps_buf = NULL;
 
 	igt_fixture() {

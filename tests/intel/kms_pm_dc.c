@@ -730,7 +730,7 @@ static void kms_poll_state_restore(int sig)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 

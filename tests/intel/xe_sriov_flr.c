@@ -1023,7 +1023,7 @@ static void clear_tests(int pf_fd, int num_vfs, flr_exec_strategy exec_strategy)
 	verify_flr(pf_fd, num_vfs, checks, num_checks, exec_strategy);
 }
 
-igt_main()
+int igt_main()
 {
 	int pf_fd;
 	bool autoprobe;

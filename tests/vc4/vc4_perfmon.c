@@ -8,7 +8,7 @@
 
 IGT_TEST_DESCRIPTION("Tests for the VC4's performance monitors");
 
-igt_main()
+int igt_main()
 {
 	int fd;
 

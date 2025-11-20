@@ -352,7 +352,7 @@ static void test_i915_blt_fill_nv_read(void)
 
 /* test 9 nouveau copy engine?? */
 
-igt_main()
+int igt_main()
 {
 	igt_fixture() {
 		igt_assert(find_and_open_devices() == 0);

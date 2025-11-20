@@ -209,7 +209,7 @@ static void handle_lost_event(data_t *data) {
 static data_t data = {};
 igt_output_t *output;
 
-igt_main()
+int igt_main()
 {
 	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);

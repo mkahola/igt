@@ -116,7 +116,7 @@ test_retire_vma_not_inactive(int fd)
 	put_ahnd(ahnd);
 }
 
-igt_main()
+int igt_main()
 {
 	igt_fd_t(fd);
 

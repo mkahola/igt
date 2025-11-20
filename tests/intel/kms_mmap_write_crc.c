@@ -269,7 +269,7 @@ static int opt_handler(int opt, int opt_index, void *data)
 
 static data_t data;
 
-igt_main_args("n", NULL, NULL, opt_handler, NULL)
+int igt_main_args("n", NULL, NULL, opt_handler, NULL)
 {
 	int i;
 	igt_output_t *output;

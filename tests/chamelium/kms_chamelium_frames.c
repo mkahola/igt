@@ -984,7 +984,7 @@ static void test_display_planes_random(chamelium_data_t *data,
 }
 
 IGT_TEST_DESCRIPTION("Tests requiring a Chamelium board");
-igt_main()
+int igt_main()
 {
 	chamelium_data_t data;
 	struct chamelium_port *port;

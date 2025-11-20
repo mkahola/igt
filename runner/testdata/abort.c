@@ -23,7 +23,7 @@
 
 #include "igt.h"
 
-igt_main()
+int igt_main()
 {
 	igt_subtest("a-subtest")
 		;

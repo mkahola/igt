@@ -440,7 +440,7 @@ static void prepare_pci_membarrier_test(int fd, int *fw_ptr)
 	igt_assert_lte(0, *fw_ptr);
 }
 
-igt_main()
+int igt_main()
 {
 	int fd;
 

@@ -318,7 +318,7 @@ static void single(int i915)
 		munmap(ptr, batch_size);
 }
 
-igt_main()
+int igt_main()
 {
 	int i915 = -1;
 

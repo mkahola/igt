@@ -497,7 +497,7 @@ const char *help_str =
 	"  -V\tVerify object after compressing\n"
 	;
 
-igt_main_args("bdDn:p:s:S:V", NULL, help_str, opt_handler, NULL)
+int igt_main_args("bdDn:p:s:S:V", NULL, help_str, opt_handler, NULL)
 {
 	const struct ccs {
 		const char *name;

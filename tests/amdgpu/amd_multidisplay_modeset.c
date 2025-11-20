@@ -406,7 +406,7 @@ static void multiple_display_test(struct data_t *data, enum sub_test test_mode)
 }
 
 IGT_TEST_DESCRIPTION("Test multi-display mode set, display enable and disable");
-igt_main()
+int igt_main()
 {
 	struct data_t data;
 

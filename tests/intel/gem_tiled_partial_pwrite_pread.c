@@ -286,7 +286,7 @@ static bool known_swizzling(uint32_t handle)
 	return arg.phys_swizzle_mode == arg.swizzle_mode;
 }
 
-igt_main()
+int igt_main()
 {
 	srandom(0xdeadbeef);
 

@@ -451,7 +451,7 @@ static void teardown_environment(struct drm_info *drm)
 	kmstest_restore_vt_mode();
 }
 
-igt_main()
+int igt_main()
 {
 	struct drm_info drm = { .fd = -1 };
 

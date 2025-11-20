@@ -261,7 +261,7 @@ static void write_packet_with_canary(int fd, struct runnerpacket *packet)
 	free(packet);
 }
 
-igt_main()
+int igt_main()
 {
 	struct settings *settings = malloc(sizeof(*settings));
 

@@ -321,7 +321,7 @@ static bool pipe_output_combo_valid(igt_display_t *display,
 	return ret;
 }
 
-igt_main()
+int igt_main()
 {
 	igt_display_t display;
 	igt_output_t *output;

@@ -154,7 +154,7 @@ static void run_on_ring(int fd, const intel_ctx_t *ctx,
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	const struct intel_execution_engine2 *e;
 	const intel_ctx_t *ctx;

@@ -905,7 +905,7 @@ has_syncobj_wait(int fd)
 	return ret == -1 && errno == ENOENT;
 }
 
-igt_main()
+int igt_main()
 {
 	int fd = -1;
 

@@ -1365,7 +1365,7 @@ preempt(int fd, const intel_ctx_t *ctx, unsigned ring,
 	intel_ctx_destroy(fd, tmp_ctx[0]);
 }
 
-igt_main()
+int igt_main()
 {
 	const int ncpus = sysconf(_SC_NPROCESSORS_ONLN);
 	const struct {

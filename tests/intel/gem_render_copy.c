@@ -716,7 +716,7 @@ static void buf_mode_to_str(uint32_t tiling, bool mixed_tiled,
 		 tiling_str, compression_str[0] ? "-" : "", compression_str);
 }
 
-igt_main_args("dac", NULL, help_str, opt_handler, NULL)
+int igt_main_args("dac", NULL, help_str, opt_handler, NULL)
 {
 	static const struct test_desc {
 		int src_tiling;

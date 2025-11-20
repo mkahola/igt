@@ -586,7 +586,7 @@ amdgpu_vce_enc_test(amdgpu_device_handle device, struct mmd_shared_context *shar
 	mmd_context_clean(device, context);
 }
 
-igt_main()
+int igt_main()
 {
 	amdgpu_device_handle device;
 	struct mmd_shared_context shared_context = {};

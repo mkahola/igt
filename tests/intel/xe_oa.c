@@ -4928,7 +4928,7 @@ static struct option long_options[] = {
 	{ NULL, 0, 0, 0 }
 };
 
-igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
+int igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 {
 	const struct sync_section {
 		const char *name;

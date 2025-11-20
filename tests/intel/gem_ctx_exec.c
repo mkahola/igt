@@ -486,7 +486,7 @@ static void close_race(int i915)
 	munmap(ctx_id, 4096);
 }
 
-igt_main()
+int igt_main()
 {
 	const uint32_t batch[2] = { 0, MI_BATCH_BUFFER_END };
 	uint32_t handle;

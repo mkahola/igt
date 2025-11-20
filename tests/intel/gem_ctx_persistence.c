@@ -1331,7 +1331,7 @@ static void exit_handler(int sig)
 	enable_hangcheck(i915);
 }
 
-igt_main()
+int igt_main()
 {
 	const intel_ctx_cfg_t empty_cfg = {};
 	struct {

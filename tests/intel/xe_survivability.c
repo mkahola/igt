@@ -207,7 +207,7 @@ static void test_spinner_after_recovery(int fd)
 	put_ahnd(ahnd);
 }
 
-igt_main()
+int igt_main()
 {
 	int fd, configfs_fd, configfs_device_fd;
 	struct pci_device *pci_xe;

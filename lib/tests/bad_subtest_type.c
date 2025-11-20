@@ -8,7 +8,7 @@
 
 IGT_TEST_DESCRIPTION("Test bad-scoped file descriptor variable");
 
-igt_main()
+int igt_main()
 {
 	igt_describe("Check if using a scoped variable inside a subtest will abort it");
 	igt_subtest("bad-scoped-variable") {

@@ -126,7 +126,7 @@ static void restore_initial_driver_state(int fd, bool eudebug_enabled, bool vf_a
 	igt_abort_on_f(abort, "Failed to restore initial driver state\n");
 }
 
-igt_main()
+int igt_main()
 {
 	bool eudebug_enabled;
 	bool vf_autoprobe;

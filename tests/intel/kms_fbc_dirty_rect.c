@@ -436,7 +436,7 @@ static void fbc_dirty_rectangle_test(data_t *data, void (*test_func)(data_t *))
 	cleanup(data);
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {0};
 

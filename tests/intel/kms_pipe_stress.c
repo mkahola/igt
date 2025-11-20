@@ -856,7 +856,7 @@ struct data data = {
 };
 
 
-igt_main() {
+int igt_main() {
 	uint8_t format_idx = 0, tiling_idx = 0;
 
 	igt_fixture() {

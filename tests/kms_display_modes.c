@@ -227,7 +227,7 @@ static void run_extendedmode_test(data_t *data) {
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	int dp_mst_outputs = 0, count = 0;
 	igt_output_t *output;

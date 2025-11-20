@@ -1004,7 +1004,7 @@ static unsigned int __has_context_isolation(int fd)
 		for_each_if(mask & (1 << (e)->class)) \
 			igt_dynamic_f("%s", (e)->name)
 
-igt_main()
+int igt_main()
 {
 	unsigned int has_context_isolation = 0;
 	const struct intel_execution_engine2 *e;

@@ -198,7 +198,7 @@ const char *help_str =
 	;
 
 
-igt_main_args("dW:H:X:Y:", NULL, help_str, opt_handler, NULL)
+int igt_main_args("dW:H:X:Y:", NULL, help_str, opt_handler, NULL)
 {
 	data_t data = {0, };
 	igt_fillfunc_t fill_fn = NULL;

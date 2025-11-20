@@ -1,6 +1,6 @@
 #include "igt.h"
 
-igt_main()
+int igt_main()
 {
 	igt_fixture() {
 		igt_require_f(false, "Skipping from fixture\n");

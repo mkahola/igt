@@ -380,7 +380,7 @@ static void isolation(int i915)
 	gem_vm_destroy(i915, vm[0]);
 }
 
-igt_main()
+int igt_main()
 {
 	int i915 = -1;
 

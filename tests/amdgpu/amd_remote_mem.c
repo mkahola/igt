@@ -635,7 +635,7 @@ static void map_unmap_to_nodes_test(amdgpu_device_handle *devices, int device_co
 	amdgpu_bo_unmap_and_free(boDstA, vaDstA, mcDstA, PAGE_SIZE);
 }
 
-igt_main() {
+int igt_main() {
 	static int fds[8];
 	static int fd_count;
 	static amdgpu_device_handle devices[8];

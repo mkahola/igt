@@ -262,7 +262,7 @@ do_mapping_test(struct msm_pipe *pipe, const char *buffername, bool write)
  * Tests for drm/msm hangcheck, recovery, and fault handling
  */
 
-igt_main()
+int igt_main()
 {
 	struct msm_device *dev = NULL;
 	struct msm_pipe *pipe = NULL;

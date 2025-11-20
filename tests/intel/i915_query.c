@@ -1436,7 +1436,7 @@ static void query_parse_and_validate_hwconfig_table(int i915)
 	free(data);
 }
 
-igt_main()
+int igt_main()
 {
 	int fd = -1;
 	int devid;

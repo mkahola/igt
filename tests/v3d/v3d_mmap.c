@@ -26,7 +26,7 @@
 
 IGT_TEST_DESCRIPTION("Tests for the V3D's mmap IOCTL");
 
-igt_main()
+int igt_main()
 {
 	int fd;
 

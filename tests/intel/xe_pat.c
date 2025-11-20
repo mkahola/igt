@@ -1211,7 +1211,7 @@ static int opt_handler(int opt, int opt_index, void *data)
 const char *help_str =
 	"  -V\tVerify every dword (might be slow)\n";
 
-igt_main_args("V", NULL, help_str, opt_handler, NULL)
+int igt_main_args("V", NULL, help_str, opt_handler, NULL)
 {
 	uint16_t dev_id;
 	int fd;

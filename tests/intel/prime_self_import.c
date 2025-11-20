@@ -458,7 +458,7 @@ static void test_llseek_bad(void)
 	drm_close_driver(fd);
 }
 
-igt_main()
+int igt_main()
 {
 	struct {
 		const char *name;

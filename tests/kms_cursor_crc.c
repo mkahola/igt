@@ -1261,7 +1261,7 @@ static int opt_handler(int opt, int opt_index, void *_data)
 const char *help_str =
 	"  -e \tExtended tests.\n";
 
-igt_main_args("e", NULL, help_str, opt_handler, NULL)
+int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 {
 	uint64_t cursor_width = 64, cursor_height = 64;
 	int ret;

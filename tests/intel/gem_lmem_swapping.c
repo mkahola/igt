@@ -774,7 +774,7 @@ struct option long_options[] = {
 	{ 0, 0, 0, 0 }
 };
 
-igt_main_args("", long_options, help_str, opt_handler, NULL)
+int igt_main_args("", long_options, help_str, opt_handler, NULL)
 {
 	struct drm_i915_query_memory_regions *regions;
 	struct drm_i915_memory_region_info *region;

@@ -103,7 +103,7 @@ static void test(data_t *data, enum pipe pipe, igt_output_t *output)
 	igt_remove_fb(data->drm_fd, &fb[0]);
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 	igt_output_t *output;

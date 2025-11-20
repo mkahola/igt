@@ -638,7 +638,7 @@
 
 IGT_TEST_DESCRIPTION("Basic unit tests for i915.ko");
 
-igt_main()
+int igt_main()
 {
 	const char *env = getenv("SELFTESTS") ?: "";
 	char opts[1024];

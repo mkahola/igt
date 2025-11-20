@@ -130,7 +130,7 @@ static void test_scaling_mode(data_t *data, uint32_t flags)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 

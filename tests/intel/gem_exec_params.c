@@ -449,7 +449,7 @@ uint32_t batch[2] = {MI_BATCH_BUFFER_END};
 uint32_t handle, devid;
 int fd;
 
-igt_main()
+int igt_main()
 {
 	igt_fixture() {
 		fd = drm_open_driver(DRIVER_INTEL);

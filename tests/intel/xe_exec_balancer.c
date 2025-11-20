@@ -560,7 +560,7 @@ test_cm(int fd, int gt, int class, int n_exec_queues, int n_execs,
 }
 
 
-igt_main()
+int igt_main()
 {
 	const struct section {
 		const char *name;

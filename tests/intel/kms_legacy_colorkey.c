@@ -58,7 +58,7 @@ static void test_plane(uint32_t plane_id, int expected_ret)
 				   sizeof(ckey)) == expected_ret);
 }
 
-igt_main()
+int igt_main()
 {
 	igt_fixture() {
 		drm_fd = drm_open_driver_master(DRIVER_INTEL);

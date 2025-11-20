@@ -76,7 +76,7 @@ err_handle:
 	return ret;
 }
 
-igt_main()
+int igt_main()
 {
 	amdgpu_device_handle device;
 	struct mmd_shared_context shared_context = {};

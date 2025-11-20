@@ -116,7 +116,7 @@ static const char * const unwanted_drivers[] = {
  * SUBTEST: many-reload
  * Description: Reload the Xe driver many times
  */
-igt_main()
+int igt_main()
 {
 	igt_describe("Check if xe and friends are not yet loaded, then load them.");
 	igt_subtest("load") {

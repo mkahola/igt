@@ -988,7 +988,7 @@ ras_tests_cleanup(struct amd_ras_setup *setup)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	struct amd_ras_setup setup = {};
 	bool render_mode = true;

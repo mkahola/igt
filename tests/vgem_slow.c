@@ -85,7 +85,7 @@ static void test_nohang(int fd)
 	gem_close(fd, bo.handle);
 }
 
-igt_main()
+int igt_main()
 {
 	int fd = -1;
 

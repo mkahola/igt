@@ -62,7 +62,7 @@ static void check_done(struct mali_job_descriptor_header *header)
         igt_assert(header->exception_status == 1 && header->fault_pointer == 0);
 }
 
-igt_main()
+int igt_main()
 {
         int fd;
 

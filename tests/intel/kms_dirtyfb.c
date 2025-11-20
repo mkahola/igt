@@ -350,7 +350,7 @@ static void run_test(data_t *data)
 	intel_buf_destroy(dst);
 }
 
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 

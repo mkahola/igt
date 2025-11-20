@@ -206,7 +206,7 @@ static void negative_reloc_blt(int fd)
 		igt_assert_eq(buf[i], 0xc0ffee ^ i);
 }
 
-igt_main()
+int igt_main()
 {
 	int fd = -1;
 

@@ -328,7 +328,7 @@ static const char *modifier_str(int modifier_index)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	enum igt_draw_method method;
 	int format_idx, modifier_idx;

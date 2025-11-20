@@ -766,7 +766,7 @@ const char *help_str =
 	"  -H\tHeight (default 512)"
 	;
 
-igt_main_args("bf:pst:W:H:", NULL, help_str, opt_handler, NULL)
+int igt_main_args("bf:pst:W:H:", NULL, help_str, opt_handler, NULL)
 {
 	struct drm_i915_query_memory_regions *query_info;
 	struct igt_collection *set;

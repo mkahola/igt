@@ -1102,7 +1102,7 @@ static void exit_handler(int sig)
 	usleep(50 * 1000); /* give time for the termination to be processed */
 }
 
-igt_main()
+int igt_main()
 {
 	bool pxp_supported = true;
 	drmModeResPtr res;

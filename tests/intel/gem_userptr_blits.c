@@ -2497,7 +2497,7 @@ static int opt_handler(int opt, int opt_index, void *data)
 
 const char *help_str = "  -c\tBuffer count\n";
 
-igt_main_args("c:", NULL, help_str, opt_handler, NULL)
+int igt_main_args("c:", NULL, help_str, opt_handler, NULL)
 {
 	int size = sizeof(linear);
 	igt_fd_t(fd);

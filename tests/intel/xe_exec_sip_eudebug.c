@@ -314,7 +314,7 @@ static void test_sip(enum shader_type shader_type, enum sip_type sip_type,
 				igt_dynamic_f("%s%d", xe_engine_class_string(__eci->engine_class), \
 					      __eci->engine_instance)
 
-igt_main()
+int igt_main()
 {
 	struct drm_xe_engine_class_instance *eci;
 	bool was_enabled;

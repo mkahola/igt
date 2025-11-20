@@ -289,7 +289,7 @@ test_fail_enable_pipe_C_while_B_has_3_lanes(data_t *data)
 }
 
 static data_t data;
-igt_main()
+int igt_main()
 {
 	int devid;
 

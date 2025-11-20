@@ -363,7 +363,7 @@ static void gpu_write(struct gpu_info *ex_gpu, struct gpu_info *im_gpu)
 
 #define DEFAULT_SIZE 0
 
-igt_main_args("", NULL, NULL, NULL, NULL)
+int igt_main_args("", NULL, NULL, NULL, NULL)
 {
 	struct gpu_info gpus[2];
 	int gpu_cnt;

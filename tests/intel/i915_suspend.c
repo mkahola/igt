@@ -298,7 +298,7 @@ test_suspend_without_i915(int state)
 
 int fd;
 
-igt_main()
+int igt_main()
 {
 	igt_describe("Validate suspend-to-idle without i915 module");
 	igt_subtest("basic-s2idle-without-i915")

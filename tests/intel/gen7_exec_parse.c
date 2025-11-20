@@ -482,7 +482,7 @@ static void hsw_load_register_reg(void)
 	drm_close_driver(fd);
 }
 
-igt_main()
+int igt_main()
 {
 	uint32_t handle;
 	int fd;

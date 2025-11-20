@@ -338,7 +338,7 @@ static const struct {
 	},
 };
 
-igt_main()
+int igt_main()
 {
 	data_t data = {};
 

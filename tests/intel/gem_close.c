@@ -137,7 +137,7 @@ static void test_many_handles(int fd)
 	}
 }
 
-igt_main()
+int igt_main()
 {
 	igt_fd_t(fd);
 

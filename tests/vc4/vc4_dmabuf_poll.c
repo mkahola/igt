@@ -55,7 +55,7 @@ poll_write_bo_test(int fd, int poll_flag)
 	gem_close(fd, handle);
 }
 
-igt_main()
+int igt_main()
 {
 	int fd;
 

@@ -644,7 +644,7 @@ static struct option long_options[] = {
 	{ NULL, 0, 0, 0 }
 };
 
-igt_main_args("e:g:o:r:u:w:", long_options, help_str, opt_handler, NULL)
+int igt_main_args("e:g:o:r:u:w:", long_options, help_str, opt_handler, NULL)
 {
 	bool blocking_read = true;
 	struct xe_device *xe_dev;

@@ -5857,7 +5857,7 @@ test_group_concurrent_oa_buffer_read(void)
 	igt_waitchildren();
 }
 
-igt_main()
+int igt_main()
 {
 	const intel_ctx_t *ctx;
 	const struct intel_execution_engine2 *e;

@@ -185,7 +185,7 @@ test_flink_lifetime(int fd)
 	drm_close_driver(fd2);
 }
 
-igt_main()
+int igt_main()
 {
 	igt_fd_t(fd);
 

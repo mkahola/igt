@@ -336,7 +336,7 @@ static void all(int fd, const intel_ctx_t *ctx,
 	free(threads);
 }
 
-igt_main()
+int igt_main()
 {
 	struct intel_execution_engine2 *e;
 

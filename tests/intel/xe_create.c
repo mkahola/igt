@@ -527,7 +527,7 @@ const char *help_str =
 	"  -p\tpercent of available resource\n"
 	;
 
-igt_main_args("Q:p:", NULL, help_str, opt_handler, NULL)
+int igt_main_args("Q:p:", NULL, help_str, opt_handler, NULL)
 {
 	int xe;
 

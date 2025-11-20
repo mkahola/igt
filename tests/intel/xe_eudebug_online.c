@@ -2668,7 +2668,7 @@ static bool restore_preempt_timeout(int fd, uint16_t engine_class, uint32_t pree
 			igt_dynamic_f("%s%d", xe_engine_class_string(__hwe->engine_class), \
 				      hwe->engine_instance)
 
-igt_main()
+int igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe;
 	bool was_enabled;

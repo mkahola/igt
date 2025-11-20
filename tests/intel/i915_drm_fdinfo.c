@@ -930,7 +930,7 @@ test_memory(int i915, struct gem_memory_region *mr, unsigned int flags)
 	igt_subtest_with_dynamic(T) for_each_ctx_engine(i915, ctx, e) \
 		igt_dynamic_f("%s", e->name)
 
-igt_main()
+int igt_main()
 {
 	unsigned int num_engines = 0, num_classes = 0;
 	const struct intel_execution_engine2 *e;

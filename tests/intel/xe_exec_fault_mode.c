@@ -398,7 +398,7 @@ test_exec(int fd, struct drm_xe_engine_class_instance *eci,
 		close(map_fd);
 }
 
-igt_main()
+int igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe;
 	const struct section {

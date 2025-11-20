@@ -770,7 +770,7 @@ static void threads(int fd, int n_exec_queues, int n_execs, unsigned int flags)
 	free(threads_data);
 }
 
-igt_main()
+int igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe;
 	const struct section {
