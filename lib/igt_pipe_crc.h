@@ -9,8 +9,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-enum pipe;
-
 /**
  * igt_pipe_crc_t:
  *
@@ -48,9 +46,9 @@ char *igt_crc_to_string(igt_crc_t *crc);
 
 void igt_require_pipe_crc(int fd);
 igt_pipe_crc_t *
-igt_pipe_crc_new(int fd, enum pipe pipe, const char *source);
+igt_pipe_crc_new(int fd, int crtc_index, const char *source);
 igt_pipe_crc_t *
-igt_pipe_crc_new_nonblock(int fd, enum pipe pipe, const char *source);
+igt_pipe_crc_new_nonblock(int fd, int crtc_index, const char *source);
 void igt_pipe_crc_free(igt_pipe_crc_t *pipe_crc);
 void igt_pipe_crc_start(igt_pipe_crc_t *pipe_crc);
 void igt_pipe_crc_stop(igt_pipe_crc_t *pipe_crc);
