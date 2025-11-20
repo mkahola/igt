@@ -82,7 +82,7 @@ create_bo(int fd)
 	return handle;
 }
 
-igt_simple_main()
+int igt_simple_main()
 {
 	int fd;
 	int i;

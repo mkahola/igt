@@ -878,7 +878,7 @@ static struct option long_options[] = {
 	{NULL, 0, 0, 0},
 };
 
-igt_simple_main_args("ds:g:c:t:rbuxmo:fp:",
+int igt_simple_main_args("ds:g:c:t:rbuxmo:fp:",
 		     long_options, NULL, parse_options, NULL)
 {
 	int i, j;

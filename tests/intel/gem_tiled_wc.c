@@ -148,7 +148,7 @@ calculate_expected(int offset)
 	return (base_y + tile_y) * WIDTH + base_x + tile_x;
 }
 
-igt_simple_main()
+int igt_simple_main()
 {
 	uint32_t tiling, swizzle;
 	uint32_t handle;

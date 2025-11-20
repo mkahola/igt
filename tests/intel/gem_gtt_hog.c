@@ -163,7 +163,7 @@ static void run(data_t *data, int child)
 	igt_assert_eq_u32(x, canary);
 }
 
-igt_simple_main()
+int igt_simple_main()
 {
 	struct timeval start, end;
 	pid_t children[64];

@@ -102,7 +102,7 @@ static void shut_non_vme_subslices(int drm_fd, uint32_t ctx)
 	gem_context_set_param(drm_fd, &arg);
 }
 
-igt_simple_main()
+int igt_simple_main()
 {
 	struct buf_ops *bops;
 	struct intel_buf src, dst;

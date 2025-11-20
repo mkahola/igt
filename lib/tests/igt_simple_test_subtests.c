@@ -23,7 +23,7 @@
 
 #include "igt_core.h"
 
-igt_simple_main()
+int igt_simple_main()
 {
 	igt_subtest("subtest") {
 		igt_info("Invalid subtest.\n");

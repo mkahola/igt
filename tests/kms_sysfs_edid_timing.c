@@ -57,7 +57,7 @@ IGT_TEST_DESCRIPTION("This test checks the time it takes to reprobe each "
 		     "make sure that the mean time for all connectors is "
 		     "not too long.");
 
-igt_simple_main()
+int igt_simple_main()
 {
 	DIR *dirp;
 	struct dirent *de;

@@ -483,6 +483,7 @@ void igt_simple_init_parse_opts(int *argc, char **argv,
  * #igt_simple_init_parse_opts.
  */
 #define igt_simple_main_args(short_opts, long_opts, help_str, opt_handler, handler_data) \
+	main(int argc, char **argv); \
 	static void igt_unique(__real_main)(void); \
 	int main(int argc, char **argv) { \
 		igt_simple_init_parse_opts(&argc, argv, \

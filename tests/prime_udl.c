@@ -121,7 +121,7 @@ static void test2(void)
 	gem_close(intel_fd, intel_handle);
 }
 
-igt_simple_main()
+int igt_simple_main()
 {
 	igt_assert(find_and_open_devices() >= 0);
 

@@ -66,7 +66,7 @@ static bool edid_block_checksum(const unsigned char *raw_edid)
 
 typedef const struct edid *(*get_edid_func)(void);
 
-igt_simple_main()
+int igt_simple_main()
 {
 	const struct {
 		const char *desc;

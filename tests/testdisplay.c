@@ -708,7 +708,7 @@ static int opt_handler(int opt, int opt_index, void *data)
 	return IGT_OPT_HANDLER_SUCCESS;
 }
 
-igt_simple_main_args(optstr, long_opts, help_str, opt_handler, NULL)
+int igt_simple_main_args(optstr, long_opts, help_str, opt_handler, NULL)
 {
 	int ret = 0;
 	GIOChannel *stdinchannel;

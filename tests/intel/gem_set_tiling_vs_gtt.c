@@ -59,7 +59,7 @@ IGT_TEST_DESCRIPTION("Check set_tiling vs gtt mmap coherency.");
  * Testcase: Check set_tiling vs gtt mmap coherency
  */
 
-igt_simple_main()
+int igt_simple_main()
 {
 	int fd;
 	uint32_t *ptr;

@@ -139,7 +139,7 @@ static void test(int w, int h)
 	intel_buf_destroy(dst);
 }
 
-igt_simple_main()
+int igt_simple_main()
 {
 	fd = drm_open_driver(DRIVER_INTEL);
 	igt_require_gem(fd);

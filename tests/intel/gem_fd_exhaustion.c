@@ -44,7 +44,7 @@
  * SUBTEST:
  */
 
-igt_simple_main()
+int igt_simple_main()
 {
 	int fd;
 

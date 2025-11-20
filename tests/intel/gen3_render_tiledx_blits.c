@@ -335,7 +335,7 @@ check_bo(int fd, uint32_t handle, uint32_t val)
 	munmap(v, WIDTH*HEIGHT*4);
 }
 
-igt_simple_main()
+int igt_simple_main()
 {
 	uint32_t *handle, *start_val;
 	uint32_t start = 0;

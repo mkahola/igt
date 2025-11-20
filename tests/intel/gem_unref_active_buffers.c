@@ -74,7 +74,7 @@ static void alarm_handler(int sig)
 {
 }
 
-igt_simple_main()
+int igt_simple_main()
 {
 	struct sigaction old_sa, sa = { .sa_handler = alarm_handler };
 	unsigned int last[2]= { -1, -1 }, count;

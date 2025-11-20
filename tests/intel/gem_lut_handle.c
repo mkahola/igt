@@ -173,7 +173,7 @@ static int many_exec(int fd, uint32_t batch, int num_exec, int num_reloc, unsign
 #define fail(x) igt_assert((x) == -ENOENT)
 #define pass(x) igt_assert((x) == 0)
 
-igt_simple_main()
+int igt_simple_main()
 {
 	uint32_t batch[2] = {MI_BATCH_BUFFER_END};
 	uint32_t handle;
