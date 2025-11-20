@@ -726,18 +726,6 @@ static inline bool igt_crtc_connector_valid(igt_crtc_t *crtc, igt_output_t *outp
 		for_each_if ((!(igt_output_is_connected((output)))))
 
 /**
- * for_each_pipe_static:
- * @pipe: The pipe to iterate.
- *
- * This for loop iterates over all pipes supported by IGT libraries.
- *
- * This should be used to enumerate per-pipe subtests since it has no runtime
- * depencies.
- */
-#define for_each_pipe_static(pipe) \
-	for (pipe = 0; pipe < IGT_MAX_PIPES; pipe++)
-
-/**
  * for_each_crtc:
  * @display: a pointer to an #igt_display_t structure
  * @crtc: The CRTC

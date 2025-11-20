@@ -297,6 +297,16 @@ static void test_source(data_t *data, const char *source)
 	free(crcs);
 }
 
+static void test_source_outp_complete(data_t *data)
+{
+	test_source(data, "outp-complete");
+}
+
+static void test_source_rg(data_t *data)
+{
+	test_source(data, "rg");
+}
+
 static void test_source_outp_inactive(data_t *data)
 {
 	struct color_fb colors[] = {
@@ -363,13 +373,17 @@ static void cleanup_test(data_t *data)
 	close(data->nv_crc_dir);
 }
 
+static void run_test(data_t *data, void (*test)(data_t *data))
+{
+	setup_test(data);
+	test(data);
+	cleanup_test(data);
+}
+
 data_t data = {0};
 
-#define pipe_test(name) igt_subtest_f("pipe-%s-" name, kmstest_pipe_name(pipe))
 int igt_main()
 {
-	int pipe;
-
 	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 		igt_require_nouveau(data.drm_fd);
@@ -381,50 +395,59 @@ int igt_main()
 		igt_display_reset(&data.display);
 	}
 
-	for_each_pipe_static(pipe) {
-		igt_fixture() {
-			data.crtc = igt_crtc_for_pipe(&data.display, pipe);
-			igt_require(data.crtc->valid);
+	/* We don't need to test this on every pipe, but the setup is the same */
+	igt_describe("Make sure that the CRC notifier context flip threshold "
+		     "is reset to its default value after a single capture.");
+	igt_subtest("ctx-flip-threshold-reset-after-capture") {
+		data.crtc = igt_crtc_for_pipe(&data.display, PIPE_A);
+		igt_require(data.crtc->valid);
 
-			setup_test(&data);
+		run_test(&data, test_ctx_flip_threshold_reset_after_capture);
+	}
+
+	igt_describe("Make sure the association between each CRC and its "
+		     "respective frame index is not broken when the driver "
+		     "performs a notifier context flip.");
+	igt_subtest("ctx-flip-detection") {
+		for_each_crtc(&data.display, data.crtc) {
+			igt_dynamic_f("pipe-%s", igt_crtc_name(data.crtc))
+				run_test(&data, test_ctx_flip_detection);
 		}
+	}
 
-		/* We don't need to test this on every pipe, but the setup is the same */
-		if (pipe == PIPE_A) {
-			igt_describe("Make sure that the CRC notifier context flip threshold "
-				     "is reset to its default value after a single capture.");
-			igt_subtest("ctx-flip-threshold-reset-after-capture")
-				test_ctx_flip_threshold_reset_after_capture(&data);
+	igt_describe("Make sure that igt_pipe_crc_get_current() works even "
+		     "when the CRC for the current frame index is lost.");
+	igt_subtest("ctx-flip-skip-current-frame") {
+		for_each_crtc(&data.display, data.crtc) {
+			igt_dynamic_f("pipe-%s", igt_crtc_name(data.crtc))
+				run_test(&data, test_ctx_flip_skip_current_frame);
 		}
+	}
 
-		igt_describe("Make sure the association between each CRC and its "
-			     "respective frame index is not broken when the driver "
-			     "performs a notifier context flip.");
-		pipe_test("ctx-flip-detection")
-			test_ctx_flip_detection(&data);
+	igt_describe("Check that basic CRC readback using the outp-complete "
+		     "source works.");
+	igt_subtest("source-outp-complete") {
+		for_each_crtc(&data.display, data.crtc) {
+			igt_dynamic_f("pipe-%s", igt_crtc_name(data.crtc))
+				run_test(&data, test_source_outp_complete);
+		}
+	}
 
-		igt_describe("Make sure that igt_pipe_crc_get_current() works even "
-			     "when the CRC for the current frame index is lost.");
-		pipe_test("ctx-flip-skip-current-frame")
-			test_ctx_flip_skip_current_frame(&data);
+	igt_describe("Check that basic CRC readback using the rg source "
+		     "works.");
+	igt_subtest("source-rg") {
+		for_each_crtc(&data.display, data.crtc) {
+			igt_dynamic_f("pipe-%s", igt_crtc_name(data.crtc))
+				run_test(&data, test_source_rg);
+		}
+	}
 
-		igt_describe("Check that basic CRC readback using the outp-complete "
-			     "source works.");
-		pipe_test("source-outp-complete")
-			test_source(&data, "outp-complete");
-
-		igt_describe("Check that basic CRC readback using the rg source "
-			     "works.");
-		pipe_test("source-rg")
-			test_source(&data, "rg");
-
-		igt_describe("Make sure that the outp-inactive source is actually "
-			     "capturing the inactive raster.");
-		pipe_test("source-outp-inactive")
-			test_source_outp_inactive(&data);
-
-		igt_fixture() {
-			cleanup_test(&data);
+	igt_describe("Make sure that the outp-inactive source is actually "
+		     "capturing the inactive raster.");
+	igt_subtest("source-outp-inactive") {
+		for_each_crtc(&data.display, data.crtc) {
+			igt_dynamic_f("pipe-%s", igt_crtc_name(data.crtc))
+				run_test(&data, test_source_outp_inactive);
 		}
 	}
 
