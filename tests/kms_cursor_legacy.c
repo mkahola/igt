@@ -403,8 +403,8 @@ static	igt_plane_t
 
 static void set_cursor_hotspot(igt_plane_t *cursor, int  hot_x, int hot_y)
 {
-	igt_output_set_prop_value(cursor, IGT_PLANE_HOTSPOT_X, hot_x);
-	igt_output_set_prop_value(cursor, IGT_PLANE_HOTSPOT_Y, hot_y);
+	igt_plane_set_prop_value(cursor, IGT_PLANE_HOTSPOT_X, hot_x);
+	igt_plane_set_prop_value(cursor, IGT_PLANE_HOTSPOT_Y, hot_y);
 }
 
 static void populate_cursor_args(igt_display_t *display, enum pipe pipe,

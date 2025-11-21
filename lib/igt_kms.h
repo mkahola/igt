@@ -832,8 +832,11 @@ uint64_t igt_plane_get_prop(igt_plane_t *plane, enum igt_atomic_plane_properties
  *
  * Check whether a given @prop changed for the @plane.
  */
-#define igt_plane_is_prop_changed(plane, prop) \
-	(!!((plane)->changed & (1 << (prop))))
+static inline bool igt_plane_is_prop_changed(igt_plane_t *plane,
+					     enum igt_atomic_plane_properties prop)
+{
+	return plane->changed & (1 << prop);
+}
 
 /**
  * igt_plane_set_prop_changed:
@@ -842,8 +845,11 @@ uint64_t igt_plane_get_prop(igt_plane_t *plane, enum igt_atomic_plane_properties
  *
  * Sets the given @prop for the @plane.
  */
-#define igt_plane_set_prop_changed(plane, prop) \
-	(plane)->changed |= 1 << (prop)
+static inline void igt_plane_set_prop_changed(igt_plane_t *plane,
+					      enum igt_atomic_plane_properties prop)
+{
+	plane->changed |= 1 << prop;
+}
 
 /**
  * igt_plane_clear_prop_changed:
@@ -852,8 +858,11 @@ uint64_t igt_plane_get_prop(igt_plane_t *plane, enum igt_atomic_plane_properties
  *
  * Clears the given @prop for the @plane.
  */
-#define igt_plane_clear_prop_changed(plane, prop) \
-	(plane)->changed &= ~(1 << (prop))
+static inline void igt_plane_clear_prop_changed(igt_plane_t *plane,
+						enum igt_atomic_plane_properties prop)
+{
+	plane->changed &= ~(1 << prop);
+}
 
 /**
  * igt_plane_set_prop_value:
@@ -863,11 +872,13 @@ uint64_t igt_plane_get_prop(igt_plane_t *plane, enum igt_atomic_plane_properties
  *
  * Sets the given @prop with the @value for the @plane.
  */
-#define igt_plane_set_prop_value(plane, prop, value) \
-	do { \
-		plane->values[prop] = value; \
-		igt_plane_set_prop_changed(plane, prop); \
-	} while (0)
+static inline void igt_plane_set_prop_value(igt_plane_t *plane,
+					    enum igt_atomic_plane_properties prop,
+					    uint64_t value)
+{
+	plane->values[prop] = value;
+	igt_plane_set_prop_changed(plane, prop);
+}
 
 extern bool igt_plane_try_prop_enum(igt_plane_t *plane,
 				    enum igt_atomic_plane_properties prop,
