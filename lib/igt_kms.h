@@ -577,6 +577,7 @@ int  igt_display_drop_events(igt_display_t *display);
 int  igt_display_get_n_pipes(igt_display_t *display);
 void igt_display_require_output(igt_display_t *display);
 void igt_display_require_output_on_pipe(igt_display_t *display, enum pipe pipe);
+int igt_display_n_crtcs(igt_display_t *display);
 
 const char *igt_output_name(igt_output_t *output);
 drmModeModeInfo *igt_output_get_mode(igt_output_t *output);
@@ -743,7 +744,7 @@ static inline bool igt_output_is_connected(igt_output_t *output)
  */
 #define for_each_pipe_with_valid_output(display, pipe, output) \
 	for (int con__ = (pipe) = 0; \
-	     assert(igt_can_fail()), (pipe) < igt_display_get_n_pipes((display)) && con__ < (display)->n_outputs; \
+	     assert(igt_can_fail()), (pipe) < igt_display_n_crtcs(display) && con__ < (display)->n_outputs; \
 	     con__ = (con__ + 1 < (display)->n_outputs) ? con__ + 1 : (pipe = pipe + 1, 0)) \
 		 for_each_if((display)->pipes[pipe].valid) \
 			for_each_if ((((output) = &(display)->outputs[con__]), \
@@ -763,9 +764,9 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display,
  * be called at most once for each pipe.
  */
 #define for_each_pipe_with_single_output(display, pipe, output) \
-	for (igt_output_t *__outputs[(display)->n_pipes], \
+	for (igt_output_t *__outputs[igt_display_n_crtcs(display)], \
 	     **__output = __igt_pipe_populate_outputs((display), __outputs); \
-		 __output < &__outputs[(display)->n_pipes]; __output++) \
+		 __output < &__outputs[igt_display_n_crtcs(display)]; __output++) \
 		for_each_if (*__output && \
 			     ((pipe) = (__output - __outputs), (output) = *__output, 1))
 

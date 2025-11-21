@@ -3272,6 +3272,17 @@ out:
 }
 
 /**
+ * igt_display_n_crtcs:
+ * @display: A pointer to an #igt_display_t structure
+ *
+ * Returns: Total number of CRTCs for the given @display
+ */
+int igt_display_n_crtcs(igt_display_t *display)
+{
+	return display->n_pipes;
+}
+
+/**
  * igt_display_get_n_pipes:
  * @display: A pointer to an #igt_display_t structure
  *
@@ -3279,7 +3290,7 @@ out:
  */
 int igt_display_get_n_pipes(igt_display_t *display)
 {
-	return display->n_pipes;
+	return igt_display_n_crtcs(display);
 }
 
 /**
