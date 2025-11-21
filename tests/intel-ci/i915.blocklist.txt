@@ -172,6 +172,8 @@ igt@kms_frontbuffer_tracking@plane-fbc-rte
 igt@kms_pm_dc@deep-pkgc
 igt@kms_vrr@cmrr
 igt@kms_fbc_dirty_rect.*
+igt@kms_sharpness_filter@.*
+igt@kms_chamelium_sharpness_filter@.*
 
 ###############################################
 # Test was written with the idea that edid read shouldn't take an
