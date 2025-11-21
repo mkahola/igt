@@ -23,6 +23,7 @@ lib_tests = [
 	'igt_simulation',
 	'igt_stats',
 	'igt_subtest_group',
+	'igt_sysfs_choice',
 	'igt_thread',
 	'igt_types',
 	'i915_perf_data_alignment',
