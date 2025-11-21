@@ -1051,8 +1051,11 @@ uint64_t igt_pipe_obj_get_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties
  *
  * Check whether a given @prop changed for the @pipe_obj.
  */
-#define igt_pipe_obj_is_prop_changed(pipe_obj, prop) \
-	(!!((pipe_obj)->changed & (1 << (prop))))
+static inline bool igt_pipe_obj_is_prop_changed(igt_pipe_t *pipe_obj,
+						enum igt_atomic_crtc_properties prop)
+{
+	return pipe_obj->changed & (1 << prop);
+}
 
 /**
  * igt_pipe_is_prop_changed:
@@ -1061,8 +1064,12 @@ uint64_t igt_pipe_obj_get_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties
  *
  * Check whether a given @prop changed for the @pipe.
  */
-#define igt_pipe_is_prop_changed(display, pipe, prop) \
-	igt_pipe_obj_is_prop_changed(&(display)->pipes[(pipe)], prop)
+static inline bool igt_pipe_is_prop_changed(igt_display_t *display,
+					    enum pipe pipe,
+					    enum igt_atomic_crtc_properties prop)
+{
+	return igt_pipe_obj_is_prop_changed(&display->pipes[pipe], prop);
+}
 
 /**
  * igt_pipe_obj_set_prop_changed:
@@ -1071,8 +1078,11 @@ uint64_t igt_pipe_obj_get_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties
  *
  * Sets the given @prop for the @pipe_obj.
  */
-#define igt_pipe_obj_set_prop_changed(pipe_obj, prop) \
-	(pipe_obj)->changed |= 1 << (prop)
+static inline void igt_pipe_obj_set_prop_changed(igt_pipe_t *pipe_obj,
+						 enum igt_atomic_crtc_properties prop)
+{
+	pipe_obj->changed |= 1 << prop;
+}
 
 /**
  * igt_pipe_obj_clear_prop_changed:
@@ -1081,8 +1091,11 @@ uint64_t igt_pipe_obj_get_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties
  *
  * Clears the given @prop for the @pipe_obj.
  */
-#define igt_pipe_obj_clear_prop_changed(pipe_obj, prop) \
-	(pipe_obj)->changed &= ~(1 << (prop))
+static inline void igt_pipe_obj_clear_prop_changed(igt_pipe_t *pipe_obj,
+						   enum igt_atomic_crtc_properties prop)
+{
+	pipe_obj->changed &= ~(1 << prop);
+}
 
 /**
  * igt_pipe_obj_set_prop_value:
@@ -1092,11 +1105,13 @@ uint64_t igt_pipe_obj_get_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties
  *
  * Sets the given @prop with the @value for the @pipe_obj.
  */
-#define igt_pipe_obj_set_prop_value(pipe_obj, prop, value) \
-	do { \
-		(pipe_obj)->values[prop] = (value); \
-		igt_pipe_obj_set_prop_changed(pipe_obj, prop); \
-	} while (0)
+static inline void igt_pipe_obj_set_prop_value(igt_pipe_t *pipe_obj,
+					       enum igt_atomic_crtc_properties prop,
+					       uint64_t value)
+{
+	pipe_obj->values[prop] = value;
+	igt_pipe_obj_set_prop_changed(pipe_obj, prop);
+}
 
 /**
  * igt_pipe_set_prop_value:
@@ -1106,8 +1121,13 @@ uint64_t igt_pipe_obj_get_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties
  *
  * Sets the given @prop with the @value for the @pipe.
  */
-#define igt_pipe_set_prop_value(display, pipe, prop, value) \
-	igt_pipe_obj_set_prop_value(&(display)->pipes[(pipe)], prop, value)
+static inline void igt_pipe_set_prop_value(igt_display_t *display,
+					   enum pipe pipe,
+					   enum igt_atomic_crtc_properties prop,
+					   uint64_t value)
+{
+	igt_pipe_obj_set_prop_value(&display->pipes[pipe], prop, value);
+}
 
 extern bool igt_pipe_obj_try_prop_enum(igt_pipe_t *pipe,
 				       enum igt_atomic_crtc_properties prop,
