@@ -391,12 +391,13 @@ static void test_cp_enable_with_retry(igt_output_t *output,
 
 }
 
-static bool igt_pipe_is_free(igt_display_t *display, enum pipe pipe)
+static bool igt_crtc_is_free(igt_crtc_t *crtc)
 {
+	igt_display_t *display = crtc->display;
 	int i;
 
 	for (i = 0; i < display->n_outputs; i++)
-		if (display->outputs[i].pending_pipe == pipe)
+		if (display->outputs[i].pending_pipe == crtc->pipe)
 			return false;
 
 	return true;
@@ -876,7 +877,9 @@ test_content_protection_mst(int content_type)
 
 		pipe_found = false;
 		for_each_pipe(display, pipe) {
-			if (igt_pipe_is_free(display, pipe) &&
+			igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
+
+			if (igt_crtc_is_free(crtc) &&
 			    igt_pipe_connector_valid(pipe, output)) {
 				pipe_found = true;
 				break;
