@@ -968,8 +968,11 @@ uint64_t igt_output_get_prop(igt_output_t *output, enum igt_atomic_connector_pro
  *
  * Check whether a given @prop changed for the @Output.
  */
-#define igt_output_is_prop_changed(output, prop) \
-	(!!((output)->changed & (1 << (prop))))
+static inline bool igt_output_is_prop_changed(igt_output_t *output,
+					      enum igt_atomic_connector_properties prop)
+{
+	return output->changed & (1 << prop);
+}
 
 /**
  * igt_output_set_prop_changed:
@@ -978,8 +981,11 @@ uint64_t igt_output_get_prop(igt_output_t *output, enum igt_atomic_connector_pro
  *
  * Sets the given @prop for the @output.
  */
-#define igt_output_set_prop_changed(output, prop) \
-	(output)->changed |= 1 << (prop)
+static inline void igt_output_set_prop_changed(igt_output_t *output,
+					       enum igt_atomic_connector_properties prop)
+{
+	output->changed |= 1 << prop;
+}
 
 /**
  * igt_output_clear_prop_changed:
@@ -988,8 +994,11 @@ uint64_t igt_output_get_prop(igt_output_t *output, enum igt_atomic_connector_pro
  *
  * Clears the given @prop for the @output.
  */
-#define igt_output_clear_prop_changed(output, prop) \
-	(output)->changed &= ~(1 << (prop))
+static inline void igt_output_clear_prop_changed(igt_output_t *output,
+						 enum igt_atomic_connector_properties prop)
+{
+	output->changed &= ~(1 << prop);
+}
 
 /**
  * igt_output_set_prop_value:
@@ -999,11 +1008,13 @@ uint64_t igt_output_get_prop(igt_output_t *output, enum igt_atomic_connector_pro
  *
  * Sets the given @prop with the @value for the @output.
  */
-#define igt_output_set_prop_value(output, prop, value) \
-	do { \
-		(output)->values[prop] = (value); \
-		igt_output_set_prop_changed(output, prop); \
-	} while (0)
+static inline void igt_output_set_prop_value(igt_output_t *output,
+					     enum igt_atomic_connector_properties prop,
+					     uint64_t value)
+{
+	output->values[prop] = value;
+	igt_output_set_prop_changed(output, prop);
+}
 
 extern bool igt_output_try_prop_enum(igt_output_t *output,
 				     enum igt_atomic_connector_properties prop,
