@@ -523,13 +523,13 @@ static void set_legacy_lut(data_t *data, enum pipe pipe,
 			   uint16_t mask)
 {
 	igt_pipe_t *pipe_obj = &data->display.pipes[pipe];
-	drmModeCrtc *crtc;
+	drmModeCrtc *drm_crtc;
 	uint16_t *lut;
 	int i, lut_size;
 
-	crtc = drmModeGetCrtc(data->drm_fd, pipe_obj->crtc_id);
-	lut_size = crtc->gamma_size;
-	drmModeFreeCrtc(crtc);
+	drm_crtc = drmModeGetCrtc(data->drm_fd, pipe_obj->crtc_id);
+	lut_size = drm_crtc->gamma_size;
+	drmModeFreeCrtc(drm_crtc);
 
 	/* Skip if legacy LUT is not supported: */
 	if (!lut_size)
@@ -550,13 +550,13 @@ static bool set_c8_legacy_lut(data_t *data, enum pipe pipe,
 			      uint16_t mask)
 {
 	igt_pipe_t *pipe_obj = &data->display.pipes[pipe];
-	drmModeCrtc *crtc;
+	drmModeCrtc *drm_crtc;
 	uint16_t *r, *g, *b;
 	int i, lut_size;
 
-	crtc = drmModeGetCrtc(data->drm_fd, pipe_obj->crtc_id);
-	lut_size = crtc->gamma_size;
-	drmModeFreeCrtc(crtc);
+	drm_crtc = drmModeGetCrtc(data->drm_fd, pipe_obj->crtc_id);
+	lut_size = drm_crtc->gamma_size;
+	drmModeFreeCrtc(drm_crtc);
 
 	if (lut_size != 256)
 		return false;

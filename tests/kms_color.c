@@ -269,7 +269,7 @@ static bool test_pipe_legacy_gamma(data_t *data,
 		{ 0.0, 1.0, 0.0 },
 		{ 0.0, 0.0, 1.0 },
 	};
-	drmModeCrtc *kms_crtc;
+	drmModeCrtc *drm_crtc;
 	uint32_t i, legacy_lut_size;
 	uint16_t *red_lut, *green_lut, *blue_lut;
 	drmModeModeInfo *mode = data->mode;
@@ -278,9 +278,9 @@ static bool test_pipe_legacy_gamma(data_t *data,
 	int fb_id, fb_modeset_id;
 	bool ret;
 
-	kms_crtc = drmModeGetCrtc(data->drm_fd, primary->pipe->crtc_id);
-	legacy_lut_size = kms_crtc->gamma_size;
-	drmModeFreeCrtc(kms_crtc);
+	drm_crtc = drmModeGetCrtc(data->drm_fd, primary->pipe->crtc_id);
+	legacy_lut_size = drm_crtc->gamma_size;
+	drmModeFreeCrtc(drm_crtc);
 
 	igt_require(legacy_lut_size > 0);
 
@@ -378,7 +378,7 @@ static bool test_pipe_legacy_gamma_reset(data_t *data,
 		0.0, 1.0, 0.0,
 		0.0, 0.0, 1.0,
 	};
-	drmModeCrtc *kms_crtc;
+	drmModeCrtc *drm_crtc;
 	gamma_lut_t *degamma_linear = NULL, *gamma_zero;
 	uint32_t i, legacy_lut_size;
 	uint16_t *red_lut, *green_lut, *blue_lut;
@@ -446,9 +446,9 @@ static bool test_pipe_legacy_gamma_reset(data_t *data,
 	 * the content of the GAMMA_LUT property is changed
 	 * and that CTM and DEGAMMA_LUT are empty.
 	 */
-	kms_crtc = drmModeGetCrtc(data->drm_fd, primary->pipe->crtc_id);
-	legacy_lut_size = kms_crtc->gamma_size;
-	drmModeFreeCrtc(kms_crtc);
+	drm_crtc = drmModeGetCrtc(data->drm_fd, primary->pipe->crtc_id);
+	legacy_lut_size = drm_crtc->gamma_size;
+	drmModeFreeCrtc(drm_crtc);
 
 	red_lut = malloc(sizeof(uint16_t) * legacy_lut_size);
 	igt_assert(red_lut);

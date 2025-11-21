@@ -700,7 +700,7 @@ static void lease_unleased_crtc(data_t *data)
 {
 	enum pipe p;
 	uint32_t bad_crtc_id;
-	drmModeCrtc *crtc;
+	drmModeCrtc *drm_crtc;
 	int ret;
 
 	/* Create a valid lease */
@@ -724,19 +724,19 @@ static void lease_unleased_crtc(data_t *data)
 	/* sanity check */
 	ret = drmModeSetCrtc(data->lease.fd, data->crtc_id, 0, 0, 0, NULL, 0, NULL);
 	igt_assert_eq(ret, 0);
-	crtc = drmModeGetCrtc(data->lease.fd, data->crtc_id);
-	igt_assert(crtc);
-	drmModeFreeCrtc(crtc);
+	drm_crtc = drmModeGetCrtc(data->lease.fd, data->crtc_id);
+	igt_assert(drm_crtc);
+	drmModeFreeCrtc(drm_crtc);
 
 	/* Attempt to use the unleased crtc id. We need raw ioctl to bypass the
 	 * igt_kms helpers.
 	 */
 	ret = drmModeSetCrtc(data->lease.fd, bad_crtc_id, 0, 0, 0, NULL, 0, NULL);
 	igt_assert_eq(ret, -ENOENT);
-	crtc = drmModeGetCrtc(data->lease.fd, bad_crtc_id);
-	igt_assert(!crtc);
+	drm_crtc = drmModeGetCrtc(data->lease.fd, bad_crtc_id);
+	igt_assert(!drm_crtc);
 	igt_assert_eq(errno, ENOENT);
-	drmModeFreeCrtc(crtc);
+	drmModeFreeCrtc(drm_crtc);
 }
 
 static void lease_unleased_connector(data_t *data)

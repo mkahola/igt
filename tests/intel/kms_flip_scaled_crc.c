@@ -539,12 +539,12 @@ static void set_lut(data_t *data, enum pipe pipe)
 {
 	igt_pipe_t *pipe_obj = &data->display.pipes[pipe];
 	struct drm_color_lut *lut;
-	drmModeCrtc *crtc;
+	drmModeCrtc *drm_crtc;
 	int i, lut_size;
 
-	crtc = drmModeGetCrtc(data->drm_fd, pipe_obj->crtc_id);
-	lut_size = crtc->gamma_size;
-	drmModeFreeCrtc(crtc);
+	drm_crtc = drmModeGetCrtc(data->drm_fd, pipe_obj->crtc_id);
+	lut_size = drm_crtc->gamma_size;
+	drmModeFreeCrtc(drm_crtc);
 
 	lut = malloc(sizeof(lut[0]) * lut_size);
 

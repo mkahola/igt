@@ -1372,17 +1372,17 @@ static int __intel_get_pipe_from_crtc_id(int fd, int crtc_id, int crtc_idx)
 int kmstest_get_pipe_from_crtc_id(int fd, int crtc_id)
 {
 	drmModeRes *res;
-	drmModeCrtc *crtc;
+	drmModeCrtc *drm_crtc;
 	int i, cur_id;
 
 	res = drmModeGetResources(fd);
 	igt_assert(res);
 
 	for (i = 0; i < res->count_crtcs; i++) {
-		crtc = drmModeGetCrtc(fd, res->crtcs[i]);
-		igt_assert(crtc);
-		cur_id = crtc->crtc_id;
-		drmModeFreeCrtc(crtc);
+		drm_crtc = drmModeGetCrtc(fd, res->crtcs[i]);
+		igt_assert(drm_crtc);
+		cur_id = drm_crtc->crtc_id;
+		drmModeFreeCrtc(drm_crtc);
 		if (cur_id == crtc_id)
 			break;
 	}

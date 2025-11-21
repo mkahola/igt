@@ -532,7 +532,7 @@ set_default_mode(struct connector *c, bool set_mode)
 static uint32_t find_crtc_for_connector(drmModeConnector *c)
 {
 	drmModeEncoder *e;
-	drmModeCrtcPtr crtc_ptr;
+	drmModeCrtcPtr drm_crtc;
 	int i;
 
 	active_crtc = 0;
@@ -562,14 +562,14 @@ static uint32_t find_crtc_for_connector(drmModeConnector *c)
 	 * other unused crtc.
 	 */
 	for (i = 0; i < resources->count_crtcs; i++) {
-		crtc_ptr = drmModeGetCrtc(drm_fd, resources->crtcs[i]);
+		drm_crtc = drmModeGetCrtc(drm_fd, resources->crtcs[i]);
 		/* if a crtc which is unused is found , use it */
-		if (!crtc_ptr->mode_valid) {
-			active_crtc = crtc_ptr->crtc_id;
-			drmModeFreeCrtc(crtc_ptr);
+		if (!drm_crtc->mode_valid) {
+			active_crtc = drm_crtc->crtc_id;
+			drmModeFreeCrtc(drm_crtc);
 			break;
 		}
-		drmModeFreeCrtc(crtc_ptr);
+		drmModeFreeCrtc(drm_crtc);
 	}
 
 	return active_crtc;

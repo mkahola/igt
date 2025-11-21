@@ -242,7 +242,7 @@ static void crtc_check_current_state(igt_pipe_t *pipe,
 				     enum kms_atomic_check_relax relax)
 {
 	uint64_t current_pipe_values[IGT_NUM_CRTC_PROPS];
-	drmModeCrtcPtr legacy;
+	drmModeCrtcPtr drm_crtc;
 	drmModePropertyBlobRes *mode_prop = NULL;
 	struct drm_mode_modeinfo *mode = NULL;
 
@@ -256,22 +256,23 @@ static void crtc_check_current_state(igt_pipe_t *pipe,
 		mode = mode_prop->data;
 	}
 
-	legacy = drmModeGetCrtc(pipe->display->drm_fd, pipe->crtc_id);
-	igt_assert(legacy);
+	drm_crtc = drmModeGetCrtc(pipe->display->drm_fd, pipe->crtc_id);
+	igt_assert(drm_crtc);
 
-	igt_assert_eq_u32(legacy->crtc_id, pipe->crtc_id);
-	igt_assert_eq_u32(legacy->x, primary_values[IGT_PLANE_SRC_X] >> 16);
-	igt_assert_eq_u32(legacy->y, primary_values[IGT_PLANE_SRC_Y] >> 16);
+	igt_assert_eq_u32(drm_crtc->crtc_id, pipe->crtc_id);
+	igt_assert_eq_u32(drm_crtc->x, primary_values[IGT_PLANE_SRC_X] >> 16);
+	igt_assert_eq_u32(drm_crtc->y, primary_values[IGT_PLANE_SRC_Y] >> 16);
 
-	igt_assert_eq_u32(legacy->buffer_id, primary_values[IGT_PLANE_FB_ID]);
+	igt_assert_eq_u32(drm_crtc->buffer_id,
+			  primary_values[IGT_PLANE_FB_ID]);
 
-	if (legacy->mode_valid) {
+	if (drm_crtc->mode_valid) {
 		igt_assert(mode_prop);
 
-		do_or_die(memcmp(&legacy->mode, mode, sizeof(*mode)));
+		do_or_die(memcmp(&drm_crtc->mode, mode, sizeof(*mode)));
 
-		igt_assert_eq(legacy->width, legacy->mode.hdisplay);
-		igt_assert_eq(legacy->height, legacy->mode.vdisplay);
+		igt_assert_eq(drm_crtc->width, drm_crtc->mode.hdisplay);
+		igt_assert_eq(drm_crtc->height, drm_crtc->mode.vdisplay);
 
 		igt_assert_neq(pipe_values[IGT_CRTC_MODE_ID], 0);
 	} else {
@@ -302,7 +303,7 @@ static void crtc_check_current_state(igt_pipe_t *pipe,
 
 	do_or_die(memcmp(pipe_values, current_pipe_values, sizeof(current_pipe_values)));
 
-	drmModeFreeCrtc(legacy);
+	drmModeFreeCrtc(drm_crtc);
 	drmModeFreePropertyBlob(mode_prop);
 }
 

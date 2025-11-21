@@ -80,7 +80,7 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 	igt_plane_t *plane;
-	drmModeCrtc *crtc;
+	drmModeCrtc *drm_crtc;
 	uint64_t cursor_width, cursor_height;
 	int num_active_planes = 0;
 
@@ -134,11 +134,11 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 
 	igt_display_commit2(&data->display, data->display.is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
-	crtc = drmModeGetCrtc(data->drm_fd, output->config.crtc->crtc_id);
+	drm_crtc = drmModeGetCrtc(data->drm_fd, output->config.crtc->crtc_id);
 
-	igt_assert_eq(crtc->buffer_id, fb.fb_id);
+	igt_assert_eq(drm_crtc->buffer_id, fb.fb_id);
 
-	drmModeFreeCrtc(crtc);
+	drmModeFreeCrtc(drm_crtc);
 
 	if (reopen) {
 		drm_close_driver(data->drm_fd);
@@ -153,11 +153,11 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 		igt_remove_fb(data->drm_fd, &argb_fb);
 	}
 
-	crtc = drmModeGetCrtc(data->drm_fd, output->config.crtc->crtc_id);
+	drm_crtc = drmModeGetCrtc(data->drm_fd, output->config.crtc->crtc_id);
 
-	igt_assert_eq(crtc->buffer_id, 0);
+	igt_assert_eq(drm_crtc->buffer_id, 0);
 
-	drmModeFreeCrtc(crtc);
+	drmModeFreeCrtc(drm_crtc);
 
 	for_each_plane_on_pipe(&data->display, pipe, plane) {
 		drmModePlanePtr planeres = drmModeGetPlane(data->drm_fd, plane->drm_plane->plane_id);
