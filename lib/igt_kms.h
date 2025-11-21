@@ -578,6 +578,14 @@ void igt_display_require_output(igt_display_t *display);
 void igt_display_require_output_on_pipe(igt_display_t *display, enum pipe pipe);
 int igt_display_n_crtcs(igt_display_t *display);
 
+static inline igt_pipe_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pipe)
+{
+	if (pipe == PIPE_NONE)
+		return NULL;
+
+	return &display->pipes[pipe];
+}
+
 const char *igt_output_name(igt_output_t *output);
 drmModeModeInfo *igt_output_get_mode(igt_output_t *output);
 drmModeModeInfo *igt_output_get_highres_mode(igt_output_t *output);
@@ -726,7 +734,7 @@ static inline bool igt_output_is_connected(igt_output_t *output)
  */
 #define for_each_pipe(display, pipe) \
 	for_each_pipe_static(pipe) \
-		for_each_if((display)->pipes[(pipe)].valid)
+		for_each_if(igt_crtc_for_pipe((display), (pipe))->valid)
 
 /**
  * for_each_pipe_with_valid_output:
@@ -745,7 +753,7 @@ static inline bool igt_output_is_connected(igt_output_t *output)
 	for (int con__ = (pipe) = 0; \
 	     assert(igt_can_fail()), (pipe) < igt_display_n_crtcs(display) && con__ < (display)->n_outputs; \
 	     con__ = (con__ + 1 < (display)->n_outputs) ? con__ + 1 : (pipe = pipe + 1, 0)) \
-		 for_each_if((display)->pipes[pipe].valid) \
+		for_each_if(igt_crtc_for_pipe((display), (pipe))->valid) \
 			for_each_if ((((output) = &(display)->outputs[con__]), \
 						igt_pipe_connector_valid((pipe), (output))))
 
@@ -793,8 +801,9 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display,
  * If there are no valid planes for this pipe, nothing happens.
  */
 #define for_each_plane_on_pipe(display, pipe, plane)			\
-	for (int j__ = 0; assert(igt_can_fail()), (plane) = &(display)->pipes[(pipe)].planes[j__], \
-		     j__ < (display)->pipes[(pipe)].n_planes; j__++)
+	for (int j__ = 0; assert(igt_can_fail()), \
+		     (plane) = &igt_crtc_for_pipe((display), (pipe))->planes[j__], \
+		     j__ < igt_crtc_for_pipe((display), (pipe))->n_planes; j__++)
 
 /**
  * for_each_connector_mode:
