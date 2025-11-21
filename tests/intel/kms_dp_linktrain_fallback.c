@@ -103,7 +103,8 @@ static void setup_pipe_on_outputs(data_t *data,
 		igt_info("Setting pipe %s on output %s\n",
 			 kmstest_pipe_name(data->pipe),
 			 igt_output_name(outputs[i]));
-		igt_output_set_pipe(outputs[i++], data->pipe);
+		igt_output_set_pipe(outputs[i], data->pipe);
+		i++;
 	}
 }
 
