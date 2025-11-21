@@ -5277,31 +5277,35 @@ int igt_output_preferred_vrefresh(igt_output_t *output)
 		return 60;
 }
 
+static const char *igt_crtc_name(igt_pipe_t *crtc)
+{
+	if (crtc == NULL)
+		return "None";
+
+	return kmstest_pipe_name(crtc->pipe);
+}
+
 /**
- * igt_output_set_pipe:
+ * igt_output_set_crtc:
  * @output: Target output for which the pipe is being set to
- * @pipe: Display pipe to set to
+ * @pipe_obj: CRTC to set to
  *
- * This function sets a @pipe to a specific @output connector by
- * setting the CRTC_ID property of the @pipe. The pipe
- * is only activated for all pipes except PIPE_NONE.
+ * This function sets a @crtc to a specific @output connector by
+ * setting the CRTC_ID property of the @crtc.
  */
-void igt_output_set_pipe(igt_output_t *output, enum pipe pipe)
+void igt_output_set_crtc(igt_output_t *output, igt_pipe_t *pipe_obj)
 {
 	igt_display_t *display = output->display;
-	igt_pipe_t *old_pipe = NULL, *pipe_obj = NULL;;
+	igt_pipe_t *old_pipe = NULL;
 
 	igt_assert(output->name);
 
 	if (output->pending_pipe != PIPE_NONE)
 		old_pipe = igt_output_get_driving_pipe(output);
 
-	if (pipe != PIPE_NONE)
-		pipe_obj = igt_crtc_for_pipe(display, pipe);
-
 	LOG(display, "%s: set_pipe(%s)\n", igt_output_name(output),
-	    kmstest_pipe_name(pipe));
-	output->pending_pipe = pipe;
+	    igt_crtc_name(pipe_obj));
+	output->pending_pipe = pipe_obj ? pipe_obj->pipe : PIPE_NONE;
 
 	if (old_pipe) {
 		igt_output_t *old_output;
@@ -5318,7 +5322,7 @@ void igt_output_set_pipe(igt_output_t *output, enum pipe pipe)
 	}
 
 	igt_output_set_prop_value(output, IGT_CONNECTOR_CRTC_ID,
-				  pipe == PIPE_NONE ? 0 : igt_crtc_for_pipe(display, pipe)->crtc_id);
+				  pipe_obj ? pipe_obj->crtc_id : 0);
 
 	igt_output_refresh(output);
 
@@ -5330,6 +5334,20 @@ void igt_output_set_pipe(igt_output_t *output, enum pipe pipe)
 
 		igt_pipe_obj_set_prop_value(pipe_obj, IGT_CRTC_ACTIVE, 1);
 	}
+}
+
+/**
+ * igt_output_set_pipe:
+ * @output: Target output for which the pipe is being set to
+ * @pipe_obj: Display pipe to set to
+ *
+ * This function sets a @pipe to a specific @output connector by
+ * setting the CRTC_ID property of the @pipe. The pipe
+ * is only activated for all pipes except PIPE_NONE.
+ */
+void igt_output_set_pipe(igt_output_t *output, enum pipe pipe)
+{
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 }
 
 static
