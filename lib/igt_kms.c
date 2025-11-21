@@ -59,6 +59,7 @@
 #include "intel_chipset.h"
 #include "igt_debugfs.h"
 #include "igt_device.h"
+#include "igt_pipe_crc.h"
 #include "igt_sysfs.h"
 #include "sw_sync.h"
 #ifdef HAVE_CHAMELIUM
@@ -5297,6 +5298,19 @@ int igt_output_preferred_vrefresh(igt_output_t *output)
 		return connector->modes[0].vrefresh;
 	else
 		return 60;
+}
+
+igt_pipe_crc_t *igt_crtc_crc_new(igt_crtc_t *crtc, const char *source)
+{
+	return igt_pipe_crc_new(crtc->display->drm_fd, crtc->crtc_offset,
+				source);
+}
+
+igt_pipe_crc_t *igt_crtc_crc_new_nonblock(igt_crtc_t *crtc, const char *source)
+{
+	return igt_pipe_crc_new_nonblock(crtc->display->drm_fd,
+					 crtc->crtc_offset,
+					 source);
 }
 
 static const char *igt_crtc_name(igt_crtc_t *crtc)
