@@ -185,7 +185,7 @@ static void cleanup_crtc(struct gpu_process_t *gpu)
 
 	igt_plane_set_fb(gpu->primary, NULL);
 
-	igt_output_set_pipe(output, PIPE_ANY);
+	igt_output_set_pipe(output, PIPE_NONE);
 	igt_display_commit(display);
 
 	igt_remove_fb(gpu->mdevice.drm_fd, &gpu->fb);

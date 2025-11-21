@@ -51,7 +51,6 @@
 /**
  * pipe:
  * @PIPE_NONE: Invalid pipe, used for disconnecting a output from a pipe.
- * @PIPE_ANY: Deprecated alias for @PIPE_NONE.
  * @PIPE_A: First crtc.
  * @PIPE_B: Second crtc.
  * @PIPE_C: Third crtc.
@@ -72,7 +71,6 @@
  */
 enum pipe {
         PIPE_NONE = -1,
-        PIPE_ANY = PIPE_NONE,
         PIPE_A = 0,
         PIPE_B,
         PIPE_C,

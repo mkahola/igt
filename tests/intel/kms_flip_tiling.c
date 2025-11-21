@@ -176,7 +176,7 @@ static void test_cleanup(data_t *data, enum pipe pipe, igt_output_t *output)
 	/* Clean up. */
 	igt_plane_set_fb(primary, NULL);
 	pipe_crc_free(data);
-	igt_output_set_pipe(output, PIPE_ANY);
+	igt_output_set_pipe(output, PIPE_NONE);
 
 	igt_remove_fb(data->drm_fd, &data->fb[0]);
 	igt_remove_fb(data->drm_fd, &data->fb[1]);
