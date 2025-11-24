@@ -562,6 +562,13 @@ static void cleanup_crtc(data_t *data)
 	cleanup_fbs(data);
 }
 
+static void skip_if_erange_or_einval(int ret)
+{
+	igt_skip_on_f(ret == -ERANGE || ret == -EINVAL,
+		      "Unsupported scaling operation (ret = %s)\n",
+		      ret == -EINVAL ? "-EINVAL" : "-ERANGE");
+}
+
 static uint32_t
 check_scaling_pipe_plane_rot(data_t *d, igt_plane_t *plane,
 			     uint32_t pixel_format,
@@ -1385,9 +1392,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 							igt_info("Required scaling operation not supported on %s trying on next output\n",
 								 igt_output_name(output));
 						}
-						igt_skip_on_f(ret == -ERANGE || ret == -EINVAL,
-							      "Unsupported scaling operation in driver with return value %s\n",
-							      (ret == -EINVAL) ? "-EINVAL" : "-ERANGE");
+						skip_if_erange_or_einval(ret);
 					}
 				}
 			}
@@ -1415,9 +1420,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 							igt_info("Required scaling operation not supported on %s trying on next output\n",
 								 igt_output_name(output));
 						}
-						igt_skip_on_f(ret == -ERANGE || ret == -EINVAL,
-							      "Unsupported scaling operation in driver with return value %s\n",
-							      (ret == -EINVAL) ? "-EINVAL" : "-ERANGE");
+						skip_if_erange_or_einval(ret);
 					}
 				}
 			}
@@ -1445,9 +1448,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 							igt_info("Required scaling operation not supported on %s trying on next output\n",
 								 igt_output_name(output));
 						}
-						igt_skip_on_f(ret == -ERANGE || ret == -EINVAL,
-							      "Unsupported scaling operation in driver with return value %s\n",
-							      (ret == -EINVAL) ? "-EINVAL" : "-ERANGE");
+						skip_if_erange_or_einval(ret);
 					}
 				}
 			}
@@ -1472,9 +1473,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 						igt_info("Required scaling operation not supported on %s trying on next output\n",
 							 igt_output_name(output));
 					}
-					igt_skip_on_f(ret == -ERANGE || ret == -EINVAL,
-						      "Unsupported scaling operation in driver with return value %s\n",
-						      (ret == -EINVAL) ? "-EINVAL" : "-ERANGE");
+					skip_if_erange_or_einval(ret);
 				}
 			}
 		}
@@ -1499,9 +1498,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 						igt_info("Required scaling operation not supported on %s trying on next output\n",
 							 igt_output_name(output));
 					}
-					igt_skip_on_f(ret == -ERANGE || ret == -EINVAL,
-						      "Unsupported scaling operation in driver with return value %s\n",
-						      (ret == -EINVAL) ? "-EINVAL" : "-ERANGE");
+					skip_if_erange_or_einval(ret);
 				}
 			}
 		}
@@ -1525,9 +1522,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 						igt_info("Required scaling operation not supported on %s trying on next output\n",
 							 igt_output_name(output));
 					}
-					igt_skip_on_f(ret == -ERANGE || ret == -EINVAL,
-						      "Unsupported scaling operation in driver with return value %s\n",
-						      (ret == -EINVAL) ? "-EINVAL" : "-ERANGE");
+					skip_if_erange_or_einval(ret);
 				}
 			}
 		}
@@ -1554,9 +1549,7 @@ igt_main_args("", long_opts, help_str, opt_handler, &data)
 							igt_info("Required scaling operation not supported on %s trying on next output\n",
 								 igt_output_name(output));
 						}
-						igt_skip_on_f(ret == -ERANGE || ret == -EINVAL,
-							      "Unsupported scaling operation in driver with return value %s\n",
-							      (ret == -EINVAL) ? "-EINVAL" : "-ERANGE");
+						skip_if_erange_or_einval(ret);
 					}
 				}
 			}
