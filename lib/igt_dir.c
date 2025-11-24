@@ -223,7 +223,6 @@ static int _igt_dir_scan_dirfd(igt_dir_t *config, int scan_maxdepth,
 	}
 
 	closedir(dirp);
-	close(dirfd);
 
 	return ret;
 }
