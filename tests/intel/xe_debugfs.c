@@ -267,6 +267,30 @@ skip:
 }
 
 /**
+ * SUBTEST: tile-dir
+ * Description: Check required debugfs devnodes exist in the tile debugfs directory
+ */
+static void test_tile_dir(struct xe_device *xe_dev, uint8_t tile)
+{
+	const struct check_entry expected_files[] = {
+		{ "ggtt", O_RDONLY },
+		{ "sa_info", O_RDONLY },
+	};
+	int debugfs_fd = igt_debugfs_tile_dir(xe_dev->fd, tile);
+	int missing_count;
+
+	igt_skip_on_f(debugfs_fd < 0, "Failed to open debugfs directory\n");
+
+	missing_count = debugfs_validate_entries(xe_dev, debugfs_fd, expected_files,
+						 ARRAY_SIZE(expected_files));
+
+	close(debugfs_fd);
+
+	igt_fail_on_f(missing_count > 0, "Found %d missing debugfs files (see warnings above)\n",
+		      missing_count);
+}
+
+/**
  * SUBTEST: info-read
  * Description: Check info debugfs devnode contents
  */
@@ -365,6 +389,7 @@ static int opt_handler(int option, int option_index, void *input)
 igt_main_args("", long_options, help_str, opt_handler, NULL)
 {
 	struct xe_device *xe_dev;
+	unsigned int t;
 	int fd = -1;
 
 	igt_fixture {
@@ -377,6 +402,12 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 	igt_describe("Check required debugfs devnodes exist in the root debugfs directory.");
 	igt_subtest("root-dir")
 		test_root_dir(xe_dev);
+
+	igt_describe("Check required debugfs devnodes exist in the tile debugfs directory.");
+	igt_subtest_with_dynamic("tile-dir")
+			xe_for_each_tile(fd, t)
+				igt_dynamic_f("tile-%u", t)
+					test_tile_dir(xe_dev, t);
 
 	igt_describe("Check info debugfs devnode contents.");
 	igt_subtest("info-read")
