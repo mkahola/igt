@@ -852,3 +852,590 @@ amdgpu_command_ce_write_fence(amdgpu_device_handle dev,
 	free_cmd_base(base);
 }
 
+/**
+ * command context creation with optional external BO
+ *
+ * @param device AMDGPU device handle
+ * @param ip_type IP block type (GFX, DMA, etc.)
+ * @param ring_id Ring index to use
+ * @param user_queue Whether to use user queue mode
+ * @param write_length Size of write operations in DWORDs
+ * @param external_bo Optional external buffer object (NULL for internal allocation)
+ * @param external_bo_mc GPU MC address of external BO (required if external_bo provided)
+ * @param external_bo_cpu CPU mapping of external BO (required if external_bo provided)
+ * @return New command context, or NULL on failure
+ */
+cmd_context_t* cmd_context_create(amdgpu_device_handle device,
+                                    enum amd_ip_block_type ip_type,
+                                    uint32_t ring_id,
+                                    bool user_queue,
+                                    uint32_t write_length,
+                                    amdgpu_bo_handle external_bo,
+                                    uint64_t external_bo_mc,
+                                    volatile uint32_t *external_bo_cpu)
+{
+	cmd_context_t *ctx;
+	void *cpu_ptr = NULL;
+	uint64_t bo_mc = 0;
+	amdgpu_va_handle va_handle = NULL;
+	int r;
+
+	if (!device)
+		return NULL;
+
+	/* Check if the requested ring is available */
+	if (!cmd_ring_available(device, ip_type, ring_id, user_queue))
+		return NULL;
+
+	/* Allocate context structure */
+	ctx = calloc(1, sizeof(cmd_context_t));
+	if (!ctx)
+		return NULL;
+
+	ctx->device = device;
+	ctx->ip_type = ip_type;
+	ctx->user_queue = user_queue;
+	ctx->last_submit_seq = 0;
+	ctx->uses_external_bo = (external_bo != NULL);  // Now this member exists
+	ctx->initialized = false;
+
+	/* Get IP block for the specified IP type */
+	ctx->ip_block = get_ip_block(device, (unsigned int)ip_type);
+	if (!ctx->ip_block) {
+		free(ctx);
+		return NULL;
+	}
+
+	/* Allocate ring context structure */
+	ctx->ring_ctx = calloc(1, sizeof(struct amdgpu_ring_context));
+	if (!ctx->ring_ctx) {
+		free(ctx);
+		return NULL;
+	}
+
+	/* Setup ring context parameters */
+	ctx->ring_ctx->write_length = write_length ? write_length : 128;
+	ctx->ring_ctx->pm4_size = 256;
+	ctx->ring_ctx->pm4 = calloc(ctx->ring_ctx->pm4_size, sizeof(uint32_t));
+	if (!ctx->ring_ctx->pm4) {
+		free(ctx->ring_ctx);
+		free(ctx);
+		return NULL;
+	}
+
+	ctx->ring_ctx->res_cnt = 1;
+	ctx->ring_ctx->ring_id = ring_id;
+	ctx->ring_ctx->secure = false;
+	ctx->ring_ctx->user_queue = user_queue;
+	ctx->ring_ctx->time_out = 0;
+
+	if (user_queue) {
+	/* Initialize user queue if requested */
+		if (!ctx->ip_block->funcs->userq_create) {
+			free(ctx->ring_ctx->pm4);
+			free(ctx->ring_ctx);
+			free(ctx);
+			return NULL;
+		}
+		ctx->ip_block->funcs->userq_create(device, ctx->ring_ctx, (unsigned int)ip_type);
+	}else {
+		/* Create regular command submission context */
+		r = amdgpu_cs_ctx_create(device, &ctx->ring_ctx->context_handle);
+		if (r) {
+			free(ctx->ring_ctx->pm4);
+			free(ctx->ring_ctx);
+			free(ctx);
+			return NULL;
+		}
+	}
+
+	/* BO allocation strategy: use external BO if provided, otherwise allocate internally */
+	if (external_bo) {
+		/* Validate external BO arguments */
+		if (!external_bo_cpu || !external_bo_mc) {
+			igt_debug("Invalid external BO arguments (mc=0x%llx, cpu=%p)\n",
+					  (unsigned long long)external_bo_mc, external_bo_cpu);
+			free(ctx->ring_ctx->pm4);
+			free(ctx->ring_ctx);
+			free(ctx);
+			return NULL;
+		}
+
+		/* Use caller-provided external BO */
+		ctx->ring_ctx->bo = external_bo;
+		ctx->ring_ctx->bo_mc = external_bo_mc;
+		ctx->ring_ctx->bo_cpu = external_bo_cpu;
+		ctx->ring_ctx->va_handle = NULL;  // VA management is caller's responsibility
+
+		igt_info("Using external BO: GPU=0x%llx, CPU=%p\n",
+				 (unsigned long long)external_bo_mc, external_bo_cpu);
+	} else {
+		/* Allocate internal BO for command operations */
+		r = amdgpu_bo_alloc_and_map(device,
+				   ctx->ring_ctx->write_length * sizeof(uint32_t),
+				   4096,
+				   AMDGPU_GEM_DOMAIN_GTT,
+				   0,
+				   &ctx->ring_ctx->bo,
+				   &cpu_ptr,
+				   &bo_mc,
+				   &va_handle);
+		if (r) {
+			goto cleanup_error;
+		}
+
+		ctx->ring_ctx->bo_mc = bo_mc;
+		ctx->ring_ctx->bo_cpu = (volatile uint32_t *)cpu_ptr;
+		ctx->ring_ctx->va_handle = va_handle;
+
+		igt_info("Allocated internal BO: GPU=0x%llx, CPU=%p\n",
+			 (unsigned long long)bo_mc, cpu_ptr);
+	}
+
+	/* Initialize resources array */
+	ctx->ring_ctx->resources[0] = ctx->ring_ctx->bo;
+	for (int i = 1; i < 4; i++) {
+		ctx->ring_ctx->resources[i] = NULL;
+	}
+
+	ctx->initialized = true;
+	return ctx;
+
+cleanup_error:
+	/* Cleanup resources in case of allocation failure */
+	if (user_queue) {
+		ctx->ip_block->funcs->userq_destroy(device, ctx->ring_ctx, (unsigned int)ip_type);
+	} else {
+		if (ctx->ring_ctx->context_handle)
+		    amdgpu_cs_ctx_free(ctx->ring_ctx->context_handle);
+	}
+
+	free(ctx->ring_ctx->pm4);
+	free(ctx->ring_ctx);
+	free(ctx);
+	return NULL;
+}
+
+/**
+ * context destruction function with external BO control
+ *
+ * @param ctx Command context to destroy
+ * @param destroy_external_bo Whether to destroy external BO (if used)
+ */
+void cmd_context_destroy(cmd_context_t *ctx, bool destroy_external_bo)
+{
+	if (!ctx || !ctx->initialized)
+		return;
+
+	if (ctx->ring_ctx) {
+		/* Handle BO cleanup based on allocation type */
+		if (ctx->ring_ctx->bo) {
+			if (!ctx->uses_external_bo || destroy_external_bo) {
+				/* Clean up internal BO or external BO if explicitly requested */
+				if (ctx->ring_ctx->va_handle) {
+				    /* Internal BO with VA handle - full cleanup */
+				    amdgpu_bo_unmap_and_free(ctx->ring_ctx->bo, ctx->ring_ctx->va_handle,
+							   ctx->ring_ctx->bo_mc,
+							   ctx->ring_ctx->write_length * sizeof(uint32_t));
+				} else if (destroy_external_bo) {
+				    /* External BO without VA handle - just free the BO */
+				    amdgpu_bo_free(ctx->ring_ctx->bo);
+				}
+			} else {
+				/* External BO, preserve it as requested by caller */
+				igt_info("Preserving external BO (GPU=0x%llx)\n",
+						 (unsigned long long)ctx->ring_ctx->bo_mc);
+			}
+		}
+
+		/* Clean up command submission context */
+		if (ctx->user_queue) {
+			if (ctx->ip_block && ctx->ip_block->funcs->userq_destroy) {
+				ctx->ip_block->funcs->userq_destroy(ctx->device, ctx->ring_ctx,
+							  (unsigned int)ctx->ip_type);
+		    }
+		} else {
+			if (ctx->ring_ctx->context_handle) {
+				amdgpu_cs_ctx_free(ctx->ring_ctx->context_handle);
+		    }
+		}
+
+		/* Free PM4 command buffer */
+		if (ctx->ring_ctx->pm4) {
+			free(ctx->ring_ctx->pm4);
+		}
+
+		free(ctx->ring_ctx);
+	}
+
+	free(ctx);
+}
+
+/**
+ * Submit command packet without waiting - Fixed submission logic
+ */
+int cmd_submit_packet(cmd_context_t *ctx)
+{
+	amdgpu_bo_list_handle bo_list;
+	int r;
+	struct amdgpu_cs_request ibs_request;
+	struct amdgpu_cs_ib_info ib_info;
+	amdgpu_bo_handle ib_bo;
+	void *ib_cpu;
+	uint64_t ib_mc_address;
+	amdgpu_va_handle ib_va_handle;
+	amdgpu_bo_handle all_res[5] = {0};
+	uint32_t res_count = 0;
+	uint32_t i;
+
+	if (!ctx || !ctx->initialized || !ctx->ring_ctx) {
+		igt_debug("Invalid context parameters\n");
+		return -EINVAL;
+	}
+
+	/* Check required parameters */
+	if (ctx->ring_ctx->pm4_dw == 0 || ctx->ring_ctx->pm4_dw > 1024) {
+		igt_debug("Invalid PM4 size: %u (must be 1-1024)\n", ctx->ring_ctx->pm4_dw);
+		return -EINVAL;
+	}
+
+	/* For user queues, use userq_submit */
+	if (ctx->user_queue) {
+		if (!ctx->ip_block || !ctx->ip_block->funcs->userq_submit) {
+			igt_debug("User queue submission not supported\n");
+			return -ENOTSUP;
+		}
+
+		if (!ctx->ring_ctx->bo_mc) {
+		igt_debug("Invalid BO MC address for user queue\n");
+		return -EINVAL;
+		}
+
+		ctx->ip_block->funcs->userq_submit(ctx->device, ctx->ring_ctx,
+		      (unsigned int)ctx->ip_type,
+		      ctx->ring_ctx->bo_mc);
+		ctx->last_submit_seq = ctx->ring_ctx->point;
+		igt_info("User queue submission successful, point=%lu\n", ctx->last_submit_seq);
+		return 0;
+	}
+
+	/* For regular queues, setup and submit CS */
+	memset(&ibs_request, 0, sizeof(ibs_request));
+	memset(&ib_info, 0, sizeof(ib_info));
+
+	/* Allocate separate IB buffer instead of reusing command buffer */
+	r = amdgpu_bo_alloc_and_map(ctx->device,
+			       ctx->ring_ctx->pm4_dw * sizeof(uint32_t),
+			       4096,
+			       AMDGPU_GEM_DOMAIN_GTT,
+			       0,
+			       &ib_bo,
+			       &ib_cpu,
+			       &ib_mc_address,
+			       &ib_va_handle);
+	if (r) {
+		igt_debug("Failed to allocate IB: %d\n", r);
+		return r;
+	}
+
+	/* Copy PM4 commands to IB */
+	memcpy(ib_cpu, ctx->ring_ctx->pm4, ctx->ring_ctx->pm4_dw * sizeof(uint32_t));
+
+	/* Setup IB information */
+	ib_info.ib_mc_address = ib_mc_address;
+	ib_info.size = ctx->ring_ctx->pm4_dw;
+	if (ctx->ring_ctx->secure)
+		ib_info.flags |= AMDGPU_IB_FLAGS_SECURE;
+
+	/* Setup submission request */
+	ibs_request.ip_type = (unsigned int)ctx->ip_type;
+	ibs_request.ring = ctx->ring_ctx->ring_id;
+	ibs_request.number_of_ibs = 1;
+	ibs_request.ibs = &ib_info;
+	ibs_request.fence_info.handle = NULL;
+
+	/* Create resource list containing both original resources and IB */
+	/* Add original resources */
+	for (i = 0; i < ctx->ring_ctx->res_cnt && i < 4; i++) {
+		if (ctx->ring_ctx->resources[i]) {
+			all_res[res_count++] = ctx->ring_ctx->resources[i];
+		}
+	}
+
+	/* Add IB as the last resource */
+	all_res[res_count++] = ib_bo;
+
+	/* Create BO list */
+	r = amdgpu_bo_list_create(ctx->device, res_count, all_res, NULL, &bo_list);
+	if (r) {
+		igt_debug("amdgpu_bo_list_create failed: %d\n", r);
+		amdgpu_bo_unmap_and_free(ib_bo, ib_va_handle, ib_mc_address,
+				       ctx->ring_ctx->pm4_dw * sizeof(uint32_t));
+		return r;
+	}
+
+	ibs_request.resources = bo_list;
+
+	/* Submit command - strict error checking */
+	r = amdgpu_cs_submit(ctx->ring_ctx->context_handle, 0, &ibs_request, 1);
+
+	if (r != 0) {
+		igt_debug("amdgpu_cs_submit failed: %d\n", r);
+		amdgpu_bo_list_destroy(bo_list);
+		amdgpu_bo_unmap_and_free(ib_bo, ib_va_handle, ib_mc_address,
+				       ctx->ring_ctx->pm4_dw * sizeof(uint32_t));
+		return r;
+	}
+
+	/* Record submission sequence number for waiting */
+	ctx->last_submit_seq = ibs_request.seq_no;
+	igt_debug("Command submitted successfully, seq_no=%lu\n", ctx->last_submit_seq);
+
+	/* Cleanup resources */
+	amdgpu_bo_list_destroy(bo_list);
+	amdgpu_bo_unmap_and_free(ib_bo, ib_va_handle, ib_mc_address,
+			   ctx->ring_ctx->pm4_dw * sizeof(uint32_t));
+
+	return 0;
+}
+
+int cmd_place_packet(cmd_context_t *ctx, const cmd_packet_params_t *params)
+{
+	int result = -EINVAL;
+
+	if (!ctx || !ctx->initialized || !ctx->ip_block || !params)
+		return -EINVAL;
+
+	if (!ctx->ring_ctx || !ctx->ring_ctx->bo_cpu)
+		return -EINVAL;
+
+	/* Clear the buffer before operation */
+	memset((void *)ctx->ring_ctx->bo_cpu, 0,
+	ctx->ring_ctx->write_length * sizeof(uint32_t));
+
+
+	/* Build the command packet based on type */
+	switch (params->type) {
+	case CMD_PACKET_WRITE_LINEAR:
+		if (!ctx->ip_block->funcs->write_linear)
+			return -ENOTSUP;
+
+		/* TODO: allow user set the dst and data */
+		//ctx->ring_ctx->bo_mc = params->dst_addr;
+		ctx->ring_ctx->write_length = params->size / sizeof(uint32_t);
+
+		/* Build PM4 packet */
+		result = ctx->ip_block->funcs->write_linear(ctx->ip_block->funcs,
+						       ctx->ring_ctx,
+						       &ctx->ring_ctx->pm4_dw);
+
+		/*  Copy PM4 packet to ring buffer */
+		if (result == 0 && ctx->ring_ctx->pm4_dw > 0) {
+			memcpy((void *)ctx->ring_ctx->bo_cpu,
+			       ctx->ring_ctx->pm4,
+			       ctx->ring_ctx->pm4_dw * sizeof(uint32_t));
+		}
+		return result;
+
+	case CMD_PACKET_WRITE_ATOMIC:
+		if (!ctx->ip_block->funcs->write_linear_atomic)
+			return -ENOTSUP;
+
+		/* TODO: allow user set the dst and data */
+		//ctx->ring_ctx->bo_mc = params->dst_addr;
+		ctx->ring_ctx->write_length = 1; /* Atomic operations typically work on single DWORD */
+
+		result = ctx->ip_block->funcs->write_linear_atomic(ctx->ip_block->funcs,
+						      ctx->ring_ctx,
+						      &ctx->ring_ctx->pm4_dw);
+
+		/*  Copy PM4 packet to ring buffer */
+		if (result == 0 && ctx->ring_ctx->pm4_dw > 0) {
+		memcpy((void *)ctx->ring_ctx->bo_cpu,
+		ctx->ring_ctx->pm4,
+		ctx->ring_ctx->pm4_dw * sizeof(uint32_t));
+		}
+		return result;
+
+	case CMD_PACKET_COPY_LINEAR:
+	    if (!ctx->ip_block->funcs->copy_linear)
+		    return -ENOTSUP;
+
+	    /* For copy operations, we need both source and destination addresses */
+	    /* This would require extending the API to pass both addresses */
+	    /* For now, use the internal buffer as source */
+	    ctx->ring_ctx->write_length = params->size / sizeof(uint32_t);
+
+	    result = ctx->ip_block->funcs->copy_linear(ctx->ip_block->funcs,
+						      ctx->ring_ctx,
+						      &ctx->ring_ctx->pm4_dw);
+
+	    /* Copy PM4 packet to ring buffer */
+	    if (result == 0 && ctx->ring_ctx->pm4_dw > 0) {
+	        memcpy((void *)ctx->ring_ctx->bo_cpu,
+	               ctx->ring_ctx->pm4,
+	               ctx->ring_ctx->pm4_dw * sizeof(uint32_t));
+
+	        //igt_info("cmd_place_packet: Copied %u DWORDs to ring buffer (copy)\n",
+	          //       ctx->ring_ctx->pm4_dw);
+	    }
+	    return result;
+
+	case CMD_PACKET_COPY_ATOMIC:
+		/* TODO: Implement atomic copy if supported */
+		igt_info("cmd_place_packet: ATOMIC_COPY not implemented\n");
+		return -ENOTSUP;
+
+	case CMD_PACKET_FENCE:
+		/* TODO: Implement fence operation */
+		igt_info("cmd_place_packet: FENCE not implemented\n");
+		return -ENOTSUP;
+
+	case CMD_PACKET_TIMESTAMP:
+		/* TODO: Implement timestamp operation */
+		igt_info("cmd_place_packet: TIMESTAMP not implemented\n");
+		return -ENOTSUP;
+
+	default:
+		igt_info("cmd_place_packet: Unknown packet type: %d\n", params->type);
+		return -EINVAL;
+	}
+}
+
+/**
+ * Build and submit packet in one operation
+ */
+int cmd_place_and_submit_packet(cmd_context_t *ctx, const cmd_packet_params_t *params)
+{
+	int r;
+
+	r = cmd_place_packet(ctx, params);
+	if (r)
+		return r;
+
+	return cmd_submit_packet(ctx);
+}
+
+/**
+ * Convenience function for write linear
+ */
+int cmd_submit_write_linear(cmd_context_t *ctx, uint64_t dst_addr, uint32_t size, uint32_t data)
+{
+	cmd_packet_params_t params = {
+		.type = CMD_PACKET_WRITE_LINEAR,
+		.dst_addr = dst_addr,
+		.size = size,
+		.data = data,
+	};
+
+	return cmd_place_and_submit_packet(ctx, &params);
+}
+
+/**
+ * Convenience function for copy linear
+ */
+int cmd_submit_copy_linear(cmd_context_t *ctx, uint64_t src_addr, uint64_t dst_addr, uint32_t size)
+{
+	cmd_packet_params_t params = {
+		.type = CMD_PACKET_COPY_LINEAR,
+		.src_addr = src_addr,
+		.dst_addr = dst_addr,
+		.size = size,
+	};
+
+	return cmd_place_and_submit_packet(ctx, &params);
+}
+
+/**
+ * Convenience function for atomic operation
+ */
+int cmd_submit_atomic(cmd_context_t *ctx, uint64_t dst_addr, uint32_t data)
+{
+	cmd_packet_params_t params = {
+		.type = CMD_PACKET_WRITE_ATOMIC,
+		.dst_addr = dst_addr,
+		.data = data,
+	};
+
+	return cmd_place_and_submit_packet(ctx, &params);
+}
+
+/**
+ * Wait for all submitted packets to complete (equivalent to Wait4PacketConsumption)
+ */
+int cmd_wait_completion(cmd_context_t *ctx)
+{
+	struct amdgpu_cs_fence fence_status = {0};
+	uint32_t expired;
+
+	if (!ctx || !ctx->initialized)
+		return -EINVAL;
+
+	/* For user queues, wait on timeline syncobj */
+	if (ctx->user_queue) {
+		if (!ctx->ring_ctx->timeline_syncobj_handle)
+			return -EINVAL;
+
+		return amdgpu_timeline_syncobj_wait(ctx->device,
+						   ctx->ring_ctx->timeline_syncobj_handle,
+						   ctx->ring_ctx->point);
+	}
+
+	/* For regular queues, wait on fence */
+	fence_status.ip_type = (unsigned int)ctx->ip_type;
+	fence_status.ip_instance = 0;
+	fence_status.ring = ctx->ring_ctx->ring_id;
+	fence_status.context = ctx->ring_ctx->context_handle;
+	fence_status.fence = ctx->last_submit_seq;
+
+	return amdgpu_cs_query_fence_status(&fence_status,
+				       AMDGPU_TIMEOUT_INFINITE,
+				       0, &expired);
+}
+
+/**
+ * Check if ring is available
+ */
+bool cmd_ring_available(amdgpu_device_handle device,
+			enum amd_ip_block_type ip_type,
+		       uint32_t ring_id,
+		       bool user_queue)
+{
+	struct drm_amdgpu_info_hw_ip hw_ip_info;
+	int r;
+
+	r = amdgpu_query_hw_ip_info(device, (unsigned int)ip_type, 0, &hw_ip_info);
+	if (r)
+		return false;
+
+	if (user_queue) {
+		/* For user queues, check user queue slots */
+		uint32_t userq_slots = hw_ip_info.num_userq_slots;
+
+		return (ring_id < userq_slots);
+	} else {
+		/* For regular queues, check available rings */
+		return !!(hw_ip_info.available_rings & (1ULL << ring_id));
+	}
+}
+
+/**
+ * Get number of available rings
+ */
+uint32_t cmd_get_available_rings(amdgpu_device_handle device,
+				 enum amd_ip_block_type ip_type,
+				bool user_queue)
+{
+	struct drm_amdgpu_info_hw_ip hw_ip_info;
+	int r;
+
+	r = amdgpu_query_hw_ip_info(device, (unsigned int)ip_type, 0, &hw_ip_info);
+	if (r)
+		return 0;
+
+	if (user_queue) {
+		return hw_ip_info.num_userq_slots;
+	} else {
+		return __builtin_popcountll(hw_ip_info.available_rings);
+	}
+}
