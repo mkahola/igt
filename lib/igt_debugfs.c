@@ -227,6 +227,37 @@ int igt_debugfs_gt_dir(int device, unsigned int gt)
 }
 
 /**
+ * igt_debugfs_tile_dir:
+ * @device: fd of the device
+ * @tile: tile index
+ *
+ * This opens the debugfs directory corresponding to tile for use
+ * with igt_sysfs_get() and related functions.
+ *
+ * Returns:
+ * The directory fd, or -1 on failure.
+ */
+int igt_debugfs_tile_dir(int device, uint8_t tile)
+{
+	int debugfs_tile_dir_fd;
+	char path[PATH_MAX];
+	size_t len;
+	int ret;
+
+	if (!igt_debugfs_path(device, path, sizeof(path)))
+		return -1;
+
+	len = strlen(path);
+	ret = snprintf(path + len, sizeof(path) - len, "/tile%u", tile);
+	igt_assert(ret >= 0 && (size_t)ret < sizeof(path) - len);
+
+	debugfs_tile_dir_fd = open(path, O_RDONLY);
+	igt_debug_on_f(debugfs_tile_dir_fd < 0, "path: %s\n", path);
+
+	return debugfs_tile_dir_fd;
+}
+
+/**
  * igt_debugfs_connector_dir:
  * @device: fd of the device
  * @conn_name: connector name
