@@ -165,10 +165,10 @@ if libdrm_amdgpu.found()
 		'amdgpu/amd_gfx.c',
 		'amdgpu/amd_ip_blocks.c',
 		'amdgpu/amd_ip_blocks_ex.c',
-		'amdgpu/amd_shaders.c',
+		'amdgpu/shaders/amd_shaders.c',
 		'amdgpu/amd_gfx_v8_0.c',
-		'amdgpu/amd_gfx_v9_0.c',
-		'amdgpu/amd_dispatch_helpers.c',
+		'amdgpu/compute_utils/amd_gca.c',
+		'amdgpu/compute_utils/amd_dispatch_helpers.c',
 		'amdgpu/amd_deadlock_helpers.c',
 		'amdgpu/amd_pci_unplug.c',
 		'amdgpu/amd_shared_process.c',
@@ -180,9 +180,20 @@ if libdrm_amdgpu.found()
 		'amdgpu/amd_vcn_shared.c'
 	]
 	if libdrm_amdgpu.version().version_compare('> 2.4.99')
-		lib_sources +=[ 'amdgpu/amd_dispatch.c',]
+		lib_sources +=[ 'amdgpu/compute_utils/amd_dispatch.c',]
 	else
 		warning('libdrm <= 2.4.99 found, amdgpu_cs_query_reset_state2 not applicable')
+	endif
+
+	# Optional runtime ISA assembly via external llvm-mc tool (no lib dependency needed)
+	llvm_mc_prog = find_program(['llvm-mc-20','llvm-mc-19','llvm-mc-18','llvm-mc'], required : false)
+	if llvm_mc_prog.found()
+		add_project_arguments('-DAMDGPU_LLVM_ENABLED', language : ['c'])
+		lib_sources += ['amdgpu/shaders/amd_llvm_asm.c']
+		message('Found ' + llvm_mc_prog.path() + ' enabling runtime AMDGPU ISA assembly')
+	else
+		lib_sources += ['amdgpu/shaders/amd_llvm_asm_stub.c']
+		message('llvm-mc not found: using stub implementation (tests will skip)')
 	endif
 
 	if libdrm_amdgpu.version().version_compare('>= 2.4.125')
