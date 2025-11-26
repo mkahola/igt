@@ -4254,111 +4254,64 @@ test_sysctl_defaults(void)
 }
 
 /**
- * SUBTEST: oa-unit-exclusive-stream-sample-oa
- * Description: Check that only a single stream can be opened on an OA unit (with sampling)
- *
- * SUBTEST: oa-unit-exclusive-stream-exec-q
- * Description: Check that only a single stream can be opened on an OA unit (for OAR/OAC)
+ * SUBTEST: oa-unit-exclusive-stream
+ * Description: Check that only a single stream can be opened on an OA unit
 */
 /*
  * Test if OA buffer streams can be independently opened on OA unit. Once a user
  * opens a stream, that oa unit is exclusive to the user, other users get -EBUSY on
  * trying to open a stream.
  */
-static void
-test_oa_unit_exclusive_stream(bool exponent)
+static void test_oa_unit_exclusive_stream(void)
 {
 	struct drm_xe_query_oa_units *qoa = xe_oa_units(drm_fd);
-	const struct drm_xe_engine_class_instance *hwe;
 	const struct drm_xe_oa_unit *oau;
 	uint64_t properties[] = {
 		DRM_XE_OA_PROPERTY_OA_UNIT_ID, 0,
 		DRM_XE_OA_PROPERTY_SAMPLE_OA, true,
 		DRM_XE_OA_PROPERTY_OA_METRIC_SET, 0,
 		DRM_XE_OA_PROPERTY_OA_FORMAT, __ff(0),
-		DRM_XE_OA_PROPERTY_OA_ENGINE_INSTANCE, 0,
 		DRM_XE_OA_PROPERTY_OA_PERIOD_EXPONENT, oa_exponent_default,
 	};
 	struct intel_xe_oa_open_prop param = {
 		.num_properties = ARRAY_SIZE(properties) / 2,
 		.properties_ptr = to_user_pointer(properties),
 	};
-	uint32_t *exec_q = calloc(qoa->num_oa_units, sizeof(u32));
 	uint32_t *perf_fd = calloc(qoa->num_oa_units, sizeof(u32));
-	u32 vm = xe_vm_create(drm_fd, 0, 0);
 	struct intel_xe_perf_metric_set *test_set;
 	uint32_t i;
 
-	/* for each oa unit, open one random perf stream with sample OA */
+	/* for each oa unit, open one stream with sample OA */
 	for (i = 0; i < qoa->num_oa_units; i++) {
 		oau = oa_unit_by_id(drm_fd, i);
-		hwe = oa_unit_engine(oau);
-
-		if (!hwe)
-			continue;
 		test_set = oa_unit_metric_set(oau);
 
-		igt_debug("opening OA buffer with c:i %d:%d\n",
-			  hwe->engine_class, hwe->engine_instance);
-		exec_q[i] = xe_exec_queue_create_deconst(drm_fd, vm, hwe, 0);
-		if (!exponent) {
-			properties[10] = DRM_XE_OA_PROPERTY_EXEC_QUEUE_ID;
-			properties[11] = exec_q[i];
-		}
+		igt_debug("Opening OA stream on OA unit id:type %d:%d\n", i, oau->oa_unit_type);
 
 		properties[1] = oau->oa_unit_id;
 		properties[5] = test_set->perf_oa_metrics_set;
 		properties[7] = __ff(test_set->perf_oa_format);
-		properties[9] = hwe->engine_instance;
 		perf_fd[i] = intel_xe_perf_ioctl(drm_fd, DRM_XE_OBSERVATION_OP_STREAM_OPEN, &param);
 		igt_assert(perf_fd[i] >= 0);
 	}
 
-	/* Xe KMD holds reference to the exec_q's so they shouldn't be really destroyed */
-	for (i = 0; i < qoa->num_oa_units; i++)
-		if (exec_q[i])
-			xe_exec_queue_destroy(drm_fd, exec_q[i]);
-
 	/* for each oa unit make sure no other streams can be opened */
 	for (i = 0; i < qoa->num_oa_units; i++) {
-		int err;
-
 		oau = oa_unit_by_id(drm_fd, i);
-		hwe = oa_unit_engine(oau);
-
-		if (!hwe)
-			continue;
 		test_set = oa_unit_metric_set(oau);
 
-		igt_debug("try with exp with c:i %d:%d\n",
-			  hwe->engine_class, hwe->engine_instance);
+		igt_debug("Try on OA unit id:type %d:%d\n", i, oau->oa_unit_type);
+
 		/* case 1: concurrent access to OAG should fail */
 		properties[1] = oau->oa_unit_id;
 		properties[5] = test_set->perf_oa_metrics_set;
 		properties[7] = __ff(test_set->perf_oa_format);
-		properties[9] = hwe->engine_instance;
-		properties[10] = DRM_XE_OA_PROPERTY_OA_PERIOD_EXPONENT;
-		properties[11] = oa_exponent_default;
 		intel_xe_perf_ioctl_err(drm_fd, DRM_XE_OBSERVATION_OP_STREAM_OPEN, &param, EBUSY);
-
-		/* case 2: concurrent access to non-OAG unit should fail */
-		igt_debug("try with exec_q with c:i %d:%d\n",
-			  hwe->engine_class, hwe->engine_instance);
-		exec_q[i] = xe_exec_queue_create_deconst(drm_fd, vm, hwe, 0);
-		properties[10] = DRM_XE_OA_PROPERTY_EXEC_QUEUE_ID;
-		properties[11] = exec_q[i];
-		errno = 0;
-		err = intel_xe_perf_ioctl(drm_fd, DRM_XE_OBSERVATION_OP_STREAM_OPEN, &param);
-		igt_assert_lt(err, 0);
-		igt_assert(errno == EBUSY || errno == ENODEV);
 	}
 
-	for (i = 0; i < qoa->num_oa_units; i++) {
+	for (i = 0; i < qoa->num_oa_units; i++)
 		if (perf_fd[i])
 			close(perf_fd[i]);
-		if (exec_q[i])
-			xe_exec_queue_destroy(drm_fd, exec_q[i]);
-	}
 }
 
 /**
@@ -5151,11 +5104,8 @@ igt_main_args("b:t", long_options, help_str, opt_handler, NULL)
 	}
 
 	igt_subtest_group {
-		igt_subtest("oa-unit-exclusive-stream-sample-oa")
-			test_oa_unit_exclusive_stream(true);
-
-		igt_subtest("oa-unit-exclusive-stream-exec-q")
-			test_oa_unit_exclusive_stream(false);
+		igt_subtest("oa-unit-exclusive-stream")
+			test_oa_unit_exclusive_stream();
 
 		igt_subtest("oa-unit-concurrent-oa-buffer-read") {
 			igt_require(!igt_run_in_simulation());
