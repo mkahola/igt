@@ -4,13 +4,13 @@
 // Copyright 2023 Advanced Micro Devices, Inc.
 
 #include <amdgpu.h>
-#include "amd_memory.h"
+#include "amdgpu/amd_memory.h"
 #include "amd_dispatch.h"
 #include "amd_shared_dispatch.h"
 #include "amd_dispatch_helpers.h"
-#include "amd_PM4.h"
-#include "amd_ip_blocks.h"
-#include "amd_shaders.h"
+#include "amdgpu/amd_PM4.h"
+#include "amdgpu/amd_ip_blocks.h"
+#include "amdgpu/shaders/amd_shaders.h"
 
 static void
 amdgpu_memset_dispatch_test(amdgpu_device_handle device_handle,

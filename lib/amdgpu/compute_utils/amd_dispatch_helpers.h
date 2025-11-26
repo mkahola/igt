@@ -25,7 +25,7 @@
 #define AMD_DISPATCH_HELPERS_H
 
 #include <amdgpu.h>
-#include "amd_ip_blocks.h"
+#include "lib/amdgpu/amd_ip_blocks.h"
 
 struct amdgpu_cmd_base;
 
@@ -35,4 +35,10 @@ int amdgpu_dispatch_write_cumask(struct amdgpu_cmd_base *base_cmd, uint32_t vers
 
 int amdgpu_dispatch_write2hw(struct amdgpu_cmd_base *base_cmd, uint64_t shader_addr, uint32_t version, enum cmd_error_type err);
 
+int execute_compute_dispatch(amdgpu_device_handle device,
+				   uint32_t version,
+				   uint64_t shader_mc_addr,
+				   uint64_t src_mc_addr,
+				   uint64_t dst_mc_addr,
+				   uint32_t expected_value);
 #endif
