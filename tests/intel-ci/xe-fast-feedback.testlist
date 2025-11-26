@@ -74,8 +74,9 @@ igt@xe_create@create-execqueues-noleak
 igt@xe_create@create-execqueues-leak
 igt@xe_create@create-invalid-mbz
 igt@xe_create@create-massive-size
-igt@xe_debugfs@xe-base
-igt@xe_debugfs@xe-forcewake
+igt@xe_debugfs@root-dir
+igt@xe_debugfs@tile-dir
+igt@xe_debugfs@info-read
 igt@xe_dma_buf_sync@export-dma-buf-once-write-sync
 igt@xe_dma_buf_sync@export-dma-buf-once-read-sync
 igt@xe_dma_buf_sync@export-dma-buf-once-read-write-sync
