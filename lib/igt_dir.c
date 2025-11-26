@@ -241,7 +241,6 @@ int igt_dir_scan_dirfd(igt_dir_t *config, int scan_maxdepth)
 	igt_require(config->root_path);
 	igt_require(config->dirfd >= 0);
 	igt_require(scan_maxdepth >= -1);
-	igt_require(scan_maxdepth != 0);
 
 	/* If the linked list is not empty, clean it first */
 	if (!igt_list_empty(&config->file_list_head)) {
