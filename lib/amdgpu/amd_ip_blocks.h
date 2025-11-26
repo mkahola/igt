@@ -21,6 +21,10 @@
 #include "amd_registers.h"
 #include "amd_family.h"
 
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
 #define MAX_CARDS_SUPPORTED 4
 
 /* reset mask */
@@ -430,6 +434,18 @@ is_support_page_queue(enum amd_ip_block_type ip_type, const struct pci_addr *pci
 
 int
 find_dri_id_by_pci(const struct pci_addr *pci);
+
+int
+get_dri_index_from_device(amdgpu_device_handle device);
+/**
+ * is_apu - Check if the GPU is an APU (accelerated processing unit)
+ * @info: Pointer to amdgpu_gpu_info structure containing device info
+ *
+ * Returns true if the device is an APU, false otherwise.
+ */
+bool is_apu(const struct amdgpu_gpu_info *info);
+
+const char *cmd_get_ip_name(enum amd_ip_block_type ip_type);
 
 int
 amdgpu_bo_alloc_and_map_uq(amdgpu_device_handle device_handle, unsigned int size,

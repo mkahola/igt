@@ -1767,3 +1767,67 @@ bool is_support_page_queue(enum amd_ip_block_type ip_type, const struct pci_addr
 	/* Return true if files matching the pattern were found, otherwise return false */
 	return (ret == 0 && glob_result.gl_pathc > 0);
 }
+
+int get_dri_index_from_device(amdgpu_device_handle device)
+{
+	/* For AMDGPU, the DRI index is typically available through the render node */
+	/* We can use the device fd to determine the appropriate debugfs path */
+	char path[64];
+	char target[1024];
+	ssize_t len;
+	int dri_index = 0;
+
+	/* Try to read the symlink from /proc/self/fd */
+	snprintf(path, sizeof(path), "/proc/self/fd/%d", amdgpu_device_get_fd(device));
+
+	len = readlink(path, target, sizeof(target) - 1);
+	if (len != -1) {
+		target[len] = '\0';
+		/* Extract DRI index from path like /dev/dri/renderD128 */
+		if (sscanf(target, "/dev/dri/renderD%d", &dri_index) == 1) {
+			return dri_index;
+		}
+		/* Try card path as well */
+		if (sscanf(target, "/dev/dri/card%d", &dri_index) == 1) {
+			return dri_index;
+		}
+	}
+
+	return 0;
+}
+
+bool is_apu(const struct amdgpu_gpu_info *info)
+{
+	return !!(info && (info->ids_flags & AMDGPU_IDS_FLAGS_FUSION));
+}
+
+/**
+ * Get IP block name string
+ */
+const char *cmd_get_ip_name(enum amd_ip_block_type ip_type)
+{
+	switch (ip_type) {
+	case AMD_IP_GFX:
+		return "GFX";
+	case AMD_IP_COMPUTE:
+		return "Compute";
+	case AMD_IP_DMA:
+		return "DMA";
+	case AMD_IP_UVD:
+		return "UVD";
+	case AMD_IP_VCE:
+		return "VCE";
+	case AMD_IP_UVD_ENC:
+		return "UVD_ENC";
+	case AMD_IP_VCN_DEC:
+		return "VCN_DEC";
+	case AMD_IP_VCN_ENC:
+		return "VCN_ENC";
+	case AMD_IP_VCN_JPEG:
+		return "VCN_JPEG";
+	case AMD_IP_VPE:
+		return "VPE";
+	default:
+		return "Unknown";
+	}
+}
