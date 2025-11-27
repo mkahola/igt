@@ -78,6 +78,7 @@ typedef struct data {
 	igt_pipe_t *pipe;
 	igt_pipe_crc_t *pipe_crc;
 	drmModeModeInfo *mode;
+	igt_fb_t ref_fb;
 	igt_fb_t pfb;
 	igt_fb_t ofb;
 	igt_fb_t cfb;
@@ -129,16 +130,6 @@ static void test_fini(data_t *data)
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
 
-/* Fills a FB with the solid color given. */
-static void draw_color(igt_fb_t *fb, double r, double g, double b)
-{
-	cairo_t *cr = igt_get_cairo_ctx(fb->fd, fb);
-
-	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-	igt_paint_color(cr, 0, 0, fb->width, fb->height, r, g, b);
-	igt_put_cairo_ctx(cr);
-}
-
 /*
  * Draws white and gray (if overlay FB is given) on the primary FB.
  * Draws a magenta square where the cursor should be over top both planes.
@@ -152,6 +143,7 @@ static void test_cursor_pos(data_t *data, int x, int y, unsigned int flags)
 {
 	igt_crc_t ref_crc, test_crc;
 	cairo_t *cr;
+	igt_fb_t *ref_fb = &data->ref_fb;
 	igt_fb_t *pfb = &data->pfb;
 	igt_fb_t *ofb = &data->ofb;
 	igt_fb_t *cfb = &data->cfb;
@@ -159,8 +151,8 @@ static void test_cursor_pos(data_t *data, int x, int y, unsigned int flags)
 	int ch = cfb->height;
 	const rect_t *or = &data->or;
 
-	cr = igt_get_cairo_ctx(pfb->fd, pfb);
-	igt_paint_color(cr, 0, 0, pfb->width, pfb->height, 1.0, 1.0, 1.0);
+	cr = igt_get_cairo_ctx(ref_fb->fd, ref_fb);
+	igt_paint_color(cr, 0, 0, ref_fb->width, ref_fb->height, 1.0, 1.0, 1.0);
 
 	if (flags & TEST_OVERLAY)
 		igt_paint_color(cr, or->x, or->y, or->w, or->h, 0.5, 0.5, 0.5);
@@ -168,6 +160,7 @@ static void test_cursor_pos(data_t *data, int x, int y, unsigned int flags)
 	igt_paint_color(cr, x, y, cw, ch, 1.0, 0.0, 1.0);
 	igt_put_cairo_ctx(cr);
 
+	igt_plane_set_fb(data->primary, ref_fb);
 	if (flags & TEST_OVERLAY)
 		igt_plane_set_fb(data->overlay, NULL);
 	igt_plane_set_fb(data->cursor, NULL);
@@ -176,7 +169,7 @@ static void test_cursor_pos(data_t *data, int x, int y, unsigned int flags)
 	igt_pipe_crc_start(data->pipe_crc);
 	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, &ref_crc);
 
-	draw_color(pfb, 1.0, 1.0, 1.0);
+	igt_plane_set_fb(data->primary, pfb);
 
 	if (flags & TEST_OVERLAY) {
 		igt_plane_set_fb(data->overlay, ofb);
@@ -249,6 +242,7 @@ static void test_cleanup(data_t *data)
 	igt_remove_fb(data->drm_fd, &data->cfb);
 	igt_remove_fb(data->drm_fd, &data->ofb);
 	igt_remove_fb(data->drm_fd, &data->pfb);
+	igt_remove_fb(data->drm_fd, &data->ref_fb);
 }
 
 static void test_cursor(data_t *data, int size, unsigned int flags)
@@ -262,6 +256,9 @@ static void test_cursor(data_t *data, int size, unsigned int flags)
 	sh = data->mode->vdisplay;
 
 	test_cleanup(data);
+
+	igt_create_fb(data->drm_fd, sw, sh, DRM_FORMAT_XRGB8888,
+		      DRM_FORMAT_MOD_LINEAR, &data->ref_fb);
 
 	igt_create_color_fb(data->drm_fd, sw, sh, DRM_FORMAT_XRGB8888,
 			    DRM_FORMAT_MOD_LINEAR, 1.0, 1.0, 1.0, &data->pfb);
