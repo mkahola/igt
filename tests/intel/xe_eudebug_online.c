@@ -139,6 +139,35 @@ static int get_maximum_number_of_threads(int fd)
 	return subslices * eus_per_subslice * threads_per_eu;
 }
 
+struct online_debug_data {
+	pthread_mutex_t mutex;
+	/* client in */
+	int drm_fd;
+	struct drm_xe_engine_class_instance hwe;
+	uint64_t flags;
+	/* client out */
+	int thread_hit_count;
+	/* debugger internals */
+	uint64_t client_handle;
+	uint64_t exec_queue_handle;
+	uint64_t lrc_handle;
+	uint64_t target_offset;
+	size_t target_size;
+	uint64_t bb_offset;
+	size_t bb_size;
+	int vm_fd;
+	uint32_t kernel_offset;
+	uint32_t first_aip;
+	uint64_t *aips_offset_table;
+	uint32_t steps_done;
+	uint8_t *single_step_bitmask;
+	int stepped_threads_count;
+	struct timespec exception_arrived;
+	int last_eu_control_seqno;
+	struct drm_xe_eudebug_event *exception_event;
+	int att_event_counter;
+};
+
 static int get_number_of_threads(int fd, uint64_t flags)
 {
 	if (flags & (PAGEFAULT_STRESS_TEST))
@@ -169,50 +198,52 @@ static int caching_get_instruction_count(int fd, uint32_t s_dim__x, int flags)
 	return (2 * xe_min_page_size(fd, memory)) / s_dim__x;
 }
 
-static struct gpgpu_shader *get_shader(int fd, const unsigned int flags)
+static struct gpgpu_shader *get_shader(struct online_debug_data *data)
 {
-	struct dim_t w_dim = walker_dimensions(get_number_of_threads(fd, flags));
-	struct dim_t s_dim = surface_dimensions(get_number_of_threads(fd, flags));
+	struct dim_t w_dim = walker_dimensions(get_number_of_threads(data->drm_fd, data->flags));
+	struct dim_t s_dim = surface_dimensions(get_number_of_threads(data->drm_fd, data->flags));
 	static struct gpgpu_shader *shader;
 
-	shader = gpgpu_shader_create(fd);
+	shader = gpgpu_shader_create(data->drm_fd);
 
 	if (shader->gen_ver == 3000)
 		gpgpu_shader_set_vrt(shader, VRT_96);
 
 	shader->simd_size = SIMD_SIZE;
 
-	if (flags & PAGEFAULT_STRESS_TEST)
+	if (data->flags & PAGEFAULT_STRESS_TEST)
 		shader->num_threads_in_tg = gpgpu_shader__get_max_threads_in_tg(shader);
 
 	gpgpu_shader__write_dword(shader, SHADER_CANARY, 0);
-	if (flags & SHADER_BREAKPOINT) {
+	if (data->flags & SHADER_BREAKPOINT) {
 		gpgpu_shader__nop(shader);
 		gpgpu_shader__breakpoint(shader);
-	} else if (flags & SHADER_LOOP) {
+	} else if (data->flags & SHADER_LOOP) {
 		gpgpu_shader__label(shader, 0);
 		gpgpu_shader__write_dword(shader, SHADER_CANARY, 0);
 		gpgpu_shader__jump_neq(shader, 0, w_dim.y, STEERING_END_LOOP);
 		gpgpu_shader__write_dword(shader, SHADER_CANARY, 0);
-	} else if (flags & SHADER_SINGLE_STEP) {
+	} else if (data->flags & SHADER_SINGLE_STEP) {
 		gpgpu_shader__nop(shader);
 		gpgpu_shader__breakpoint(shader);
 		for (int i = 0; i < SINGLE_STEP_COUNT; i++)
 			gpgpu_shader__nop(shader);
-	} else if (flags & SHADER_N_NOOP_BREAKPOINT) {
+	} else if (data->flags & SHADER_N_NOOP_BREAKPOINT) {
 		for (int i = 0; i < SHADER_LOOP_N; i++) {
 			gpgpu_shader__nop(shader);
 			gpgpu_shader__breakpoint(shader);
 		}
-	} else if ((flags & SHADER_CACHING_SRAM) || (flags & SHADER_CACHING_VRAM)) {
+	} else if ((data->flags & SHADER_CACHING_SRAM) || (data->flags & SHADER_CACHING_VRAM)) {
+		int  count = caching_get_instruction_count(data->drm_fd, s_dim.x, data->flags);
+
 		gpgpu_shader__nop(shader);
 		gpgpu_shader__breakpoint(shader);
-		for (int i = 0; i < caching_get_instruction_count(fd, s_dim.x, flags); i++)
+		for (int i = 0; i < count; i++)
 			gpgpu_shader__common_target_write_u32(shader, s_dim.y + i, CACHING_VALUE(i));
 		gpgpu_shader__nop(shader);
 		gpgpu_shader__breakpoint(shader);
-	} else if (flags & SHADER_PAGEFAULT) {
-		if (flags & SHADER_PAGEFAULT_READ)
+	} else if (data->flags & SHADER_PAGEFAULT) {
+		if (data->flags & SHADER_PAGEFAULT_READ)
 			gpgpu_shader__read_a64_d32(shader, BAD_OFFSET);
 		else
 			gpgpu_shader__write_a64_d32(shader, BAD_OFFSET, BAD_CANARY);
@@ -228,16 +259,16 @@ static struct gpgpu_shader *get_shader(int fd, const unsigned int flags)
 	return shader;
 }
 
-static struct gpgpu_shader *get_sip(int fd, const unsigned int flags)
+static struct gpgpu_shader *get_sip(struct online_debug_data *data)
 {
-	struct dim_t w_dim = walker_dimensions(get_number_of_threads(fd, flags));
+	struct dim_t w_dim = walker_dimensions(get_number_of_threads(data->drm_fd, data->flags));
 	static struct gpgpu_shader *sip;
 
-	sip = gpgpu_shader_create(fd);
+	sip = gpgpu_shader_create(data->drm_fd);
 	gpgpu_shader__write_aip(sip, 0);
 
 	gpgpu_shader__wait(sip);
-	if (flags & SIP_SINGLE_STEP)
+	if (data->flags & SIP_SINGLE_STEP)
 		gpgpu_shader__end_system_routine_step_if_eq(sip, w_dim.y, 0);
 	else
 		gpgpu_shader__end_system_routine(sip, true);
@@ -374,35 +405,6 @@ static inline uint64_t eu_ctl_interrupt_all(int debugfd, uint64_t client,
 		      DRM_XE_EUDEBUG_EU_CONTROL_CMD_INTERRUPT_ALL);
 }
 
-struct online_debug_data {
-	pthread_mutex_t mutex;
-	/* client in */
-	int drm_fd;
-	struct drm_xe_engine_class_instance hwe;
-	uint64_t flags;
-	/* client out */
-	int thread_hit_count;
-	/* debugger internals */
-	uint64_t client_handle;
-	uint64_t exec_queue_handle;
-	uint64_t lrc_handle;
-	uint64_t target_offset;
-	size_t target_size;
-	uint64_t bb_offset;
-	size_t bb_size;
-	int vm_fd;
-	uint32_t kernel_offset;
-	uint32_t first_aip;
-	uint64_t *aips_offset_table;
-	uint32_t steps_done;
-	uint8_t *single_step_bitmask;
-	int stepped_threads_count;
-	struct timespec exception_arrived;
-	int last_eu_control_seqno;
-	struct drm_xe_eudebug_event *exception_event;
-	int att_event_counter;
-};
-
 static struct online_debug_data *
 online_debug_data_create(int drm_fd, struct drm_xe_engine_class_instance *hwe, uint64_t flags)
 {
@@ -530,7 +532,7 @@ static bool set_breakpoint_once(struct xe_eudebug_debugger *d,
 	struct gpgpu_shader *kernel;
 	uint32_t aip;
 
-	kernel = get_shader(d->master_fd, d->flags);
+	kernel = get_shader(data);
 
 	if (!data->kernel_offset) {
 		uint32_t instr_usdw;
@@ -671,7 +673,7 @@ static void eu_attention_resume_trigger(struct xe_eudebug_debugger *d,
 			uint32_t expected, aip;
 			struct gpgpu_shader *kernel;
 
-			kernel = get_shader(d->master_fd, d->flags);
+			kernel = get_shader(data);
 			expected = data->kernel_offset + kernel->size * 4 - 0x10;
 
 			igt_assert_eq(pread(data->vm_fd, &aip, sizeof(aip),
@@ -953,7 +955,7 @@ static void eu_attention_resume_caching_trigger(struct xe_eudebug_debugger *d,
 	gpgpu_shader__common_target_write_u32(shader_write_instr, 0, 0);
 
 	if (!*kernel_offset) {
-		kernel = get_shader(d->master_fd, d->flags);
+		kernel = get_shader(data);
 		*kernel_offset = find_kernel_in_bb(kernel, data);
 		gpgpu_shader_destroy(kernel);
 	}
@@ -1093,7 +1095,7 @@ static void run_online_client(struct xe_eudebug_client *c)
 	w_dim = walker_dimensions(threads);
 	s_dim = surface_dimensions(threads);
 
-	shader = get_shader(fd, c->flags);
+	shader = get_shader(data);
 	bb_size = get_bb_size(fd, shader);
 
 	/* Additional memory for steering control */
@@ -1129,7 +1131,7 @@ static void run_online_client(struct xe_eudebug_client *c)
 				     get_memory_region(fd, c->flags, BB_REGION_BITMASK));
 	intel_bb_set_lr_mode(ibb, true);
 
-	sip = get_sip(fd, c->flags);
+	sip = get_sip(data);
 
 	igt_nsec_elapsed(&ts);
 	gpgpu_shader_exec(ibb, buf, w_dim.x, w_dim.y, shader, sip, 0, 0);
