@@ -2152,3 +2152,23 @@ int igt_bitmap_hweight(void *bitmap, int nbits)
 		ret += igt_hweight(bitmap_get_nbits(p, nbits));
 	return ret;
 }
+
+/**
+ * igt_bitmap_fls: find last set bit in bitmap
+ *
+ * @bitmap: pointer to bitmap
+ * @nbits: number of bits to examine
+ *
+ * Bitmap version of fls.
+ */
+int igt_bitmap_fls(void *bitmap, int nbits)
+{
+	uint64_t *p = bitmap;
+	int n = nbits / BITS_PER_TYPE(*p), r = nbits % BITS_PER_TYPE(*p);
+	uint64_t v = r ? bitmap_get_nbits(p + n, r) : 0;
+
+	while (!v && n)
+		v = p[--n];
+
+	return n * BITS_PER_TYPE(*p) + igt_fls(v);
+}
