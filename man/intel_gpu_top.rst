@@ -9,7 +9,7 @@ Display a top-like summary of Intel GPU usage
 :Author: IGT Developers <igt-dev@lists.freedesktop.org>
 :Date: 2023-01-27
 :Version: |PACKAGE_STRING|
-:Copyright: 2009,2011,2012,2016,2018,2019,2020,2023 Intel Corporation
+:Copyright: 2009,2011,2012,2016,2018,2019,2020,2023,2025 Intel Corporation
 :Manual section: |MANUAL_SECTION|
 :Manual group: |MANUAL_GROUP|
 
@@ -57,6 +57,14 @@ OPTIONS
 
 -m
    Default to showing all memory regions separately.
+
+-n <number>
+   Specify application running time as <number - 1> * <refresh period>.
+   Passing 0 (default) or negative number will run it in infinite loop
+   until user breaks with q or Ctrl-C or sends a signal. With options
+   -c, -J or -l it will print info <number> times.
+
+
 
 RUNTIME CONTROL
 ===============

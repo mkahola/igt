@@ -1065,6 +1065,11 @@ usage(const char *appname)
 		"\t[-d <device>]   Device filter, please check manual page for more details.\n"
 		"\t[-p]            Default to showing physical engines instead of classes.\n"
 		"\t[-m]            Default to showing all memory regions.\n"
+		"\t[-n <number>]   Specify running time as <number - 1> * <refresh period>.\n"
+		"\t                Passing 0 (default) or negative number will run it in\n"
+		"\t                infinite loop until user breaks with q or Ctrl-C or sends\n"
+		"\t                a signal. With options -c, -J or -l it will print info\n"
+		"\t                <number> times.\n"
 		"\n",
 		appname, DEFAULT_PERIOD_MS);
 	printf("To access interactive help, press 'h' while the application is running.\n");
@@ -2617,9 +2622,10 @@ int main(int argc, char **argv)
 	struct igt_device_card card;
 	char *codename = NULL;
 	struct timespec ts;
+	long iteration_count = 0;
 
 	/* Parse options */
-	while ((ch = getopt(argc, argv, "o:s:d:mpcJLlh")) != -1) {
+	while ((ch = getopt(argc, argv, "o:s:d:n:mpcJLlh")) != -1) {
 		switch (ch) {
 		case 'o':
 			output_path = optarg;
@@ -2629,6 +2635,11 @@ int main(int argc, char **argv)
 			break;
 		case 'd':
 			opt_device = strdup(optarg);
+			break;
+		case 'n':
+			iteration_count = atol(optarg);
+			if (iteration_count < 0)
+				iteration_count = 0;
 			break;
 		case 'p':
 			physical_engines = true;
@@ -2856,6 +2867,12 @@ int main(int argc, char **argv)
 
 		if (disp_clients != iclients.clients)
 			free_display_clients(disp_clients);
+
+		if (iteration_count > 0) {
+			--iteration_count;
+			if (!iteration_count)
+				stop_top = true;
+		}
 
 		if (stop_top)
 			break;
