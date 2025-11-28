@@ -145,6 +145,7 @@ struct online_debug_data {
 	int drm_fd;
 	struct drm_xe_engine_class_instance hwe;
 	uint64_t flags;
+	int thread_count;
 	/* client out */
 	int thread_hit_count;
 	/* debugger internals */
@@ -168,16 +169,16 @@ struct online_debug_data {
 	int att_event_counter;
 };
 
-static int get_number_of_threads(int fd, uint64_t flags)
+static int get_number_of_threads(struct online_debug_data *data)
 {
-	if (flags & (PAGEFAULT_STRESS_TEST))
-		return get_maximum_number_of_threads(fd);
+	if (data->flags & (PAGEFAULT_STRESS_TEST))
+		return get_maximum_number_of_threads(data->drm_fd);
 
-	if (flags & (SHADER_MIN_THREADS | SHADER_PAGEFAULT))
+	if (data->flags & (SHADER_MIN_THREADS | SHADER_PAGEFAULT))
 		return 16;
 
-	if (flags & (TRIGGER_RESUME_ONE | TRIGGER_RESUME_SINGLE_WALK |
-		     TRIGGER_RESUME_PARALLEL_WALK | SHADER_CACHING_SRAM | SHADER_CACHING_VRAM))
+	if (data->flags & (TRIGGER_RESUME_ONE | TRIGGER_RESUME_SINGLE_WALK |
+	    TRIGGER_RESUME_PARALLEL_WALK | SHADER_CACHING_SRAM | SHADER_CACHING_VRAM))
 		return 32;
 
 	return 512;
@@ -200,8 +201,8 @@ static int caching_get_instruction_count(int fd, uint32_t s_dim__x, int flags)
 
 static struct gpgpu_shader *get_shader(struct online_debug_data *data)
 {
-	struct dim_t w_dim = walker_dimensions(get_number_of_threads(data->drm_fd, data->flags));
-	struct dim_t s_dim = surface_dimensions(get_number_of_threads(data->drm_fd, data->flags));
+	struct dim_t w_dim = walker_dimensions(data->thread_count);
+	struct dim_t s_dim = surface_dimensions(data->thread_count);
 	static struct gpgpu_shader *shader;
 
 	shader = gpgpu_shader_create(data->drm_fd);
@@ -261,7 +262,7 @@ static struct gpgpu_shader *get_shader(struct online_debug_data *data)
 
 static struct gpgpu_shader *get_sip(struct online_debug_data *data)
 {
-	struct dim_t w_dim = walker_dimensions(get_number_of_threads(data->drm_fd, data->flags));
+	struct dim_t w_dim = walker_dimensions(data->thread_count);
 	static struct gpgpu_shader *sip;
 
 	sip = gpgpu_shader_create(data->drm_fd);
@@ -417,6 +418,7 @@ online_debug_data_create(int drm_fd, struct drm_xe_engine_class_instance *hwe, u
 	data->drm_fd = drm_fd;
 	memcpy(&data->hwe, hwe, sizeof(*hwe));
 	data->flags = flags;
+	data->thread_count = get_number_of_threads(data);
 	pthread_mutex_init(&data->mutex, NULL);
 	data->client_handle = -1ULL;
 	data->exec_queue_handle = -1ULL;
@@ -685,7 +687,7 @@ static void eu_attention_resume_trigger(struct xe_eudebug_debugger *d,
 	}
 
 	if (d->flags & (SHADER_LOOP | SHADER_PAGEFAULT)) {
-		uint32_t threads = get_number_of_threads(d->master_fd, d->flags);
+		uint32_t threads = data->thread_count;
 		uint32_t val = STEERING_END_LOOP;
 
 		igt_assert_eq(pwrite(data->vm_fd, &val, sizeof(uint32_t),
@@ -707,7 +709,7 @@ static void eu_attention_resume_single_step_trigger(struct xe_eudebug_debugger *
 {
 	struct drm_xe_eudebug_event_eu_attention *att = (void *) e;
 	struct online_debug_data *data = d->ptr;
-	const int threads = get_number_of_threads(d->fd, d->flags);
+	const int threads = data->thread_count;
 	uint32_t val;
 	size_t sz = sizeof(uint32_t);
 
@@ -932,7 +934,7 @@ static void eu_attention_resume_caching_trigger(struct xe_eudebug_debugger *d,
 {
 	struct drm_xe_eudebug_event_eu_attention *att = (void *)e;
 	struct online_debug_data *data = d->ptr;
-	struct dim_t s_dim = surface_dimensions(get_number_of_threads(d->fd, d->flags));
+	struct dim_t s_dim = surface_dimensions(data->thread_count);
 	uint32_t *kernel_offset = &data->kernel_offset;
 	int *counter = &data->att_event_counter;
 	int val;
@@ -1091,7 +1093,7 @@ static void run_online_client(struct xe_eudebug_client *c)
 
 	fd = xe_eudebug_client_open_driver(c);
 
-	threads = get_number_of_threads(fd, c->flags);
+	threads = data->thread_count;
 	w_dim = walker_dimensions(threads);
 	s_dim = surface_dimensions(threads);
 
