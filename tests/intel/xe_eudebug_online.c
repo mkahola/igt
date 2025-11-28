@@ -1195,9 +1195,8 @@ static int query_attention_bitmask_size(int fd, int gt)
 	uint32_t threads_per_eu = xe_hwconfig_lookup_value_u32(fd, INTEL_HWCONFIG_NUM_THREADS_PER_EU);
 	struct drm_xe_query_topology_mask *c_dss = NULL, *g_dss = NULL, *eu_per_dss = NULL;
 	struct drm_xe_query_topology_mask *topology, *topo;
-	uint8_t dss_mask, last_dss;
 	uint32_t size;
-	int i, last_dss_idx;
+	int i, max_eu_count;
 
 	topology = xe_query_device(fd, DRM_XE_DEVICE_QUERY_GT_TOPOLOGY, &size);
 
@@ -1217,27 +1216,18 @@ static int query_attention_bitmask_size(int fd, int gt)
 	igt_assert(g_dss && c_dss && eu_per_dss);
 	igt_assert_eq_u32(c_dss->num_bytes, g_dss->num_bytes);
 
-	for (i = 0; i < c_dss->num_bytes; i++) {
-		dss_mask = c_dss->mask[i] | g_dss->mask[i];
-		if (dss_mask) {
-			last_dss = dss_mask;
-			last_dss_idx = i;
-		}
-	}
+	for (i = 0; i < c_dss->num_bytes; i++)
+		c_dss->mask[i] |= g_dss->mask[i];
 
-	last_dss_idx *= BITS_PER_BYTE;
-	do {
-		last_dss_idx++;
-	} while (last_dss >>= 1);
-
-	last_dss_idx *= igt_bitmap_hweight(eu_per_dss->mask, eu_per_dss->num_bytes * 8);
+	max_eu_count = igt_bitmap_fls(c_dss->mask, c_dss->num_bytes * 8) *
+		       igt_bitmap_hweight(eu_per_dss->mask, eu_per_dss->num_bytes * 8);
 
 	if (intel_gen_has_lockstep_eus(fd))
-		last_dss_idx /= 2;
+		max_eu_count /= 2;
 
 	free(topology);
 
-	return last_dss_idx * DIV_ROUND_UP(threads_per_eu, 8);
+	return max_eu_count * DIV_ROUND_UP(threads_per_eu, 8);
 }
 
 static struct drm_xe_eudebug_event_exec_queue *
