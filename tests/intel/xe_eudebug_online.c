@@ -377,7 +377,9 @@ static inline uint64_t eu_ctl_interrupt_all(int debugfd, uint64_t client,
 struct online_debug_data {
 	pthread_mutex_t mutex;
 	/* client in */
+	int drm_fd;
 	struct drm_xe_engine_class_instance hwe;
+	uint64_t flags;
 	/* client out */
 	int threads_count;
 	/* debugger internals */
@@ -402,7 +404,7 @@ struct online_debug_data {
 };
 
 static struct online_debug_data *
-online_debug_data_create(struct drm_xe_engine_class_instance *hwe)
+online_debug_data_create(int drm_fd, struct drm_xe_engine_class_instance *hwe, uint64_t flags)
 {
 	struct online_debug_data *data;
 
@@ -410,7 +412,9 @@ online_debug_data_create(struct drm_xe_engine_class_instance *hwe)
 		    PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
 	igt_assert(data);
 
+	data->drm_fd = drm_fd;
 	memcpy(&data->hwe, hwe, sizeof(*hwe));
+	data->flags = flags;
 	pthread_mutex_init(&data->mutex, NULL);
 	data->client_handle = -1ULL;
 	data->exec_queue_handle = -1ULL;
@@ -1439,7 +1443,7 @@ static void test_basic_online(int fd, struct drm_xe_engine_class_instance *hwe, 
 	struct xe_eudebug_session *s;
 	struct online_debug_data *data;
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 	s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 
 	xe_eudebug_debugger_add_trigger(s->debugger, DRM_XE_EUDEBUG_EVENT_EU_ATTENTION,
@@ -1475,7 +1479,7 @@ static void test_set_breakpoint_online(int fd, struct drm_xe_engine_class_instan
 
 	igt_require(!(flags & FAULTABLE_VM) || !xe_supports_faults(fd));
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 	s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 	xe_eudebug_debugger_add_trigger(s->debugger, DRM_XE_EUDEBUG_EVENT_OPEN,
 					open_trigger);
@@ -1538,7 +1542,7 @@ static void test_set_breakpoint_online_sigint_debugger(int fd,
 		sleep_time = rand() % max_sleep_time;
 		igt_debug("Loop %d: SIGINT after %" PRIu64 " us\n", loop_count, sleep_time);
 
-		data = online_debug_data_create(hwe);
+		data = online_debug_data_create(fd, hwe, flags);
 		s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 		s->client->allow_dead_client = true;
 		xe_eudebug_debugger_add_trigger(s->debugger, DRM_XE_EUDEBUG_EVENT_OPEN,
@@ -1632,7 +1636,7 @@ static void test_pagefault_online(int fd, struct drm_xe_engine_class_instance *h
 	struct xe_eudebug_session *s;
 	struct online_debug_data *data;
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 	s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 
 	xe_eudebug_debugger_add_trigger(s->debugger, DRM_XE_EUDEBUG_EVENT_OPEN,
@@ -1672,7 +1676,7 @@ static void test_preemption(int fd, struct drm_xe_engine_class_instance *hwe)
 	struct online_debug_data *data;
 	struct xe_eudebug_client *other;
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 	s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 	other = xe_eudebug_client_create(fd, run_online_client, SHADER_NOP, data);
 
@@ -1717,7 +1721,7 @@ static void test_reset_with_attention_online(int fd, struct drm_xe_engine_class_
 	struct xe_eudebug_session *s1, *s2;
 	struct online_debug_data *data;
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 	s1 = xe_eudebug_session_create(fd, run_online_client, flags, data);
 
 	xe_eudebug_debugger_add_trigger(s1->debugger, DRM_XE_EUDEBUG_EVENT_EU_ATTENTION,
@@ -1771,7 +1775,7 @@ static void test_interrupt_all(int fd, struct drm_xe_engine_class_instance *hwe,
 
 	igt_require(!(flags & FAULTABLE_VM) || !xe_supports_faults(fd));
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 	s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 
 	xe_eudebug_debugger_add_trigger(s->debugger, DRM_XE_EUDEBUG_EVENT_OPEN,
@@ -1862,7 +1866,7 @@ static void test_interrupt_other(int fd, struct drm_xe_engine_class_instance *hw
 	int debugee_flags = SHADER_LOOP | DO_NOT_EXPECT_CANARIES;
 	int val;
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 	s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 
 	xe_eudebug_debugger_add_trigger(s->debugger, DRM_XE_EUDEBUG_EVENT_OPEN, open_trigger);
@@ -1892,7 +1896,7 @@ static void test_interrupt_other(int fd, struct drm_xe_engine_class_instance *hw
 	xe_eudebug_debugger_detach(s->debugger);
 	reset_debugger_log(s->debugger);
 
-	debugee_data = online_debug_data_create(hwe);
+	debugee_data = online_debug_data_create(fd, hwe, flags);
 	s->debugger->ptr = debugee_data;
 	debugee = xe_eudebug_client_create(fd, run_online_client, debugee_flags, debugee_data);
 	igt_assert_eq(xe_eudebug_debugger_attach(s->debugger, debugee), 0);
@@ -1953,7 +1957,7 @@ static void test_tdctl_parameters(int fd, struct drm_xe_engine_class_instance *h
 
 	igt_assert(attention_bitmask);
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 	s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 
 	xe_eudebug_debugger_add_trigger(s->debugger, DRM_XE_EUDEBUG_EVENT_OPEN,
@@ -2103,7 +2107,7 @@ static void test_interrupt_reconnect(int fd, struct drm_xe_engine_class_instance
 	struct xe_eudebug_session *s;
 	uint32_t val;
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 	s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 
 	xe_eudebug_debugger_add_trigger(s->debugger, DRM_XE_EUDEBUG_EVENT_OPEN,
@@ -2182,7 +2186,7 @@ static void test_single_step(int fd, struct drm_xe_engine_class_instance *hwe, i
 	struct xe_eudebug_session *s;
 	struct online_debug_data *data;
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 	s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 
 	xe_eudebug_debugger_add_trigger(s->debugger, DRM_XE_EUDEBUG_EVENT_OPEN,
@@ -2232,7 +2236,7 @@ static void test_debugger_reopen(int fd, struct drm_xe_engine_class_instance *hw
 	struct xe_eudebug_session *s;
 	struct online_debug_data *data;
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 
 	s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 
@@ -2283,7 +2287,7 @@ static void test_caching(int fd, struct drm_xe_engine_class_instance *hwe, int f
 	if (flags & SHADER_CACHING_VRAM || flags & BB_IN_VRAM || flags & TARGET_IN_VRAM)
 		igt_skip_on_f(!xe_has_vram(fd), "Device does not have VRAM.\n");
 
-	data = online_debug_data_create(hwe);
+	data = online_debug_data_create(fd, hwe, flags);
 	s = xe_eudebug_session_create(fd, run_online_client, flags, data);
 
 	xe_eudebug_debugger_add_trigger(s->debugger, DRM_XE_EUDEBUG_EVENT_OPEN,
@@ -2411,7 +2415,7 @@ static void test_many_sessions_on_tiles(int fd, bool multi_tile)
 	igt_require_f(n > 1, "Test requires at least two parallel compute engines!\n");
 
 	for (i = 0; i < n; i++) {
-		data[i] = online_debug_data_create(hwe[i]);
+		data[i] = online_debug_data_create(fd, hwe[i], flags);
 		s[i] = xe_eudebug_session_create(fd, run_online_client, flags, data[i]);
 
 		xe_eudebug_debugger_add_trigger(s[i]->debugger, DRM_XE_EUDEBUG_EVENT_EU_ATTENTION,
