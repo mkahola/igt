@@ -381,7 +381,7 @@ struct online_debug_data {
 	struct drm_xe_engine_class_instance hwe;
 	uint64_t flags;
 	/* client out */
-	int threads_count;
+	int thread_hit_count;
 	/* debugger internals */
 	uint64_t client_handle;
 	uint64_t exec_queue_handle;
@@ -1147,8 +1147,8 @@ static void run_online_client(struct xe_eudebug_client *c)
 
 	if (!(c->flags & DO_NOT_EXPECT_CANARIES)) {
 		ptr = xe_bo_mmap_ext(fd, buf->handle, buf->size, PROT_READ);
-		data->threads_count = count_canaries_neq(ptr, w_dim, 0);
-		igt_assert_f(data->threads_count, "No canaries found, nothing executed?\n");
+		data->thread_hit_count = count_canaries_neq(ptr, w_dim, 0);
+		igt_assert_f(data->thread_hit_count, "No canaries found, nothing executed?\n");
 
 		if ((c->flags & SHADER_BREAKPOINT || c->flags & TRIGGER_RESUME_SET_BP ||
 		     c->flags & SHADER_N_NOOP_BREAKPOINT) && !(c->flags & DISABLE_DEBUG_MODE)) {
@@ -1156,8 +1156,9 @@ static void run_online_client(struct xe_eudebug_client *c)
 
 			igt_assert_f(aip != SHADER_CANARY,
 				     "Workload executed but breakpoint not hit!\n");
-			igt_assert_eq(count_canaries_eq(ptr, w_dim, aip), data->threads_count);
-			igt_debug("Breakpoint hit in %d threads, AIP=0x%08x\n", data->threads_count,
+			igt_assert_eq(count_canaries_eq(ptr, w_dim, aip), data->thread_hit_count);
+			igt_debug("Breakpoint hit in %d threads, AIP=0x%08x\n",
+				  data->thread_hit_count,
 				  aip);
 		}
 
@@ -1338,7 +1339,7 @@ static void online_session_check(struct xe_eudebug_session *s, int flags)
 	 * if we have a breakpoint set and we resume all threads always.
 	 */
 	if (flags == SHADER_BREAKPOINT || flags == TRIGGER_UFENCE_SET_BREAKPOINT)
-		igt_assert_eq(sum, data->threads_count);
+		igt_assert_eq(sum, data->thread_hit_count);
 
 	if (expect_exception)
 		igt_assert(sum > 0);
