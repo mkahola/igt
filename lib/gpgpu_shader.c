@@ -11,6 +11,7 @@
 #include "ioctl_wrappers.h"
 #include "gpgpu_shader.h"
 #include "gpu_cmds.h"
+#include "xe/xe_query.h"
 
 struct label_entry {
 	uint32_t id;
@@ -131,7 +132,7 @@ __xelp_gpgpu_execfunc(struct intel_bb *ibb,
 
 	gen9_emit_state_base_address(ibb);
 
-	xelp_emit_vfe_state(ibb, THREADS, GEN8_GPGPU_URB_ENTRIES,
+	xelp_emit_vfe_state(ibb, xe_query_eu_thread_count(ibb->fd, 0), GEN8_GPGPU_URB_ENTRIES,
 			    GPGPU_URB_SIZE, GPGPU_CURBE_SIZE, true);
 
 	gen7_emit_interface_descriptor_load(ibb, interface_descriptor);
@@ -197,7 +198,7 @@ __xehp_gpgpu_execfunc(struct intel_bb *ibb,
 	xehp_emit_state_base_address(ibb);
 	xehp_emit_state_compute_mode(ibb, shdr->vrt != VRT_DISABLED);
 	xehp_emit_state_binding_table_pool_alloc(ibb);
-	xehp_emit_cfe_state(ibb, THREADS);
+	xehp_emit_cfe_state(ibb, xe_query_eu_thread_count(ibb->fd, 0));
 
 	if (sip_offset)
 		emit_sip(ibb, sip_offset);
