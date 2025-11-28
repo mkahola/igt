@@ -245,20 +245,6 @@ static struct gpgpu_shader *get_sip(int fd, const unsigned int flags)
 	return sip;
 }
 
-static int count_set_bits(void *ptr, size_t size)
-{
-	uint32_t *p = ptr;
-	int count = 0;
-	int i;
-
-	igt_assert(size % 4 == 0);
-
-	for (i = 0; i < size/4; i++)
-		count += igt_hweight(p[i]);
-
-	return count;
-}
-
 static int eu_attentions_xor_count(const uint32_t *a, const uint32_t *b, uint32_t size)
 {
 	int count = 0;
@@ -449,7 +435,7 @@ static void eu_attention_debug_trigger(struct xe_eudebug_debugger *d,
 
 	igt_debug("EVENT[%llu] eu-attenttion; threads=%d "
 		 "client[%llu], exec_queue[%llu], lrc[%llu], bitmask_size[%d]\n",
-		 att->base.seqno, count_set_bits(att->bitmask, att->bitmask_size),
+		 att->base.seqno, igt_bitmap_hweight(att->bitmask, att->bitmask_size * 8),
 				att->client_handle, att->exec_queue_handle,
 				att->lrc_handle, att->bitmask_size);
 
@@ -466,7 +452,7 @@ static void eu_attention_reset_trigger(struct xe_eudebug_debugger *d,
 
 	igt_debug("EVENT[%llu] eu-attention with reset; threads=%d "
 		 "client[%llu], exec_queue[%llu], lrc[%llu], bitmask_size[%d]\n",
-		 att->base.seqno, count_set_bits(att->bitmask, att->bitmask_size),
+		 att->base.seqno, igt_bitmap_hweight(att->bitmask, att->bitmask_size * 8),
 				att->client_handle, att->exec_queue_handle,
 				att->lrc_handle, att->bitmask_size);
 
@@ -1244,7 +1230,7 @@ static int query_attention_bitmask_size(int fd, int gt)
 		last_dss_idx++;
 	} while (last_dss >>= 1);
 
-	last_dss_idx *= count_set_bits(eu_per_dss->mask, eu_per_dss->num_bytes);
+	last_dss_idx *= igt_bitmap_hweight(eu_per_dss->mask, eu_per_dss->num_bytes * 8);
 
 	if (intel_gen_has_lockstep_eus(fd))
 		last_dss_idx /= 2;
@@ -1337,7 +1323,7 @@ static void online_session_check(struct xe_eudebug_session *s, int flags)
 
 			igt_assert(event->flags == DRM_XE_EUDEBUG_EVENT_STATE_CHANGE);
 			igt_assert_eq(ea->bitmask_size, bitmask_size);
-			sum += count_set_bits(ea->bitmask, bitmask_size);
+			sum += igt_bitmap_hweight(ea->bitmask, bitmask_size * 8);
 			igt_assert(match_attention_with_exec_queue(s->debugger->log, ea));
 		} else if (event->type == DRM_XE_EUDEBUG_EVENT_PAGEFAULT) {
 			uint32_t after_offset = bitmask_size / sizeof(uint32_t);
@@ -1402,7 +1388,7 @@ static void pagefault_trigger(struct xe_eudebug_debugger *d,
 	int threads[3], pagefault_threads, idx;
 
 	for (idx = 0; idx < 3; idx++)
-		threads[idx] = count_set_bits(ptrs[idx], attn_size);
+		threads[idx] = igt_bitmap_hweight(ptrs[idx], attn_size * 8);
 
 	pagefault_threads = eu_attentions_xor_count(ptrs[1], ptrs[2], attn_size);
 
