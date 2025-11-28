@@ -1047,6 +1047,63 @@ int xe_wait_for_pxp_init(int fd)
 	return -ETIMEDOUT;
 }
 
+/**
+ * xe_query_eu_count:
+ * @fd: xe device fd
+ * @gt: GT id
+ *
+ * Return count of EUs for given GT.
+ */
+int xe_query_eu_count(int fd, int gt)
+{
+	struct drm_xe_query_topology_mask *c_dss = NULL, *g_dss = NULL, *eu_per_dss = NULL;
+	struct drm_xe_query_topology_mask *topology, *topo;
+	uint32_t size;
+	int eu_count;
+
+	topology = xe_query_device(fd, DRM_XE_DEVICE_QUERY_GT_TOPOLOGY, &size);
+	xe_for_each_topology_mask(topology, size, topo) {
+		if (topo->gt_id != gt)
+			continue;
+
+		if (topo->type == DRM_XE_TOPO_DSS_GEOMETRY) {
+			g_dss = topo;
+		} else if (topo->type == DRM_XE_TOPO_DSS_COMPUTE) {
+			c_dss = topo;
+		} else if (topo->type == DRM_XE_TOPO_EU_PER_DSS ||
+			 topo->type == DRM_XE_TOPO_SIMD16_EU_PER_DSS) {
+			eu_per_dss = topo;
+			break;
+		}
+	}
+
+	igt_assert(g_dss && c_dss && eu_per_dss);
+	igt_assert_eq_u32(c_dss->num_bytes, g_dss->num_bytes);
+
+	for (int i = 0; i < c_dss->num_bytes; i++)
+		c_dss->mask[i] |= g_dss->mask[i];
+
+	eu_count = igt_bitmap_hweight(c_dss->mask, c_dss->num_bytes * 8);
+	eu_count *= igt_bitmap_hweight(eu_per_dss->mask, eu_per_dss->num_bytes * 8);
+
+	free(topology);
+
+	return eu_count;
+}
+
+/**
+ * xe_query_eu_thread_count:
+ * @fd: xe device fd
+ * @gt: GT id
+ *
+ * Return count of EU threads for given GT.
+ */
+int xe_query_eu_thread_count(int fd, int gt)
+{
+	return xe_query_eu_count(fd, gt) *
+		xe_hwconfig_lookup_value_u32(fd, INTEL_HWCONFIG_NUM_THREADS_PER_EU);
+}
+
 igt_constructor
 {
 	xe_device_cache_init();

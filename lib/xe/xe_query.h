@@ -175,4 +175,7 @@ static inline void *xe_query_device(int fd, uint32_t type, uint32_t *size)
 struct xe_device *xe_device_get(int fd);
 void xe_device_put(int fd);
 
+int xe_query_eu_count(int fd, int gt);
+int xe_query_eu_thread_count(int fd, int gt);
+
 #endif	/* XE_QUERY_H */
