@@ -66,6 +66,17 @@ igt_main {
 		igt_panthor_free_bo(fd, &bo);
 	}
 
+	igt_describe_f("Check zero-ing of buffer at creation time");
+	igt_subtest("bo_zeroed") {
+		struct panthor_bo bo;
+
+		igt_panthor_bo_create_mapped(fd, &bo, getpagesize(), 0, 0);
+		igt_assert(bo.map);
+		igt_assert_eq(*((uint32_t *)bo.map), 0);
+
+		igt_panthor_free_bo(fd, &bo);
+	}
+
 	igt_fixture {
 		drm_close_driver(fd);
 	}
