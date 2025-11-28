@@ -352,4 +352,6 @@ void *igt_memdup(const void *ptr, size_t len);
 
 void igt_wait_and_close(int fence_fd);
 
+int igt_bitmap_hweight(void *bitmap, int nbits);
+
 #endif /* IGT_AUX_H */
