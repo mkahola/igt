@@ -22,6 +22,8 @@
  */
 
 #include <assert.h>
+#include <dirent.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <time.h>
@@ -73,6 +75,115 @@ get_sysfs_path(const char *which)
 #undef STATIC_STRLEN
 
 	return path;
+}
+
+/* Returns:
+ * 1 if Intel card was bound by i915 driver
+ * 0 otherwise
+ * -errno on error
+ */
+static int
+is_intel_card(int card)
+{
+	static const char fmt[] = "/sys/class/drm/card%d/device/driver/module/drivers";
+	char path[PATH_MAX];
+	struct dirent *entry;
+	int dirfd;
+	DIR *dirp;
+	int found = 0;
+
+	if (card < 0)
+		return -1;
+
+	sprintf(path, fmt, card);
+
+	dirfd = open(path, O_RDONLY | O_DIRECTORY);
+	if (dirfd < 0)
+		return -errno;
+
+	dirp = fdopendir(dirfd);
+	if (!dirp) {
+		int err = errno;
+
+		close(dirfd);
+		return -err;
+	}
+
+	while ((entry = readdir(dirp))) {
+		if (strcmp(entry->d_name, ".") == 0 ||
+		    strcmp(entry->d_name, "..") == 0)
+			continue;
+
+		if (strncmp(entry->d_name, "pci:", 4))
+			continue;
+
+		if (!strcmp(entry->d_name, "pci:i915")) {
+			found = 1;
+			break;
+		}
+	}
+
+	closedir(dirp);
+
+	return found;
+}
+
+static void __attribute__((noreturn))
+exit_error(const char *msg, int err)
+{
+	if (msg)
+		fprintf(stderr, "%s\n", msg);
+
+	if (err > 0)
+		fprintf(stderr, "Error: %d %s\n", err, strerror(err));
+
+	exit(EXIT_FAILURE);
+}
+
+static int
+get_intel_card(void)
+{
+	struct dirent *entry;
+	int intel_card = -1;
+	int dirfd, err;
+	DIR *dirp;
+
+	dirfd = open("/dev/dri/", O_RDONLY | O_DIRECTORY);
+	if (dirfd < 0)
+		exit_error("Cannot open /dev/dri/", errno);
+
+	dirp = fdopendir(dirfd);
+	if (!dirp) {
+		err = errno;
+		close(dirfd);
+		exit_error("Cannot open directory /dev/dri/", err);
+	}
+
+	while ((entry = readdir(dirp))) {
+		int num;
+
+		if (strcmp(entry->d_name, ".") == 0 ||
+		    strcmp(entry->d_name, "..") == 0)
+			continue;
+
+		if (entry->d_type == DT_DIR)
+			continue;
+
+		if (strncmp(entry->d_name, "card", 4))
+			continue;
+
+		if (sscanf(entry->d_name, "card%d", &num) != 1)
+			exit_error("Cannot parse card ID as integer", 0);
+
+		if (is_intel_card(num) > 0) {
+			intel_card = num;
+			break;
+		}
+	}
+
+	closedir(dirp);
+
+	return intel_card;
 }
 
 static void
@@ -317,10 +428,15 @@ int main(int argc, char *argv[])
 
 	parse_version_or_help(argc, argv);
 
+	device = get_intel_card();
+	if (device < 0)
+		exit_error("No Intel card found in /dev/dri\n", 0);
+
 	fd = __drm_open_driver(DRIVER_INTEL);
-	devid = intel_get_drm_devid(fd);
-	device = igt_device_get_card_index(fd);
-	close(fd);
+	if (fd >= 0) {
+		devid = intel_get_drm_devid(fd);
+		close(fd);
+	}
 
 	write = parse(argc, argv, targets, ARRAY_SIZE(targets), set_freq);
 	fail = write;
