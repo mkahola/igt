@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015,2018 Intel Corporation
+ * Copyright © 2015,2018,2025 Intel Corporation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -117,11 +117,21 @@ static int get_frequency(struct freq_info *freq_info)
 	return val;
 }
 
+static const char *
+get_shortname(const char *prog)
+{
+	const char *slash = strrchr(prog, '/');
+
+	return slash ? slash + 1 : prog;
+}
+
 static void __attribute__((noreturn))
 usage(const char *prog, int err)
 {
-	printf("%s A program to manipulate Intel GPU frequencies.\n\n", prog);
-	printf("Usage: %s [-e] [--min | --max] [--get] [--set frequency_mhz]\n\n", prog);
+	const char *shortname = get_shortname(prog);
+
+	printf("%s A program to manipulate Intel GPU frequencies.\n\n", shortname);
+	printf("Usage: %s [-e] [--min | --max] [--get] [--set frequency_mhz]\n\n", shortname);
 	printf("Options: \n");
 	printf("  -e		Lock frequency to the most efficient frequency\n");
 	printf("  -g, --get     Get all the frequency settings\n");
@@ -145,8 +155,8 @@ usage(const char *prog, int err)
 static void
 version(const char *prog)
 {
-	printf("%s: %s\n", prog, VERSION);
-	printf("Copyright © 2015,2018 Intel Corporation\n");
+	printf("%s: %s\n", get_shortname(prog), VERSION);
+	printf("Copyright © 2015,2018,2025 Intel Corporation\n");
 }
 
 static void
