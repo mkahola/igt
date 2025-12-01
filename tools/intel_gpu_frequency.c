@@ -51,6 +51,7 @@ struct freq_info {
 	const char *mode;
 	FILE *filp;
 	char *path;
+	bool write;
 };
 
 static struct freq_info info[] = {
@@ -187,15 +188,37 @@ get_intel_card(void)
 }
 
 static void
-initialize_freq_info(struct freq_info *freq_info)
+initialize_read_info(struct freq_info *freq_info)
 {
 	if (freq_info->filp)
 		return;
 
 	freq_info->path = get_sysfs_path(freq_info->name);
 	assert(freq_info->path);
-	freq_info->filp = fopen(freq_info->path, freq_info->mode);
+	freq_info->filp = fopen(freq_info->path, "r");
 	assert(freq_info->filp);
+}
+
+static void
+initialize_write_info(struct freq_info *freq_info)
+{
+	if (freq_info->write)
+		return;
+
+	if (freq_info->filp)
+		fclose(freq_info->filp);
+	else
+		freq_info->path = get_sysfs_path(freq_info->name);
+
+	assert(freq_info->path);
+	freq_info->filp = fopen(freq_info->path, freq_info->mode);
+	if (!(freq_info->filp)) {
+		fprintf(stderr, "Cannot open file %s for write mode %s\nerror %d %s\n",
+			freq_info->path, freq_info->mode, errno, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	freq_info->write = true;
 }
 
 static void wait_freq_settle(void)
@@ -210,7 +233,7 @@ static void wait_freq_settle(void)
 
 static void set_frequency(struct freq_info *freq_info, int val)
 {
-	initialize_freq_info(freq_info);
+	initialize_write_info(freq_info);
 	rewind(freq_info->filp);
 	assert(fprintf(freq_info->filp, "%d", val) > 0);
 
@@ -221,7 +244,7 @@ static int get_frequency(struct freq_info *freq_info)
 {
 	int val;
 
-	initialize_freq_info(freq_info);
+	initialize_read_info(freq_info);
 	rewind(freq_info->filp);
 	assert(fscanf(freq_info->filp, "%d", &val)==1);
 
