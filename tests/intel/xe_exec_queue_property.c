@@ -172,6 +172,7 @@ static void basic_get_property(int xe)
 static void invalid_property(int xe)
 {
 	uint32_t valid_property = DRM_XE_EXEC_QUEUE_SET_PROPERTY_PRIORITY;
+	uint32_t invalid_property = 32;	/* Picking some high value */
 	struct drm_xe_engine_class_instance instance = {
 			.engine_class = DRM_XE_ENGINE_CLASS_VM_BIND,
 	};
@@ -187,13 +188,10 @@ static void invalid_property(int xe)
 	igt_assert_eq(__xe_exec_queue_create(xe, vm, 1, 1, &instance,
 					     to_user_pointer(&ext), &exec_queue_id), 0);
 
-	/* This will fail as soon as a new property is introduced. It is
-	 * expected and the test will have to be updated. */
-	for (int i = 3; i < 16; i++ ) {
-		ext.property = i;
-		igt_assert_eq(__xe_exec_queue_create(xe, vm, 1, 1, &instance,
-						     to_user_pointer(&ext), &exec_queue_id), -EINVAL);
-	}
+	/* Invalid property should fail */
+	ext.property = invalid_property;
+	igt_assert_eq(__xe_exec_queue_create(xe, vm, 1, 1, &instance,
+					     to_user_pointer(&ext), &exec_queue_id), -EINVAL);
 
 	/* Correct value should still pass */
 	ext.property = valid_property;
