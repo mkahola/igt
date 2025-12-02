@@ -46,6 +46,9 @@
  * SUBTEST: lic-type-0
  * Description: Test for the integrity of link for type-0 content.
  *
+ * SUBTEST: lic-type-0-hdcp14
+ * Description: Test for the integrity of link for type-0 content with HDCP1.4.
+ *
  * SUBTEST: lic-type-1
  * Description: Test for the integrity of link for type-1 content.
  *
@@ -65,6 +68,11 @@
  * Description: Test to detect the HDCP status change when we are reading the
  *              uevent sent with the corresponding connector id and property id.
  *
+ * SUBTEST: uevent-hdcp14
+ * Description: Test to detect the status change when we are reading the
+ *              uevent sent with the corresponding connector id and property id
+ *              with HDCP1.4 content protection.
+ *
  * SUBTEST: %s
  * Description: Test content protection with %arg[1]
  *
@@ -75,6 +83,10 @@
  * @legacy:         legacy style commit
  * @type1:          content type 1 that can be handled only through HDCP2.2.
  * @suspend-resume: Suspend and resume the system
+ * @legacy-hdcp14:  Test HDCP1.4 content protection with legacy style commit.
+ * @atomic-hdcp14:  Test HDCP1.4 content protection with atomic modesetting.
+ * @atomic-dpms-hdcp14: Test HDCP1.4 content protection with atomic modesetting and DPMS.
+ *
  */
 
 /**
@@ -84,8 +96,10 @@
  * arg[1]:
  *
  * @lic-type-0:   Type 0 with LIC
+ * @lic-type-0-hdcp14: Type 0 with LIC and HDCP1.4
  * @lic-type-1:   Type 1 with LIC.
  * @type-0:       Type 0
+ * @type-0-hdcp14: Type 0 with HDCP1.4
  * @type-1:       Type 1
  * @suspend-resume: Suspend and resume the system
  */
@@ -98,6 +112,7 @@ struct data {
 	struct igt_fb red, green;
 	unsigned int cp_tests;
 	struct udev_monitor *uevent_monitor;
+	bool is_force_hdcp14;
 } data;
 
 /* Test flags */
@@ -600,6 +615,51 @@ static bool output_hdcp_capable(igt_output_t *output, int content_type)
 		return true;
 }
 
+static void set_i915_force_hdcp14(igt_output_t *output)
+{
+	int fd, ret;
+	char buf[MAX_SINK_HDCP_CAP_BUF_LEN];
+
+	fd = igt_debugfs_connector_dir(data.drm_fd, output->name, O_RDONLY);
+	igt_require_f(fd >= 0, "Cannot open %s debugfs\n", output->name);
+
+	ret = igt_debugfs_simple_read(fd, "i915_force_hdcp14", buf, sizeof(buf));
+	if (ret <= 0) {
+		igt_info("i915_force_hdcp14 not supported\n");
+		close(fd);
+		return;
+	}
+
+	ret = igt_sysfs_write(fd, "i915_force_hdcp14", "1", 2);
+	igt_require_f(ret > 0, "i915_force_hdcp14 is not enabled\n");
+
+	ret = igt_debugfs_simple_read(fd, "i915_force_hdcp14", buf, sizeof(buf));
+	igt_assert_f(ret > 0 && strstr(buf, "yes"),
+			 "i915_force_hdcp14 is not set to 'yes' on %s debugfs\n",
+			 output->name);
+
+	close(fd);
+}
+
+static void reset_i915_force_hdcp14(igt_output_t *output)
+{
+	int fd, ret;
+	char buf[MAX_SINK_HDCP_CAP_BUF_LEN];
+
+	fd = igt_debugfs_connector_dir(data.drm_fd, output->name, O_RDONLY);
+	igt_require_f(fd >= 0, "Cannot open %s debugfs\n", output->name);
+
+	ret = igt_sysfs_write(fd, "i915_force_hdcp14", "0", 2);
+	igt_require_f(ret > 0, "i915_force_hdcp14 is not disabled\n");
+
+	ret = igt_debugfs_simple_read(fd, "i915_force_hdcp14", buf, sizeof(buf));
+	igt_assert_f(ret > 0 && strstr(buf, "no"),
+			 "i915_force_hdcp14 is not set to 'no' on %s debugfs\n",
+			 "i915_force_hdcp14");
+
+	close(fd);
+}
+
 static void
 test_fini(igt_output_t *output, enum igt_commit_style commit_style)
 {
@@ -678,9 +738,14 @@ test_content_protection(enum igt_commit_style commit_style, int content_type)
 				continue;
 
 			modeset_with_fb(pipe, output, commit_style);
+			if (data.is_force_hdcp14)
+				set_i915_force_hdcp14(output);
 
 			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), output->name)
 				test_content_protection_on_output(output, pipe, commit_style, content_type);
+
+			if (data.is_force_hdcp14)
+				reset_i915_force_hdcp14(output);
 
 			test_fini(output, commit_style);
 			/*
@@ -743,6 +808,11 @@ test_mst_cp_enable_with_retry(igt_output_t *hdcp_mst_output[], int valid_outputs
 	int retry_orig = retries, count, i;
 	bool ret;
 
+	if (data.is_force_hdcp14) {
+		for (count = 0; count < valid_outputs; count++)
+			set_i915_force_hdcp14(hdcp_mst_output[count]);
+	}
+
 	do {
 		if (retry_orig != retries)
 			test_mst_cp_disable(hdcp_mst_output, COMMIT_ATOMIC, valid_outputs);
@@ -775,6 +845,11 @@ test_mst_cp_enable_with_retry(igt_output_t *hdcp_mst_output[], int valid_outputs
 
 		igt_display_commit2(display, COMMIT_ATOMIC);
 	} while (retries && !ret);
+
+	if (data.is_force_hdcp14) {
+		for (count = 0; count < valid_outputs; count++)
+			reset_i915_force_hdcp14(hdcp_mst_output[count]);
+	}
 
 	igt_assert_f(ret, "Content Protection not enabled on MST outputs\n");
 }
@@ -920,38 +995,63 @@ static const struct {
 	const char *name;
 	unsigned int cp_tests;
 	bool content_type;
+	bool is_force_hdcp14;
 } subtests[] = {
+	{ .desc = "Test content protection with atomic modesetting with HDCP1.4.",
+	  .name = "atomic-hdcp14",
+	  .cp_tests = 0,
+	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = true,
+	},
 	{ .desc = "Test content protection with atomic modesetting",
 	  .name = "atomic",
 	  .cp_tests = 0,
-	  .content_type = HDCP_CONTENT_TYPE_0
+	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = false,
+	},
+	{ .desc = "Test content protection with DPMS ON/OFF during "
+		  "atomic modesetting with HDCP1.4.",
+	  .name = "atomic-dpms-hdcp14",
+	  .cp_tests = CP_DPMS,
+	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = true,
 	},
 	{ .desc = "Test content protection with DPMS ON/OFF during atomic modesetting.",
 	  .name = "atomic-dpms",
 	  .cp_tests = CP_DPMS,
-	  .content_type = HDCP_CONTENT_TYPE_0
+	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = false,
 	},
 	{ .desc = "Test for the integrity of link with type 0 content.",
 	  .name = "lic-type-0",
 	  .cp_tests = CP_LIC,
 	  .content_type = HDCP_CONTENT_TYPE_0,
 	},
+	{ .desc = "Test for the integrity of link with type 0 content.",
+	  .name = "lic-type-0-hdcp14",
+	  .cp_tests = CP_LIC,
+	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = true,
+	},
 	{ .desc = "Test for the integrity of link with type 1 content",
 	  .name = "lic-type-1",
 	  .cp_tests = CP_LIC,
 	  .content_type = HDCP_CONTENT_TYPE_1,
+	  .is_force_hdcp14 = false,
 	},
 	{ .desc = "Test content protection with content type 1 "
 		  "that can be handled only through HDCP2.2.",
 	  .name = "type1",
 	  .cp_tests = 0,
 	  .content_type = HDCP_CONTENT_TYPE_1,
+	  .is_force_hdcp14 = false,
 	},
 	{ .desc = "Test the teardown and rebuild of the interface between "
 		  "Intel and mei hdcp.",
 	  .name = "mei-interface",
 	  .cp_tests = CP_MEI_RELOAD,
 	  .content_type = HDCP_CONTENT_TYPE_1,
+	  .is_force_hdcp14 = false,
 	},
 	{ .desc = "Test the content type change when the content protection already enabled",
 	  .name = "content-type-change",
@@ -963,6 +1063,14 @@ static const struct {
 	  .name = "uevent",
 	  .cp_tests = CP_UEVENT,
 	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = false,
+	},
+	{ .desc = "Test to detect the HDCP status change when we are reading the uevent "
+		  "sent with the corresponding connector id and property id.",
+	  .name = "uevent-hdcp14",
+	  .cp_tests = CP_UEVENT,
+	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = true,
 	},
 	/*
 	 *  Testing the revocation check through SRM needs a HDCP sink with
@@ -977,6 +1085,7 @@ static const struct {
 	  .name = "srm",
 	  .cp_tests = 0,
 	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = false,
 	},
 	{.desc = "Test to verify the behaviour of HDCP after suspend resume cycles.",
 	 .name = "suspend-resume",
@@ -990,26 +1099,43 @@ static const struct {
 	const char *name;
 	unsigned int cp_tests;
 	bool content_type;
+	bool is_force_hdcp14;
 } mst_subtests[] = {
 	{ .desc = "Test Content protection(Type 0) over DP MST.",
 	  .name = "dp-mst-type-0",
 	  .cp_tests = 0,
-	  .content_type = HDCP_CONTENT_TYPE_0
+	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = false,
+	},
+	{ .desc = "Test Content protection(Type 0) over DP MST with HDCP1.4.",
+	  .name = "dp-mst-type-0-hdcp14",
+	  .cp_tests = 0,
+	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = true,
 	},
 	{ .desc = "Test Content protection(Type 0) over DP MST with LIC.",
 	  .name = "dp-mst-lic-type-0",
 	  .cp_tests = CP_LIC,
-	  .content_type = HDCP_CONTENT_TYPE_0
+	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = false,
+	},
+	{ .desc = "Test Content protection(Type 0) over DP MST with LIC.",
+	  .name = "dp-mst-lic-type-0-hdcp14",
+	  .cp_tests = CP_LIC,
+	  .content_type = HDCP_CONTENT_TYPE_0,
+	  .is_force_hdcp14 = true,
 	},
 	{ .desc = "Test Content protection(Type 1) over DP MST.",
 	  .name = "dp-mst-type-1",
 	  .cp_tests = 0,
 	  .content_type = HDCP_CONTENT_TYPE_1,
+	  .is_force_hdcp14 = false,
 	},
 	{ .desc = "Test Content protection(Type 1) over DP MST with LIC.",
 	  .name = "dp-mst-lic-type-1",
 	  .cp_tests = CP_LIC,
 	  .content_type = HDCP_CONTENT_TYPE_1,
+	  .is_force_hdcp14 = false,
 	},
 	{ .desc = "Test Content protection(Type 1) over DP MST with suspend resume.",
 	  .name = "dp-mst-suspend-resume",
@@ -1030,6 +1156,14 @@ int igt_main()
 	igt_describe("Test content protection with legacy style commit.");
 	igt_subtest_with_dynamic("legacy") {
 		data.cp_tests = 0;
+		data.is_force_hdcp14 = false;
+		test_content_protection(COMMIT_LEGACY, HDCP_CONTENT_TYPE_0);
+	}
+
+	igt_describe("Test content protection with legacy style commit with HDCP1.4");
+	igt_subtest_with_dynamic("legacy-hdcp14") {
+		data.cp_tests = 0;
+		data.is_force_hdcp14 = true;
 		test_content_protection(COMMIT_LEGACY, HDCP_CONTENT_TYPE_0);
 	}
 
@@ -1042,6 +1176,7 @@ int igt_main()
 
 			igt_subtest_with_dynamic(subtests[i].name) {
 				data.cp_tests = subtests[i].cp_tests;
+				data.is_force_hdcp14 = subtests[i].is_force_hdcp14;
 
 				if (!strcmp(subtests[i].name, "srm")) {
 					bool ret;
@@ -1065,6 +1200,7 @@ int igt_main()
 
 			igt_subtest(mst_subtests[i].name) {
 				data.cp_tests = mst_subtests[i].cp_tests;
+				data.is_force_hdcp14 = mst_subtests[i].is_force_hdcp14;
 				test_content_protection_mst(mst_subtests[i].content_type);
 			}
 		}
