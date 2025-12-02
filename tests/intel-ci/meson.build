@@ -9,7 +9,6 @@ intelci_files = [
   'fast-feedback-chamelium-only.testlist',
   'i915.blocklist.txt',
   'i915.blocklist-pre-merge.txt',
-  'i915.chamelium-only.testlist',
   'i915.fast-feedback.testlist',
   'i915.fast-feedback-chamelium-only.testlist',
   'meta.testlist',
