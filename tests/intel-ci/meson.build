@@ -18,16 +18,16 @@ intelci_files = [
   'xe.bmg.display.blocklist.txt',
   'xe.bmg.eudebug.blocklist.txt',
   'xe.eudebug.blocklist.txt',
+  'xe.fast-feedback.testlist',
+  'xe.fast-feedback-chamelium-only.testlist',
   'xe.lnl.core.blocklist.txt',
   'xe.lnl.display.blocklist.txt',
   'xe.lnl.eudebug.blocklist.txt',
   'xe.multigpu.blocklist.txt',
   'xe.ptl.core.blocklist.txt',
   'xe.ptl.display.blocklist.txt',
-  'xe-fast-feedback.testlist',
-  'xe-fast-feedback-chamelium-only.testlist',
-  'xe-sriov-vf.blocklist.txt',
-  'xe-sriov-vm.blocklist.txt',
+  'xe.sriov-vf.blocklist.txt',
+  'xe.sriov-vm.blocklist.txt',
 ]
 
 if meson.version().version_compare('<1.3.0')
