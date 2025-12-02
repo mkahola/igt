@@ -10,8 +10,8 @@
 #include <sys/sysmacros.h>
 #include "lib/amdgpu/amd_memory.h"
 #include "lib/amdgpu/amd_command_submission.h"
-#include "lib/amdgpu/amd_dispatch_helpers.h"
-#include "lib/amdgpu/amd_dispatch.h"
+#include "lib/amdgpu/compute_utils/amd_dispatch_helpers.h"
+#include "lib/amdgpu/compute_utils/amd_dispatch.h"
 
 static void
 amdgpu_dispatch_hang_slow_gfx(amdgpu_device_handle device_handle,

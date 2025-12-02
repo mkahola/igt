@@ -11,8 +11,8 @@
 #include "lib/amdgpu/amd_command_submission.h"
 #include "lib/amdgpu/amd_compute.h"
 #include "lib/amdgpu/amd_gfx.h"
-#include "lib/amdgpu/amd_shaders.h"
-#include "lib/amdgpu/amd_dispatch.h"
+#include "lib/amdgpu/shaders/amd_shaders.h"
+#include "lib/amdgpu/compute_utils/amd_dispatch.h"
 
 #define BUFFER_SIZE (8 * 1024)
 
