@@ -20,6 +20,9 @@ extern "C" {
  * clean these up when kernel uapi headers are sync'd.
  */
 
+#define DRM_XE_GEM_CREATE_FLAG_NO_COMPRESSION (1 << 3)
+#define DRM_XE_QUERY_CONFIG_FLAG_HAS_NO_COMPRESSION_HINT (1 << 3)
+
 #if defined(__cplusplus)
 }
 #endif

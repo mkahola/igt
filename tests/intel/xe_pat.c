@@ -753,6 +753,62 @@ static void prime_external_import_coh(void)
 	drm_close_driver(fd2);
 }
 
+static bool has_no_compression_hint(int fd)
+{
+	struct drm_xe_query_config *config = xe_config(fd);
+
+	return config->info[DRM_XE_QUERY_CONFIG_FLAGS] &
+		DRM_XE_QUERY_CONFIG_FLAG_HAS_NO_COMPRESSION_HINT;
+}
+
+/**
+ * SUBTEST: bo-comp-disable-bind
+ * Test category: functionality test
+ * Description: Validates that binding a BO created with
+ * the NO_COMPRESSION flag using a compressed PAT index fails
+ * with -EINVAL on Xe2+ platforms.
+ */
+
+static void bo_comp_disable_bind(int fd)
+{
+	size_t size = xe_get_default_alignment(fd);
+	uint8_t comp_pat_index, uncomp_pat_index;
+	bool supported;
+	uint32_t vm, bo;
+	int ret;
+
+	supported = has_no_compression_hint(fd);
+	ret = __xe_bo_create_caching(fd, 0, size, vram_if_possible(fd, 0),
+				     DRM_XE_GEM_CREATE_FLAG_NO_COMPRESSION,
+				     DRM_XE_GEM_CPU_CACHING_WC, &bo);
+
+	if (!supported) {
+		igt_assert_neq(ret, 0);
+		igt_skip("Missing NO_COMPRESSION support, skipping.\n");
+	}
+
+	igt_assert_eq(ret, 0);
+	vm = xe_vm_create(fd, 0, 0);
+
+	comp_pat_index = intel_get_pat_idx_uc_comp(fd);
+	uncomp_pat_index = intel_get_pat_idx_uc(fd);
+
+	igt_assert_eq(__xe_vm_bind(fd, vm, 0, bo, 0, 0x100000,
+				   size, 0, 0, NULL, 0,
+				   0, comp_pat_index, 0),
+		      -EINVAL);
+
+	igt_assert_eq(__xe_vm_bind(fd, vm, 0, bo, 0, 0x100000,
+				   size, 0, 0, NULL, 0,
+				   0, uncomp_pat_index, 0),
+		      0);
+	xe_vm_unbind_sync(fd, vm, 0, 0x100000, size);
+
+	gem_close(fd, bo);
+
+	xe_vm_destroy(fd, vm);
+}
+
 /**
  * SUBTEST: display-vs-wb-transient
  * Test category: functionality test
@@ -1184,6 +1240,9 @@ igt_main_args("V", NULL, help_str, opt_handler, NULL)
 
 	igt_subtest("prime-external-import-coh")
 		prime_external_import_coh();
+
+	igt_subtest("bo-comp-disable-bind")
+		bo_comp_disable_bind(fd);
 
 	igt_subtest_with_dynamic("pat-index-xelp") {
 		igt_require(intel_graphics_ver(dev_id) <= IP_VER(12, 55));
