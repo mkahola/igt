@@ -201,12 +201,12 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 	for_each_pipe(display, p) num_pipes++;
 
 	igt_skip_on_f(pipe >= num_pipes,
-                      "ASIC does not have %d pipes\n", pipe);
+                      "ASIC does not have %d pipes\n", pipe + 1);
 
 	test_init(data, physical);
 
 	igt_skip_on_f(physical && pipe >= data->connected_outputs,
-		      "Only %d connected need %d connected\n",data->connected_outputs, pipe+1);
+		      "Only %d connected need %d connected\n", data->connected_outputs, pipe + 1);
 
 	/* create buffers */
 	for (i = 0; i <= pipe; i++) {
