@@ -436,7 +436,7 @@ int
 find_dri_id_by_pci(const struct pci_addr *pci);
 
 int
-get_dri_index_from_device(amdgpu_device_handle device);
+get_dri_index_from_device(amdgpu_device_handle device, int fd);
 /**
  * is_apu - Check if the GPU is an APU (accelerated processing unit)
  * @info: Pointer to amdgpu_gpu_info structure containing device info

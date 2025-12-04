@@ -1401,13 +1401,13 @@ cleanup:
 	}
 }
 
-static void test_gca_config_basic(amdgpu_device_handle device)
+static void test_gca_config_basic(amdgpu_device_handle device, int fd)
 {
 	uint32_t config[MAX_CONFIG_SIZE];
 	int dri_index = 0; /* Typically 0 for primary GPU */
 	int bytes_read;
 
-	dri_index = get_dri_index_from_device(device);
+	dri_index = get_dri_index_from_device(device, fd);
 	/* Try to read from debugfs */
 	bytes_read = read_gca_config_debugfs(dri_index, config, sizeof(config));
 
@@ -4223,7 +4223,7 @@ igt_main
 
 	igt_describe("Test basic GCA configuration reading from debugfs");
 	igt_subtest("gca-config-basic")
-		test_gca_config_basic(device);
+		test_gca_config_basic(device, fd);
 
 	igt_describe("Test allocation of large GTT memory buffers");
 	igt_subtest("largest-gtt-buffer") {

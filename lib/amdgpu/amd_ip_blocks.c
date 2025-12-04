@@ -1768,7 +1768,7 @@ bool is_support_page_queue(enum amd_ip_block_type ip_type, const struct pci_addr
 	return (ret == 0 && glob_result.gl_pathc > 0);
 }
 
-int get_dri_index_from_device(amdgpu_device_handle device)
+int get_dri_index_from_device(amdgpu_device_handle device, int fd)
 {
 	/* For AMDGPU, the DRI index is typically available through the render node */
 	/* We can use the device fd to determine the appropriate debugfs path */
@@ -1778,7 +1778,7 @@ int get_dri_index_from_device(amdgpu_device_handle device)
 	int dri_index = 0;
 
 	/* Try to read the symlink from /proc/self/fd */
-	snprintf(path, sizeof(path), "/proc/self/fd/%d", amdgpu_device_get_fd(device));
+	snprintf(path, sizeof(path), "/proc/self/fd/%d", fd);
 
 	len = readlink(path, target, sizeof(target) - 1);
 	if (len != -1) {
