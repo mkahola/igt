@@ -3014,9 +3014,9 @@ static void ptrace_access_invisible_vram_test(amdgpu_device_handle device)
 
 		/* Swap values via ptrace POKEDATA */
 		if (!err) {
-		if (ptrace(PTRACE_POKEDATA, parent_pid, word_before, (void *)original1))
+		if (ptrace(PTRACE_POKEDATA, parent_pid, word_before, from_user_pointer(original1)))
 			err = 1;
-		if (ptrace(PTRACE_POKEDATA, parent_pid, word_after, (void *)original0))
+		if (ptrace(PTRACE_POKEDATA, parent_pid, word_after, from_user_pointer(original0)))
 			err = 1;
 		}
 
@@ -3140,7 +3140,7 @@ static void test_signal_handling(amdgpu_device_handle device)
 	r = amdgpu_bo_cpu_map(sys_bo, &sys_cpu_ptr);
 	igt_assert_eq(r, 0);
 
-	igt_info("System memory allocated at CPU: %p, GPU: 0x%lx\n", sys_cpu_ptr, sys_mc_address);
+	igt_info("System memory allocated at CPU: %p, GPU: 0x%" PRIx64 "\n", sys_cpu_ptr, sys_mc_address);
 
 	/* Fork child process to send signal */
 	child_pid = fork();
@@ -3213,7 +3213,7 @@ static void test_signal_handling(amdgpu_device_handle device)
 
 		/* Submit GPU command to write different value */
 		igt_info("Submitting GPU write command...\n");
-		igt_info("Writing 0xdeadbeaf to address 0x%lx\n", sys_mc_address);
+		igt_info("Writing 0xdeadbeaf to address 0x%" PRIx64 "\n", sys_mc_address);
 
 		/* Now SDMA should write to the correct address since we're using the same BO */
 		r = cmd_submit_write_linear(dma_ctx, sys_mc_address, sizeof(uint32_t), 0xdeadbeaf);
