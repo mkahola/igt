@@ -131,6 +131,9 @@
  *
  * SUBTEST: system-suspend-idle
  * Description: Validate suspend-to-idle (S0ix) functionality.
+ *
+ * SUBTEST: package-g7
+ * Description: Validate the package-g7 residency.
  */
 
 #define MSR_PC8_RES	0x630
@@ -145,6 +148,8 @@
 #define HEIGHT 64
 #define STRIDE (WIDTH)
 #define SIZE (HEIGHT * STRIDE)
+
+#define G7_RES_TIMEOUT 30000
 
 enum pc8_status {
 	PC8_ENABLED,
@@ -161,6 +166,14 @@ enum plane_type {
 	PLANE_OVERLAY,
 	PLANE_PRIMARY,
 	PLANE_CURSOR,
+};
+
+static const struct {
+	int w, h, hz;
+	const char *name;
+} prefers_mode[] = {
+	{7680, 4320, 60,  "8K@60"},
+	{3840, 2160, 144, "4K@144"},
 };
 
 /* Wait flags */
@@ -181,7 +194,10 @@ struct mode_set_data {
 	drmModeConnectorPtr connectors[MAX_CONNECTORS];
 	drmModePropertyBlobPtr edids[MAX_CONNECTORS];
 	igt_display_t display;
-
+	igt_output_t *output;
+	drmModeModeInfo *mode;
+	igt_plane_t *primary;
+	struct igt_fb fb_white;
 	uint32_t devid;
 	int fw_fd;
 };
@@ -1576,6 +1592,134 @@ static void pm_test_caching(void)
 	gem_close(drm_fd, handle);
 }
 
+static bool is_preferred_mode_present(igt_output_t *output, enum pipe pipe,
+				      igt_display_t *display)
+{
+	drmModeModeInfo *mode = NULL;
+
+	for (int i = 0; i < output->config.connector->count_modes; i++) {
+		mode = &output->config.connector->modes[i];
+
+		for (int j = 0; j < ARRAY_SIZE(prefers_mode); j++) {
+			if (mode->hdisplay == prefers_mode[j].w &&
+				mode->vdisplay == prefers_mode[j].h &&
+				mode->vrefresh == prefers_mode[j].hz) {
+
+				igt_output_override_mode(output, mode);
+				ms_data.output = output;
+				ms_data.mode = igt_output_get_mode(output);
+				ms_data.primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
+
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+static void set_prefered_mode(void)
+{
+	enum pipe pipe;
+	igt_output_t *output;
+	bool mode_found = false;
+	igt_display_t *display = &ms_data.display;
+
+	igt_display_reset(display);
+
+	for_each_pipe_with_valid_output(display, pipe, output) {
+
+		igt_output_set_pipe(output, pipe);
+
+		if (!intel_pipe_output_combo_valid(display))
+			continue;
+
+		if (is_preferred_mode_present(output, pipe, display)) {
+			mode_found = true;
+			break;
+		}
+	}
+
+	igt_require_f(mode_found, "Not found any 8K@60Hz or 4k@144hz mode on any connected output\n");
+}
+
+static void setup_output_fb(void)
+{
+	igt_plane_set_fb(ms_data.primary, NULL);
+	igt_create_color_fb(drm_fd,
+			    ms_data.mode->hdisplay, ms_data.mode->vdisplay,
+			    DRM_FORMAT_XRGB8888,
+			    DRM_FORMAT_MOD_LINEAR,
+			    1.0, 1.0, 1.0,
+			    &ms_data.fb_white);
+	igt_plane_set_fb(ms_data.primary, &ms_data.fb_white);
+
+	igt_display_commit(&ms_data.display);
+}
+
+static void has_g7_support(void)
+{
+	char buf[256];
+
+	igt_require_f(igt_debugfs_simple_read(debugfs, "dgfx_pkg_residencies", buf, sizeof(buf)) >= 0 &&
+		      strstr(buf, "Package G7"), "Package G7 is not supported\n");
+}
+
+static uint64_t get_pkg_count(char *pkg_data)
+{
+	char *e;
+	long long ret;
+	char *s = strchr(pkg_data, ':');
+
+	igt_assert(s);
+	s++;
+	ret = strtol(s, &e, 10);
+	igt_assert(((ret != LLONG_MIN && ret != LLONG_MAX) || errno != ERANGE) && e > s && *e == '\n' && ret >= 0);
+
+	return ret;
+}
+
+static uint64_t read_g7(void)
+{
+	char buf[256];
+	int ret;
+	char *str;
+
+	ret = igt_debugfs_simple_read(debugfs, "dgfx_pkg_residencies", buf, sizeof(buf));
+	igt_assert_f(ret >= 0, "Debugfs dgfx_pkg_residencies file not present.\n");
+
+	str = strstr(buf, "Package G7");
+	igt_skip_on_f(!str, "Package G7 is not supported.\n");
+
+	return get_pkg_count(str);
+}
+
+static void test_g7(void)
+{
+	uint64_t prev_count = 0;
+
+	prev_count = read_g7();
+	/* 30 sec timeout, based on trial statistics, is safe for G7 entry. */
+	igt_assert_f(igt_wait(read_g7() > prev_count, G7_RES_TIMEOUT, 100),
+		     "Package G7 residency is not achived\n");
+}
+
+static void cleanup(void)
+{
+	igt_plane_set_fb(ms_data.primary, NULL);
+	igt_output_override_mode(ms_data.output, NULL);
+	igt_remove_fb(drm_fd, &ms_data.fb_white);
+}
+
+static void test_package_g7(void)
+{
+	has_g7_support();
+	set_prefered_mode();
+	setup_output_fb();
+	test_g7();
+	cleanup();
+}
+
 int rounds = 10;
 bool stay = false;
 
@@ -1703,6 +1847,8 @@ igt_main_args("", long_options, help_str, opt_handler, NULL)
 		gem_require_mappable_ggtt(drm_fd);
 		pm_test_caching();
 	}
+	igt_subtest("package-g7")
+		test_package_g7();
 
 	igt_fixture {
 		teardown_environment();
