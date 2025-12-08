@@ -192,3 +192,9 @@ igt@kms_sysfs_edid_timing
 # boards (which support 4K @ 60Hz) are available in the test environment.
 ##################################################################
 igt@kms_chamelium_edid@hdmi-edid-stress-resolution-4k
+##################################################################
+# KMS: Yet to add/missing i915 support
+##################################################################
+igt@kms_writeback@writeback.*
+igt@kms_colorop@.*
+##################################################################

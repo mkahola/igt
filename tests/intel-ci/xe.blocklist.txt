@@ -89,6 +89,7 @@ igt@kms_plane_scaling@.*downscale-factor-0-25.*
 igt@kms_prime@.*
 igt@kms_scaling_modes@scaling-mode-none
 igt@kms_writeback@writeback.*
+igt@kms_colorop@.*
 ##################################################################
 # KMS: Test was written with the idea that edid read shouldn't take an
 # unreasonable amount of time. The timeout is an arbitrary value
