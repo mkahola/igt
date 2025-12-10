@@ -2484,16 +2484,6 @@ int kmstest_get_crtc_idx(drmModeRes *res, uint32_t crtc_id)
 	igt_assert(false);
 }
 
-static inline uint32_t pipe_select(int pipe)
-{
-	if (pipe > 1)
-		return pipe << DRM_VBLANK_HIGH_CRTC_SHIFT;
-	else if (pipe > 0)
-		return DRM_VBLANK_SECONDARY;
-	else
-		return 0;
-}
-
 /**
  * kmstest_get_vblank:
  * @fd: Opened drm file descriptor
@@ -2509,7 +2499,7 @@ unsigned int kmstest_get_vblank(int fd, int pipe, unsigned int flags)
 	union drm_wait_vblank vbl;
 
 	memset(&vbl, 0, sizeof(vbl));
-	vbl.request.type = DRM_VBLANK_RELATIVE | pipe_select(pipe) | flags;
+	vbl.request.type = DRM_VBLANK_RELATIVE | kmstest_get_vbl_flag(pipe) | flags;
 	if (drmIoctl(fd, DRM_IOCTL_WAIT_VBLANK, &vbl))
 		return 0;
 
