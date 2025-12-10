@@ -235,7 +235,7 @@ static void multiple_display_test(struct data_t *data, enum sub_test test_mode)
 
 	igt_info("Connected num_disps:%d\n", num_disps);
 
-	igt_skip_on_f(num_disps > igt_display_get_n_pipes(&data->display) ||
+	igt_skip_on_f(num_disps > igt_display_n_crtcs(&data->display) ||
 			      num_disps > data->display.n_outputs,
 		      "ASIC does not have %d outputs/pipes\n", num_disps);
 

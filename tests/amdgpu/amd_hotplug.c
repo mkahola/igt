@@ -51,7 +51,7 @@ typedef struct data {
 static void test_init(data_t *data)
 {
 	igt_display_t *display = &data->display;
-	int i, n, max_pipes = display->n_pipes;
+	int i, n, max_pipes = igt_display_n_crtcs(display);
 
 	for_each_pipe(display, i) {
 		data->pipe_id[i] = PIPE_A + i;

@@ -513,7 +513,7 @@ static void override_edid(data_t *data)
 	int num_outputs = 0;
 	int num_tiles = 0;
 
-	igt_require(data->display.n_pipes >= 2);
+	igt_require(igt_display_n_crtcs(&data->display) >= 2);
 
 	for_each_connected_output(&data->display, output) {
 		drmModeModeInfo *mode = igt_output_get_mode(output);
@@ -530,7 +530,7 @@ static void override_edid(data_t *data)
 
 	igt_require(num_outputs >= 2);
 
-	num_tiles = min(num_outputs, data->display.n_pipes);
+	num_tiles = min(num_outputs, igt_display_n_crtcs(&data->display));
 
 	/* disable everything so that we are sure to get a full modeset */
 	igt_display_reset(&data->display);

@@ -2870,7 +2870,7 @@ static void igt_fill_display_format_mod(igt_display_t *display);
  */
 void igt_require_pipe(igt_display_t *display, enum pipe pipe)
 {
-	igt_skip_on_f(pipe >= display->n_pipes || !display->pipes[pipe].valid,
+	igt_skip_on_f(pipe >= igt_display_n_crtcs(display) || !display->pipes[pipe].valid,
 			"Pipe %s does not exist\n",
 			kmstest_pipe_name(pipe));
 }
@@ -3107,8 +3107,10 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 		     resources->count_crtcs, IGT_MAX_PIPES);
 
 	display->n_pipes = IGT_MAX_PIPES;
-	display->pipes = calloc(display->n_pipes, sizeof(igt_pipe_t));
-	igt_assert_f(display->pipes, "Failed to allocate memory for %d pipes\n", display->n_pipes);
+	display->pipes = calloc(igt_display_n_crtcs(display),
+				sizeof(igt_pipe_t));
+	igt_assert_f(display->pipes, "Failed to allocate memory for %d pipes\n",
+		     igt_display_n_crtcs(display));
 
 	for (i = 0; i < resources->count_crtcs; i++) {
 		igt_pipe_t *pipe;
@@ -3260,14 +3262,14 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 out:
 	LOG_UNINDENT(display);
 
-	if (display->n_pipes && display->n_outputs) {
+	if (igt_display_n_crtcs(display) && display->n_outputs) {
 		igt_enable_connectors(drm_fd);
 
 		igt_handle_spurious_hpd(display);
 	}
 	else {
 		igt_skip("No KMS driver or no outputs, pipes: %d, outputs: %d\n",
-			 display->n_pipes, display->n_outputs);
+			 igt_display_n_crtcs(display), display->n_outputs);
 	}
 }
 
@@ -3280,17 +3282,6 @@ out:
 int igt_display_n_crtcs(igt_display_t *display)
 {
 	return display->n_pipes;
-}
-
-/**
- * igt_display_get_n_pipes:
- * @display: A pointer to an #igt_display_t structure
- *
- * Returns: Total number of pipes for the given @display
- */
-int igt_display_get_n_pipes(igt_display_t *display)
-{
-	return igt_display_n_crtcs(display);
 }
 
 /**
@@ -3469,7 +3460,7 @@ void igt_display_fini(igt_display_t *display)
 		}
 	}
 
-	for (i = 0; i < display->n_pipes; i++)
+	for (i = 0; i < igt_display_n_crtcs(display); i++)
 		igt_pipe_fini(&display->pipes[i]);
 
 	for (i = 0; i < display->n_outputs; i++)
@@ -3539,7 +3530,7 @@ static igt_pipe_t *igt_output_get_driving_pipe(igt_output_t *output)
 		pipe = output->pending_pipe;
 	}
 
-	igt_assert(pipe >= 0 && pipe < display->n_pipes);
+	igt_assert(pipe >= 0 && pipe < igt_display_n_crtcs(display));
 
 	return &display->pipes[pipe];
 }
@@ -3663,9 +3654,10 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 	igt_output_t *output;
 	int i, j;
 
-	memset(chosen_outputs, 0, sizeof(*chosen_outputs) * display->n_pipes);
+	memset(chosen_outputs, 0,
+	       sizeof(*chosen_outputs) * igt_display_n_crtcs(display));
 
-	for (i = 0; i < display->n_pipes; i++) {
+	for (i = 0; i < igt_display_n_crtcs(display); i++) {
 		igt_pipe_t *pipe = &display->pipes[i];
 		if (pipe->valid)
 			full_pipe_mask |= (1 << i);
@@ -3676,7 +3668,7 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 	 * it, start with the outputs restricted to 1 pipe, then increase
 	 * number of pipes until we assign connectors to all pipes.
 	 */
-	for (i = 0; i <= display->n_pipes; i++) {
+	for (i = 0; i <= igt_display_n_crtcs(display); i++) {
 		for_each_connected_output(display, output) {
 			uint32_t pipe_mask = output->config.valid_crtc_idx_mask & full_pipe_mask;
 			bool found = false;
@@ -3693,7 +3685,7 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 			} else if (__builtin_popcount(pipe_mask) != i)
 				continue;
 
-			for (j = 0; j < display->n_pipes; j++) {
+			for (j = 0; j < igt_display_n_crtcs(display); j++) {
 				bool pipe_assigned = assigned_pipes & (1 << j);
 
 				if (pipe_assigned || !(pipe_mask & (1 << j)))
@@ -3733,7 +3725,7 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
  */
 igt_output_t *igt_get_single_output_for_pipe(igt_display_t *display, enum pipe pipe)
 {
-	igt_output_t *chosen_outputs[display->n_pipes];
+	igt_output_t *chosen_outputs[igt_display_n_crtcs(display)];
 
 	igt_assert(pipe != PIPE_NONE);
 	igt_require_pipe(display, pipe);
@@ -4969,7 +4961,7 @@ static int do_display_commit(igt_display_t *display,
 	LOG_INDENT(display, "commit");
 
 	/* someone managed to bypass igt_display_require, catch them */
-	assert(display->n_pipes && display->n_outputs);
+	assert(igt_display_n_crtcs(display) && display->n_outputs);
 
 	igt_display_refresh(display);
 
@@ -5022,7 +5014,7 @@ int igt_display_try_commit_atomic(igt_display_t *display, uint32_t flags, void *
 	int ret;
 
 	/* someone managed to bypass igt_display_require, catch them */
-	assert(display->n_pipes && display->n_outputs);
+	assert(igt_display_n_crtcs(display) && display->n_outputs);
 
 	LOG_INDENT(display, "commit");
 

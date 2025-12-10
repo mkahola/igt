@@ -119,7 +119,7 @@ static drmModeModeInfo test_mode[] = {
 static void test_init(data_t *data, bool physical)
 {
 	igt_display_t *display = &data->display;
-	int i, max_pipes = display->n_pipes;
+	int i, max_pipes = igt_display_n_crtcs(display);
 	igt_output_t *output;
 	data->connected_outputs = 0;
 
@@ -196,7 +196,7 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 	enum pipe p;
 	int ret;
 
-	/* Cannot use igt_display_get_n_pipes() due to fused pipes on i915 where they do
+	/* Cannot use igt_display_n_crtcs() due to fused pipes on i915 where they do
 	 * not give the numver of valid crtcs and always return IGT_MAX_PIPES */
 	for_each_pipe(display, p) num_pipes++;
 

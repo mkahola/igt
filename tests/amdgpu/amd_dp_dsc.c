@@ -73,7 +73,8 @@ static void test_init(data_t *data)
 						 IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
-	for (i = 0, n = 0; i < display->n_outputs && n < display->n_pipes; ++i) {
+	for (i = 0,
+	     n = 0; i < display->n_outputs && n < igt_display_n_crtcs(display); ++i) {
 		igt_output_t *output = &display->outputs[i];
 		data->output[n] = output;
 
