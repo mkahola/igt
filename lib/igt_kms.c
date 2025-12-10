@@ -3057,7 +3057,7 @@ static void igt_crtc_init(igt_display_t *display,
 {
 	igt_crtc_t *pipe = igt_crtc_for_pipe(display, i);
 	igt_plane_t *plane;
-	int p = 1, crtc_mask = 0;
+	int crtc_mask = 0;
 	int j, type;
 
 	pipe->display = display;
@@ -3085,10 +3085,14 @@ static void igt_crtc_init(igt_display_t *display,
 	igt_assert_f(pipe->planes, "Failed to allocate memory for %d planes\n",
 		     pipe->n_planes);
 
+	for (j = 0; j < pipe->n_planes; j++)
+		pipe->planes[j].index = -1;
+
 	/* add the planes that can be used with that pipe */
 	for (j = 0; j < display->n_planes; j++) {
 		igt_plane_t *global_plane = &display->planes[j];
 		drmModePlane *drm_plane = global_plane->drm_plane;
+		int index;
 
 		if (!(drm_plane->possible_crtcs & crtc_mask))
 			continue;
@@ -3096,29 +3100,36 @@ static void igt_crtc_init(igt_display_t *display,
 		type = global_plane->type;
 
 		if (type == DRM_PLANE_TYPE_PRIMARY && pipe->plane_primary == -1) {
-			plane = &pipe->planes[0];
-			plane->index = 0;
-			pipe->plane_primary = 0;
+			index = 0;
+
+			pipe->plane_primary = index;
 			pipe->num_primary_planes++;
 		} else if (type == DRM_PLANE_TYPE_CURSOR && pipe->plane_cursor == -1) {
-			plane = &pipe->planes[pipe->n_planes - 1];
-			plane->index = pipe->n_planes - 1;
-			pipe->plane_cursor = pipe->n_planes - 1;
+			index = pipe->n_planes - 1;
+
+			pipe->plane_cursor = index;
 			display->has_cursor_plane = true;
 		} else {
+			for (index = 1; index < pipe->n_planes; index++) {
+				if (pipe->planes[index].index < 0)
+					break;
+			}
+
 			/*
 			 * Increment num_primary_planes for any extra
 			 * primary plane found.
 			 */
 			if (type == DRM_PLANE_TYPE_PRIMARY)
 				pipe->num_primary_planes++;
-
-			plane = &pipe->planes[p];
-			plane->index = p++;
 		}
 
-		igt_assert_f(plane->index < pipe->n_planes,
-			     "n_planes < plane->index failed\n");
+		igt_assert_lt(index, pipe->n_planes);
+
+		plane = &pipe->planes[index];
+
+		igt_assert_lt(plane->index, 0);
+
+		plane->index = index;
 		plane->type = type;
 		plane->pipe = pipe;
 		plane->drm_plane = drm_plane;
@@ -3143,11 +3154,8 @@ static void igt_crtc_init(igt_display_t *display,
 	 */
 	igt_assert_eq(pipe->plane_primary, 0);
 
-	/* Check that we filled every slot exactly once */
-	if (display->has_cursor_plane)
-		igt_assert_eq(p, pipe->n_planes - 1);
-	else
-		igt_assert_eq(p, pipe->n_planes);
+	for (j = 0; j < pipe->n_planes; j++)
+		igt_assert_lte(0, pipe->planes[j].index);
 }
 
 /**
