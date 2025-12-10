@@ -555,18 +555,14 @@ static void test_async_flip(data_t *data)
 
 static void wait_for_vblank(data_t *data, unsigned long *vbl_time, unsigned int *seq)
 {
-	drmVBlank wait_vbl;
-	uint32_t pipe_id_flag;
-	int pipe;
-
-	memset(&wait_vbl, 0, sizeof(wait_vbl));
-	pipe = kmstest_get_pipe_from_crtc_id(data->drm_fd, data->crtc_id);
-	pipe_id_flag = kmstest_get_vbl_flag(pipe);
-
-	wait_vbl.request.type = DRM_VBLANK_RELATIVE | pipe_id_flag;
-	wait_vbl.request.sequence = 1;
+	int pipe = kmstest_get_pipe_from_crtc_id(data->drm_fd, data->crtc_id);
+	drmVBlank wait_vbl = {
+		.request.type = DRM_VBLANK_RELATIVE | kmstest_get_vbl_flag(pipe),
+		.request.sequence = 1,
+	};
 
 	do_ioctl(data->drm_fd, DRM_IOCTL_WAIT_VBLANK, &wait_vbl);
+
 	*vbl_time = wait_vbl.reply.tval_sec * 1000000 + wait_vbl.reply.tval_usec;
 	*seq = wait_vbl.reply.sequence;
 }
