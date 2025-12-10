@@ -3052,6 +3052,106 @@ void igt_display_reset_outputs(igt_display_t *display)
 	drmModeFreeResources(resources);
 }
 
+static void igt_crtc_init(igt_display_t *display,
+			  drmModeRes *resources, int i)
+{
+	igt_crtc_t *pipe = igt_crtc_for_pipe(display, i);
+	igt_plane_t *plane;
+	int p = 1, crtc_mask = 0;
+	int j, type;
+	uint8_t last_plane = 0, n_planes = 0;
+
+	pipe->display = display;
+	pipe->plane_cursor = -1;
+	pipe->plane_primary = -1;
+	pipe->planes = NULL;
+	pipe->num_primary_planes = 0;
+
+	igt_fill_pipe_props(display, pipe, IGT_NUM_CRTC_PROPS, igt_crtc_prop_names);
+
+	/* Get valid crtc index from crtcs for a pipe */
+	crtc_mask = __get_crtc_mask_for_pipe(resources, pipe);
+
+	/* count number of valid planes */
+	for (j = 0; j < display->n_planes; j++) {
+		drmModePlane *drm_plane = display->planes[j].drm_plane;
+		igt_assert(drm_plane);
+
+		if (drm_plane->possible_crtcs & crtc_mask)
+			n_planes++;
+	}
+
+	igt_assert_lt(0, n_planes);
+	pipe->planes = calloc(n_planes, sizeof(igt_plane_t));
+	igt_assert_f(pipe->planes, "Failed to allocate memory for %d planes\n", n_planes);
+	last_plane = n_planes - 1;
+
+	/* add the planes that can be used with that pipe */
+	for (j = 0; j < display->n_planes; j++) {
+		igt_plane_t *global_plane = &display->planes[j];
+		drmModePlane *drm_plane = global_plane->drm_plane;
+
+		if (!(drm_plane->possible_crtcs & crtc_mask))
+			continue;
+
+		type = global_plane->type;
+
+		if (type == DRM_PLANE_TYPE_PRIMARY && pipe->plane_primary == -1) {
+			plane = &pipe->planes[0];
+			plane->index = 0;
+			pipe->plane_primary = 0;
+			pipe->num_primary_planes++;
+		} else if (type == DRM_PLANE_TYPE_CURSOR && pipe->plane_cursor == -1) {
+			plane = &pipe->planes[last_plane];
+			plane->index = last_plane;
+			pipe->plane_cursor = last_plane;
+			display->has_cursor_plane = true;
+		} else {
+			/*
+			 * Increment num_primary_planes for any extra
+			 * primary plane found.
+			 */
+			if (type == DRM_PLANE_TYPE_PRIMARY)
+				pipe->num_primary_planes++;
+
+			plane = &pipe->planes[p];
+			plane->index = p++;
+		}
+
+		igt_assert_f(plane->index < n_planes, "n_planes < plane->index failed\n");
+		plane->type = type;
+		plane->pipe = pipe;
+		plane->drm_plane = drm_plane;
+		plane->values[IGT_PLANE_IN_FENCE_FD] = ~0ULL;
+		plane->ref = global_plane;
+
+		/*
+		 * HACK: point the global plane to the first pipe that
+		 * it can go on.
+		 */
+		if (!global_plane->ref)
+			igt_plane_set_pipe(plane, pipe);
+
+		igt_fill_plane_props(display, plane, IGT_NUM_PLANE_PROPS, igt_plane_prop_names);
+
+		igt_fill_plane_format_mod(display, plane);
+	}
+
+	/*
+	 * At the bare minimum, we should expect to have a primary
+	 * plane, and it must be in slot 0.
+	 */
+	igt_assert_eq(pipe->plane_primary, 0);
+
+	/* Check that we filled every slot exactly once */
+	if (display->has_cursor_plane)
+		igt_assert_eq(p, last_plane);
+	else
+		igt_assert_eq(p, n_planes);
+
+	pipe->n_planes = n_planes;
+}
+
 /**
  * igt_display_require:
  * @display: a pointer to an #igt_display_t structure
@@ -3155,103 +3255,8 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 	display->colorops = calloc(MAX_NUM_COLOROPS, sizeof(igt_colorop_t));
 	display->n_colorops = 0;
 
-	for_each_pipe(display, i) {
-		igt_crtc_t *pipe = igt_crtc_for_pipe(display, i);
-		igt_plane_t *plane;
-		int p = 1, crtc_mask = 0;
-		int j, type;
-		uint8_t last_plane = 0, n_planes = 0;
-
-		pipe->display = display;
-		pipe->plane_cursor = -1;
-		pipe->plane_primary = -1;
-		pipe->planes = NULL;
-		pipe->num_primary_planes = 0;
-
-		igt_fill_pipe_props(display, pipe, IGT_NUM_CRTC_PROPS, igt_crtc_prop_names);
-
-		/* Get valid crtc index from crtcs for a pipe */
-		crtc_mask = __get_crtc_mask_for_pipe(resources, pipe);
-
-		/* count number of valid planes */
-		for (j = 0; j < display->n_planes; j++) {
-			drmModePlane *drm_plane = display->planes[j].drm_plane;
-			igt_assert(drm_plane);
-
-			if (drm_plane->possible_crtcs & crtc_mask)
-				n_planes++;
-		}
-
-		igt_assert_lt(0, n_planes);
-		pipe->planes = calloc(n_planes, sizeof(igt_plane_t));
-		igt_assert_f(pipe->planes, "Failed to allocate memory for %d planes\n", n_planes);
-		last_plane = n_planes - 1;
-
-		/* add the planes that can be used with that pipe */
-		for (j = 0; j < display->n_planes; j++) {
-			igt_plane_t *global_plane = &display->planes[j];
-			drmModePlane *drm_plane = global_plane->drm_plane;
-
-			if (!(drm_plane->possible_crtcs & crtc_mask))
-				continue;
-
-			type = global_plane->type;
-
-			if (type == DRM_PLANE_TYPE_PRIMARY && pipe->plane_primary == -1) {
-				plane = &pipe->planes[0];
-				plane->index = 0;
-				pipe->plane_primary = 0;
-				pipe->num_primary_planes++;
-			} else if (type == DRM_PLANE_TYPE_CURSOR && pipe->plane_cursor == -1) {
-				plane = &pipe->planes[last_plane];
-				plane->index = last_plane;
-				pipe->plane_cursor = last_plane;
-				display->has_cursor_plane = true;
-			} else {
-				/*
-				 * Increment num_primary_planes for any extra
-				 * primary plane found.
-				 */
-				if (type == DRM_PLANE_TYPE_PRIMARY)
-					pipe->num_primary_planes++;
-
-				plane = &pipe->planes[p];
-				plane->index = p++;
-			}
-
-			igt_assert_f(plane->index < n_planes, "n_planes < plane->index failed\n");
-			plane->type = type;
-			plane->pipe = pipe;
-			plane->drm_plane = drm_plane;
-			plane->values[IGT_PLANE_IN_FENCE_FD] = ~0ULL;
-			plane->ref = global_plane;
-
-			/*
-			 * HACK: point the global plane to the first pipe that
-			 * it can go on.
-			 */
-			if (!global_plane->ref)
-				igt_plane_set_pipe(plane, pipe);
-
-			igt_fill_plane_props(display, plane, IGT_NUM_PLANE_PROPS, igt_plane_prop_names);
-
-			igt_fill_plane_format_mod(display, plane);
-		}
-
-		/*
-		 * At the bare minimum, we should expect to have a primary
-		 * plane, and it must be in slot 0.
-		 */
-		igt_assert_eq(pipe->plane_primary, 0);
-
-		/* Check that we filled every slot exactly once */
-		if (display->has_cursor_plane)
-			igt_assert_eq(p, last_plane);
-		else
-			igt_assert_eq(p, n_planes);
-
-		pipe->n_planes = n_planes;
-	}
+	for_each_pipe(display, i)
+		igt_crtc_init(display, resources, i);
 
 	drmModeFreeResources(resources);
 
