@@ -299,7 +299,7 @@ static void test_init(data_t *data)
 
 	mode = igt_output_get_mode(data->output);
 
-	data->crtc_id = data->display.pipes[data->pipe].crtc_id;
+	data->crtc_id = igt_crtc_for_pipe(&data->display, data->pipe)->crtc_id;
 	data->refresh_rate = mode->vrefresh;
 
 	igt_output_set_pipe(data->output, data->pipe);

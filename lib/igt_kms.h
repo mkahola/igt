@@ -1077,7 +1077,8 @@ static inline bool igt_pipe_is_prop_changed(igt_display_t *display,
 					    enum pipe pipe,
 					    enum igt_atomic_crtc_properties prop)
 {
-	return igt_pipe_obj_is_prop_changed(&display->pipes[pipe], prop);
+	return igt_pipe_obj_is_prop_changed(igt_crtc_for_pipe(display, pipe),
+					    prop);
 }
 
 /**
@@ -1135,7 +1136,8 @@ static inline void igt_pipe_set_prop_value(igt_display_t *display,
 					   enum igt_atomic_crtc_properties prop,
 					   uint64_t value)
 {
-	igt_pipe_obj_set_prop_value(&display->pipes[pipe], prop, value);
+	igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(display, pipe), prop,
+				    value);
 }
 
 extern bool igt_pipe_obj_try_prop_enum(igt_pipe_t *pipe,

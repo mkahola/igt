@@ -588,8 +588,8 @@ static void stress_pipes(struct data *data, struct timespec *start,
 		if (!data->highest_mode[pipe])
 			continue;
 
-		igt_assert_f(data->display.pipes[pipe].n_planes < MAX_PLANES,
-			    "Currently we don't support more than %d planes!",
+		igt_assert_f(igt_crtc_for_pipe(&data->display, pipe)->n_planes < MAX_PLANES,
+			     "Currently we don't support more than %d planes!",
 			     MAX_PLANES);
 
 		ret = pipe_stress(data, output, pipe,
@@ -748,7 +748,8 @@ static void destroy_framebuffers(struct data *data)
 
 		for (j = 0; j < MAX_PLANES; j++) {
 			if (data->fb[i * MAX_PLANES + j].fb_id) {
-				igt_plane_set_fb(&data->display.pipes[i].planes[j], NULL);
+				igt_plane_set_fb(&igt_crtc_for_pipe(&data->display, i)->planes[j],
+						 NULL);
 				igt_remove_fb(data->display.drm_fd, &data->fb[i * MAX_PLANES + j]);
 				data->fb[i * MAX_PLANES + j].fb_id = 0;
 			}
@@ -812,7 +813,8 @@ static void prepare_test(struct data *data)
 			data->pipe_crc[i] = NULL;
 
 		if (data->num_planes[i] == -1)
-			data->num_planes[i] = data->display.pipes[i].n_planes;
+			data->num_planes[i] = igt_crtc_for_pipe(&data->display,
+								i)->n_planes;
 
 		igt_info("Max number of planes is %d for pipe %d\n",
 			 data->num_planes[i], i);

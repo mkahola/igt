@@ -215,7 +215,7 @@ static void cursor_disable(data_t *data)
 
 	/* do this wait here so it will not need to be added everywhere */
 	igt_wait_for_vblank_count(data->drm_fd,
-				  data->display.pipes[data->pipe].crtc_offset,
+				  igt_crtc_for_pipe(&data->display, data->pipe)->crtc_offset,
 				  data->vblank_wait_count);
 }
 
@@ -301,7 +301,7 @@ static void do_single_test(data_t *data, int x, int y, bool hw_test,
 
 		/* Extra vblank wait is because nonblocking cursor ioctl */
 		igt_wait_for_vblank_count(data->drm_fd,
-					  display->pipes[data->pipe].crtc_offset,
+					  igt_crtc_for_pipe(display, data->pipe)->crtc_offset,
 					  data->vblank_wait_count);
 
 		igt_pipe_crc_get_current(data->drm_fd, pipe_crc, hwcrc);
@@ -351,7 +351,7 @@ static void do_single_test(data_t *data, int x, int y, bool hw_test,
 		 */
 		if (is_amdgpu_device(data->drm_fd))
 			igt_wait_for_vblank_count(data->drm_fd,
-				display->pipes[data->pipe].crtc_offset,
+				igt_crtc_for_pipe(display, data->pipe)->crtc_offset,
 				data->vblank_wait_count);
 
 		igt_pipe_crc_get_current(data->drm_fd, pipe_crc, &crc);
@@ -736,7 +736,7 @@ static void timed_cursor_changes(data_t *data, void (changefunc)(data_t *, enum 
 
 	/* Extra vblank wait is because nonblocking cursor ioctl */
 	igt_wait_for_vblank_count(data->drm_fd,
-				  data->display.pipes[data->pipe].crtc_offset,
+				  igt_crtc_for_pipe(&data->display, data->pipe)->crtc_offset,
 				  data->vblank_wait_count);
 
 	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, &crc1);

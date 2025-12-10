@@ -127,7 +127,7 @@ static color_t blue  = { 0.0f, 0.0f, 1.0f };
  */
 static void test_init(data_t *data, enum pipe pipe)
 {
-	igt_require(data->display.pipes[pipe].n_planes > 0);
+	igt_require(igt_crtc_for_pipe(&data->display, pipe)->n_planes > 0);
 	if (data->pipe_crc)
 		igt_pipe_crc_free(data->pipe_crc);
 	data->pipe_crc = igt_pipe_crc_new(data->drm_fd, pipe,
@@ -337,7 +337,7 @@ test_plane_position_with_output(data_t *data,
 static void
 test_plane_position(data_t *data, enum pipe pipe)
 {
-	int n_planes = data->display.pipes[pipe].n_planes;
+	int n_planes = igt_crtc_for_pipe(&data->display, pipe)->n_planes;
 	igt_output_t *output = data->output;
 	igt_crc_t reference_crc;
 
@@ -522,7 +522,7 @@ static const color_t colors_reduced[] = {
 static void set_legacy_lut(data_t *data, enum pipe pipe,
 			   uint16_t mask)
 {
-	igt_pipe_t *pipe_obj = &data->display.pipes[pipe];
+	igt_pipe_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
 	drmModeCrtc *drm_crtc;
 	uint16_t *lut;
 	int i, lut_size;
@@ -549,7 +549,7 @@ static void set_legacy_lut(data_t *data, enum pipe pipe,
 static bool set_c8_legacy_lut(data_t *data, enum pipe pipe,
 			      uint16_t mask)
 {
-	igt_pipe_t *pipe_obj = &data->display.pipes[pipe];
+	igt_pipe_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
 	drmModeCrtc *drm_crtc;
 	uint16_t *r, *g, *b;
 	int i, lut_size;
@@ -793,7 +793,7 @@ restart_round:
 				igt_display_t *display = &data->display;
 
 				igt_wait_for_vblank(data->drm_fd,
-						display->pipes[pipe].crtc_offset);
+						igt_crtc_for_pipe(display, pipe)->crtc_offset);
 			}
 		}
 

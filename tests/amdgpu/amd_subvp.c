@@ -65,7 +65,8 @@ static void test_init(struct data *data)
 
 	for_each_pipe(display, i) {
 		data->pipe_id[i] = PIPE_A + i;
-		data->pipe[i] = &data->display.pipes[data->pipe_id[i]];
+		data->pipe[i] = igt_crtc_for_pipe(&data->display,
+						  data->pipe_id[i]);
 		data->primary[i] = igt_pipe_get_plane_type(data->pipe[i],
 							   DRM_PLANE_TYPE_PRIMARY);
 		data->pipe_crc[i] = igt_pipe_crc_new(data->fd,

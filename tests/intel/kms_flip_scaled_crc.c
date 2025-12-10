@@ -537,7 +537,7 @@ static void free_fbs(data_t *data)
 
 static void set_lut(data_t *data, enum pipe pipe)
 {
-	igt_pipe_t *pipe_obj = &data->display.pipes[pipe];
+	igt_pipe_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
 	struct drm_color_lut *lut;
 	drmModeCrtc *drm_crtc;
 	int i, lut_size;
@@ -569,7 +569,7 @@ static void set_lut(data_t *data, enum pipe pipe)
 
 static void clear_lut(data_t *data, enum pipe pipe)
 {
-	igt_pipe_t *pipe_obj = &data->display.pipes[pipe];
+	igt_pipe_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
 
 	igt_pipe_obj_set_prop_value(pipe_obj, IGT_CRTC_GAMMA_LUT, 0);
 }

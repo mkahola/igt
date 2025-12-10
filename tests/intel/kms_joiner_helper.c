@@ -105,7 +105,7 @@ void igt_set_all_master_pipes_for_platform(igt_display_t *display, uint32_t *mas
 
 	*master_pipes = 0;
 	for (pipe = PIPE_A; pipe < IGT_MAX_PIPES - 1; pipe++) {
-		if (display->pipes[pipe].valid && display->pipes[pipe + 1].valid) {
+		if (igt_crtc_for_pipe(display, pipe)->valid && igt_crtc_for_pipe(display, pipe + 1)->valid) {
 			*master_pipes |= BIT(pipe);
 			igt_info("Found master pipe %s\n", kmstest_pipe_name(pipe));
 		}

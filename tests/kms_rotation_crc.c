@@ -1353,7 +1353,8 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		igt_display_require_output(&data.display);
 
 		for_each_pipe_with_valid_output(&data.display, pipe, output) {
-			igt_plane_t *primary = &data.display.pipes[pipe].planes[0];
+			igt_plane_t *primary = &igt_crtc_for_pipe(&data.display,
+								  pipe)->planes[0];
 
 			test_plane_rotation_exhaust_fences(&data, pipe, output, primary);
 			break;

@@ -172,10 +172,10 @@ functional_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	 * drm_universal_plane_init(), the type enum can get interpreted as a
 	 * boolean and show up in userspace as the wrong type.
 	 */
-	for (i = 0; i < display->pipes[pipe].n_planes; i++)
-		if (display->pipes[pipe].planes[i].type == DRM_PLANE_TYPE_PRIMARY)
+	for (i = 0; i < igt_crtc_for_pipe(display, pipe)->n_planes; i++)
+		if (igt_crtc_for_pipe(display, pipe)->planes[i].type == DRM_PLANE_TYPE_PRIMARY)
 			num_primary++;
-		else if (display->pipes[pipe].planes[i].type == DRM_PLANE_TYPE_CURSOR)
+		else if (igt_crtc_for_pipe(display, pipe)->planes[i].type == DRM_PLANE_TYPE_CURSOR)
 			num_cursor++;
 
 	igt_warn_on(num_primary != 1);
@@ -711,7 +711,9 @@ cursor_leak_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	 * framebuffer.
 	 */
 	if (is_xe_device(data->drm_fd))
-		igt_wait_for_vblank_count(data->drm_fd, data->display.pipes[pipe].crtc_offset, 2);
+		igt_wait_for_vblank_count(data->drm_fd,
+					  igt_crtc_for_pipe(&data->display, pipe)->crtc_offset,
+					  2);
 
 	/* We should be back to the same framebuffer count as when we started */
 	count2 = intel_gem_fb_count(data);

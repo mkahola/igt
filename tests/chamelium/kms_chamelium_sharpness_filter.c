@@ -180,7 +180,7 @@ static int test_setup(data_t *data, enum pipe p)
 
 	igt_display_reset(&data->display);
 
-	pipe = &data->display.pipes[p];
+	pipe = igt_crtc_for_pipe(&data->display, p);
 	igt_require(pipe->n_planes >= 0);
 
 	data->primary = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
@@ -217,7 +217,7 @@ static void test_sharpness_filter(data_t *data,  enum pipe p)
 	int port_idx = test_setup(data, p);
 
 	igt_require(port_idx >= 0);
-	igt_require(igt_pipe_obj_has_prop(&data->display.pipes[p], IGT_CRTC_SHARPNESS_STRENGTH));
+	igt_require(igt_pipe_obj_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_SHARPNESS_STRENGTH));
 
 	if (!pipe_output_combo_valid(data, p))
 		return;

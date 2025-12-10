@@ -403,7 +403,7 @@ static void
 test_plane_position(data_t *data, enum pipe pipe, igt_output_t *output, uint64_t modifier)
 {
 	int n_planes = opt.all_planes ?
-			data->display.pipes[pipe].n_planes : DEFAULT_N_PLANES;
+			igt_crtc_for_pipe(&data->display, pipe)->n_planes : DEFAULT_N_PLANES;
 
 	if (!opt.user_seed)
 		opt.seed = time(NULL);
@@ -464,7 +464,7 @@ static void test_plane_position_2_display(data_t *data, enum pipe pipe1, enum pi
 	color_t blue  = { 0.0f, 0.0f, 1.0f };
 	igt_crc_t crc1, crc2;
 	int n_planes = opt.all_planes ?
-		       data->display.pipes[0].n_planes : DEFAULT_N_PLANES;
+		       igt_crtc_for_pipe(&data->display, 0)->n_planes : DEFAULT_N_PLANES;
 
 	/*
 	 * Note: We could use the dynamic way of calculating the maximum planes here

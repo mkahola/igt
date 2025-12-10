@@ -94,7 +94,7 @@ static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 		      unsigned int flags)
 {
 	data->pipe_id = pipe_id;
-	data->pipe = &data->display.pipes[data->pipe_id];
+	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
 	data->output = output;
 
 	data->mode = igt_output_get_mode(data->output);
@@ -188,7 +188,9 @@ static void test_cursor_pos(data_t *data, int x, int y, unsigned int flags)
 	/* Wait for one more vblank since cursor updates are not
 	 * synchronized to the same frame on AMD hw */
 	if(is_amdgpu_device(data->drm_fd))
-		igt_wait_for_vblank_count(data->drm_fd, data->display.pipes[data->pipe_id].crtc_offset, 1);
+		igt_wait_for_vblank_count(data->drm_fd,
+					  igt_crtc_for_pipe(&data->display, data->pipe_id)->crtc_offset,
+					  1);
 
 	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, &test_crc);
 	igt_pipe_crc_stop(data->pipe_crc);
@@ -326,7 +328,7 @@ int igt_main()
 		igt_subtest_with_dynamic_f("%s", tests[i].name) {
 			for_each_pipe_with_single_output(&data.display, pipe, output) {
 				if ((tests[i].flags & TEST_OVERLAY) &&
-				    !igt_pipe_get_plane_type(&data.display.pipes[pipe],
+				    !igt_pipe_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
 							     DRM_PLANE_TYPE_OVERLAY))
 					continue;
 

@@ -98,7 +98,7 @@ static void test_init(data_t *data, igt_output_t *output)
 
 	igt_require(data->pipe_id != PIPE_NONE);
 
-	data->pipe = &data->display.pipes[data->pipe_id];
+	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
 
 	data->pipe_crc = igt_pipe_crc_new(data->drm_fd, data->pipe_id,
 					  AMDGPU_PIPE_CRC_SOURCE_DPRX);

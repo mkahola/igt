@@ -306,7 +306,7 @@ test_resolution_with_output(data_t *data, enum pipe pipe, int max_planes, igt_ou
 static void
 run_test(data_t *data, enum pipe pipe, igt_output_t *output)
 {
-	int n_planes = data->display.pipes[pipe].n_planes;
+	int n_planes = igt_crtc_for_pipe(&data->display, pipe)->n_planes;
 	igt_display_reset(&data->display);
 
 	if (!opt.user_seed)
@@ -346,7 +346,7 @@ run_tests_for_pipe(data_t *data)
 			if (!intel_pipe_output_combo_valid(&data->display))
 				continue;
 
-			igt_require(data->display.pipes[pipe].n_planes > 0);
+			igt_require(igt_crtc_for_pipe(&data->display, pipe)->n_planes > 0);
 			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output))
 				run_test(data, pipe, output);
 		}

@@ -289,13 +289,15 @@ static void stress(igt_display_t *display,
 	if (pipe < 0) {
 		num_crtcs = igt_display_n_crtcs(display);
 		for_each_pipe(display, n) {
-			arg.crtc_id = crtc_id[n] = display->pipes[n].crtc_id;
+			arg.crtc_id = crtc_id[n] = igt_crtc_for_pipe(display,
+								     n)->crtc_id;
 			do_ioctl(display->drm_fd, DRM_IOCTL_MODE_CURSOR, &arg);
 		}
 	} else {
 		num_crtcs = 1;
-		if(display->pipes[pipe].valid) {
-			arg.crtc_id = crtc_id[0] = display->pipes[pipe].crtc_id;
+		if(igt_crtc_for_pipe(display, pipe)->valid) {
+			arg.crtc_id = crtc_id[0] = igt_crtc_for_pipe(display,
+								     pipe)->crtc_id;
 			do_ioctl(display->drm_fd, DRM_IOCTL_MODE_CURSOR, &arg);
 		}
 	}
@@ -410,7 +412,7 @@ static void set_cursor_hotspot(igt_plane_t *cursor, int  hot_x, int hot_y)
 static void populate_cursor_args(igt_display_t *display, enum pipe pipe,
 				 struct drm_mode_cursor *arg, struct igt_fb *fb)
 {
-	arg->crtc_id = display->pipes[pipe].crtc_id;
+	arg->crtc_id = igt_crtc_for_pipe(display, pipe)->crtc_id;
 	arg->flags = DRM_MODE_CURSOR_MOVE;
 	arg->x = 128;
 	arg->y = 128;
@@ -468,7 +470,7 @@ find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 
 static void flip_nonblocking(igt_display_t *display, enum pipe pipe_id, bool atomic, struct igt_fb *fb, void *data)
 {
-	igt_pipe_t *pipe = &display->pipes[pipe_id];
+	igt_pipe_t *pipe = igt_crtc_for_pipe(display, pipe_id);
 	igt_plane_t *primary = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 	int ret;
 
@@ -532,7 +534,7 @@ static void transition_nonblocking(igt_display_t *display, enum pipe pipe_id,
 				   struct igt_fb *prim_fb, struct igt_fb *argb_fb,
 				   bool hide_sprite)
 {
-	igt_pipe_t *pipe = &display->pipes[pipe_id];
+	igt_pipe_t *pipe = igt_crtc_for_pipe(display, pipe_id);
 	igt_plane_t *primary = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_t *sprite = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_OVERLAY);
 
@@ -600,8 +602,8 @@ static void prepare_flip_test(igt_display_t *display,
 
 	if (mode == flip_test_atomic_transitions ||
 	    mode == flip_test_atomic_transitions_varying_size) {
-		igt_require(display->pipes[flip_pipe].n_planes > 1 &&
-		            display->pipes[flip_pipe].planes[1].type != DRM_PLANE_TYPE_CURSOR);
+		igt_require(igt_crtc_for_pipe(display, flip_pipe)->n_planes > 1 &&
+		            igt_crtc_for_pipe(display, flip_pipe)->planes[1].type != DRM_PLANE_TYPE_CURSOR);
 
 		igt_create_color_pattern_fb(display->drm_fd, prim_fb->width, prim_fb->height,
 					    DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_LINEAR, .1, .1, .1, argb_fb);
@@ -633,8 +635,8 @@ static void flip(igt_display_t *display,
 
 	if (mode == flip_test_atomic_transitions ||
 		mode == flip_test_atomic_transitions_varying_size) {
-		igt_require(igt_pipe_get_plane_type(&display->pipes[flip_pipe],
-					DRM_PLANE_TYPE_OVERLAY));
+		igt_require(igt_pipe_get_plane_type(igt_crtc_for_pipe(display, flip_pipe),
+						    DRM_PLANE_TYPE_OVERLAY));
 	}
 
 	set_fb_on_crtc(display, flip_pipe, output, &fb_info);
@@ -1289,11 +1291,11 @@ static void two_screens_flip_vs_cursor(igt_display_t *display, int nloops, bool 
 			continue;
 		}
 
-		if (vbl.crtc_id == display->pipes[pipe].crtc_id) {
+		if (vbl.crtc_id == igt_crtc_for_pipe(display, pipe)->crtc_id) {
 			vblank_start = kmstest_get_vblank(display->drm_fd, pipe, DRM_VBLANK_NEXTONMISS);
 			flip_nonblocking(display, pipe, atomic, &fb_info, (void*)(ptrdiff_t)vblank_start);
 		} else {
-			igt_assert(vbl.crtc_id == display->pipes[pipe2].crtc_id);
+			igt_assert(vbl.crtc_id == igt_crtc_for_pipe(display, pipe2)->crtc_id);
 
 			nloops--;
 

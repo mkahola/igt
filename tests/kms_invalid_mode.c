@@ -277,7 +277,7 @@ test_output(data_t *data)
 
 	kmstest_unset_all_crtcs(data->drm_fd, data->res);
 
-	crtc_id = data->display.pipes[data->pipe].crtc_id;
+	crtc_id = igt_crtc_for_pipe(&data->display, data->pipe)->crtc_id;
 
 	ret = drmModeSetCrtc(data->drm_fd, crtc_id,
 			     fb.fb_id, 0, 0,

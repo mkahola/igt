@@ -130,7 +130,7 @@ static void flip_to_fb(igt_display_t *dpy, int pipe,
 		igt_assert(gem_bo_busy(dpy->drm_fd, fb->gem_handle));
 		if (!modeset)
 			do_or_die(drmModePageFlip(dpy->drm_fd,
-						  dpy->pipes[pipe].crtc_id, fb->fb_id,
+						  igt_crtc_for_pipe(dpy, pipe)->crtc_id, fb->fb_id,
 						  DRM_MODE_PAGE_FLIP_EVENT, fb));
 		else {
 			igt_plane_set_fb(igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY), fb);
@@ -204,7 +204,7 @@ static void test_flip(igt_display_t *dpy, int pipe,
 		struct drm_event_vblank ev;
 
 		do_or_die(drmModePageFlip(dpy->drm_fd,
-					  dpy->pipes[pipe].crtc_id,
+					  igt_crtc_for_pipe(dpy, pipe)->crtc_id,
 					  fb[warmup[i]].fb_id,
 					  DRM_MODE_PAGE_FLIP_EVENT,
 					  &fb[warmup[i]]));
@@ -335,7 +335,7 @@ test_pageflip_modeset_hang(igt_display_t *dpy,
 			 .dependency = fb.gem_handle,
 			 .flags = IGT_SPIN_NO_PREEMPTION);
 
-	do_or_die(drmModePageFlip(dpy->drm_fd, dpy->pipes[pipe].crtc_id, fb.fb_id, DRM_MODE_PAGE_FLIP_EVENT, &fb));
+	do_or_die(drmModePageFlip(dpy->drm_fd, igt_crtc_for_pipe(dpy, pipe)->crtc_id, fb.fb_id, DRM_MODE_PAGE_FLIP_EVENT, &fb));
 
 	/* Kill crtc with hung fb */
 	igt_plane_set_fb(primary, NULL);

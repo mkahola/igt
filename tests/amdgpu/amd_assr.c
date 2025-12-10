@@ -168,7 +168,7 @@ static void present_visual_pattern(data_t *data, igt_output_t *output)
 	mode = igt_output_get_mode(output);
 	igt_assert(mode);
 
-	pipe = &data->display.pipes[PIPE_A];
+	pipe = igt_crtc_for_pipe(&data->display, PIPE_A);
 	primary =
 		igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 	igt_output_set_pipe(output, PIPE_A);

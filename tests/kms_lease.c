@@ -153,7 +153,7 @@ static int prepare_crtc(data_t *data, bool is_master)
 	lease_t *lease = is_master ? &data->master : &data->lease;
 	igt_display_t *display = &lease->display;
 	igt_output_t *output = connector_id_to_output(display, data->connector_id);
-	enum pipe pipe = display->pipes[data->pipe].pipe;
+	enum pipe pipe = igt_crtc_for_pipe(display, data->pipe)->pipe;
 	igt_plane_t *primary;
 	int ret;
 
@@ -179,7 +179,8 @@ static int prepare_crtc(data_t *data, bool is_master)
 	if (ret)
 		return ret;
 
-	igt_wait_for_vblank(lease->fd, display->pipes[pipe].crtc_offset);
+	igt_wait_for_vblank(lease->fd,
+			    igt_crtc_for_pipe(display, pipe)->crtc_offset);
 
 	lease->output = output;
 	lease->mode = mode;
@@ -377,7 +378,7 @@ static void page_flip_implicit_plane(data_t *data)
 	display = &data->master.display;
 
 	igt_wait_for_vblank(data->master.fd,
-			display->pipes[pipe].crtc_offset);
+			igt_crtc_for_pipe(display, pipe)->crtc_offset);
 
 	do_or_die(drmModePageFlip(data->lease.fd, data->crtc_id,
 			      data->master.primary_fb.fb_id,
@@ -388,7 +389,7 @@ static void page_flip_implicit_plane(data_t *data)
 	do_or_die(create_lease(data->master.fd, &mcl, &data->lease.fd));
 
 	igt_wait_for_vblank(data->master.fd,
-			display->pipes[pipe].crtc_offset);
+			igt_crtc_for_pipe(display, pipe)->crtc_offset);
 
 	igt_assert_eq(drmModePageFlip(data->lease.fd, data->crtc_id,
 				      data->master.primary_fb.fb_id,
@@ -714,8 +715,9 @@ static void lease_unleased_crtc(data_t *data)
 	for_each_pipe(&data->master.display, p) {
 		if (bad_crtc_id != 0)
 			break;
-		if (data->master.display.pipes[p].crtc_id != data->crtc_id)
-			bad_crtc_id = data->master.display.pipes[p].crtc_id;
+		if (igt_crtc_for_pipe(&data->master.display, p)->crtc_id != data->crtc_id)
+			bad_crtc_id = igt_crtc_for_pipe(&data->master.display,
+							p)->crtc_id;
 	}
 
 	/* Give up if there isn't another crtc */
@@ -895,11 +897,11 @@ static void invalid_create_leases(data_t *data)
 	igt_assert_eq(create_lease(data->master.fd, &mcl, NULL), -EINVAL);
 
 	/* no connector, non-universal_plane */
-	object_ids[0] = data->master.display.pipes[0].crtc_id;
+	object_ids[0] = igt_crtc_for_pipe(&data->master.display, 0)->crtc_id;
 	igt_assert_eq(create_lease(data->master.fd, &mcl, NULL), -EINVAL);
 
 	/* sanity check */
-	object_ids[0] = data->master.display.pipes[0].crtc_id;
+	object_ids[0] = igt_crtc_for_pipe(&data->master.display, 0)->crtc_id;
 	object_ids[1] = data->master.display.outputs[0].id;
 	mcl.object_count = 2;
 	igt_assert_eq(create_lease(data->master.fd, &mcl, NULL), 0);
@@ -910,7 +912,7 @@ static void invalid_create_leases(data_t *data)
 	igt_assert_eq(create_lease(data->master.fd, &mcl, NULL), -EINVAL);
 
 	/* sanity check */
-	object_ids[2] = igt_pipe_get_plane_type(&data->master.display.pipes[0],
+	object_ids[2] = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
 						DRM_PLANE_TYPE_PRIMARY)->drm_plane->plane_id;
 	mcl.object_count = 3;
 	igt_assert_eq(create_lease(data->master.fd, &mcl, NULL), 0);
@@ -1075,9 +1077,9 @@ static int _create_simple_lease(int master_fd, data_t *data, int expected_ret)
 	uint32_t object_ids[3];
 	struct drm_mode_create_lease mcl;
 
-	object_ids[0] = data->master.display.pipes[0].crtc_id;
+	object_ids[0] = igt_crtc_for_pipe(&data->master.display, 0)->crtc_id;
 	object_ids[1] = data->master.display.outputs[0].id;
-	object_ids[2] = igt_pipe_get_plane_type(&data->master.display.pipes[0],
+	object_ids[2] = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
 						DRM_PLANE_TYPE_PRIMARY)->drm_plane->plane_id;
 	mcl.object_ids = (uint64_t) (uintptr_t) object_ids;
 	mcl.object_count = 3;
@@ -1165,12 +1167,12 @@ static void implicit_plane_lease(data_t *data)
 	struct drm_mode_create_lease mcl;
 	struct drm_mode_get_lease mgl;
 	int ret;
-	uint32_t cursor_id = igt_pipe_get_plane_type(&data->master.display.pipes[0],
+	uint32_t cursor_id = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
 						     DRM_PLANE_TYPE_CURSOR)->drm_plane->plane_id;
 
-	object_ids[0] = data->master.display.pipes[0].crtc_id;
+	object_ids[0] = igt_crtc_for_pipe(&data->master.display, 0)->crtc_id;
 	object_ids[1] = data->master.display.outputs[0].id;
-	object_ids[2] = igt_pipe_get_plane_type(&data->master.display.pipes[0],
+	object_ids[2] = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
 						DRM_PLANE_TYPE_PRIMARY)->drm_plane->plane_id;
 	mcl.object_ids = (uint64_t) (uintptr_t) object_ids;
 	mcl.object_count = 3;
@@ -1298,11 +1300,12 @@ int igt_main()
 
 					igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(data.pipe),
 						      igt_output_name(output)) {
-						data.crtc_id = display->pipes[data.pipe].crtc_id;
+						data.crtc_id = igt_crtc_for_pipe(display,
+										 data.pipe)->crtc_id;
 						data.connector_id = output->id;
 						data.plane_id =
-							igt_pipe_get_plane_type(&data.master.display.pipes[data.pipe],
-									DRM_PLANE_TYPE_PRIMARY)->drm_plane->plane_id;
+							igt_pipe_get_plane_type(igt_crtc_for_pipe(&data.master.display, data.pipe),
+										DRM_PLANE_TYPE_PRIMARY)->drm_plane->plane_id;
 						f->func(&data);
 					}
 					terminate_lease(data.lease.fd);

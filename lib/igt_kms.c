@@ -2839,7 +2839,7 @@ void igt_display_reset(igt_display_t *display)
 	display->first_commit = true;
 
 	for_each_pipe(display, pipe) {
-		igt_pipe_t *pipe_obj = &display->pipes[pipe];
+		igt_pipe_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
 		igt_plane_t *plane;
 
 		for_each_plane_on_pipe(display, pipe, plane)
@@ -2870,7 +2870,7 @@ static void igt_fill_display_format_mod(igt_display_t *display);
  */
 void igt_require_pipe(igt_display_t *display, enum pipe pipe)
 {
-	igt_skip_on_f(pipe >= igt_display_n_crtcs(display) || !display->pipes[pipe].valid,
+	igt_skip_on_f(pipe >= igt_display_n_crtcs(display) || !igt_crtc_for_pipe(display, pipe)->valid,
 			"Pipe %s does not exist\n",
 			kmstest_pipe_name(pipe));
 }
@@ -3013,7 +3013,7 @@ void igt_display_reset_outputs(igt_display_t *display)
 	igt_display_reset(display);
 
 	for_each_pipe(display, i) {
-		igt_pipe_t *pipe = &display->pipes[i];
+		igt_pipe_t *pipe = igt_crtc_for_pipe(display, i);
 		igt_output_t *output;
 
 		if (!igt_pipe_has_valid_output(display, i))
@@ -3118,7 +3118,7 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 			__intel_get_pipe_from_crtc_id(drm_fd,
 						      resources->crtcs[i], i) : i;
 
-		pipe = &display->pipes[pipe_enum];
+		pipe = igt_crtc_for_pipe(display, pipe_enum);
 		pipe->pipe = pipe_enum;
 
 		pipe->valid = true;
@@ -3156,7 +3156,7 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 	display->n_colorops = 0;
 
 	for_each_pipe(display, i) {
-		igt_pipe_t *pipe = &display->pipes[i];
+		igt_pipe_t *pipe = igt_crtc_for_pipe(display, i);
 		igt_plane_t *plane;
 		int p = 1, crtc_mask = 0;
 		int j, type;
@@ -3461,7 +3461,7 @@ void igt_display_fini(igt_display_t *display)
 	}
 
 	for (i = 0; i < igt_display_n_crtcs(display); i++)
-		igt_pipe_fini(&display->pipes[i]);
+		igt_pipe_fini(igt_crtc_for_pipe(display, i));
 
 	for (i = 0; i < display->n_outputs; i++)
 		igt_output_fini(&display->outputs[i]);
@@ -3532,7 +3532,7 @@ static igt_pipe_t *igt_output_get_driving_pipe(igt_output_t *output)
 
 	igt_assert(pipe >= 0 && pipe < igt_display_n_crtcs(display));
 
-	return &display->pipes[pipe];
+	return igt_crtc_for_pipe(display, pipe);
 }
 
 static igt_plane_t *igt_pipe_get_plane(igt_pipe_t *pipe, int plane_idx)
@@ -3658,7 +3658,7 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 	       sizeof(*chosen_outputs) * igt_display_n_crtcs(display));
 
 	for (i = 0; i < igt_display_n_crtcs(display); i++) {
-		igt_pipe_t *pipe = &display->pipes[i];
+		igt_pipe_t *pipe = igt_crtc_for_pipe(display, i);
 		if (pipe->valid)
 			full_pipe_mask |= (1 << i);
 	}
@@ -4815,7 +4815,7 @@ static int igt_atomic_commit(igt_display_t *display, uint32_t flags, void *user_
 	req = drmModeAtomicAlloc();
 
 	for_each_pipe(display, pipe) {
-		igt_pipe_t *pipe_obj = &display->pipes[pipe];
+		igt_pipe_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
 		igt_plane_t *plane;
 
 		/*
@@ -4866,7 +4866,7 @@ display_commit_changed(igt_display_t *display, enum igt_commit_style s)
 	enum pipe pipe;
 
 	for_each_pipe(display, pipe) {
-		igt_pipe_t *pipe_obj = &display->pipes[pipe];
+		igt_pipe_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
 		igt_plane_t *plane;
 
 		if (s == COMMIT_ATOMIC) {
@@ -4969,7 +4969,8 @@ static int do_display_commit(igt_display_t *display,
 		ret = igt_atomic_commit(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 	} else {
 		for_each_pipe(display, pipe) {
-			igt_pipe_t *pipe_obj = &display->pipes[pipe];
+			igt_pipe_t *pipe_obj = igt_crtc_for_pipe(display,
+								 pipe);
 
 			ret = igt_pipe_commit(pipe_obj, s, fail_on_error);
 			if (ret)
@@ -5296,7 +5297,7 @@ void igt_output_set_pipe(igt_output_t *output, enum pipe pipe)
 		old_pipe = igt_output_get_driving_pipe(output);
 
 	if (pipe != PIPE_NONE)
-		pipe_obj = &display->pipes[pipe];
+		pipe_obj = igt_crtc_for_pipe(display, pipe);
 
 	LOG(display, "%s: set_pipe(%s)\n", igt_output_name(output),
 	    kmstest_pipe_name(pipe));
@@ -5316,7 +5317,8 @@ void igt_output_set_pipe(igt_output_t *output, enum pipe pipe)
 		}
 	}
 
-	igt_output_set_prop_value(output, IGT_CONNECTOR_CRTC_ID, pipe == PIPE_NONE ? 0 : display->pipes[pipe].crtc_id);
+	igt_output_set_prop_value(output, IGT_CONNECTOR_CRTC_ID,
+				  pipe == PIPE_NONE ? 0 : igt_crtc_for_pipe(display, pipe)->crtc_id);
 
 	igt_output_refresh(output);
 
@@ -5450,7 +5452,7 @@ bool igt_fit_modes_in_bw(igt_display_t *display)
  */
 void igt_pipe_refresh(igt_display_t *display, enum pipe pipe, bool force)
 {
-	igt_pipe_t *pipe_obj = &display->pipes[pipe];
+	igt_pipe_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
 
 	if (force && display->is_atomic) {
 		igt_output_t *output = igt_pipe_get_output(pipe_obj);
@@ -7196,9 +7198,9 @@ bool igt_check_bigjoiner_support(igt_display_t *display)
 				}
 			}
 
-			if (!display->pipes[pipes[i].idx + 1].valid) {
+			if (!igt_crtc_for_pipe(display, pipes[i].idx + 1)->valid) {
 				igt_info("Consecutive pipe-%s: Fused-off, couldn't be used as a Bigjoiner Secondary.\n",
-					 kmstest_pipe_name(display->pipes[pipes[i].idx + 1].pipe));
+					 kmstest_pipe_name(igt_crtc_for_pipe(display, pipes[i].idx + 1)->pipe));
 				return false;
 			}
 
@@ -7218,9 +7220,9 @@ bool igt_check_bigjoiner_support(igt_display_t *display)
 				 max_dotclock, pipes[i - 1].force_joiner ? "Yes" : "No");
 			kmstest_dump_mode(pipes[i - 1].mode);
 
-			if (!display->pipes[pipes[i - 1].idx + 1].valid) {
+			if (!igt_crtc_for_pipe(display, pipes[i - 1].idx + 1)->valid) {
 				igt_info("Consecutive pipe-%s: Fused-off, couldn't be used as a Bigjoiner Secondary.\n",
-					 kmstest_pipe_name(display->pipes[pipes[i - 1].idx + 1].pipe));
+					 kmstest_pipe_name(igt_crtc_for_pipe(display, pipes[i - 1].idx + 1)->pipe));
 				return false;
 			}
 

@@ -75,7 +75,7 @@ static void run_test(data_t *data, int valid_outputs)
 
 	/* Collect reference CRC by Committing individually on all outputs*/
 	for_each_connected_output(display, output) {
-		pipe = &display->pipes[i];
+		pipe = igt_crtc_for_pipe(display, i);
 		plane = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 
 		mode = NULL;
@@ -100,7 +100,7 @@ static void run_test(data_t *data, int valid_outputs)
 	i = 0;
 	/* Simultaneously commit on all outputs */
 	for_each_connected_output(display, output) {
-		pipe = &display->pipes[i];
+		pipe = igt_crtc_for_pipe(display, i);
 		plane = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 
 		mode = NULL;

@@ -724,16 +724,16 @@ prep_pipe(data_t *data, enum pipe p)
 {
 	igt_require_pipe(&data->display, p);
 
-	if (igt_pipe_obj_has_prop(&data->display.pipes[p], IGT_CRTC_DEGAMMA_LUT_SIZE)) {
+	if (igt_pipe_obj_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_DEGAMMA_LUT_SIZE)) {
 		data->degamma_lut_size =
-			igt_pipe_obj_get_prop(&data->display.pipes[p],
+			igt_pipe_obj_get_prop(igt_crtc_for_pipe(&data->display, p),
 					      IGT_CRTC_DEGAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->degamma_lut_size);
 	}
 
-	if (igt_pipe_obj_has_prop(&data->display.pipes[p], IGT_CRTC_GAMMA_LUT_SIZE)) {
+	if (igt_pipe_obj_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_GAMMA_LUT_SIZE)) {
 		data->gamma_lut_size =
-			igt_pipe_obj_get_prop(&data->display.pipes[p],
+			igt_pipe_obj_get_prop(igt_crtc_for_pipe(&data->display, p),
 					      IGT_CRTC_GAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->gamma_lut_size);
 	}
@@ -746,7 +746,7 @@ static void test_setup(data_t *data, enum pipe p)
 	prep_pipe(data, p);
 	igt_require_pipe_crc(data->drm_fd);
 
-	pipe = &data->display.pipes[p];
+	pipe = igt_crtc_for_pipe(&data->display, p);
 	igt_require(pipe->n_planes >= 0);
 
 	data->primary = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);

@@ -214,7 +214,8 @@ static void prepare_crtc(data_t *data, igt_output_t *output, enum pipe pipe)
 	drmModeModeInfo *mode;
 	igt_display_t *display = &data->display;
 	int w, h;
-	igt_plane_t *primary = igt_pipe_get_plane_type(&display->pipes[pipe], DRM_PLANE_TYPE_PRIMARY);
+	igt_plane_t *primary = igt_pipe_get_plane_type(igt_crtc_for_pipe(display, pipe),
+						       DRM_PLANE_TYPE_PRIMARY);
 
 	/* create the pipe_crc object for this pipe */
 	igt_pipe_crc_free(data->pipe_crc);
@@ -387,7 +388,8 @@ static void constant_alpha_mid(data_t *data, enum pipe pipe, igt_plane_t *plane)
 	igt_crc_t ref_crc, crc;
 
 	if (plane->type != DRM_PLANE_TYPE_PRIMARY)
-		igt_plane_set_fb(igt_pipe_get_plane_type(&display->pipes[pipe], DRM_PLANE_TYPE_PRIMARY), &data->gray_fb);
+		igt_plane_set_fb(igt_pipe_get_plane_type(igt_crtc_for_pipe(display, pipe), DRM_PLANE_TYPE_PRIMARY),
+				 &data->gray_fb);
 
 	igt_plane_set_prop_enum(plane, IGT_PLANE_PIXEL_BLEND_MODE, "None");
 	igt_plane_set_prop_value(plane, IGT_PLANE_ALPHA, 0x7fff);
@@ -412,7 +414,8 @@ static void constant_alpha_max(data_t *data, enum pipe pipe, igt_plane_t *plane)
 	igt_crc_t ref_crc, crc;
 
 	if (plane->type != DRM_PLANE_TYPE_PRIMARY)
-		igt_plane_set_fb(igt_pipe_get_plane_type(&display->pipes[pipe], DRM_PLANE_TYPE_PRIMARY), &data->gray_fb);
+		igt_plane_set_fb(igt_pipe_get_plane_type(igt_crtc_for_pipe(display, pipe), DRM_PLANE_TYPE_PRIMARY),
+				 &data->gray_fb);
 
 	igt_plane_set_fb(plane, &data->argb_fb_100);
 	igt_display_commit2(display, COMMIT_ATOMIC);
@@ -442,7 +445,8 @@ static void alpha_7efc(data_t *data, enum pipe pipe, igt_plane_t *plane)
 	igt_crc_t ref_crc = {}, crc = {};
 
 	if (plane->type != DRM_PLANE_TYPE_PRIMARY)
-		igt_plane_set_fb(igt_pipe_get_plane_type(&display->pipes[pipe], DRM_PLANE_TYPE_PRIMARY), &data->gray_fb);
+		igt_plane_set_fb(igt_pipe_get_plane_type(igt_crtc_for_pipe(display, pipe), DRM_PLANE_TYPE_PRIMARY),
+				 &data->gray_fb);
 
 	igt_display_commit2(display, COMMIT_ATOMIC);
 	igt_pipe_crc_start(data->pipe_crc);
@@ -496,7 +500,8 @@ static void coverage_premult_constant(data_t *data, enum pipe pipe, igt_plane_t 
 
 	/* Set a background color on the primary fb for testing */
 	if (plane->type != DRM_PLANE_TYPE_PRIMARY)
-		igt_plane_set_fb(igt_pipe_get_plane_type(&display->pipes[pipe], DRM_PLANE_TYPE_PRIMARY), &data->gray_fb);
+		igt_plane_set_fb(igt_pipe_get_plane_type(igt_crtc_for_pipe(display, pipe), DRM_PLANE_TYPE_PRIMARY),
+				 &data->gray_fb);
 
 	igt_require(igt_plane_try_prop_enum(plane, IGT_PLANE_PIXEL_BLEND_MODE, "Coverage"));
 	igt_plane_set_fb(plane, &data->argb_fb_cov_7e);

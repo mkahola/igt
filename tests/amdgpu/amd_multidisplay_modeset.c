@@ -160,9 +160,9 @@ static void test_init(struct data_t *data)
 		 * tested
 		 */
 		output = igt_get_single_output_for_pipe(display, i);
-		pipes = &display->pipes[i];
-		data->primary[i] = igt_pipe_get_plane_type(
-			&data->display.pipes[i], DRM_PLANE_TYPE_PRIMARY);
+		pipes = igt_crtc_for_pipe(display, i);
+		data->primary[i] = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->display, i),
+							   DRM_PLANE_TYPE_PRIMARY);
 		data->output[i] = output;
 
 		/* dp rx crc only available for eDP, SST DP, MST DP */

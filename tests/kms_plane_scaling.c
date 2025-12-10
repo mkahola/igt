@@ -963,7 +963,7 @@ test_planes_scaling_combo(data_t *d, double sf_plane1,
 		w2 = get_width(mode, sf_plane2);
 		h2 = get_height(mode, sf_plane2);
 
-		n_planes = display->pipes[pipe].n_planes;
+		n_planes = igt_crtc_for_pipe(display, pipe)->n_planes;
 		igt_require(n_planes >= 2);
 
 		switch (test_type) {
@@ -990,9 +990,9 @@ test_planes_scaling_combo(data_t *d, double sf_plane1,
 		for (int k = 0; k < n_planes - 1; k += 2) {
 			igt_plane_t *p1, *p2;
 
-			p1 = &display->pipes[pipe].planes[k];
+			p1 = &igt_crtc_for_pipe(display, pipe)->planes[k];
 			igt_require(p1);
-			p2 = &display->pipes[pipe].planes[k+1];
+			p2 = &igt_crtc_for_pipe(display, pipe)->planes[k+1];
 			igt_require(p2);
 
 			if (p1->type == DRM_PLANE_TYPE_CURSOR || p2->type == DRM_PLANE_TYPE_CURSOR)
@@ -1015,7 +1015,7 @@ static void
 test_invalid_num_scalers(data_t *d, enum pipe pipe, igt_output_t *output)
 {
 	igt_display_t *display = &d->display;
-	igt_pipe_t *pipe_obj = &display->pipes[pipe];
+	igt_pipe_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
 	int width, height;
 	igt_plane_t *plane[3];
 	drmModeModeInfo *mode;

@@ -488,7 +488,7 @@ plane_immutable_zpos(data_t *data, igt_output_t *output, enum pipe pipe, int n_p
 		int zpos;
 		igt_plane_t *temp;
 
-		temp = &data->display.pipes[pipe].planes[k];
+		temp = &igt_crtc_for_pipe(&data->display, pipe)->planes[k];
 
 		if (!igt_plane_has_prop(temp, IGT_PLANE_ZPOS))
 			continue;
@@ -1333,8 +1333,9 @@ static void atomic_setup(data_t *data, enum pipe pipe, igt_output_t *output)
 	igt_display_reset(&data->display);
 	igt_output_set_pipe(output, pipe);
 
-	data->primary = igt_pipe_get_plane_type(&data->display.pipes[pipe], DRM_PLANE_TYPE_PRIMARY);
-	data->pipe = &data->display.pipes[pipe];
+	data->primary = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
+						DRM_PLANE_TYPE_PRIMARY);
+	data->pipe = igt_crtc_for_pipe(&data->display, pipe);
 	mode = igt_output_get_mode(output);
 
 	igt_create_pattern_fb(data->drm_fd,
@@ -1418,7 +1419,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_subtest_with_dynamic("plane-overlay-legacy") {
 		for_each_pipe_with_single_output(&data.display, pipe, output) {
 			igt_plane_t *overlay =
-				igt_pipe_get_plane_type(&data.display.pipes[pipe], DRM_PLANE_TYPE_OVERLAY);
+				igt_pipe_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
+							DRM_PLANE_TYPE_OVERLAY);
 			uint32_t format = plane_get_igt_format(overlay);
 
 			if (!pipe_output_combo_valid(&data.display, pipe, output))
@@ -1456,7 +1458,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_subtest_with_dynamic("plane-primary-overlay-mutable-zpos") {
 		for_each_pipe_with_single_output(&data.display, pipe, output) {
 			igt_plane_t *overlay =
-				igt_pipe_get_plane_type(&data.display.pipes[pipe], DRM_PLANE_TYPE_OVERLAY);
+				igt_pipe_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
+							DRM_PLANE_TYPE_OVERLAY);
 
 			if (!pipe_output_combo_valid(&data.display, pipe, output))
 				continue;
@@ -1483,7 +1486,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		     "only higher zpos planes cover the lower zpos ones.");
 	igt_subtest_with_dynamic("plane-immutable-zpos") {
 		for_each_pipe_with_single_output(&data.display, pipe, output) {
-			int n_planes = data.display.pipes[pipe].n_planes;
+			int n_planes = igt_crtc_for_pipe(&data.display, pipe)->n_planes;
 
 			if (!pipe_output_combo_valid(&data.display, pipe, output))
 				continue;
@@ -1527,7 +1530,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_subtest_with_dynamic("plane-cursor-legacy") {
 		for_each_pipe_with_single_output(&data.display, pipe, output) {
 			igt_plane_t *cursor =
-				igt_pipe_get_plane_type(&data.display.pipes[pipe], DRM_PLANE_TYPE_CURSOR);
+				igt_pipe_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
+							DRM_PLANE_TYPE_CURSOR);
 
 			if (!pipe_output_combo_valid(&data.display, pipe, output))
 				continue;

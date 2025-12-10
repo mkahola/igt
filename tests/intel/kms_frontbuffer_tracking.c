@@ -1110,21 +1110,24 @@ static void init_mode_params(struct modeset_params *params,
 	params->output = output;
 	params->mode = *mode;
 
-	params->primary.plane = igt_pipe_get_plane_type(&drm.display.pipes[pipe], DRM_PLANE_TYPE_PRIMARY);
+	params->primary.plane = igt_pipe_get_plane_type(igt_crtc_for_pipe(&drm.display, pipe),
+							DRM_PLANE_TYPE_PRIMARY);
 	params->primary.fb = NULL;
 	params->primary.x = 0;
 	params->primary.y = 0;
 	params->primary.w = mode->hdisplay;
 	params->primary.h = mode->vdisplay;
 
-	params->cursor.plane = igt_pipe_get_plane_type(&drm.display.pipes[pipe], DRM_PLANE_TYPE_CURSOR);
+	params->cursor.plane = igt_pipe_get_plane_type(igt_crtc_for_pipe(&drm.display, pipe),
+						       DRM_PLANE_TYPE_CURSOR);
 	params->cursor.fb = NULL;
 	params->cursor.x = 0;
 	params->cursor.y = 0;
 	params->cursor.w = 64;
 	params->cursor.h = 64;
 
-	params->sprite.plane = igt_pipe_get_plane_type(&drm.display.pipes[pipe], DRM_PLANE_TYPE_OVERLAY);
+	params->sprite.plane = igt_pipe_get_plane_type(igt_crtc_for_pipe(&drm.display, pipe),
+						       DRM_PLANE_TYPE_OVERLAY);
 	igt_require(params->sprite.plane);
 	params->sprite.fb = NULL;
 	params->sprite.x = 0;
@@ -3112,7 +3115,8 @@ static void page_flip_for_params(struct modeset_params *params,
 
 	switch (type) {
 	case FLIP_PAGEFLIP:
-		rc = drmModePageFlip(drm.fd, drm.display.pipes[params->pipe].crtc_id,
+		rc = drmModePageFlip(drm.fd,
+				     igt_crtc_for_pipe(&drm.display, params->pipe)->crtc_id,
 				     params->primary.fb->fb_id,
 				     DRM_MODE_PAGE_FLIP_EVENT, NULL);
 		igt_assert_eq(rc, 0);
@@ -3724,7 +3728,9 @@ static void stridechange_subtest(const struct test_mode *t)
 	 * Try to set a new stride. with the page flip api. This is allowed
 	 * with the atomic page flip helper, but not with the legacy page flip.
 	 */
-	rc = drmModePageFlip(drm.fd, drm.display.pipes[params->pipe].crtc_id, new_fb->fb_id, 0, NULL);
+	rc = drmModePageFlip(drm.fd,
+			     igt_crtc_for_pipe(&drm.display, params->pipe)->crtc_id,
+			     new_fb->fb_id, 0, NULL);
 	igt_assert(rc == -EINVAL || rc == 0);
 	do_assertions(rc ? 0 : DONT_ASSERT_FBC_STATUS);
 }

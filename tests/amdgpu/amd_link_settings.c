@@ -100,7 +100,7 @@ static void test_init(data_t *data, igt_output_t *output)
 
 	igt_require(data->pipe_id != PIPE_NONE);
 
-	data->pipe = &data->display.pipes[data->pipe_id];
+	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
 
 	igt_output_set_pipe(output, data->pipe_id);
 

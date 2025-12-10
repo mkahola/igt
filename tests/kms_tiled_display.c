@@ -328,7 +328,7 @@ static data_connector_t *conn_for_crtc(data_t *data, unsigned int crtc_id)
 	for (int i = 0; i < data->num_h_tiles; i++) {
 		data_connector_t *conn = &data->conns[i];
 
-		if (data->display.pipes[conn->pipe].crtc_id == crtc_id)
+		if (igt_crtc_for_pipe(&data->display, conn->pipe)->crtc_id == crtc_id)
 			return conn;
 	}
 

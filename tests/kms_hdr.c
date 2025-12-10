@@ -213,7 +213,7 @@ static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
 	igt_display_t *display = &data->display;
 
 	data->pipe_id = pipe;
-	data->pipe = &data->display.pipes[data->pipe_id];
+	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
 	igt_assert(data->pipe);
 
 	igt_display_reset(display);

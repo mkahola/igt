@@ -144,7 +144,7 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 	igt_display_commit(display);
 
 	igt_wait_for_vblank(fd,
-			display->pipes[data->pipe].crtc_offset);
+			igt_crtc_for_pipe(display, data->pipe)->crtc_offset);
 }
 
 static void cleanup_crtc(data_t *data, int fd, igt_output_t *output)
@@ -251,7 +251,7 @@ static void crtc_id_subtest(data_t *data, int fd)
 	uint64_t val;
 	union drm_wait_vblank vbl;
 
-	crtc_id = display->pipes[p].crtc_id;
+	crtc_id = igt_crtc_for_pipe(display, p)->crtc_id;
 	if (drmGetCap(display->drm_fd, DRM_CAP_CRTC_IN_VBLANK_EVENT, &val) == 0)
 		expected_crtc_id = crtc_id;
 	else

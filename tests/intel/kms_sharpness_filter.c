@@ -436,7 +436,7 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 
 			data->output = output;
 			data->pipe_id = pipe;
-			data->pipe = &display->pipes[data->pipe_id];
+			data->pipe = igt_crtc_for_pipe(display, data->pipe_id);
 			data->mode = igt_output_get_mode(data->output);
 
 			if (!has_sharpness_filter(data->pipe)) {
