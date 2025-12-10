@@ -3052,13 +3052,71 @@ void igt_display_reset_outputs(igt_display_t *display)
 	drmModeFreeResources(resources);
 }
 
+static void igt_crtc_plane_init(igt_display_t *display,
+				igt_crtc_t *pipe,
+				drmModeRes *resources,
+				igt_plane_t *global_plane)
+{
+	drmModePlane *drm_plane = global_plane->drm_plane;
+	int type = global_plane->type;
+	igt_plane_t *plane;
+	int index;
+
+	if (type == DRM_PLANE_TYPE_PRIMARY && pipe->plane_primary == -1) {
+		index = 0;
+
+		pipe->plane_primary = index;
+		pipe->num_primary_planes++;
+	} else if (type == DRM_PLANE_TYPE_CURSOR && pipe->plane_cursor == -1) {
+		index = pipe->n_planes - 1;
+
+		pipe->plane_cursor = index;
+		display->has_cursor_plane = true;
+	} else {
+		for (index = 1; index < pipe->n_planes; index++) {
+			if (pipe->planes[index].index < 0)
+				break;
+		}
+
+		/*
+		 * Increment num_primary_planes for any extra
+		 * primary plane found.
+		 */
+		if (type == DRM_PLANE_TYPE_PRIMARY)
+			pipe->num_primary_planes++;
+	}
+
+	igt_assert_lt(index, pipe->n_planes);
+
+	plane = &pipe->planes[index];
+
+	igt_assert_lt(plane->index, 0);
+
+	plane->index = index;
+	plane->type = type;
+	plane->pipe = pipe;
+	plane->drm_plane = drm_plane;
+	plane->values[IGT_PLANE_IN_FENCE_FD] = ~0ULL;
+	plane->ref = global_plane;
+
+	/*
+	 * HACK: point the global plane to the first pipe that
+	 * it can go on.
+	 */
+	if (!global_plane->ref)
+		igt_plane_set_pipe(plane, pipe);
+
+	igt_fill_plane_props(display, plane, IGT_NUM_PLANE_PROPS, igt_plane_prop_names);
+
+	igt_fill_plane_format_mod(display, plane);
+}
+
 static void igt_crtc_init(igt_display_t *display,
 			  drmModeRes *resources, int i)
 {
 	igt_crtc_t *pipe = igt_crtc_for_pipe(display, i);
-	igt_plane_t *plane;
 	int crtc_mask = 0;
-	int j, type;
+	int j;
 
 	pipe->display = display;
 	pipe->plane_cursor = -1;
@@ -3092,60 +3150,11 @@ static void igt_crtc_init(igt_display_t *display,
 	for (j = 0; j < display->n_planes; j++) {
 		igt_plane_t *global_plane = &display->planes[j];
 		drmModePlane *drm_plane = global_plane->drm_plane;
-		int index;
 
 		if (!(drm_plane->possible_crtcs & crtc_mask))
 			continue;
 
-		type = global_plane->type;
-
-		if (type == DRM_PLANE_TYPE_PRIMARY && pipe->plane_primary == -1) {
-			index = 0;
-
-			pipe->plane_primary = index;
-			pipe->num_primary_planes++;
-		} else if (type == DRM_PLANE_TYPE_CURSOR && pipe->plane_cursor == -1) {
-			index = pipe->n_planes - 1;
-
-			pipe->plane_cursor = index;
-			display->has_cursor_plane = true;
-		} else {
-			for (index = 1; index < pipe->n_planes; index++) {
-				if (pipe->planes[index].index < 0)
-					break;
-			}
-
-			/*
-			 * Increment num_primary_planes for any extra
-			 * primary plane found.
-			 */
-			if (type == DRM_PLANE_TYPE_PRIMARY)
-				pipe->num_primary_planes++;
-		}
-
-		igt_assert_lt(index, pipe->n_planes);
-
-		plane = &pipe->planes[index];
-
-		igt_assert_lt(plane->index, 0);
-
-		plane->index = index;
-		plane->type = type;
-		plane->pipe = pipe;
-		plane->drm_plane = drm_plane;
-		plane->values[IGT_PLANE_IN_FENCE_FD] = ~0ULL;
-		plane->ref = global_plane;
-
-		/*
-		 * HACK: point the global plane to the first pipe that
-		 * it can go on.
-		 */
-		if (!global_plane->ref)
-			igt_plane_set_pipe(plane, pipe);
-
-		igt_fill_plane_props(display, plane, IGT_NUM_PLANE_PROPS, igt_plane_prop_names);
-
-		igt_fill_plane_format_mod(display, plane);
+		igt_crtc_plane_init(display, pipe, resources, global_plane);
 	}
 
 	/*
