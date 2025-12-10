@@ -640,8 +640,8 @@ static inline bool igt_plane_has_rotation(igt_plane_t *plane, igt_rotation_t rot
 }
 const char *igt_plane_rotation_name(igt_rotation_t rotation);
 
-void igt_wait_for_vblank(int drm_fd, int crtc_offset);
-void igt_wait_for_vblank_count(int drm_fd, int crtc_offset, int count);
+void igt_wait_for_vblank(igt_pipe_t *crtc);
+void igt_wait_for_vblank_count(igt_pipe_t *crtc, int count);
 
 /**
  * igt_output_is_connected:

@@ -792,8 +792,7 @@ restart_round:
 			if (plane->type == DRM_PLANE_TYPE_CURSOR) {
 				igt_display_t *display = &data->display;
 
-				igt_wait_for_vblank(data->drm_fd,
-						igt_crtc_for_pipe(display, pipe)->crtc_offset);
+				igt_wait_for_vblank(igt_crtc_for_pipe(display, pipe));
 			}
 		}
 

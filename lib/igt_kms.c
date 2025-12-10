@@ -5823,28 +5823,28 @@ static int __igt_vblank_wait(int drm_fd, int crtc_offset, int count)
 /**
  * igt_wait_for_vblank_count:
  * @drm_fd: A drm file descriptor
- * @crtc_offset: offset of the crtc in drmModeRes.crtcs
+ * @crtc: the CRTC
  * @count: Number of vblanks to wait on
  *
  * Waits for a given number of vertical blank intervals
  */
-void igt_wait_for_vblank_count(int drm_fd, int crtc_offset, int count)
+void igt_wait_for_vblank_count(igt_pipe_t *crtc, int count)
 {
-	igt_assert(__igt_vblank_wait(drm_fd, crtc_offset, count) == 0);
+	igt_assert(__igt_vblank_wait(crtc->display->drm_fd, crtc->crtc_offset, count) == 0);
 }
 
 /**
  * igt_wait_for_vblank:
  * @drm_fd: A drm file descriptor
- * @crtc_offset: offset of a crtc in drmModeRes.crtcs
+ * @crtc: the CRTC
  *
  * See #igt_wait_for_vblank_count for more details
  *
  * Waits for 1 vertical blank intervals
  */
-void igt_wait_for_vblank(int drm_fd, int crtc_offset)
+void igt_wait_for_vblank(igt_pipe_t *crtc)
 {
-	igt_assert(__igt_vblank_wait(drm_fd, crtc_offset, 1) == 0);
+	igt_assert(__igt_vblank_wait(crtc->display->drm_fd, crtc->crtc_offset, 1) == 0);
 }
 
 /**

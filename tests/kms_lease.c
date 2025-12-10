@@ -179,8 +179,7 @@ static int prepare_crtc(data_t *data, bool is_master)
 	if (ret)
 		return ret;
 
-	igt_wait_for_vblank(lease->fd,
-			    igt_crtc_for_pipe(display, pipe)->crtc_offset);
+	igt_wait_for_vblank(igt_crtc_for_pipe(display, pipe));
 
 	lease->output = output;
 	lease->mode = mode;
@@ -377,8 +376,7 @@ static void page_flip_implicit_plane(data_t *data)
 
 	display = &data->master.display;
 
-	igt_wait_for_vblank(data->master.fd,
-			igt_crtc_for_pipe(display, pipe)->crtc_offset);
+	igt_wait_for_vblank(igt_crtc_for_pipe(display, pipe));
 
 	do_or_die(drmModePageFlip(data->lease.fd, data->crtc_id,
 			      data->master.primary_fb.fb_id,
@@ -388,8 +386,7 @@ static void page_flip_implicit_plane(data_t *data)
 	object_ids[mcl.object_count++] = wrong_plane_id;
 	do_or_die(create_lease(data->master.fd, &mcl, &data->lease.fd));
 
-	igt_wait_for_vblank(data->master.fd,
-			igt_crtc_for_pipe(display, pipe)->crtc_offset);
+	igt_wait_for_vblank(igt_crtc_for_pipe(display, pipe));
 
 	igt_assert_eq(drmModePageFlip(data->lease.fd, data->crtc_id,
 				      data->master.primary_fb.fb_id,
