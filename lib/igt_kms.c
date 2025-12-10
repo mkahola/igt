@@ -5827,15 +5827,6 @@ static int __igt_vblank_wait(int drm_fd, int crtc_offset, int count)
  * @count: Number of vblanks to wait on
  *
  * Waits for a given number of vertical blank intervals
- *
- * In DRM, 'Pipe', as understood by DRM_IOCTL_WAIT_VBLANK,
- * is actually an offset of crtc in drmModeRes.crtcs
- * and it has nothing to do with a hardware concept of a pipe.
- * They can match but don't have to in case of DRM lease or
- * non-contiguous pipes.
- *
- * To make thing clear we are calling DRM_IOCTL_WAIT_VBLANK's 'pipe'
- * a crtc_offset.
  */
 void igt_wait_for_vblank_count(int drm_fd, int crtc_offset, int count)
 {
