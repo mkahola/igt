@@ -522,7 +522,7 @@ static const color_t colors_reduced[] = {
 static void set_legacy_lut(data_t *data, enum pipe pipe,
 			   uint16_t mask)
 {
-	igt_pipe_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
+	igt_crtc_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
 	drmModeCrtc *drm_crtc;
 	uint16_t *lut;
 	int i, lut_size;
@@ -549,7 +549,7 @@ static void set_legacy_lut(data_t *data, enum pipe pipe,
 static bool set_c8_legacy_lut(data_t *data, enum pipe pipe,
 			      uint16_t mask)
 {
-	igt_pipe_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
+	igt_crtc_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
 	drmModeCrtc *drm_crtc;
 	uint16_t *r, *g, *b;
 	int i, lut_size;

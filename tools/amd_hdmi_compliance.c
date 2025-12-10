@@ -33,7 +33,7 @@ typedef struct data {
 	igt_display_t display;
 	igt_plane_t *primary;
 	igt_output_t *output;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	enum pipe pipe_id;
 	bool use_virtual_connector;
 	int timeout_seconds;

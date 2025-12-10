@@ -237,7 +237,7 @@ static void set_mode(data_t *data, int count, drmModeModeInfo *mode,
 		     igt_output_t **valid_outputs, struct igt_fb fb)
 {
 	igt_display_t *display = &data->display;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	igt_plane_t *plane;
 
 	for (int i = 0; i < count; i++) {

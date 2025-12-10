@@ -39,7 +39,7 @@ typedef struct data {
 	igt_plane_t *overlay[MAX_PIPES];
 	igt_plane_t *cursor[MAX_PIPES];
 	igt_output_t *output[MAX_PIPES];
-	igt_pipe_t *pipe[MAX_PIPES];
+	igt_crtc_t *pipe[MAX_PIPES];
 	igt_pipe_crc_t *pipe_crc[MAX_PIPES];
 	drmModeModeInfo mode[MAX_PIPES];
 	enum pipe pipe_id[MAX_PIPES];

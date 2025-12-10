@@ -556,7 +556,7 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 {
 	drmModeModeInfo *mode, override_mode;
 	igt_plane_t *plane;
-	igt_pipe_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
+	igt_crtc_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
 	uint32_t iter_max, i;
 	struct plane_parms parms[pipe_obj->n_planes];
 	unsigned flags = 0;
@@ -921,7 +921,7 @@ retry:
 				    DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, .5, .5, .5, &data->fbs[1]);
 
 	for_each_pipe(&data->display, i) {
-		igt_pipe_t *pipe = igt_crtc_for_pipe(&data->display, i);
+		igt_crtc_t *pipe = igt_crtc_for_pipe(&data->display, i);
 		igt_plane_t *plane = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 		drmModeModeInfo *mode = NULL;
 

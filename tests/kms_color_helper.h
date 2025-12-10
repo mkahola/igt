@@ -90,25 +90,25 @@ struct drm_color_lut *coeffs_to_lut(data_t *data,
 				    uint32_t color_depth,
 				    int off);
 void set_degamma(data_t *data,
-		 igt_pipe_t *pipe,
+		 igt_crtc_t *pipe,
 		 const gamma_lut_t *gamma);
 void set_gamma(data_t *data,
-	       igt_pipe_t *pipe,
+	       igt_crtc_t *pipe,
 	       const gamma_lut_t *gamma);
-void set_ctm(igt_pipe_t *pipe, const double *coefficients);
-void disable_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties prop);
+void set_ctm(igt_crtc_t *pipe, const double *coefficients);
+void disable_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop);
 
 #define disable_degamma(pipe) disable_prop(pipe, IGT_CRTC_DEGAMMA_LUT)
 #define disable_gamma(pipe) disable_prop(pipe, IGT_CRTC_GAMMA_LUT)
 #define disable_ctm(pipe) disable_prop(pipe, IGT_CRTC_CTM)
 
-drmModePropertyBlobPtr get_blob(data_t *data, igt_pipe_t *pipe,
+drmModePropertyBlobPtr get_blob(data_t *data, igt_crtc_t *pipe,
 				enum igt_atomic_crtc_properties prop);
 bool crc_equal(igt_crc_t *a, igt_crc_t *b);
-int pipe_set_property_blob_id(igt_pipe_t *pipe,
+int pipe_set_property_blob_id(igt_crtc_t *pipe,
 			      enum igt_atomic_crtc_properties prop,
 			      uint32_t blob_id);
-int pipe_set_property_blob(igt_pipe_t *pipe,
+int pipe_set_property_blob(igt_crtc_t *pipe,
 			   enum igt_atomic_crtc_properties prop,
 			   void *ptr, size_t length);
 void invalid_gamma_lut_sizes(data_t *data, enum pipe p);

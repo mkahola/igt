@@ -1204,7 +1204,7 @@ static void test_display_protected_crc(int i915, igt_display_t *display)
 	drmModeModeInfo *mode;
 	igt_fb_t ref_fb, protected_fb;
 	igt_plane_t *plane;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	igt_pipe_crc_t *pipe_crc;
 	igt_crc_t ref_crc, new_crc;
 	int width = 0, height = 0, i = 0, ret;

@@ -160,7 +160,7 @@ static bool get_internal_display_flag(data_t *data, igt_output_t *output)
 static void present_visual_pattern(data_t *data, igt_output_t *output)
 {
 	igt_plane_t *primary;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	drmModeModeInfo *mode;
 	igt_fb_t fb;
 	cairo_t *cr;

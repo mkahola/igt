@@ -379,7 +379,7 @@ extern const char * const igt_plane_prop_names[];
 extern const char * const igt_colorop_prop_names[];
 
 typedef struct igt_display igt_display_t;
-typedef struct igt_pipe igt_pipe_t;
+typedef struct igt_crtc igt_crtc_t;
 typedef uint32_t igt_fixed_t;			/* 16.16 fixed point */
 
 #define IGT_NUM_PLANE_COLOR_PIPELINES 4
@@ -425,7 +425,7 @@ typedef struct igt_colorop {
 
 typedef struct igt_plane {
 	/*< private >*/
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	struct igt_plane *ref;
 	int index;
 	/* capabilities */
@@ -473,7 +473,7 @@ typedef struct igt_plane {
  * DRM_IOCTL_WAIT_VBLANK notion of pipe is confusing and we are using
  * crtc_offset instead (refer people to #igt_wait_for_vblank_count)
  */
-struct igt_pipe {
+struct igt_crtc {
 	igt_display_t *display;
 	/* ID of a hardware pipe */
 	enum pipe pipe;
@@ -535,7 +535,7 @@ struct igt_display {
 	igt_output_t *outputs;
 	igt_plane_t *planes;
 	igt_colorop_t *colorops;
-	igt_pipe_t *pipes;
+	igt_crtc_t *pipes;
 	bool has_cursor_plane;
 	bool is_atomic;
 	bool has_virt_cursor_plane;
@@ -578,7 +578,7 @@ void igt_display_require_output(igt_display_t *display);
 void igt_display_require_output_on_pipe(igt_display_t *display, enum pipe pipe);
 int igt_display_n_crtcs(igt_display_t *display);
 
-static inline igt_pipe_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pipe)
+static inline igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pipe)
 {
 	if (pipe == PIPE_NONE)
 		return NULL;
@@ -592,7 +592,7 @@ drmModeModeInfo *igt_output_get_highres_mode(igt_output_t *output);
 drmModeModeInfo *igt_output_get_lowres_mode(igt_output_t *output);
 void igt_output_override_mode(igt_output_t *output, const drmModeModeInfo *mode);
 int igt_output_preferred_vrefresh(igt_output_t *output);
-void igt_output_set_crtc(igt_output_t *output, igt_pipe_t *pipe_obj);
+void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *pipe_obj);
 igt_plane_t *igt_output_get_plane(igt_output_t *output, int plane_idx);
 igt_plane_t *igt_output_get_plane_type(igt_output_t *output, int plane_type);
 int igt_output_count_plane_type(igt_output_t *output, int plane_type);
@@ -605,18 +605,18 @@ drmModeModeInfo *igt_std_1024_mode_get(int vrefresh);
 void igt_output_set_writeback_fb(igt_output_t *output, struct igt_fb *fb);
 void igt_modeset_disable_all_outputs(igt_display_t *display);
 
-igt_plane_t *igt_pipe_get_plane_type(igt_pipe_t *pipe, int plane_type);
-int igt_pipe_count_plane_type(igt_pipe_t *pipe, int plane_type);
-igt_plane_t *igt_pipe_get_plane_type_index(igt_pipe_t *pipe, int plane_type,
+igt_plane_t *igt_pipe_get_plane_type(igt_crtc_t *pipe, int plane_type);
+int igt_pipe_count_plane_type(igt_crtc_t *pipe, int plane_type);
+igt_plane_t *igt_pipe_get_plane_type_index(igt_crtc_t *pipe, int plane_type,
 					   int index);
 bool output_is_internal_panel(igt_output_t *output);
 igt_output_t *igt_get_single_output_for_pipe(igt_display_t *display, enum pipe pipe);
 
-void igt_pipe_request_out_fence(igt_pipe_t *pipe);
+void igt_pipe_request_out_fence(igt_crtc_t *pipe);
 
 void igt_plane_set_fb(igt_plane_t *plane, struct igt_fb *fb);
 void igt_plane_set_fence_fd(igt_plane_t *plane, int fence_fd);
-void igt_plane_set_pipe(igt_plane_t *plane, igt_pipe_t *pipe);
+void igt_plane_set_pipe(igt_plane_t *plane, igt_crtc_t *pipe);
 void igt_plane_set_position(igt_plane_t *plane, int x, int y);
 void igt_plane_set_size(igt_plane_t *plane, int w, int h);
 void igt_plane_set_rotation(igt_plane_t *plane, igt_rotation_t rotation);
@@ -640,8 +640,8 @@ static inline bool igt_plane_has_rotation(igt_plane_t *plane, igt_rotation_t rot
 }
 const char *igt_plane_rotation_name(igt_rotation_t rotation);
 
-void igt_wait_for_vblank(igt_pipe_t *crtc);
-void igt_wait_for_vblank_count(igt_pipe_t *crtc, int count);
+void igt_wait_for_vblank(igt_crtc_t *crtc);
+void igt_wait_for_vblank_count(igt_crtc_t *crtc, int count);
 
 /**
  * igt_output_is_connected:
@@ -1046,12 +1046,12 @@ extern void igt_output_replace_prop_blob(igt_output_t *output,
  * Returns: True if the property is supported, otherwise false.
  */
 static inline bool
-igt_pipe_obj_has_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties prop)
+igt_pipe_obj_has_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop)
 {
 	return pipe->props[prop];
 }
 
-uint64_t igt_pipe_obj_get_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties prop);
+uint64_t igt_pipe_obj_get_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop);
 
 /**
  * igt_pipe_obj_is_prop_changed:
@@ -1060,7 +1060,7 @@ uint64_t igt_pipe_obj_get_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties
  *
  * Check whether a given @prop changed for the @pipe_obj.
  */
-static inline bool igt_pipe_obj_is_prop_changed(igt_pipe_t *pipe_obj,
+static inline bool igt_pipe_obj_is_prop_changed(igt_crtc_t *pipe_obj,
 						enum igt_atomic_crtc_properties prop)
 {
 	return pipe_obj->changed & (1 << prop);
@@ -1088,7 +1088,7 @@ static inline bool igt_pipe_is_prop_changed(igt_display_t *display,
  *
  * Sets the given @prop for the @pipe_obj.
  */
-static inline void igt_pipe_obj_set_prop_changed(igt_pipe_t *pipe_obj,
+static inline void igt_pipe_obj_set_prop_changed(igt_crtc_t *pipe_obj,
 						 enum igt_atomic_crtc_properties prop)
 {
 	pipe_obj->changed |= 1 << prop;
@@ -1101,7 +1101,7 @@ static inline void igt_pipe_obj_set_prop_changed(igt_pipe_t *pipe_obj,
  *
  * Clears the given @prop for the @pipe_obj.
  */
-static inline void igt_pipe_obj_clear_prop_changed(igt_pipe_t *pipe_obj,
+static inline void igt_pipe_obj_clear_prop_changed(igt_crtc_t *pipe_obj,
 						   enum igt_atomic_crtc_properties prop)
 {
 	pipe_obj->changed &= ~(1 << prop);
@@ -1115,7 +1115,7 @@ static inline void igt_pipe_obj_clear_prop_changed(igt_pipe_t *pipe_obj,
  *
  * Sets the given @prop with the @value for the @pipe_obj.
  */
-static inline void igt_pipe_obj_set_prop_value(igt_pipe_t *pipe_obj,
+static inline void igt_pipe_obj_set_prop_value(igt_crtc_t *pipe_obj,
 					       enum igt_atomic_crtc_properties prop,
 					       uint64_t value)
 {
@@ -1140,14 +1140,14 @@ static inline void igt_pipe_set_prop_value(igt_display_t *display,
 				    value);
 }
 
-extern bool igt_pipe_obj_try_prop_enum(igt_pipe_t *pipe,
+extern bool igt_pipe_obj_try_prop_enum(igt_crtc_t *pipe,
 				       enum igt_atomic_crtc_properties prop,
 				       const char *val);
 
-extern void igt_pipe_obj_set_prop_enum(igt_pipe_t *pipe,
+extern void igt_pipe_obj_set_prop_enum(igt_crtc_t *pipe,
 				       enum igt_atomic_crtc_properties prop,
 				       const char *val);
-extern void igt_pipe_obj_replace_prop_blob(igt_pipe_t *pipe,
+extern void igt_pipe_obj_replace_prop_blob(igt_crtc_t *pipe,
 					   enum igt_atomic_crtc_properties prop,
 					   const void *ptr, size_t length);
 void igt_pipe_refresh(igt_display_t *display, enum pipe pipe, bool force);

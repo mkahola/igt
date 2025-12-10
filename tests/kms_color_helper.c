@@ -220,7 +220,7 @@ struct drm_color_lut *coeffs_to_lut(data_t *data,
 }
 
 void set_degamma(data_t *data,
-		 igt_pipe_t *pipe,
+		 igt_crtc_t *pipe,
 		 const gamma_lut_t *gamma)
 {
 	size_t size = sizeof(struct drm_color_lut) * gamma->size;
@@ -233,7 +233,7 @@ void set_degamma(data_t *data,
 }
 
 void set_gamma(data_t *data,
-	       igt_pipe_t *pipe, const gamma_lut_t *gamma)
+	       igt_crtc_t *pipe, const gamma_lut_t *gamma)
 {
 	size_t size = sizeof(struct drm_color_lut) * gamma->size;
 	struct drm_color_lut *lut = coeffs_to_lut(data, gamma,
@@ -244,7 +244,7 @@ void set_gamma(data_t *data,
 	free(lut);
 }
 
-void set_ctm(igt_pipe_t *pipe, const double *coefficients)
+void set_ctm(igt_crtc_t *pipe, const double *coefficients)
 {
 	struct drm_color_ctm ctm;
 	int i;
@@ -264,14 +264,14 @@ void set_ctm(igt_pipe_t *pipe, const double *coefficients)
 	igt_pipe_obj_replace_prop_blob(pipe, IGT_CRTC_CTM, &ctm, sizeof(ctm));
 }
 
-void disable_prop(igt_pipe_t *pipe, enum igt_atomic_crtc_properties prop)
+void disable_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop)
 {
 	if (igt_pipe_obj_has_prop(pipe, prop))
 		igt_pipe_obj_replace_prop_blob(pipe, prop, NULL, 0);
 }
 
 drmModePropertyBlobPtr
-get_blob(data_t *data, igt_pipe_t *pipe, enum igt_atomic_crtc_properties prop)
+get_blob(data_t *data, igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop)
 {
 	uint64_t prop_value;
 
@@ -284,7 +284,7 @@ get_blob(data_t *data, igt_pipe_t *pipe, enum igt_atomic_crtc_properties prop)
 }
 
 int
-pipe_set_property_blob_id(igt_pipe_t *pipe,
+pipe_set_property_blob_id(igt_crtc_t *pipe,
 			  enum igt_atomic_crtc_properties prop,
 			  uint32_t blob_id)
 {
@@ -304,7 +304,7 @@ pipe_set_property_blob_id(igt_pipe_t *pipe,
 }
 
 int
-pipe_set_property_blob(igt_pipe_t *pipe,
+pipe_set_property_blob(igt_crtc_t *pipe,
 		       enum igt_atomic_crtc_properties prop,
 		       void *ptr, size_t length)
 {
@@ -320,7 +320,7 @@ invalid_lut_sizes(data_t *data, enum pipe p,
 		  enum igt_atomic_crtc_properties prop, int size)
 {
 	igt_display_t *display = &data->display;
-	igt_pipe_t *pipe = igt_crtc_for_pipe(display, p);
+	igt_crtc_t *pipe = igt_crtc_for_pipe(display, p);
 	struct drm_color_lut *lut;
 	size_t lut_size = size * sizeof(lut[0]);
 
@@ -363,7 +363,7 @@ invalid_degamma_lut_sizes(data_t *data, enum pipe p)
 void invalid_ctm_matrix_sizes(data_t *data, enum pipe p)
 {
 	igt_display_t *display = &data->display;
-	igt_pipe_t *pipe = igt_crtc_for_pipe(display, p);
+	igt_crtc_t *pipe = igt_crtc_for_pipe(display, p);
 	void *ptr;
 
 	igt_require(igt_pipe_obj_has_prop(pipe, IGT_CRTC_CTM));

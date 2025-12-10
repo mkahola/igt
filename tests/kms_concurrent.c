@@ -158,7 +158,7 @@ prepare_planes(data_t *data, enum pipe pipe, int max_planes,
 	       igt_output_t *output)
 {
 	drmModeModeInfo *mode;
-	igt_pipe_t *p;
+	igt_crtc_t *p;
 	igt_plane_t *primary;
 	int *x;
 	int *y;

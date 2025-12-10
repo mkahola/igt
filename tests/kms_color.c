@@ -731,7 +731,7 @@ prep_pipe(data_t *data, enum pipe p)
 
 static void test_setup(data_t *data, enum pipe p)
 {
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 
 	prep_pipe(data, p);
 	igt_require_pipe_crc(data->drm_fd);

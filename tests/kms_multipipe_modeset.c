@@ -55,7 +55,7 @@ static void run_test(data_t *data, int valid_outputs)
 	igt_crc_t ref_crcs[IGT_MAX_PIPES], new_crcs[IGT_MAX_PIPES];
 	igt_display_t *display = &data->display;
 	uint16_t width = 0, height = 0;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	igt_plane_t *plane;
 	drmModeModeInfo *mode;
 	int i = 0;

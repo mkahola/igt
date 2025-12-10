@@ -375,7 +375,7 @@ static void prep_fb(data_t *data)
 
 static void set_c8_lut(data_t *data)
 {
-	igt_pipe_t *pipe = igt_crtc_for_pipe(&data->display, data->pipe);
+	igt_crtc_t *pipe = igt_crtc_for_pipe(&data->display, data->pipe);
 	struct drm_color_lut *lut;
 	int i, lut_size = 256;
 
@@ -396,7 +396,7 @@ static void set_c8_lut(data_t *data)
 
 static void unset_lut(data_t *data)
 {
-	igt_pipe_t *pipe = igt_crtc_for_pipe(&data->display, data->pipe);
+	igt_crtc_t *pipe = igt_crtc_for_pipe(&data->display, data->pipe);
 
 	igt_pipe_obj_replace_prop_blob(pipe, IGT_CRTC_GAMMA_LUT, NULL, 0);
 }

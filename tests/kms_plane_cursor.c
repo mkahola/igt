@@ -75,7 +75,7 @@ typedef struct data {
 	igt_plane_t *overlay;
 	igt_plane_t *cursor;
 	igt_output_t *output;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	igt_pipe_crc_t *pipe_crc;
 	drmModeModeInfo *mode;
 	igt_fb_t ref_fb;

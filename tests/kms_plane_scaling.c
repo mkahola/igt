@@ -1016,7 +1016,7 @@ static void
 test_invalid_num_scalers(data_t *d, enum pipe pipe, igt_output_t *output)
 {
 	igt_display_t *display = &d->display;
-	igt_pipe_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
+	igt_crtc_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
 	int width, height;
 	igt_plane_t *plane[3];
 	drmModeModeInfo *mode;

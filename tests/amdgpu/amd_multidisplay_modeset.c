@@ -153,7 +153,7 @@ static void test_init(struct data_t *data)
 
 	for_each_pipe(display, i) {
 		igt_output_t *output;
-		igt_pipe_t *pipes;
+		igt_crtc_t *pipes;
 
 		/* For each valid pipe, get one connected display.
 		 * This will let displays connected to MST hub be

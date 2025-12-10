@@ -177,7 +177,7 @@ static void test_t(data_t *data, igt_plane_t *primary,
 
 static int test_setup(data_t *data, enum pipe p)
 {
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	int i = 0;
 
 	igt_display_reset(&data->display);

@@ -30,7 +30,7 @@ typedef struct
         igt_plane_t *primary;
         igt_output_t *output;
         igt_fb_t fb;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
         enum pipe pipe_id;
 	int connector_type;
 	int w, h;

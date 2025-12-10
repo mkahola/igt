@@ -839,7 +839,7 @@ static void compare_crcs(int fd, igt_display_t *display, igt_fb_t *ref_fb, igt_f
 	igt_output_t *output;
 	drmModeModeInfo *mode;
 	igt_plane_t *plane;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	igt_pipe_crc_t *pipe_crc;
 	igt_crc_t ref_crc, new_crc;
 
@@ -881,7 +881,7 @@ static void test_display_pxp_fb(int fd, igt_display_t *display)
 	drmModeModeInfo *mode;
 	igt_fb_t ref_fb, pxp_fb;
 	igt_plane_t *plane;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	int width = 0, height = 0, i = 0;
 	uint32_t q;
 	uint32_t vm;
@@ -938,7 +938,7 @@ static void test_display_black_pxp_fb(int fd, igt_display_t *display)
 	drmModeModeInfo *mode;
 	igt_fb_t ref_fb, pxp_fb;
 	igt_plane_t *plane;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	int width = 0, height = 0, i = 0;
 	uint32_t q;
 	uint32_t vm;

@@ -21,7 +21,7 @@ struct test_data {
 	igt_display_t display;
 	igt_plane_t *primary;
 	igt_output_t *output;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	drmModeModeInfo *mode;
 	igt_fb_t ref_fb;
 	igt_fb_t ref_fb2;

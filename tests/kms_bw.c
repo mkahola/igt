@@ -67,7 +67,7 @@ typedef struct data {
         igt_plane_t *primary[IGT_MAX_PIPES];
         igt_output_t *output[IGT_MAX_PIPES];
 	igt_output_t *connected_output[IGT_MAX_PIPES];
-        igt_pipe_t *pipe[IGT_MAX_PIPES];
+        igt_crtc_t *pipe[IGT_MAX_PIPES];
         igt_pipe_crc_t *pipe_crc[IGT_MAX_PIPES];
         drmModeModeInfo mode[IGT_MAX_PIPES];
         enum pipe pipe_id[IGT_MAX_PIPES];

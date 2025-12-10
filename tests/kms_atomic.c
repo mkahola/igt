@@ -113,7 +113,7 @@ static bool all_pipes = false;
 typedef struct {
 	igt_display_t display;
 	igt_plane_t *primary;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	int drm_fd;
 	igt_fb_t fb;
 } data_t;
@@ -222,7 +222,7 @@ static bool crtc_filter(enum igt_atomic_crtc_properties prop)
 	return true;
 }
 
-static void crtc_get_current_state(igt_pipe_t *pipe, uint64_t *values)
+static void crtc_get_current_state(igt_crtc_t *pipe, uint64_t *values)
 {
 	int i;
 
@@ -236,7 +236,7 @@ static void crtc_get_current_state(igt_pipe_t *pipe, uint64_t *values)
 	}
 }
 
-static void crtc_check_current_state(igt_pipe_t *pipe,
+static void crtc_check_current_state(igt_crtc_t *pipe,
 				     const uint64_t *pipe_values,
 				     const uint64_t *primary_values,
 				     enum kms_atomic_check_relax relax)
@@ -307,7 +307,7 @@ static void crtc_check_current_state(igt_pipe_t *pipe,
 	drmModeFreePropertyBlob(mode_prop);
 }
 
-static void crtc_commit(igt_pipe_t *pipe, igt_plane_t *plane,
+static void crtc_commit(igt_crtc_t *pipe, igt_plane_t *plane,
 			enum igt_commit_style s,
 			enum kms_atomic_check_relax relax)
 {
@@ -317,7 +317,7 @@ static void crtc_commit(igt_pipe_t *pipe, igt_plane_t *plane,
 	plane_check_current_state(plane, plane->values, relax);
 }
 
-static void crtc_commit_atomic_flags_err(igt_pipe_t *pipe, igt_plane_t *plane,
+static void crtc_commit_atomic_flags_err(igt_crtc_t *pipe, igt_plane_t *plane,
 					 unsigned flags,
 					 enum kms_atomic_check_relax relax,
 					 int err)

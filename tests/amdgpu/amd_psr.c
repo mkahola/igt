@@ -56,7 +56,7 @@ typedef struct data {
 	igt_plane_t *cursor;
 	igt_plane_t *overlay;
 	igt_output_t *output;
-	igt_pipe_t *pipe;
+	igt_crtc_t *pipe;
 	igt_pipe_crc_t *pipe_crc;
 	igt_fb_t ov_fb[2];
 	igt_fb_t pm_fb[2];
