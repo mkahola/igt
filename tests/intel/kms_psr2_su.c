@@ -127,7 +127,8 @@ static void setup_output(data_t *data)
 			continue;
 
 		igt_display_reset(display);
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
@@ -300,7 +301,7 @@ static int check_psr2_support(data_t *data, enum pipe pipe)
 
 	igt_display_reset(display);
 	output = data->output;
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	prepare(data, output);
 	status = psr_wait_entry(data->debugfs_fd, PSR_MODE_2, output);
@@ -372,7 +373,8 @@ int igt_main()
 				for (i = 0; i < n_pipes; i++) {
 					igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipes[i]),
 							igt_output_name(outputs[i])) {
-						igt_output_set_pipe(outputs[i], pipes[i]);
+						igt_output_set_crtc(outputs[i],
+								    igt_crtc_for_pipe(outputs[i]->display, pipes[i]));
 						if (data.op == FRONTBUFFER &&
 						    intel_display_ver(intel_get_drm_devid(data.drm_fd)) >= 12) {
 							/*

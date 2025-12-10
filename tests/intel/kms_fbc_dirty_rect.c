@@ -397,7 +397,7 @@ static void cleanup(data_t *data)
 
 	igt_pipe_crc_free(data->pipe_crc);
 
-	igt_output_set_pipe(data->output, PIPE_NONE);
+	igt_output_set_crtc(data->output, NULL);
 
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
@@ -407,7 +407,8 @@ static bool prepare_test(data_t *data)
 	igt_display_reset(&data->display);
 
 	data->mode = igt_output_get_mode(data->output);
-	igt_output_set_pipe(data->output, data->pipe);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe));
 	data->pipe_crc = igt_pipe_crc_new(data->drm_fd, data->pipe,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 

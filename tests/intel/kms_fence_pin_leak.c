@@ -141,7 +141,7 @@ static void run_single_test(data_t *data, enum pipe pipe, igt_output_t *output)
 	igt_info("Using (pipe %s + %s) to run the subtest.\n",
 		 kmstest_pipe_name(pipe), igt_output_name(output));
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	mode = igt_output_get_mode(output);
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
@@ -197,7 +197,7 @@ static void run_single_test(data_t *data, enum pipe pipe, igt_output_t *output)
 	}
 
 	igt_plane_set_fb(primary, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit(display);
 
 	igt_remove_fb(data->drm_fd, &fb[1]);
@@ -215,7 +215,8 @@ static void run_test(data_t *data)
 	for_each_pipe_with_valid_output(display, p, output) {
 		igt_display_reset(display);
 
-		igt_output_set_pipe(output, p);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, p));
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 

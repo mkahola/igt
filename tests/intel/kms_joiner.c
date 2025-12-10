@@ -153,7 +153,7 @@ static enum pipe setup_pipe(data_t *data, igt_output_t *output, enum pipe pipe, 
 
 	igt_info("Using pipe %s as master and %s slave for %s\n", kmstest_pipe_name(pipe),
 		 kmstest_pipe_name(pipe + 1), output->name);
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	return master_pipe;
 }
@@ -166,7 +166,8 @@ static void set_joiner_mode(data_t *data, igt_output_t *output, drmModeModeInfo 
 	igt_info("Committing joiner mode for output %s with mode %dx%d@%d\n",
 		  output->name, mode->hdisplay, mode->vdisplay, mode->vrefresh);
 
-	igt_output_set_pipe(output, PIPE_A);
+	igt_output_set_crtc(output,
+			    igt_crtc_for_pipe(output->display, PIPE_A));
 	igt_output_override_mode(output, mode);
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	igt_create_pattern_fb(data->drm_fd, mode->hdisplay, mode->vdisplay, DRM_FORMAT_XRGB8888,
@@ -378,7 +379,8 @@ static void test_invalid_modeset_two_joiner(data_t *data,
 				mode = *igt_output_get_mode(output);
 			}
 
-			igt_output_set_pipe(output, data->pipe_seq[i + j]);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, data->pipe_seq[i + j]));
 			igt_info("Assigning pipe %s to %s with mode %dx%d@%d%s",
 				 kmstest_pipe_name(data->pipe_seq[i + j]),
 				 igt_output_name(output), mode.hdisplay,
@@ -425,7 +427,8 @@ static void test_joiner_on_last_pipe(data_t *data, bool force_joiner)
 			mode = *igt_output_get_mode(output);
 		}
 
-		igt_output_set_pipe(output, data->pipe_seq[data->n_pipes - 1]);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, data->pipe_seq[data->n_pipes - 1]));
 		igt_info(" Assigning pipe %s to %s with mode %dx%d@%d\n",
 				 kmstest_pipe_name(data->pipe_seq[data->n_pipes - 1]),
 				 igt_output_name(output), mode.hdisplay,
@@ -481,7 +484,8 @@ static void test_ultra_joiner(data_t *data, bool invalid_pipe, bool two_display,
 			if (two_display && j != PIPE_A)
 				continue;
 
-			igt_output_set_pipe(output, data->pipe_seq[j]);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, data->pipe_seq[j]));
 
 			primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 			igt_create_pattern_fb(data->drm_fd, mode.hdisplay, mode.vdisplay, DRM_FORMAT_XRGB8888,
@@ -502,7 +506,8 @@ static void test_ultra_joiner(data_t *data, bool invalid_pipe, bool two_display,
 
 							mode1 = igt_output_get_mode(non_ultra_joiner_output);
 
-							igt_output_set_pipe(non_ultra_joiner_output, data->pipe_seq[k]);
+							igt_output_set_crtc(non_ultra_joiner_output,
+									    igt_crtc_for_pipe(non_ultra_joiner_output->display, data->pipe_seq[k]));
 							plane = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
 							igt_plane_set_fb(plane, &fb);
@@ -548,7 +553,8 @@ static void test_basic_max_non_joiner(data_t *data)
 
 		for (pipe = 0; pipe < data->n_pipes; pipe++) {
 			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), output->name) {
-				igt_output_set_pipe(output, pipe);
+				igt_output_set_crtc(output,
+						    igt_crtc_for_pipe(output->display, pipe));
 				igt_require(max_non_joiner_mode_found(data->drm_fd,
 								      output->config.connector,
 								      max_dotclock, &mode));

@@ -102,7 +102,7 @@ disable_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 {
 	igt_plane_t *primary;
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	primary = igt_output_get_plane(output, 0);
 	igt_plane_set_fb(primary, NULL);
 	return igt_display_commit(&data->display);
@@ -116,7 +116,7 @@ set_mode_on_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	struct igt_fb fb;
 	int fb_id;
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	mode = igt_output_get_mode(output);
 
@@ -162,7 +162,7 @@ find_outputs(data_t *data, igt_output_t **output1, igt_output_t **output2)
 		if (pipe == PIPE_C && output != *output1 && !*output2)
 			*output2 = output;
 
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 	}
 
 	igt_skip_on_f(!*output1 || !*output2, "Not enough connected outputs\n");

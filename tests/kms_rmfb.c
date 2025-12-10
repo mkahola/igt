@@ -85,7 +85,7 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 	int num_active_planes = 0;
 
 	igt_display_reset(display);
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	mode = igt_output_get_mode(output);
 
@@ -167,7 +167,7 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 		drmModeFreePlane(planeres);
 	}
 
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 }
 
 static void
@@ -180,7 +180,8 @@ run_rmfb_test(struct rmfb_data *data, bool reopen)
 	for_each_pipe_with_single_output(display, pipe, output) {
 		igt_display_reset(display);
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 

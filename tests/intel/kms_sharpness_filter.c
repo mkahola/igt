@@ -445,10 +445,11 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 				continue;
 			}
 
-			igt_output_set_pipe(data->output, data->pipe_id);
+			igt_output_set_crtc(data->output,
+					    igt_crtc_for_pipe(data->output->display, data->pipe_id));
 
 			if (!intel_pipe_output_combo_valid(display)) {
-				igt_output_set_pipe(data->output, PIPE_NONE);
+				igt_output_set_crtc(data->output, NULL);
 				continue;
 			}
 

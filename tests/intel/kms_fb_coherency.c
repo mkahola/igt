@@ -47,7 +47,8 @@ static void prepare_crtc(data_t *data)
 
 	igt_display_reset(display);
 	/* select the pipe we want to use */
-	igt_output_set_pipe(output, data->pipe);
+	igt_output_set_crtc(output,
+			    igt_crtc_for_pipe(output->display, data->pipe));
 
 	mode = igt_output_get_mode(output);
 
@@ -144,7 +145,7 @@ static void cleanup_crtc(data_t *data)
 
 	igt_plane_set_fb(data->primary, NULL);
 
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit(display);
 
 	igt_remove_fb(data->drm_fd, &data->fb[0]);
@@ -226,7 +227,8 @@ static void select_valid_pipe_output_combo(data_t *data)
 	for_each_pipe_with_valid_output(display, data->pipe, data->output) {
 		igt_display_reset(display);
 
-		igt_output_set_pipe(data->output, data->pipe);
+		igt_output_set_crtc(data->output,
+				    igt_crtc_for_pipe(data->output->display, data->pipe));
 		if (intel_pipe_output_combo_valid(display))
 			return;
 	}

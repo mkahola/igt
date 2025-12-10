@@ -79,7 +79,7 @@ set_fb_on_crtc(igt_display_t *dpy, int pipe,
 	drmModeModeInfoPtr mode;
 	igt_plane_t *primary;
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	mode = igt_output_get_mode(output);
 
 	igt_create_pattern_fb(dpy->drm_fd, mode->hdisplay, mode->vdisplay,
@@ -101,7 +101,7 @@ static void do_cleanup_display(igt_display_t *dpy)
 			igt_plane_set_fb(plane, NULL);
 
 	for_each_connected_output(dpy, output)
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 
 	igt_display_commit2(dpy, dpy->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 }
@@ -134,7 +134,7 @@ static void flip_to_fb(igt_display_t *dpy, int pipe,
 						  DRM_MODE_PAGE_FLIP_EVENT, fb));
 		else {
 			igt_plane_set_fb(igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY), fb);
-			igt_output_set_pipe(output, PIPE_NONE);
+			igt_output_set_crtc(output, NULL);
 			igt_display_commit_atomic(dpy,
 						  DRM_MODE_ATOMIC_NONBLOCK |
 						  DRM_MODE_PAGE_FLIP_EVENT |
@@ -163,7 +163,8 @@ static void flip_to_fb(igt_display_t *dpy, int pipe,
 		/* Clear old mode blob. */
 		igt_pipe_refresh(dpy, pipe, true);
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		igt_display_commit2(dpy, COMMIT_ATOMIC);
 	}
 
@@ -287,13 +288,14 @@ static void test_hang(igt_display_t *dpy,
 
 	if (modeset) {
 		/* Test modeset disable with hang */
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 		igt_plane_set_fb(primary, &fb[1]);
 		test_atomic_commit_hang(dpy, primary, &fb[hang_newfb]);
 
 		/* Test modeset enable with hang */
 		igt_plane_set_fb(primary, &fb[0]);
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		test_atomic_commit_hang(dpy, primary, &fb[!hang_newfb]);
 	} else {
 		/*
@@ -339,7 +341,7 @@ test_pageflip_modeset_hang(igt_display_t *dpy,
 
 	/* Kill crtc with hung fb */
 	igt_plane_set_fb(primary, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(dpy, dpy->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
 	igt_assert(read(dpy->drm_fd, &ev, sizeof(ev)) == sizeof(ev));
@@ -357,10 +359,10 @@ pipe_output_combo_valid(igt_display_t *dpy,
 
 	igt_display_reset(dpy);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	if (!intel_pipe_output_combo_valid(dpy))
 		ret = false;
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	return ret;
 }

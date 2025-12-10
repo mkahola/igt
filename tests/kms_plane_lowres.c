@@ -283,7 +283,7 @@ static void test_cleanup(data_t *data)
 {
 	igt_pipe_crc_free(data->pipe_crc);
 
-	igt_output_set_pipe(data->output, PIPE_NONE);
+	igt_output_set_crtc(data->output, NULL);
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
 
@@ -301,7 +301,8 @@ static void run_test(data_t *data, uint64_t modifier)
 			data->output = output;
 
 			igt_display_reset(&data->display);
-			igt_output_set_pipe(data->output, data->pipe);
+			igt_output_set_crtc(data->output,
+					    igt_crtc_for_pipe(data->output->display, data->pipe));
 
 			if (!intel_pipe_output_combo_valid(&data->display))
 				continue;

@@ -611,7 +611,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 	if (modetoset)
 		igt_output_override_mode(output, modetoset);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
@@ -676,7 +676,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 	clear_lut(data, pipe);
 
 	modetoset = NULL;
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_plane_set_fb(primary, NULL);
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
@@ -750,7 +750,8 @@ int igt_main()
 					igt_display_reset(&data.display);
 
 					modetoset = find_mode(&data, output);
-					igt_output_set_pipe(output, pipe);
+					igt_output_set_crtc(output,
+							    igt_crtc_for_pipe(output->display, pipe));
 					igt_output_override_mode(output, modetoset);
 
 					if (modetoset && intel_pipe_output_combo_valid(&data.display)) {
@@ -764,7 +765,8 @@ int igt_main()
 					for_each_valid_output_on_pipe(&data.display, pipe, output) {
 						igt_display_reset(&data.display);
 
-						igt_output_set_pipe(output, pipe);
+						igt_output_set_crtc(output,
+								    igt_crtc_for_pipe(output->display, pipe));
 						if (!intel_pipe_output_combo_valid(&data.display))
 							continue;
 

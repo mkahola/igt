@@ -80,7 +80,7 @@ static void prepare_pipe(igt_display_t *display, enum pipe pipe, igt_output_t *o
 	igt_create_pattern_fb(display->drm_fd, mode->hdisplay, mode->vdisplay,
 			      DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, fb);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	igt_plane_set_fb(igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY), fb);
 
@@ -94,7 +94,7 @@ static void cleanup_pipe(igt_display_t *display, enum pipe pipe, igt_output_t *o
 	for_each_plane_on_pipe(display, pipe, plane)
 		igt_plane_set_fb(plane, NULL);
 
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
@@ -328,7 +328,8 @@ static void colorop_properties(igt_display_t *display, bool atomic)
 		for_each_valid_output_on_pipe(display, pipe, output) {
 			igt_display_reset(display);
 
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 			if (!intel_pipe_output_combo_valid(display))
 				continue;
 
@@ -352,7 +353,8 @@ static void plane_properties(igt_display_t *display, bool atomic)
 	for_each_pipe_with_single_output(display, pipe, output) {
 		igt_display_reset(display);
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
@@ -371,7 +373,8 @@ static void crtc_properties(igt_display_t *display, bool atomic)
 	for_each_pipe_with_single_output(display, pipe, output) {
 		igt_display_reset(display);
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
@@ -393,9 +396,10 @@ static void connector_properties(igt_display_t *display, bool atomic)
 		for_each_pipe(display, pipe) {
 			igt_display_reset(display);
 
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 			if (!intel_pipe_output_combo_valid(display)) {
-				igt_output_set_pipe(output, PIPE_NONE);
+				igt_output_set_crtc(output, NULL);
 				continue;
 			}
 

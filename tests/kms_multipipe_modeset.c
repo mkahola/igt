@@ -64,7 +64,7 @@ static void run_test(data_t *data, int valid_outputs)
 		mode = igt_output_get_mode(output);
 		igt_assert(mode);
 
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 
 		width = max(width, mode->hdisplay);
 		height = max(height, mode->vdisplay);
@@ -83,7 +83,8 @@ static void run_test(data_t *data, int valid_outputs)
 		pipe_crcs[i] = igt_pipe_crc_new(display->drm_fd, i,
 						IGT_PIPE_CRC_SOURCE_AUTO);
 
-		igt_output_set_pipe(output, i);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, i));
 		mode = igt_output_get_mode(output);
 		igt_assert(mode);
 
@@ -93,7 +94,7 @@ static void run_test(data_t *data, int valid_outputs)
 
 		igt_display_commit2(display, COMMIT_ATOMIC);
 		igt_pipe_crc_collect_crc(pipe_crcs[i], &ref_crcs[i]);
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 		i++;
 	}
 
@@ -105,7 +106,8 @@ static void run_test(data_t *data, int valid_outputs)
 
 		mode = NULL;
 
-		igt_output_set_pipe(output, i);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, i));
 		mode = igt_output_get_mode(output);
 		igt_assert(mode);
 

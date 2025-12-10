@@ -1229,7 +1229,8 @@ static void test_display_protected_crc(int i915, igt_display_t *display)
 		pipe = igt_crtc_for_pipe(display, i);
 		plane = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 		igt_require(igt_pipe_connector_valid(i, output));
-		igt_output_set_pipe(output, i);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, i));
 
 		igt_plane_set_fb(plane, &ref_fb);
 		igt_fb_set_size(&ref_fb, plane, mode->hdisplay, mode->vdisplay);
@@ -1248,7 +1249,7 @@ static void test_display_protected_crc(int i915, igt_display_t *display)
 					    IGT_PIPE_CRC_SOURCE_AUTO);
 		plane = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 		igt_require(igt_pipe_connector_valid(pipe->pipe, output));
-		igt_output_set_pipe(output, pipe->pipe);
+		igt_output_set_crtc(output, pipe);
 
 		igt_plane_set_fb(plane, &ref_fb);
 		igt_fb_set_size(&ref_fb, plane, mode->hdisplay, mode->vdisplay);

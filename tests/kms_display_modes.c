@@ -87,8 +87,10 @@ static void run_extendedmode_basic(data_t *data,
 
 	igt_display_reset(display);
 
-	igt_output_set_pipe(output1, pipe1);
-	igt_output_set_pipe(output2, pipe2);
+	igt_output_set_crtc(output1,
+			    igt_crtc_for_pipe(output1->display, pipe1));
+	igt_output_set_crtc(output2,
+			    igt_crtc_for_pipe(output2->display, pipe2));
 
 	mode[0] = igt_output_get_mode(output1);
 	mode[1] = igt_output_get_mode(output2);
@@ -156,8 +158,8 @@ static void run_extendedmode_basic(data_t *data,
 	igt_pipe_crc_free(pipe_crc[0]);
 	igt_pipe_crc_free(pipe_crc[1]);
 
-	igt_output_set_pipe(output1, PIPE_NONE);
-	igt_output_set_pipe(output2, PIPE_NONE);
+	igt_output_set_crtc(output1, NULL);
+	igt_output_set_crtc(output2, NULL);
 
 	igt_plane_set_fb(igt_pipe_get_plane_type(igt_crtc_for_pipe(display, pipe1),
 						 DRM_PLANE_TYPE_PRIMARY),
@@ -203,8 +205,10 @@ static void run_extendedmode_test(data_t *data) {
 
 					igt_display_reset(display);
 
-					igt_output_set_pipe(output1, pipe1);
-					igt_output_set_pipe(output2, pipe2);
+					igt_output_set_crtc(output1,
+							    igt_crtc_for_pipe(output1->display, pipe1));
+					igt_output_set_crtc(output2,
+							    igt_crtc_for_pipe(output2->display, pipe2));
 
 					if (!intel_pipe_output_combo_valid(display))
 						continue;

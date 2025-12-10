@@ -105,7 +105,7 @@ static void screens_disabled_subtest(data_t *data)
 
 	for (int i = 0; i < data->display.n_outputs; i++) {
 		data->output = &data->display.outputs[i];
-		igt_output_set_pipe(data->output, PIPE_NONE);
+		igt_output_set_crtc(data->output, NULL);
 		igt_display_commit(&data->display);
 		valid_output++;
 	}
@@ -145,7 +145,7 @@ static void test_cleanup(data_t *data)
 	primary = igt_output_get_plane_type(data->output,
 					    DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, NULL);
-	igt_output_set_pipe(data->output, PIPE_NONE);
+	igt_output_set_crtc(data->output, NULL);
 	igt_display_commit(&data->display);
 	igt_remove_fb(data->drm_fd, &data->fb);
 	data->output = NULL;
@@ -156,7 +156,8 @@ static bool test_constraint(data_t *data)
 	drmModeModeInfo *mode;
 
 	igt_display_reset(&data->display);
-	igt_output_set_pipe(data->output, data->pipe);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe));
 
 	mode = igt_output_get_mode(data->output);
 

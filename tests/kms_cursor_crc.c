@@ -559,7 +559,7 @@ static void cleanup_crtc(data_t *data)
 	cairo_surface_destroy(data->surface);
 	data->surface = NULL;
 
-	igt_output_set_pipe(data->output, PIPE_NONE);
+	igt_output_set_crtc(data->output, NULL);
 	igt_plane_set_fb(data->primary, NULL);
 	igt_display_commit(display);
 
@@ -578,7 +578,8 @@ static void prepare_crtc(data_t *data, int cursor_w, int cursor_h)
 	igt_display_reset(display);
 
 	/* select the pipe we want to use */
-	igt_output_set_pipe(output, data->pipe);
+	igt_output_set_crtc(output,
+			    igt_crtc_for_pipe(output->display, data->pipe));
 
 	/* create and set the primary plane fbs */
 	mode = igt_output_get_mode(output);
@@ -780,7 +781,8 @@ static bool cursor_size_supported(data_t *data, int w, int h)
 		    h <= data->cursor_max_h);
 
 	igt_display_reset(display);
-	igt_output_set_pipe(output, data->pipe);
+	igt_output_set_crtc(output,
+			    igt_crtc_for_pipe(output->display, data->pipe));
 
 	mode = igt_output_get_mode(output);
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
@@ -807,7 +809,7 @@ static bool cursor_size_supported(data_t *data, int w, int h)
 	igt_plane_set_fb(cursor, NULL);
 
 	igt_remove_fb(data->drm_fd, &primary_fb);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	return ret == 0;
 }
@@ -884,12 +886,13 @@ static bool valid_pipe_output_combo(data_t *data)
 	igt_display_t *display = &data->display;
 
 	igt_display_reset(display);
-	igt_output_set_pipe(data->output, data->pipe);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe));
 
 	if (intel_pipe_output_combo_valid(display))
 		ret = true;
 
-	igt_output_set_pipe(data->output, PIPE_NONE);
+	igt_output_set_crtc(data->output, NULL);
 
 	return ret;
 }

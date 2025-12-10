@@ -276,7 +276,8 @@ static void test_cursor(data_t *data, int size, unsigned int flags)
 			    DRM_FORMAT_MOD_LINEAR, 1.0, 0.0, 1.0, &data->cfb);
 
 	igt_plane_set_fb(data->primary, &data->pfb);
-	igt_output_set_pipe(data->output, data->pipe_id);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe_id));
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 	test_cursor_spots(data, size, flags);
@@ -333,7 +334,8 @@ int igt_main()
 
 				igt_display_reset(display);
 
-				igt_output_set_pipe(output, pipe);
+				igt_output_set_crtc(output,
+						    igt_crtc_for_pipe(output->display, pipe));
 				if (!intel_pipe_output_combo_valid(display))
 					continue;
 

@@ -299,7 +299,8 @@ int igt_main()
 					      DRM_FORMAT_XRGB8888,
 					      DRM_FORMAT_MOD_LINEAR, &fb);
 
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+				            igt_crtc_for_pipe(output->display, pipe));
 			igt_plane_set_fb(igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY), &fb);
 			break;
 		}

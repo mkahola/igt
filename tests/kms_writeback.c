@@ -170,7 +170,8 @@ static igt_output_t *kms_writeback_get_output(igt_display_t *display)
 			continue;
 
 		for_each_pipe(display, pipe) {
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 
 			if (data.custom_mode)
 				override_mode = data.user_mode;
@@ -201,7 +202,7 @@ static void cleanup_writeback(igt_display_t *display, igt_output_t *output)
 				  to_user_pointer(NULL));
 	igt_output_set_writeback_fb(output, NULL);
 
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, COMMIT_ATOMIC);
 }
 

@@ -344,7 +344,7 @@ int igt_main()
 			 * one
 			 */
 			if (data.output) {
-				igt_output_set_pipe(data.output, PIPE_NONE);
+				igt_output_set_crtc(data.output, NULL);
 				igt_display_commit(&data.display);
 			}
 
@@ -354,7 +354,8 @@ int igt_main()
 			/* None of these tests need to perform modesets, just page flips. So running
 			 * display setup here is fine
 			 */
-			igt_output_set_pipe(data.output, pipe);
+			igt_output_set_crtc(data.output,
+					    igt_crtc_for_pipe(data.output->display, pipe));
 			data.primary = igt_output_get_plane(data.output, 0);
 			igt_create_color_fb(data.drm_fd,
 					    data.mode->hdisplay,

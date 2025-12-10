@@ -198,7 +198,7 @@ static void test_cleanup(data_t *data)
 	for (count = 0; count < data->num_h_tiles; count++) {
 		if (conns[count].output) {
 			reset_plane(conns[count].output);
-			igt_output_set_pipe(conns[count].output, PIPE_NONE);
+			igt_output_set_crtc(conns[count].output, NULL);
 		}
 	}
 	igt_remove_fb(data->drm_fd, &data->fb_test_pattern);
@@ -250,8 +250,8 @@ static void setup_mode(data_t *data)
 				conns[count].pipe = pipe;
 				conns[count].output = output;
 
-				igt_output_set_pipe(conns[count].output,
-						    conns[count].pipe);
+				igt_output_set_crtc(conns[count].output,
+						    igt_crtc_for_pipe(conns[count].output->display, conns[count].pipe));
 				break;
 			}
 		}

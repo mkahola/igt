@@ -75,7 +75,7 @@ static void set_all_output_pipe_to_none(data_t *data)
 	igt_output_t *output;
 
 	for_each_connected_output(&data->display, output) {
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 	}
 
 	igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
@@ -102,7 +102,8 @@ static void test_init(data_t *data, igt_output_t *output)
 
 	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
 
-	igt_output_set_pipe(output, data->pipe_id);
+	igt_output_set_crtc(output,
+			    igt_crtc_for_pipe(output->display, data->pipe_id));
 
 	data->primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 }

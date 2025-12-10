@@ -76,7 +76,7 @@ static void disable_all_displays(data_t *data)
 
 	for (int i = 0; i < data->display.n_outputs; i++) {
 		output = &data->display.outputs[i];
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 		igt_display_commit(&data->display);
 	}
 }

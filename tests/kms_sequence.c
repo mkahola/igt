@@ -105,7 +105,8 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 	igt_display_reset(&data->display);
 
 	/* select the pipe we want to use */
-	igt_output_set_pipe(output, data->pipe);
+	igt_output_set_crtc(output,
+			    igt_crtc_for_pipe(output->display, data->pipe));
 
 	/* create and set the primary plane fb */
 	mode = igt_output_get_mode(output);
@@ -135,7 +136,7 @@ static void cleanup_crtc(data_t *data, int fd, igt_output_t *output)
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, NULL);
 
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 }
 
@@ -311,7 +312,8 @@ int igt_main()
 				for_each_pipe_with_valid_output(&data.display, p, output) {
 					igt_display_reset(&data.display);
 
-					igt_output_set_pipe(output, p);
+					igt_output_set_crtc(output,
+							    igt_crtc_for_pipe(output->display, p));
 					if (!intel_pipe_output_combo_valid(&data.display))
 						continue;
 

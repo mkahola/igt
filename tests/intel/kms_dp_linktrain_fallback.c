@@ -103,7 +103,8 @@ static void setup_pipe_on_outputs(data_t *data,
 		igt_info("Setting pipe %s on output %s\n",
 			 kmstest_pipe_name(data->pipe),
 			 igt_output_name(outputs[i]));
-		igt_output_set_pipe(outputs[i], data->pipe);
+		igt_output_set_crtc(outputs[i],
+				    igt_crtc_for_pipe(outputs[i]->display, data->pipe));
 		i++;
 	}
 }
@@ -479,7 +480,8 @@ static void test_dsc_sst_fallback(data_t *data)
 				    DRM_FORMAT_MOD_LINEAR, 0.0, 1.0, 0.0,
 				    &data->fb);
 		igt_output_override_mode(data->output, data->mode);
-		igt_output_set_pipe(data->output, data->pipe);
+		igt_output_set_crtc(data->output,
+				    igt_crtc_for_pipe(data->output->display, data->pipe));
 		data->primary = igt_output_get_plane_type(data->output,
 						DRM_PLANE_TYPE_PRIMARY);
 		igt_plane_set_fb(data->primary, &data->fb);

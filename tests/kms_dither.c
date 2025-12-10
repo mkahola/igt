@@ -81,7 +81,7 @@ static void prepare_test(data_t *data, igt_output_t *output, enum pipe p)
 	data->primary =
 		igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 
-	igt_output_set_pipe(output, p);
+	igt_output_set_crtc(output, pipe);
 }
 
 /* Returns the current state of dithering from the crtc debugfs. */
@@ -168,7 +168,7 @@ static void test_dithering(data_t *data, enum pipe pipe,
 cleanup:
 	igt_output_set_prop_value(output, IGT_CONNECTOR_MAX_BPC, bpc);
 	igt_plane_set_fb(data->primary, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 	igt_remove_fb(data->drm_fd, &data->fb);
 
@@ -218,10 +218,11 @@ run_dither_test(data_t *data, int fb_bpc, int fb_format, int output_bpc)
 		}
 
 		for_each_pipe(display, pipe) {
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 
 			if (!intel_pipe_output_combo_valid(display)) {
-				igt_output_set_pipe(output, PIPE_NONE);
+				igt_output_set_crtc(output, NULL);
 				continue;
 			}
 

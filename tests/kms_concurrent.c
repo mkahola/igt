@@ -97,7 +97,7 @@ static void test_fini(data_t *data, enum pipe pipe, int n_planes,
 	}
 
 	/* reset the constraint on the pipe */
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(&data->display, data->display.is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
 	free(data->plane);
@@ -166,7 +166,7 @@ prepare_planes(data_t *data, enum pipe pipe, int max_planes,
 	int i;
 	int format, modifier;
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	p = primary->pipe;
@@ -283,7 +283,8 @@ test_resolution_with_output(data_t *data, enum pipe pipe, int max_planes, igt_ou
 		const drmModeModeInfo *mode_hi;
 		drmModeModeInfo *mode_lo;
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 
 		mode_hi = igt_output_get_mode(output);
 		mode_lo = get_lowres_mode(data, mode_hi, output);
@@ -292,7 +293,7 @@ test_resolution_with_output(data_t *data, enum pipe pipe, int max_planes, igt_ou
 		igt_output_override_mode(output, mode_lo);
 		free(mode_lo);
 		if (is_amdgpu_device(data->drm_fd))
-			igt_output_set_pipe(output, PIPE_NONE);
+			igt_output_set_crtc(output, NULL);
 		igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 		/* switch back to higher resolution */
@@ -342,7 +343,8 @@ run_tests_for_pipe(data_t *data)
 		for_each_valid_output_on_pipe(&data->display, pipe, output) {
 			igt_display_reset(&data->display);
 
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 			if (!intel_pipe_output_combo_valid(&data->display))
 				continue;
 

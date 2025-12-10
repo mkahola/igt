@@ -166,7 +166,7 @@ check_suspend(igt_output_t *output)
 
 static void test_cleanup(igt_display_t *display, igt_output_t *output)
 {
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 	igt_pm_restore_sata_link_power_management();
 }
@@ -181,9 +181,10 @@ static void test_setup(igt_display_t display, igt_output_t *output)
 	igt_display_reset(&display);
 
 	for_each_pipe(&display, pipe) {
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		if (!intel_pipe_output_combo_valid(&display)) {
-			igt_output_set_pipe(output, PIPE_NONE);
+			igt_output_set_crtc(output, NULL);
 			continue;
 		}
 		mode = igt_output_get_mode(output);

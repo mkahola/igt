@@ -194,7 +194,7 @@ test_grab_crc(data_t *data, igt_output_t *output, enum pipe pipe,
 	char *crc_str;
 	int ret;
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	primary = igt_output_get_plane(output, 0);
 
@@ -271,7 +271,7 @@ test_plane_position_with_output(data_t *data,
 	igt_debug("Testing connector %s using pipe %s plane %d\n", igt_output_name(output),
 		  kmstest_pipe_name(pipe), plane);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	mode = igt_output_get_mode(output);
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
@@ -327,7 +327,7 @@ test_plane_position_with_output(data_t *data,
 	igt_plane_set_fb(sprite, NULL);
 
 	/* reset the constraint on the pipe */
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(&data->display, data->display.is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
 	igt_remove_fb(data->drm_fd, &primary_fb);
@@ -407,7 +407,7 @@ test_plane_panning_with_output(data_t *data,
 	drmModeModeInfo *mode;
 	igt_crc_t crc;
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	mode = igt_output_get_mode(output);
 	primary = igt_output_get_plane(output, 0);
@@ -436,7 +436,7 @@ test_plane_panning_with_output(data_t *data,
 	igt_plane_set_fb(primary, NULL);
 
 	/* reset states to neutral values, assumed by other tests */
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_fb_set_position(&primary_fb, primary, 0, 0);
 	igt_display_commit2(&data->display, data->display.is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
@@ -1215,7 +1215,7 @@ test_pixel_formats(data_t *data, enum pipe pipe)
 	igt_create_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
 		      DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, &primary_fb);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, &primary_fb);
 
@@ -1235,7 +1235,7 @@ test_pixel_formats(data_t *data, enum pipe pipe)
 	set_legacy_lut(data, pipe, 0xffff);
 
 	igt_plane_set_fb(primary, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(&data->display, data->display.is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
 	igt_remove_fb(data->drm_fd, &primary_fb);
@@ -1264,7 +1264,7 @@ static void test_planar_settings(data_t *data)
 	output = igt_get_single_output_for_pipe(&data->display, pipe);
 	igt_require(output);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
 	igt_display_commit_atomic(&data->display,
@@ -1347,11 +1347,12 @@ static void run_test(data_t *data, void (*test)(data_t *, enum pipe))
 	for_each_pipe_with_single_output(&data->display, pipe, data->output) {
 		igt_display_reset(&data->display);
 
-		igt_output_set_pipe(data->output, pipe);
+		igt_output_set_crtc(data->output,
+				    igt_crtc_for_pipe(data->output->display, pipe));
 		if (!intel_pipe_output_combo_valid(&data->display))
 			continue;
 
-		igt_output_set_pipe(data->output, PIPE_NONE);
+		igt_output_set_crtc(data->output, NULL);
 		test(data, pipe);
 
 		if (is_pipe_limit_reached(++count))

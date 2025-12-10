@@ -133,7 +133,8 @@ static void test_dsc_enable(data_t *data)
 				      DRM_FORMAT_XRGB8888,
 				      0,
 				      &ref_fb);
-		igt_output_set_pipe(output, data->pipe_id[i]);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, data->pipe_id[i]));
 		igt_plane_set_fb(data->primary[i], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 
@@ -279,7 +280,8 @@ static void test_dsc_slice_dimensions_change(data_t *data)
 				      DRM_FORMAT_XRGB8888,
 				      0,
 				      &ref_fb);
-		igt_output_set_pipe(output, data->pipe_id[i]);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, data->pipe_id[i]));
 		igt_plane_set_fb(data->primary[i], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 
@@ -369,7 +371,8 @@ static void test_dsc_link_settings(data_t *data)
 				      DRM_FORMAT_XRGB8888,
 				      0,
 				      &ref_fb[i]);
-		igt_output_set_pipe(output, data->pipe_id[i]);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, data->pipe_id[i]));
 		igt_plane_set_fb(data->primary[i], &ref_fb[i]);
 	}
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
@@ -489,7 +492,8 @@ static void test_dsc_bpc(data_t *data)
 					      DRM_FORMAT_XRGB8888,
 					      0,
 					      &ref_fb[i]);
-			igt_output_set_pipe(output, data->pipe_id[i]);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, data->pipe_id[i]));
 			igt_plane_set_fb(data->primary[i], &ref_fb[i]);
 		}
 

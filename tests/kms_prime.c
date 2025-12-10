@@ -124,7 +124,8 @@ static igt_output_t *setup_display(int importer_fd, igt_display_t *display,
 	for_each_pipe_with_valid_output(display, *pipe, output) {
 		igt_display_reset(display);
 
-		igt_output_set_pipe(output, *pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, *pipe));
 		if (intel_pipe_output_combo_valid(display)) {
 			found = true;
 			break;

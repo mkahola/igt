@@ -750,7 +750,7 @@ static void init_data(data_t *data, igt_output_t *output)
 static void finish_test(data_t *data, enum pipe pipe, igt_output_t *output)
 {
 	igt_plane_set_fb(data->primary, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_output_override_mode(output, NULL);
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
@@ -847,7 +847,8 @@ run_test(data_t *data, uint32_t scene)
 		for_each_pipe(&data->display, pipe)
 			if (igt_pipe_connector_valid(pipe, output)) {
 				igt_display_reset(&data->display);
-				igt_output_set_pipe(output, pipe);
+				igt_output_set_crtc(output,
+						    igt_crtc_for_pipe(output->display, pipe));
 
 				igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), output->name)
 				mode_transition(data, pipe, output, scene);

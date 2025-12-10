@@ -609,7 +609,7 @@ test_fini(igt_output_t *output, enum igt_commit_style commit_style)
 	primary = igt_output_get_plane_type(output,
 					    DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(&data.display, commit_style);
 }
 
@@ -672,7 +672,8 @@ test_content_protection(enum igt_commit_style commit_style, int content_type)
 			}
 
 			igt_display_reset(display);
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+				            igt_crtc_for_pipe(output->display, pipe));
 			if (!intel_pipe_output_combo_valid(display))
 				continue;
 
@@ -808,7 +809,8 @@ test_content_protection_mst(int content_type)
 
 		igt_assert_f(pipe_found, "No valid pipe found for %s\n", output->name);
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		prepare_modeset_on_mst_output(output, false);
 		dp_mst_outputs++;
 		if (output_hdcp_capable(output, content_type))

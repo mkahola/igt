@@ -150,10 +150,10 @@ igt_output_t *chamelium_prepare_output(chamelium_data_t *data,
 	output = chamelium_get_output_for_port(data, port);
 
 	/* Refresh pipe to update connected status */
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	pipe = chamelium_get_pipe_for_output(display, output);
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	return output;
 }
@@ -207,14 +207,15 @@ enum pipe chamelium_get_pipe_for_output(igt_display_t *display,
 	enum pipe pipe;
 
 	for_each_pipe(display, pipe) {
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 
 		if (!intel_pipe_output_combo_valid(display)) {
-			igt_output_set_pipe(output, PIPE_NONE);
+			igt_output_set_crtc(output, NULL);
 			continue;
 		}
 
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 		return pipe;
 	}
 

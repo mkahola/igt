@@ -154,7 +154,8 @@ static igt_output_t *kms_writeback_get_output(igt_display_t *display, __u32 four
 			continue;
 
 		for_each_pipe(display, pipe) {
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 
 			if (check_writeback_config(display, output, override_mode, fourcc_in, fourcc_out)) {
 				igt_debug("Using connector %u:%s on pipe %d\n",

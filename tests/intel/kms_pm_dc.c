@@ -135,7 +135,8 @@ static void set_output_on_pipe_b(data_t *data)
 		if (c->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
@@ -169,7 +170,8 @@ static void setup_output(data_t *data)
 		if (c->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		data->output = output;
 		data->mode = igt_output_get_mode(output);
 
@@ -678,7 +680,7 @@ static void test_deep_pkgc_state(data_t *data)
 
 	igt_display_reset(display);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	for_each_connector_mode(output) {
 		data->mode = &output->config.connector->modes[j__];
 		delay = (MSEC / (data->mode->vrefresh));

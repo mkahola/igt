@@ -168,11 +168,13 @@ bool igt_assign_pipes_for_outputs(int drm_fd,
 						out->name);
 				return false;
 			}
-			igt_output_set_pipe(out, start);
+			igt_output_set_crtc(out,
+					    igt_crtc_for_pipe(out->display, start));
 			igt_debug("Using pipe %s as master.\n",
 					kmstest_pipe_name(start));
 		} else
-			igt_output_set_pipe(out, start);
+			igt_output_set_crtc(out,
+					    igt_crtc_for_pipe(out->display, start));
 
 		for (i = 0; i < needed; i++)
 			*used_pipes_mask |= BIT(start + i);

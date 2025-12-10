@@ -176,7 +176,7 @@ static void test_cleanup(data_t *data, enum pipe pipe, igt_output_t *output)
 	/* Clean up. */
 	igt_plane_set_fb(primary, NULL);
 	pipe_crc_free(data);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	igt_remove_fb(data->drm_fd, &data->fb[0]);
 	igt_remove_fb(data->drm_fd, &data->fb[1]);
@@ -234,7 +234,8 @@ int igt_main()
 			igt_display_reset(&data.display);
 			pipe_crc_free(&data);
 
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 			if (!intel_pipe_output_combo_valid(&data.display))
 				continue;
 

@@ -578,7 +578,7 @@ static void run_test_on_pipe_planes(data_t *data, enum pipe pipe, igt_output_t *
 			break;
 	}
 
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, COMMIT_ATOMIC);
 }
 
@@ -705,7 +705,8 @@ static void run_subtests(data_t *data)
 
 				igt_display_reset(&data->display);
 
-				igt_output_set_pipe(output, pipe);
+				igt_output_set_crtc(output,
+						    igt_crtc_for_pipe(output->display, pipe));
 				if (!intel_pipe_output_combo_valid(&data->display))
 					continue;
 

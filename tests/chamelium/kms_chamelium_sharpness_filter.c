@@ -42,10 +42,11 @@ static bool pipe_output_combo_valid(data_t *data, enum pipe pipe)
 {
 	bool ret = true;
 
-	igt_output_set_pipe(data->output, pipe);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, pipe));
 	if (!intel_pipe_output_combo_valid(&data->display))
 		ret = false;
-	igt_output_set_pipe(data->output, PIPE_NONE);
+	igt_output_set_crtc(data->output, NULL);
 
 	return ret;
 }
@@ -102,7 +103,7 @@ static void destroy_frame_dumps(struct chamelium_frame_dump *frames[], int count
 static void cleanup(data_t *data)
 {
 	igt_remove_fb(data->drm_fd, &data->fb);
-	igt_output_set_pipe(data->output, PIPE_NONE);
+	igt_output_set_crtc(data->output, NULL);
 	igt_output_override_mode(data->output, NULL);
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
@@ -115,7 +116,8 @@ static void test_t(data_t *data, igt_plane_t *primary,
 	int height, width;
 	bool match[4], match_ok = false;
 
-	igt_output_set_pipe(data->output, data->pipe_id);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe_id));
 
 	mode = igt_output_get_mode(data->output);
 	height = mode->hdisplay;

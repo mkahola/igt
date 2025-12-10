@@ -97,7 +97,7 @@ static void test(data_t *data, enum pipe pipe, igt_output_t *output)
 	igt_device_set_master(data->drm_fd);
 
 	igt_plane_set_fb(primary, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit(&data->display);
 
 	igt_remove_fb(data->drm_fd, &fb[0]);
@@ -121,7 +121,8 @@ int igt_main()
 		for_each_pipe_with_valid_output(&data.display, pipe, output) {
 			igt_display_reset(&data.display);
 
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 			if (!intel_pipe_output_combo_valid(&data.display))
 				continue;
 

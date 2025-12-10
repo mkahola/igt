@@ -129,7 +129,8 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 	igt_display_reset(display);
 
 	/* select the pipe we want to use */
-	igt_output_set_pipe(output, data->pipe);
+	igt_output_set_crtc(output,
+			    igt_crtc_for_pipe(output->display, data->pipe));
 
 	/* create and set the primary plane fb */
 	mode = igt_output_get_mode(output);
@@ -148,7 +149,7 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 
 static void cleanup_crtc(data_t *data, int fd, igt_output_t *output)
 {
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit(&data->display);
 	igt_remove_fb(fd, &data->primary_fb);
 }
@@ -231,10 +232,10 @@ pipe_output_combo_valid(igt_display_t *display,
 
 	igt_display_reset(display);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	if (!intel_pipe_output_combo_valid(display))
 		ret = false;
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	return ret;
 }
@@ -420,7 +421,7 @@ static void vblank_ts_cont(data_t *data, int fd, int nchildren)
 	}
 
 	if (data->flags & MODESET) {
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 		igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 	}
 
@@ -445,7 +446,8 @@ static void vblank_ts_cont(data_t *data, int fd, int nchildren)
 	}
 
 	if (data->flags & MODESET) {
-		igt_output_set_pipe(output, data->pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, data->pipe));
 		igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 	}
 

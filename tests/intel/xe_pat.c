@@ -852,7 +852,8 @@ static void display_vs_wb_transient(int fd)
 	for_each_pipe_with_valid_output(&display, pipe, output) {
 		igt_display_reset(&display);
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		if (!intel_pipe_output_combo_valid(&display))
 			continue;
 

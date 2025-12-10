@@ -424,11 +424,12 @@ static void prepare(data_t *data)
 	if (data->coexist_feature & FEATURE_DSC) {
 		save_force_dsc_en(data->drm_fd, output);
 		force_dsc_enable(data->drm_fd, output);
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 		igt_display_commit2(&data->display, COMMIT_ATOMIC);
 	}
 
-	igt_output_set_pipe(output, data->pipe);
+	igt_output_set_crtc(output,
+		            igt_crtc_for_pipe(output->display, data->pipe));
 
 	if (data->big_fb_test) {
 		fb_w = data->big_fb_width;
@@ -1045,7 +1046,7 @@ static void cleanup(data_t *data)
 	if (data->coexist_feature & FEATURE_DSC)
 		restore_force_dsc_en();
 
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
@@ -1082,10 +1083,10 @@ pipe_output_combo_valid(igt_display_t *display,
 
 	igt_display_reset(display);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	if (!intel_pipe_output_combo_valid(display))
 		ret = false;
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	return ret;
 }

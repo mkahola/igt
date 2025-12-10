@@ -1153,7 +1153,8 @@ static void test_output(data_t *data, const int testnum)
 			for_each_pipe_with_valid_output(&data->display, data->pipe, data->output) {
 				igt_display_reset(&data->display);
 
-				igt_output_set_pipe(data->output, data->pipe);
+				igt_output_set_crtc(data->output,
+						    igt_crtc_for_pipe(data->output->display, data->pipe));
 				if (!intel_pipe_output_combo_valid(&data->display))
 					continue;
 

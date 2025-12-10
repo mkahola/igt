@@ -303,7 +303,8 @@ static void edid_stress_resolution(chamelium_data_t *data,
 		chamelium_create_fb_for_mode(data, &fb, &mode);
 		output = chamelium_get_output_for_port(data, port);
 		pipe = chamelium_get_pipe_for_output(&data->display, output);
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		chamelium_enable_output(data, port, output, &mode, &fb);
 
 		/* Capture the screen resolution and verify. */
@@ -357,7 +358,7 @@ static void edid_resolution_list(chamelium_data_t *data,
 
 	output = chamelium_get_output_for_port(data, port);
 	pipe = chamelium_get_pipe_for_output(&data->display, output);
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	for (i = 0; i < count_modes; ++i)
 		igt_debug("#%d %s %uHz\n", i, modes[i].name, modes[i].vrefresh);

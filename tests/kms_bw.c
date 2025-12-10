@@ -223,7 +223,8 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 				    DRM_FORMAT_MOD_LINEAR, 1.f, 0.f, 0.f,
 				    &buffer[i]);
 
-		igt_output_set_pipe(output, i);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, i));
 
 		igt_plane_set_fb(data->primary[i], &buffer[i]);
 		igt_info("Assigning pipe %s to output %s with mode %s\n",

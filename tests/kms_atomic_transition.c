@@ -144,7 +144,7 @@ run_primary_test(data_t *data, enum pipe pipe, igt_output_t *output)
 	igt_info("Using (pipe %s + %s) to run the subtest.\n",
 		 kmstest_pipe_name(pipe), igt_output_name(output));
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
 	mode = igt_output_get_mode(output);
@@ -584,16 +584,17 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 	igt_create_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
 		      DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, &data->fbs[0]);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, pipe_obj);
 
 	wm_setup_plane(data, pipe, 0, NULL, false);
 
 	if (flags & DRM_MODE_ATOMIC_ALLOW_MODESET) {
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 
 		igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    pipe_obj);
 	}
 
 	setup_parms(data, pipe, mode, &data->fbs[0], &data->argb_fb, &data->sprite_fb, parms, &iter_max);
@@ -674,7 +675,8 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 		    n_enable_planes < pipe_obj->n_planes)
 			continue;
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    pipe_obj);
 
 		if (!wm_setup_plane(data, pipe, i, parms, fencing))
 			continue;
@@ -683,7 +685,7 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 		wait_for_transition(data, pipe, nonblocking, fencing);
 
 		if (type == TRANSITION_MODESET_DISABLE) {
-			igt_output_set_pipe(output, PIPE_NONE);
+			igt_output_set_crtc(output, NULL);
 
 			if (!wm_setup_plane(data, pipe, 0, parms, fencing))
 				continue;
@@ -731,7 +733,7 @@ static void test_cleanup(data_t *data, enum pipe pipe, igt_output_t *output, boo
 	if (fencing)
 		unprepare_fencing(data, pipe);
 
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	for_each_plane_on_pipe(&data->display, pipe, plane)
 		igt_plane_set_fb(plane, NULL);
@@ -791,7 +793,7 @@ static void unset_output_pipe(igt_display_t *display)
 	int i;
 
 	for (i = 0; i < display->n_outputs; i++)
-		igt_output_set_pipe(&display->outputs[i], PIPE_NONE);
+		igt_output_set_crtc(&display->outputs[i], NULL);
 }
 
 static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
@@ -841,19 +843,21 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 			if (output->pending_pipe != PIPE_NONE)
 				continue;
 
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 			if (intel_pipe_output_combo_valid(&data->display)) {
 				mode = igt_output_get_mode(output);
 				break;
 			} else {
-				igt_output_set_pipe(output, PIPE_NONE);
+				igt_output_set_crtc(output, NULL);
 			}
 		}
 
 		if (!mode)
 			return 0;
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		igt_plane_set_fb(plane, fb);
 		igt_fb_set_size(fb, plane, mode->hdisplay, mode->vdisplay);
 		igt_plane_set_size(plane, mode->hdisplay, mode->vdisplay);
@@ -932,7 +936,8 @@ retry:
 			if (output->pending_pipe != PIPE_NONE)
 				continue;
 
-			igt_output_set_pipe(output, i);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, i));
 			if (intel_pipe_output_combo_valid(&data->display)) {
 				mode = igt_output_get_mode(output);
 
@@ -942,7 +947,7 @@ retry:
 
 				break;
 			} else {
-				igt_output_set_pipe(output, PIPE_NONE);
+				igt_output_set_crtc(output, NULL);
 			}
 		}
 
@@ -1088,10 +1093,10 @@ static bool pipe_output_combo_valid(igt_display_t *display,
 
 	igt_display_reset(display);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	if (!intel_pipe_output_combo_valid(display))
 		ret = false;
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	return ret;
 }

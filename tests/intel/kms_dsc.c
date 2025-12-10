@@ -122,7 +122,7 @@ static void test_cleanup(data_t *data)
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, NULL);
 
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_remove_fb(data->drm_fd, &data->fb_test_pattern);
 }
 
@@ -164,7 +164,8 @@ static void update_display(data_t *data, uint32_t test_type)
 		force_dsc_fractional_bpp_enable(data->drm_fd, data->output);
 	}
 
-	igt_output_set_pipe(output, data->pipe);
+	igt_output_set_crtc(output,
+			    igt_crtc_for_pipe(output->display, data->pipe));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
 	igt_skip_on(!igt_plane_has_format_mod(primary, data->plane_format,

@@ -266,7 +266,8 @@ static void test_hotplug(chamelium_data_t *data, struct chamelium_port *port,
 				chamelium_create_fb_for_mode(data, &fb, &mode);
 			}
 
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 			chamelium_enable_output(data, port, output, &mode, &fb);
 		}
 
@@ -279,7 +280,7 @@ static void test_hotplug(chamelium_data_t *data, struct chamelium_port *port,
 		igt_flush_uevents(mon);
 
 		if (modeset_mode == TEST_MODESET_ON_OFF) {
-			igt_output_set_pipe(output, PIPE_NONE);
+			igt_output_set_crtc(output, NULL);
 			igt_display_commit2(&data->display, COMMIT_ATOMIC);
 		}
 	}
@@ -315,7 +316,8 @@ static void test_hotplug_for_each_pipe(chamelium_data_t *data,
 		output = chamelium_get_output_for_port(data, port);
 
 		/* If pipe is valid for output then set it */
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		if (intel_pipe_output_combo_valid(&data->display))
 			igt_display_commit2(&data->display, COMMIT_ATOMIC);
 

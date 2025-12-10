@@ -266,7 +266,8 @@ static void prepare_crtc(data_t *data)
 	cleanup_crtc(data);
 
 	/* select the pipe we want to use */
-	igt_output_set_pipe(data->output, data->pipe);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe));
 
 	mode = igt_output_get_mode(data->output);
 	igt_create_pattern_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
@@ -399,11 +400,12 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 						continue;
 
 					igt_display_reset(&data.display);
-					igt_output_set_pipe(data.output, data.pipe);
+					igt_output_set_crtc(data.output,
+							    igt_crtc_for_pipe(data.output->display, data.pipe));
 					if (!intel_pipe_output_combo_valid(&data.display))
 						continue;
 
-					igt_output_set_pipe(data.output, PIPE_NONE);
+					igt_output_set_crtc(data.output, NULL);
 
 					igt_dynamic_f("pipe-%s-%s",
 						      kmstest_pipe_name(data.pipe),

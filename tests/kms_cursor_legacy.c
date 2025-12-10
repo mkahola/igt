@@ -256,8 +256,8 @@ static void override_output_modes(igt_display_t *display,
 	bool found = igt_override_all_active_output_modes_to_fit_bw(display);
 	igt_require_f(found, "No valid mode combo found.\n");
 
-	igt_output_set_pipe(output1, PIPE_NONE);
-	igt_output_set_pipe(output2, PIPE_NONE);
+	igt_output_set_crtc(output1, NULL);
+	igt_output_set_crtc(output2, NULL);
 }
 
 static void stress(igt_display_t *display,
@@ -373,7 +373,7 @@ static void set_fb_on_crtc(igt_display_t *display, enum pipe pipe,
 	drmModeModeInfoPtr mode;
 	igt_plane_t *primary;
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	mode = igt_output_get_mode(output);
 
 	igt_create_pattern_fb(display->drm_fd,
@@ -442,7 +442,8 @@ find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 			if((*output)->pending_pipe != PIPE_NONE)
 				continue;
 
-			igt_output_set_pipe(*output, pipe);
+			igt_output_set_crtc(*output,
+					    igt_crtc_for_pipe((*output)->display, pipe));
 			if (intel_pipe_output_combo_valid(display)) {
 				found = true;
 
@@ -453,7 +454,7 @@ find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 				}
 				break;
 			}
-			igt_output_set_pipe(*output, PIPE_NONE);
+			igt_output_set_crtc(*output, NULL);
 		}
 		if (found)
 			break;
@@ -707,11 +708,11 @@ static void flip(igt_display_t *display,
 	igt_plane_set_fb(cursor, NULL);
 	igt_plane_set_fb(igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY),
 			 NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	if (flip_pipe != cursor_pipe) {
 		igt_plane_set_fb(igt_output_get_plane_type(output2, DRM_PLANE_TYPE_PRIMARY),
 			 NULL);
-		igt_output_set_pipe(output2, PIPE_NONE);
+		igt_output_set_crtc(output2, NULL);
 	}
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
@@ -873,7 +874,7 @@ static void basic_flip_cursor(igt_display_t *display,
 	igt_plane_set_fb(igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY),
 			 NULL);
 	igt_plane_set_fb(cursor, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
 	igt_remove_fb(display->drm_fd, &fb_info);
@@ -1041,7 +1042,7 @@ static void flip_vs_cursor(igt_display_t *display, enum flip_test mode, int nloo
 	igt_plane_set_fb(igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY),
 			 NULL);
 	igt_plane_set_fb(cursor, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
 	igt_remove_fb(display->drm_fd, &fb_info);
@@ -1080,7 +1081,7 @@ static void nonblocking_modeset_vs_cursor(igt_display_t *display, int loops)
 	 * Start disabled. No way around it, since the first atomic
 	 * commit may be unreliable with amount of events sent.
 	 */
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, COMMIT_ATOMIC);
 
 	while (loops--) {
@@ -1097,7 +1098,8 @@ static void nonblocking_modeset_vs_cursor(igt_display_t *display, int loops)
 		 * works as intended. It should block until the modeset completes.
 		 */
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		igt_plane_set_fb(cursor, NULL);
 		igt_display_commit_atomic(display, flags, NULL);
 
@@ -1113,7 +1115,7 @@ static void nonblocking_modeset_vs_cursor(igt_display_t *display, int loops)
 		igt_ignore_warn(read(display->drm_fd, &vbl, sizeof(vbl)));
 		igt_reset_timeout();
 
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 		igt_display_commit_atomic(display, flags, NULL);
 
 		igt_assert_eq(0, poll(&pfd, 1, 0));
@@ -1132,7 +1134,7 @@ static void nonblocking_modeset_vs_cursor(igt_display_t *display, int loops)
 
 	igt_plane_set_fb(primary, NULL);
 	igt_plane_set_fb(cursor, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, COMMIT_ATOMIC);
 
 	igt_remove_fb(display->drm_fd, &fb_info);
@@ -1225,7 +1227,7 @@ static void two_screens_flip_vs_cursor(igt_display_t *display, int nloops, bool 
 			DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
 
 		/* Disable pipe2 */
-		igt_output_set_pipe(output2, PIPE_NONE);
+		igt_output_set_crtc(output2, NULL);
 		igt_display_commit_atomic(display, flags, NULL);
 		enabled = false;
 
@@ -1255,7 +1257,8 @@ static void two_screens_flip_vs_cursor(igt_display_t *display, int nloops, bool 
 
 				/* Commit page flip and modeset simultaneously. */
 				igt_plane_set_fb(plane, &fb_info);
-				igt_output_set_pipe(output2, enabled ? PIPE_NONE : pipe2);
+				igt_output_set_crtc(output2,
+						    igt_crtc_for_pipe(output2->display, enabled ? PIPE_NONE : pipe2));
 				enabled = !enabled;
 
 				wait_for_modeset(display, flags, 5, "Scheduling modeset");
@@ -1303,7 +1306,8 @@ static void two_screens_flip_vs_cursor(igt_display_t *display, int nloops, bool 
 				vblank_start = kmstest_get_vblank(display->drm_fd, pipe2, DRM_VBLANK_NEXTONMISS);
 				flip_nonblocking(display, pipe2, atomic, &fb2_info, (void*)(ptrdiff_t)vblank_start);
 			} else {
-				igt_output_set_pipe(output2, enabled ? PIPE_NONE : pipe2);
+				igt_output_set_crtc(output2,
+						    igt_crtc_for_pipe(output2->display, enabled ? PIPE_NONE : pipe2));
 
 				igt_set_timeout(1, "Scheduling modeset\n");
 				do {
@@ -1329,8 +1333,8 @@ done:
 			 NULL);
 	igt_plane_set_fb(cursor, NULL);
 	igt_plane_set_fb(cursor2, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
-	igt_output_set_pipe(output2, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
+	igt_output_set_crtc(output2, NULL);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
 	igt_remove_fb(display->drm_fd, &fb_info);
@@ -1439,7 +1443,7 @@ static void cursor_vs_flip(igt_display_t *display, enum flip_test mode, int nloo
 	igt_plane_set_fb(igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY),
 			 NULL);
 	igt_plane_set_fb(cursor, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
 	igt_remove_fb(display->drm_fd, &fb_info);
@@ -1569,8 +1573,8 @@ static void two_screens_cursor_vs_flip(igt_display_t *display, int nloops, bool 
 			 NULL);
 	igt_plane_set_fb(cursors[0], NULL);
 	igt_plane_set_fb(cursors[1], NULL);
-	igt_output_set_pipe(outputs[0], PIPE_NONE);
-	igt_output_set_pipe(outputs[1], PIPE_NONE);
+	igt_output_set_crtc(outputs[0], NULL);
+	igt_output_set_crtc(outputs[1], NULL);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
 	igt_remove_fb(display->drm_fd, &fb_info[0]);
@@ -1644,7 +1648,7 @@ static void flip_vs_cursor_crc(igt_display_t *display, bool atomic)
 	igt_plane_set_fb(igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY),
 			 NULL);
 	igt_plane_set_fb(cursor, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
 	igt_remove_fb(display->drm_fd, &fb_info);
@@ -1755,7 +1759,7 @@ static void flip_vs_cursor_busy_crc(igt_display_t *display, bool atomic)
 	/* Clean-up */
 	igt_plane_set_fb(plane_primary, NULL);
 	igt_plane_set_fb(cursor, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
 	igt_remove_fb(display->drm_fd, &fb_info[1]);
@@ -1820,7 +1824,7 @@ static void modeset_atomic_cursor_hotspot(igt_display_t *display)
 	/* Clean-up */
 	set_cursor_hotspot(cursor, init_hot_x, init_hot_y);
 	igt_plane_set_fb(cursor, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, COMMIT_ATOMIC);
 
 	igt_remove_fb(display->drm_fd, &cursor_fb);

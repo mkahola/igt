@@ -161,7 +161,7 @@ static void cleanup_crtc(gpu_process_t *gpu)
 
 	igt_plane_set_fb(gpu->primary, NULL);
 
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit(display);
 
 	igt_remove_fb(gpu->drm_fd, &gpu->fb);
@@ -174,7 +174,8 @@ static void prepare_crtc(gpu_process_t *gpu)
 	drmModeModeInfo *mode;
 
 	/* select the pipe we want to use */
-	igt_output_set_pipe(output, gpu->pipe);
+	igt_output_set_crtc(output,
+			    igt_crtc_for_pipe(output->display, gpu->pipe));
 
 	mode = igt_output_get_mode(output);
 

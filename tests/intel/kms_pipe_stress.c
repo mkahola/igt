@@ -343,7 +343,7 @@ static int commit_mode(struct data *data, igt_output_t *output,
 	int ret;
 
 	igt_output_override_mode(output, mode);
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	ret = igt_display_try_commit_atomic(&data->display,
 					    DRM_MODE_ATOMIC_TEST_ONLY |

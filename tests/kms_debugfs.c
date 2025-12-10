@@ -48,7 +48,8 @@ static void igt_display_all_on(igt_display_t *display)
 			if (output->pending_pipe != PIPE_NONE)
 				continue;
 
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 			primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 			mode = igt_output_get_mode(output);
 			igt_create_pattern_fb(display->drm_fd,
@@ -83,7 +84,7 @@ static void igt_display_all_off(igt_display_t *display)
 	igt_plane_t *plane;
 
 	for_each_connected_output(display, output)
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 
 	for_each_pipe(display, pipe)
 		for_each_plane_on_pipe(display, pipe, plane)

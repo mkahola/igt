@@ -92,7 +92,8 @@ static void test_init(data_t *data)
 	data->pipe_crc = igt_pipe_crc_new(data->drm_fd, data->pipe_id,
 					  AMDGPU_PIPE_CRC_SOURCE_DPRX);
 
-	igt_output_set_pipe(data->output, data->pipe_id);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe_id));
 
 	data->width = data->mode->hdisplay;
 	data->height = data->mode->vdisplay;

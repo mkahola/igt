@@ -1169,7 +1169,8 @@ static bool find_connector(bool edp_only, bool pipe_a,
 			continue;
 
 		if (output == forbidden_output || pipe == forbidden_pipe) {
-			igt_output_set_pipe(output, pipe);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, pipe));
 			igt_output_override_mode(output, connector_get_mode(output));
 
 			continue;
@@ -1178,7 +1179,8 @@ static bool find_connector(bool edp_only, bool pipe_a,
 		if (c->connector_type == DRM_MODE_CONNECTOR_eDP && opt.no_edp)
 			continue;
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		igt_output_override_mode(output, connector_get_mode(output));
 		if (intel_pipe_output_combo_valid(&drm.display)) {
 			*ret_output = output;
@@ -1480,7 +1482,8 @@ static void __set_prim_plane_for_params(struct modeset_params *params)
 static void __set_mode_for_params(struct modeset_params *params)
 {
 	igt_output_override_mode(params->output, &params->mode);
-	igt_output_set_pipe(params->output, params->pipe);
+	igt_output_set_crtc(params->output,
+			    igt_crtc_for_pipe(params->output->display, params->pipe));
 
 	__set_prim_plane_for_params(params);
 }
@@ -1939,7 +1942,8 @@ static void init_blue_crc(enum pixel_format format, enum tiling_type tiling)
 
 	fill_fb(&blue, COLOR_PRIM_BG);
 
-	igt_output_set_pipe(prim_mode_params.output, prim_mode_params.pipe);
+	igt_output_set_crtc(prim_mode_params.output,
+			    igt_crtc_for_pipe(prim_mode_params.output->display, prim_mode_params.pipe));
 	igt_output_override_mode(prim_mode_params.output, &prim_mode_params.mode);
 	igt_plane_set_fb(prim_mode_params.primary.plane, &blue);
 	igt_display_commit(&drm.display);
@@ -1994,7 +1998,8 @@ static void init_crcs(enum pixel_format format, enum tiling_type tiling,
 					 IGT_DRAW_PWRITE : IGT_DRAW_BLT, r);
 	}
 
-	igt_output_set_pipe(prim_mode_params.output, prim_mode_params.pipe);
+	igt_output_set_crtc(prim_mode_params.output,
+			    igt_crtc_for_pipe(prim_mode_params.output->display, prim_mode_params.pipe));
 	igt_output_override_mode(prim_mode_params.output, &prim_mode_params.mode);
 	for (r = 0; r < pattern->n_rects; r++) {
 		igt_plane_set_fb(prim_mode_params.primary.plane, &tmp_fbs[r]);
@@ -2400,8 +2405,10 @@ static void update_modeset_cached_params(enum igt_draw_method method)
 {
 	bool found = false;
 
-	igt_output_set_pipe(prim_mode_params.output, prim_mode_params.pipe);
-	igt_output_set_pipe(scnd_mode_params.output, scnd_mode_params.pipe);
+	igt_output_set_crtc(prim_mode_params.output,
+			    igt_crtc_for_pipe(prim_mode_params.output->display, prim_mode_params.pipe));
+	igt_output_set_crtc(scnd_mode_params.output,
+			    igt_crtc_for_pipe(scnd_mode_params.output->display, scnd_mode_params.pipe));
 
 	found = igt_override_all_active_output_modes_to_fit_bw(&drm.display);
 	igt_require_f(found, "No valid mode combo found.\n");
@@ -2724,7 +2731,8 @@ static void plane_fbc_rte_subtest(const struct test_mode *t)
 	do_assertions(ASSERT_FBC_DISABLED | DONT_ASSERT_CRC);
 
 	igt_output_override_mode(prim_mode_params.output, &prim_mode_params.mode);
-	igt_output_set_pipe(prim_mode_params.output, prim_mode_params.pipe);
+	igt_output_set_crtc(prim_mode_params.output,
+			    igt_crtc_for_pipe(prim_mode_params.output->display, prim_mode_params.pipe));
 
 	wanted_crc = &blue_crcs[t->format].crc;
 

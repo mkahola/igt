@@ -120,7 +120,7 @@ static void test_init(data_t *data, enum pipe pipe, int n_planes)
 static void test_fini(data_t *data, igt_output_t *output, int n_planes)
 {
 	/* reset the constraint on the pipe */
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	igt_pipe_crc_free(data->pipe_crc1);
 	data->pipe_crc1 = NULL;
@@ -143,7 +143,7 @@ get_reference_crc(data_t *data, igt_output_t *output, enum pipe pipe, igt_pipe_c
 	int ret;
 
 	igt_display_reset(&data->display);
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	plane[primary->index] = primary;
@@ -212,7 +212,8 @@ prepare_planes(data_t *data, enum pipe pipe_id, color_t *color, igt_plane_t **pl
 	int i;
 	int* suffle;
 
-	igt_output_set_pipe(output, pipe_id);
+	igt_output_set_crtc(output,
+			    igt_crtc_for_pipe(output->display, pipe_id));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	pipe = primary->pipe;
 
@@ -357,7 +358,7 @@ test_plane_position_with_output(data_t *data, enum pipe pipe,
 		for_each_plane_on_pipe(&data->display, pipe, plane)
 			igt_plane_set_fb(plane, NULL);
 
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 		igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 		for (int x = 0; x < c; x++)
@@ -387,7 +388,7 @@ test_plane_position_with_output(data_t *data, enum pipe pipe,
 		for_each_plane_on_pipe(&data->display, pipe, plane)
 			igt_plane_set_fb(plane, NULL);
 
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 		igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 		for (int x = 0; x < c; x++)
@@ -527,8 +528,10 @@ static void run_2_display_test(data_t *data, uint64_t modifier, const char *name
 
 					igt_display_reset(display);
 
-					igt_output_set_pipe(output1, pipe1);
-					igt_output_set_pipe(output2, pipe2);
+					igt_output_set_crtc(output1,
+							    igt_crtc_for_pipe(output1->display, pipe1));
+					igt_output_set_crtc(output2,
+							    igt_crtc_for_pipe(output2->display, pipe2));
 
 					if (!intel_pipe_output_combo_valid(display))
 						continue;
@@ -559,7 +562,8 @@ static void run_test(data_t *data, uint64_t modifier, const char *name)
 	for_each_pipe_with_valid_output(display, pipe, output) {
 		igt_display_reset(display);
 
-		igt_output_set_pipe(output, pipe);
+		igt_output_set_crtc(output,
+				    igt_crtc_for_pipe(output->display, pipe));
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 

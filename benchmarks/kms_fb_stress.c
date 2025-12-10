@@ -166,7 +166,8 @@ int igt_simple_main()
 		igt_debug("Selecting pipe %s to %s\n",
 			  kmstest_pipe_name(pipe),
 			  igt_output_name(data.wb_output));
-		igt_output_set_pipe(data.wb_output, pipe);
+		igt_output_set_crtc(data.wb_output,
+				    igt_crtc_for_pipe(data.wb_output->display, pipe));
 		break;
 	}
 

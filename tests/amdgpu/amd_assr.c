@@ -171,7 +171,8 @@ static void present_visual_pattern(data_t *data, igt_output_t *output)
 	pipe = igt_crtc_for_pipe(&data->display, PIPE_A);
 	primary =
 		igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
-	igt_output_set_pipe(output, PIPE_A);
+	igt_output_set_crtc(output,
+			    pipe);
 
 	igt_create_fb(data->fd, mode->hdisplay, mode->vdisplay,
 			DRM_FORMAT_XRGB8888, 0, &fb);
@@ -188,7 +189,7 @@ static void present_visual_pattern(data_t *data, igt_output_t *output)
 
 	igt_plane_set_fb(primary, NULL);
 	igt_remove_fb(data->fd, &fb);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
 

@@ -84,7 +84,7 @@ static bool test_pipe_degamma(data_t *data,
 
 	degamma_full = generate_table_max(data->degamma_lut_size);
 
-	igt_output_set_pipe(output, primary->pipe->pipe);
+	igt_output_set_crtc(output, primary->pipe);
 
 	/* Create a framebuffer at the size of the output. */
 	fb_id = igt_create_fb(data->drm_fd,
@@ -140,7 +140,7 @@ static bool test_pipe_degamma(data_t *data,
 
 	disable_degamma(primary->pipe);
 	igt_plane_set_fb(primary, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit(&data->display);
 	free_lut(degamma_full);
 
@@ -173,7 +173,7 @@ static bool test_pipe_gamma(data_t *data,
 
 	gamma_full = generate_table_max(data->gamma_lut_size);
 
-	igt_output_set_pipe(output, primary->pipe->pipe);
+	igt_output_set_crtc(output, primary->pipe);
 
 	/* Create a framebuffer at the size of the output. */
 	fb_id = igt_create_fb(data->drm_fd,
@@ -229,7 +229,7 @@ static bool test_pipe_gamma(data_t *data,
 
 	disable_gamma(primary->pipe);
 	igt_plane_set_fb(primary, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit(&data->display);
 	free_lut(gamma_full);
 
@@ -260,7 +260,7 @@ static bool test_pipe_ctm(data_t *data,
 	degamma_linear = generate_table(data->degamma_lut_size, 1.0);
 	gamma_linear = generate_table(data->gamma_lut_size, 1.0);
 
-	igt_output_set_pipe(output, primary->pipe->pipe);
+	igt_output_set_crtc(output, primary->pipe);
 
 	/* Create a framebuffer at the size of the output. */
 	fb_id = igt_create_fb(data->drm_fd,
@@ -324,7 +324,7 @@ static bool test_pipe_ctm(data_t *data,
 	igt_plane_set_fb(primary, NULL);
 	disable_degamma(primary->pipe);
 	disable_gamma(primary->pipe);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit(&data->display);
 	free_lut(degamma_linear);
 	free_lut(gamma_linear);
@@ -363,7 +363,7 @@ static bool test_pipe_limited_range_ctm(data_t *data,
 	degamma_linear = generate_table(data->degamma_lut_size, 1.0);
 	gamma_linear = generate_table(data->gamma_lut_size, 1.0);
 
-	igt_output_set_pipe(output, primary->pipe->pipe);
+	igt_output_set_crtc(output, primary->pipe);
 
 	/* Create a framebuffer at the size of the output. */
 	fb_id0 = igt_create_fb(data->drm_fd,
@@ -415,7 +415,7 @@ static bool test_pipe_limited_range_ctm(data_t *data,
 				  IGT_CONNECTOR_BROADCAST_RGB,
 				  BROADCAST_RGB_FULL);
 	igt_plane_set_fb(primary, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	/* Verify frame dumps are equal. */
 	ret = chamelium_frame_match_or_dump_frame_pair(data->chamelium, port,

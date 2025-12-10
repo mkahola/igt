@@ -2991,7 +2991,7 @@ void igt_display_reset_outputs(igt_display_t *display)
 
 		/*
 		 * We don't assign each output a pipe unless
-		 * a pipe is set with igt_output_set_pipe().
+		 * a CRTC is set with igt_output_set_crtc().
 		 */
 		output->pending_pipe = PIPE_NONE;
 		output->id = resources->connectors[i];
@@ -3412,7 +3412,7 @@ void igt_modeset_disable_all_outputs(igt_display_t *display)
 	for (i = 0; i < display->n_outputs; i++) {
 		igt_output_t *output = &display->outputs[i];
 
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 	}
 
 	igt_display_commit2(display, COMMIT_ATOMIC);
@@ -5303,7 +5303,7 @@ void igt_output_set_crtc(igt_output_t *output, igt_pipe_t *pipe_obj)
 	if (output->pending_pipe != PIPE_NONE)
 		old_pipe = igt_output_get_driving_pipe(output);
 
-	LOG(display, "%s: set_pipe(%s)\n", igt_output_name(output),
+	LOG(display, "%s: set_crtc(%s)\n", igt_output_name(output),
 	    igt_crtc_name(pipe_obj));
 	output->pending_pipe = pipe_obj ? pipe_obj->pipe : PIPE_NONE;
 
@@ -5334,20 +5334,6 @@ void igt_output_set_crtc(igt_output_t *output, igt_pipe_t *pipe_obj)
 
 		igt_pipe_obj_set_prop_value(pipe_obj, IGT_CRTC_ACTIVE, 1);
 	}
-}
-
-/**
- * igt_output_set_pipe:
- * @output: Target output for which the pipe is being set to
- * @pipe_obj: Display pipe to set to
- *
- * This function sets a @pipe to a specific @output connector by
- * setting the CRTC_ID property of the @pipe. The pipe
- * is only activated for all pipes except PIPE_NONE.
- */
-void igt_output_set_pipe(igt_output_t *output, enum pipe pipe)
-{
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 }
 
 static
@@ -7152,7 +7138,7 @@ bool igt_check_bigjoiner_support(igt_display_t *display)
 		total_pipes++;
 
 	/*
-	 * Get list of pipes in use those were set by igt_output_set_pipe()
+	 * Get list of CRTCs in use those were set by igt_output_set_crtc()
 	 * just before calling this function.
 	 */
 	for_each_connected_output(display, output) {
@@ -7276,7 +7262,7 @@ bool igt_parse_mode_string(const char *mode_string, drmModeModeInfo *mode)
  * intel_pipe_output_combo_valid:
  * @display: a pointer to an #igt_display_t structure
  *
- * Every individual test must use igt_output_set_pipe() before calling this
+ * Every individual test must use igt_output_set_crtc() before calling this
  * helper, so that this function will get all active pipes from connected
  * outputs (i.e. pending_pipe != PIPE_NONE) and check the selected combo is
  * valid or not.
@@ -7913,7 +7899,7 @@ void igt_detach_crtc(igt_display_t *display, igt_output_t *output)
 	if (igt_get_writeback_fb_id(output) == 0)
 		return;
 
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, COMMIT_ATOMIC);
 }
 

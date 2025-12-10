@@ -85,7 +85,7 @@ static int block_plane(igt_display_t *display, igt_output_t *output, enum plane_
 		signal(SIGCONT, SIG_IGN);
 
 		if (test_type == test_legacy_modeset || test_type == test_atomic_modeset) {
-			igt_output_set_pipe(output, PIPE_NONE);
+			igt_output_set_crtc(output, NULL);
 		}
 		igt_plane_set_fence_fd(plane, sw_sync_timeline_create_fence(timeline, 1));
 
@@ -130,7 +130,7 @@ static void run_plane_test(igt_display_t *display, enum pipe pipe, igt_output_t 
 	igt_display_reset(display);
 	igt_display_commit2(display, COMMIT_ATOMIC);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	plane = igt_output_get_plane_type(output, plane_type);
@@ -301,7 +301,7 @@ static void run_plane_test(igt_display_t *display, enum pipe pipe, igt_output_t 
 
 	igt_plane_set_fb(plane, NULL);
 	igt_plane_set_fb(primary, NULL);
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, COMMIT_ATOMIC);
 	igt_remove_fb(display->drm_fd, &fb);
 }
@@ -313,10 +313,10 @@ static bool pipe_output_combo_valid(igt_display_t *display,
 
 	igt_display_reset(display);
 
-	igt_output_set_pipe(output, pipe);
+	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 	if (!intel_pipe_output_combo_valid(display))
 		ret = false;
-	igt_output_set_pipe(output, PIPE_NONE);
+	igt_output_set_crtc(output, NULL);
 
 	return ret;
 }

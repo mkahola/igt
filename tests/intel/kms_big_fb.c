@@ -536,7 +536,8 @@ static bool test_pipe(data_t *data)
 	igt_create_fb(data->drm_fd, width, height,
 		      data->format, data->modifier, &data->small_fb);
 
-	igt_output_set_pipe(data->output, data->pipe);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe));
 
 	primary = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, NULL);
@@ -595,7 +596,8 @@ max_hw_stride_async_flip_test(data_t *data)
 	igt_info("Using (pipe %s + %s) to run the subtest.\n",
 		 kmstest_pipe_name(data->pipe), igt_output_name(data->output));
 
-	igt_output_set_pipe(data->output, data->pipe);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe));
 
 	primary = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
 
@@ -708,7 +710,8 @@ static void test_scanout(data_t *data)
 	for_each_pipe_with_valid_output(&data->display, data->pipe, data->output) {
 		igt_display_reset(&data->display);
 
-		igt_output_set_pipe(data->output, data->pipe);
+		igt_output_set_crtc(data->output,
+				    igt_crtc_for_pipe(data->output->display, data->pipe));
 		if (!intel_pipe_output_combo_valid(&data->display))
 			continue;
 
@@ -905,7 +908,7 @@ static void test_cleanup(data_t *data)
 		return;
 
 	igt_pipe_crc_free(data->pipe_crc);
-	igt_output_set_pipe(data->output, PIPE_NONE);
+	igt_output_set_crtc(data->output, NULL);
 	igt_remove_fb(data->drm_fd, &data->big_fb);
 	igt_remove_fb(data->drm_fd, &data->big_fb_flip[0]);
 	igt_remove_fb(data->drm_fd, &data->big_fb_flip[1]);

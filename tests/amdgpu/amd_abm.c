@@ -146,7 +146,8 @@ static void test_init(data_t *data)
 	data->primary =
 		 igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
 
-	igt_output_set_pipe(data->output, data->pipe_id);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe_id));
 
 	data->w = data->mode->hdisplay;
 	data->h = data->mode->vdisplay;
@@ -266,7 +267,8 @@ static void set_abm_level(data_t *data, igt_output_t *output, int level)
 
 	igt_assert_eq(close(fd), 0);
 
-	igt_output_set_pipe(data->output, data->pipe_id);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe_id));
 	igt_plane_set_fb(data->primary, &data->ref_fb);
 	igt_display_commit_atomic(&data->display, 0, 0);
 }

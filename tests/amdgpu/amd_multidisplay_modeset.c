@@ -134,7 +134,7 @@ static void set_all_output_pipe_to_none(struct data_t *data)
 	igt_output_t *output;
 
 	for_each_connected_output(&data->display, output) {
-		igt_output_set_pipe(output, PIPE_NONE);
+		igt_output_set_crtc(output, NULL);
 	}
 
 	igt_display_commit_atomic(&data->display,
@@ -329,7 +329,8 @@ static void multiple_display_test(struct data_t *data, enum sub_test test_mode)
 					kmode->vdisplay, DRM_FORMAT_XRGB8888,
 					0, (buf + j));
 
-			igt_output_set_pipe(output, j);
+			igt_output_set_crtc(output,
+					    igt_crtc_for_pipe(output->display, j));
 			igt_plane_set_fb(data->primary[j], (buf + j));
 			j++;
 		}

@@ -77,7 +77,8 @@ static void test_init(struct data *data)
 		      "ODM Combine isn't supported on HDMI 1.x\n");
 
 	data->primary = igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
-	igt_output_set_pipe(data->output, data->pipe_id);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, data->pipe_id));
 
 	igt_display_reset(display);
 }
@@ -121,7 +122,8 @@ static void run_test_odmc(struct data *data, enum odmc_mode m, const drmModeMode
 			    DRM_FORMAT_MOD_LINEAR, 1.f, 0.f, 0.f,
 			    &buffer);
 
-	igt_output_set_pipe(data->output, i);
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(data->output->display, i));
 
 	igt_plane_set_fb(data->primary, &buffer);
 

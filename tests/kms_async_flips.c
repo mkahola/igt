@@ -302,7 +302,8 @@ static void test_init(data_t *data)
 	data->crtc_id = igt_crtc_for_pipe(&data->display, data->pipe)->crtc_id;
 	data->refresh_rate = mode->vrefresh;
 
-	igt_output_set_pipe(data->output, data->pipe);
+	igt_output_set_crtc(data->output,
+		            igt_crtc_for_pipe(data->output->display, data->pipe));
 
 	data->plane = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
 	if (data->overlay_path)
@@ -915,7 +916,8 @@ static void run_test(data_t *data, void (*test)(data_t *))
 	for_each_pipe_with_valid_output(display, data->pipe, data->output) {
 		igt_display_reset(display);
 
-		igt_output_set_pipe(data->output, data->pipe);
+		igt_output_set_crtc(data->output,
+				    igt_crtc_for_pipe(data->output->display, data->pipe));
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
