@@ -3059,7 +3059,7 @@ static void igt_crtc_init(igt_display_t *display,
 	igt_plane_t *plane;
 	int p = 1, crtc_mask = 0;
 	int j, type;
-	uint8_t last_plane = 0, n_planes = 0;
+	uint8_t last_plane = 0;
 
 	pipe->display = display;
 	pipe->plane_cursor = -1;
@@ -3078,13 +3078,14 @@ static void igt_crtc_init(igt_display_t *display,
 		igt_assert(drm_plane);
 
 		if (drm_plane->possible_crtcs & crtc_mask)
-			n_planes++;
+			pipe->n_planes++;
 	}
 
-	igt_assert_lt(0, n_planes);
-	pipe->planes = calloc(n_planes, sizeof(igt_plane_t));
-	igt_assert_f(pipe->planes, "Failed to allocate memory for %d planes\n", n_planes);
-	last_plane = n_planes - 1;
+	igt_assert_lt(0, pipe->n_planes);
+	pipe->planes = calloc(pipe->n_planes, sizeof(igt_plane_t));
+	igt_assert_f(pipe->planes, "Failed to allocate memory for %d planes\n",
+		     pipe->n_planes);
+	last_plane = pipe->n_planes - 1;
 
 	/* add the planes that can be used with that pipe */
 	for (j = 0; j < display->n_planes; j++) {
@@ -3118,7 +3119,8 @@ static void igt_crtc_init(igt_display_t *display,
 			plane->index = p++;
 		}
 
-		igt_assert_f(plane->index < n_planes, "n_planes < plane->index failed\n");
+		igt_assert_f(plane->index < pipe->n_planes,
+			     "n_planes < plane->index failed\n");
 		plane->type = type;
 		plane->pipe = pipe;
 		plane->drm_plane = drm_plane;
@@ -3147,9 +3149,7 @@ static void igt_crtc_init(igt_display_t *display,
 	if (display->has_cursor_plane)
 		igt_assert_eq(p, last_plane);
 	else
-		igt_assert_eq(p, n_planes);
-
-	pipe->n_planes = n_planes;
+		igt_assert_eq(p, pipe->n_planes);
 }
 
 /**
