@@ -1703,12 +1703,6 @@ void intel_allocator_init(void)
 	__free_maps(vm_map, false);
 	__free_ahnd_map();
 
-	if (!system_supports_sysvipc()) {
-		alloc_debug("System doesn't support SysV IPC\n");
-		channel = NULL;
-		return;
-	}
-
 	atomic_init(&next_handle, 1);
 	handles = igt_map_create(hash_handles, equal_handles);
 	ctx_map = igt_map_create(hash_instance, equal_ctx);
@@ -1716,6 +1710,12 @@ void intel_allocator_init(void)
 	pthread_mutex_init(&ahnd_map_mutex, NULL);
 	ahnd_map = igt_map_create(igt_map_hash_64, igt_map_equal_64);
 	igt_assert(handles && ctx_map && vm_map && ahnd_map);
+
+	if (!system_supports_sysvipc()) {
+		alloc_debug("System doesn't support SysV IPC\n");
+		channel = NULL;
+		return;
+	}
 
 	channel = intel_allocator_get_msgchannel(CHANNEL_SYSVIPC_MSGQUEUE);
 }
