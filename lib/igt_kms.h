@@ -490,7 +490,6 @@ struct igt_crtc {
 	int n_planes;
 	int num_primary_planes;
 	int plane_cursor;
-	int plane_primary;
 	igt_plane_t *planes;
 
 	uint64_t changed;

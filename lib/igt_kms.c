@@ -3022,29 +3022,24 @@ void igt_display_reset_outputs(igt_display_t *display)
 		output = igt_get_single_output_for_pipe(display, i);
 
 		if (pipe->num_primary_planes > 1) {
-			igt_plane_t *primary =
-				&pipe->planes[pipe->plane_primary];
+			igt_plane_t *primary = &pipe->planes[0];
 			igt_plane_t *assigned_primary =
 				igt_get_assigned_primary(output, pipe);
 			int assigned_primary_index = assigned_primary->index;
 
 			/*
 			 * If the driver-assigned primary plane isn't at
-			 * the pipe->plane_primary index, swap it with
-			 * the plane that's currently at the
-			 * plane_primary index and update plane->index
-			 * accordingly.
+			 * index 0, swap it with the plane that's currently
+			 * at index 0 and update the indexes accordingly.
 			 *
-			 * This way, we can preserve pipe->plane_primary
-			 * as 0 so that tests that assume
-			 * pipe->plane_primary is always 0 won't break.
+			 * This way, the primary plane is always at index 0.
 			 */
-			if (assigned_primary_index != pipe->plane_primary) {
-				assigned_primary->index = pipe->plane_primary;
+			if (assigned_primary_index != 0) {
+				assigned_primary->index = 0;
 				primary->index = assigned_primary_index;
 
 				igt_swap(pipe->planes[assigned_primary_index],
-					 pipe->planes[pipe->plane_primary]);
+					 pipe->planes[0]);
 			}
 		}
 	}
@@ -3062,10 +3057,9 @@ static void igt_crtc_plane_init(igt_display_t *display,
 	igt_plane_t *plane;
 	int index;
 
-	if (type == DRM_PLANE_TYPE_PRIMARY && pipe->plane_primary == -1) {
+	if (type == DRM_PLANE_TYPE_PRIMARY && pipe->planes[0].index < 0) {
 		index = 0;
 
-		pipe->plane_primary = index;
 		pipe->num_primary_planes++;
 	} else if (type == DRM_PLANE_TYPE_CURSOR && pipe->plane_cursor == -1) {
 		index = pipe->n_planes - 1;
@@ -3120,7 +3114,6 @@ static void igt_crtc_init(igt_display_t *display,
 
 	pipe->display = display;
 	pipe->plane_cursor = -1;
-	pipe->plane_primary = -1;
 	pipe->planes = NULL;
 	pipe->num_primary_planes = 0;
 
@@ -3156,12 +3149,6 @@ static void igt_crtc_init(igt_display_t *display,
 
 		igt_crtc_plane_init(display, pipe, resources, global_plane);
 	}
-
-	/*
-	 * At the bare minimum, we should expect to have a primary
-	 * plane, and it must be in slot 0.
-	 */
-	igt_assert_eq(pipe->plane_primary, 0);
 
 	for (j = 0; j < pipe->n_planes; j++)
 		igt_assert_lte(0, pipe->planes[j].index);
@@ -3583,7 +3570,7 @@ igt_plane_t *igt_pipe_get_plane_type(igt_crtc_t *pipe, int plane_type)
 		plane_idx = pipe->plane_cursor;
 		break;
 	case DRM_PLANE_TYPE_PRIMARY:
-		plane_idx = pipe->plane_primary;
+		plane_idx = 0;
 		break;
 	case DRM_PLANE_TYPE_OVERLAY:
 		for(i = 0; i < pipe->n_planes; i++)
