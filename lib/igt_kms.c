@@ -3061,10 +3061,9 @@ static void igt_crtc_plane_init(igt_display_t *display,
 		index = 0;
 
 		pipe->num_primary_planes++;
-	} else if (type == DRM_PLANE_TYPE_CURSOR && pipe->plane_cursor == -1) {
+	} else if (type == DRM_PLANE_TYPE_CURSOR && pipe->planes[pipe->n_planes - 1].index < 0) {
 		index = pipe->n_planes - 1;
 
-		pipe->plane_cursor = index;
 		display->has_cursor_plane = true;
 	} else {
 		for (index = 1; index < pipe->n_planes; index++) {
@@ -3113,7 +3112,6 @@ static void igt_crtc_init(igt_display_t *display,
 	int j;
 
 	pipe->display = display;
-	pipe->plane_cursor = -1;
 	pipe->planes = NULL;
 	pipe->num_primary_planes = 0;
 
@@ -3567,7 +3565,7 @@ igt_plane_t *igt_pipe_get_plane_type(igt_crtc_t *pipe, int plane_type)
 
 	switch(plane_type) {
 	case DRM_PLANE_TYPE_CURSOR:
-		plane_idx = pipe->plane_cursor;
+		plane_idx = pipe->n_planes - 1;
 		break;
 	case DRM_PLANE_TYPE_PRIMARY:
 		plane_idx = 0;
