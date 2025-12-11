@@ -3075,24 +3075,26 @@ static void igt_crtc_plane_init(igt_display_t *display,
 	drmModePlane *drm_plane = global_plane->drm_plane;
 	int type = global_plane->type;
 	igt_plane_t *plane;
-	int index = plane_type_index(pipe, type);
+	int index;
 
-	if (type == DRM_PLANE_TYPE_PRIMARY && pipe->planes[index].index < 0) {
+	switch (type) {
+	case DRM_PLANE_TYPE_PRIMARY:
 		pipe->num_primary_planes++;
-	} else if (type == DRM_PLANE_TYPE_CURSOR && pipe->planes[index].index < 0) {
+		break;
+	case DRM_PLANE_TYPE_CURSOR:
 		display->has_cursor_plane = true;
-	} else {
+		break;
+	default:
+		break;
+	}
+
+	index = plane_type_index(pipe, type);
+
+	if (index < 0 || pipe->planes[index].index >= 0) {
 		for (index = 1; index < pipe->n_planes; index++) {
 			if (pipe->planes[index].index < 0)
 				break;
 		}
-
-		/*
-		 * Increment num_primary_planes for any extra
-		 * primary plane found.
-		 */
-		if (type == DRM_PLANE_TYPE_PRIMARY)
-			pipe->num_primary_planes++;
 	}
 
 	igt_assert_lt(index, pipe->n_planes);
@@ -3577,20 +3579,13 @@ static igt_plane_t *igt_pipe_get_plane(igt_crtc_t *pipe, int plane_idx)
  */
 igt_plane_t *igt_pipe_get_plane_type(igt_crtc_t *pipe, int plane_type)
 {
-	int i, plane_idx = -1;
+	int plane_idx = plane_type_index(pipe, plane_type);
 
-	switch(plane_type) {
-	case DRM_PLANE_TYPE_CURSOR:
-	case DRM_PLANE_TYPE_PRIMARY:
-		plane_idx = plane_type_index(pipe, plane_type);
-		break;
-	case DRM_PLANE_TYPE_OVERLAY:
-		for(i = 0; i < pipe->n_planes; i++)
-			if (pipe->planes[i].type == DRM_PLANE_TYPE_OVERLAY)
-			    plane_idx = i;
-		break;
-	default:
-		break;
+	if (plane_idx < 0) {
+		for (plane_idx = 0; plane_idx < pipe->n_planes; plane_idx++) {
+			if (pipe->planes[plane_idx].type == plane_type)
+				break;
+		}
 	}
 
 	igt_require_f(plane_idx >= 0 && plane_idx < pipe->n_planes,
