@@ -3022,10 +3022,10 @@ void igt_display_reset_outputs(igt_display_t *display)
 		output = igt_get_single_output_for_pipe(display, i);
 
 		if (pipe->num_primary_planes > 1) {
-			igt_plane_t *primary = &pipe->planes[0];
-			igt_plane_t *assigned_primary =
+			igt_plane_t *old_primary = &pipe->planes[0];
+			igt_plane_t *new_primary =
 				igt_get_assigned_primary(output, pipe);
-			int assigned_primary_index = assigned_primary->index;
+			int new_primary_index = new_primary->index;
 
 			/*
 			 * If the driver-assigned primary plane isn't at
@@ -3034,11 +3034,11 @@ void igt_display_reset_outputs(igt_display_t *display)
 			 *
 			 * This way, the primary plane is always at index 0.
 			 */
-			if (assigned_primary_index != 0) {
-				assigned_primary->index = 0;
-				primary->index = assigned_primary_index;
+			if (new_primary_index != 0) {
+				new_primary->index = 0;
+				old_primary->index = new_primary_index;
 
-				igt_swap(pipe->planes[assigned_primary_index],
+				igt_swap(pipe->planes[new_primary_index],
 					 pipe->planes[0]);
 			}
 		}
