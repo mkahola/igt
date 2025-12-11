@@ -354,6 +354,31 @@ static char *__igt_sriov_get_vf_pci_slot_alloc(int pf_sysfs, unsigned int vf_num
 	return pci_slot_addr ? strdup(pci_slot_addr) : NULL;
 }
 
+/**
+ * igt_sriov_get_vf_pci_slot_alloc:
+ * @pf: PF device file descriptor
+ * @vf_num: VF number (1-based); 0 means PF
+ *
+ * Resolves the symlink under the PF sysfs directory (device/virtfnX) to obtain
+ * the PCI slot address of the VF (or PF if @vf_num is 0).
+ *
+ * Returns: newly allocated PCI slot address string (e.g. "0000:3b:00.4"),
+ * or NULL on failure. Caller must free().
+ */
+char *igt_sriov_get_vf_pci_slot_alloc(int pf, unsigned int vf_num)
+{
+	char *pci_slot;
+	int sysfs;
+
+	sysfs = igt_sysfs_open(pf);
+	igt_assert_fd(sysfs);
+
+	pci_slot = __igt_sriov_get_vf_pci_slot_alloc(sysfs, vf_num);
+	close(sysfs);
+
+	return pci_slot;
+}
+
 static bool __igt_sriov_bind_vf_drm_driver(int pf, unsigned int vf_num, bool bind)
 {
 	char *pci_slot;
