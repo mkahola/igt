@@ -3059,7 +3059,6 @@ static void igt_crtc_init(igt_display_t *display,
 	igt_plane_t *plane;
 	int p = 1, crtc_mask = 0;
 	int j, type;
-	uint8_t last_plane = 0;
 
 	pipe->display = display;
 	pipe->plane_cursor = -1;
@@ -3085,7 +3084,6 @@ static void igt_crtc_init(igt_display_t *display,
 	pipe->planes = calloc(pipe->n_planes, sizeof(igt_plane_t));
 	igt_assert_f(pipe->planes, "Failed to allocate memory for %d planes\n",
 		     pipe->n_planes);
-	last_plane = pipe->n_planes - 1;
 
 	/* add the planes that can be used with that pipe */
 	for (j = 0; j < display->n_planes; j++) {
@@ -3103,9 +3101,9 @@ static void igt_crtc_init(igt_display_t *display,
 			pipe->plane_primary = 0;
 			pipe->num_primary_planes++;
 		} else if (type == DRM_PLANE_TYPE_CURSOR && pipe->plane_cursor == -1) {
-			plane = &pipe->planes[last_plane];
-			plane->index = last_plane;
-			pipe->plane_cursor = last_plane;
+			plane = &pipe->planes[pipe->n_planes - 1];
+			plane->index = pipe->n_planes - 1;
+			pipe->plane_cursor = pipe->n_planes - 1;
 			display->has_cursor_plane = true;
 		} else {
 			/*
@@ -3147,7 +3145,7 @@ static void igt_crtc_init(igt_display_t *display,
 
 	/* Check that we filled every slot exactly once */
 	if (display->has_cursor_plane)
-		igt_assert_eq(p, last_plane);
+		igt_assert_eq(p, pipe->n_planes - 1);
 	else
 		igt_assert_eq(p, pipe->n_planes);
 }
