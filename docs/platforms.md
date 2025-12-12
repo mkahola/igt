@@ -2,9 +2,9 @@
 
 ## :material-chip: Hardware
 
-**IGT GPU Tools** is designed to validate few DRM drivers across a variety of Intel
-and non-Intel platforms. While virtual environments help with development, real hardware
-is recommended for full test coverage, performance metrics, and regression tracking.
+**IGT GPU Tools** is designed to validate few DRM drivers across a variety of platforms.
+While virtual environments help with development, real hardware is recommended for full
+test coverage, performance metrics, and regression tracking.
 
 ### :material-lightbulb-outline: General Guidelines
 
@@ -12,7 +12,21 @@ is recommended for full test coverage, performance metrics, and regression track
 - Prefer **dedicated test systems** for kernel and firmware flexibility.
 - Ensure **reliable cooling** to avoid throttling during performance tests.
 
-### Intel
+### Supported GPUs
+
+Support exists for the following platforms:
+
+- Intel (i915 and xe)
+- AMD (amdgpu)
+- NVIDIA (nouveau)
+- Broadcom (v3d and vc4)
+- Qualcomm (msm)
+- Arm (Panfrost)
+- Panthor
+- Virtual GPUs (e.g., virtio_gpu in QEMU/KVM/AVD or vmwgfx)
+- Virtual display (vkms)
+
+#### Intel
 
 | GPU Generation | Example Platform / CPU      | Notes                                        |
 |-||-|
@@ -25,14 +39,6 @@ is recommended for full test coverage, performance metrics, and regression track
 :material-information-outline: *Older GPUs (Gen7/Gen8) are still useful for regression
 testing but may not support new test features.*
 
-### Non-Intel GPU Support
-
-Although IGT is Intel-focused, basic support exists for other platforms:
-
-- **AMD (AMDGPU):** Some display and KMS tests run; feature support may vary.
-- **NVIDIA (nouveau):** Partial functionality; manual testing encouraged.
-- **VirtIO-GPU / QEMU / GVT-g:** Useful for automation and limited pipeline testing.
-- **ARM SoCs (e.g., Mali, Vivante):** Experimental – not all tests apply.
 
 :material-account-group-outline: Community contributions are welcome to expand non-Intel
 support!
@@ -48,14 +54,14 @@ IGT supports two major Intel GPU drivers in the kernel:
 Here are some basic information, for more please visit an official
 [Intel Graphics for Linux - Documentation](https://drm.pages.freedesktop.org/intel-docs/)
 
-#### :material-chip: `i915` Driver
+##### :material-chip: `i915` Driver
 
 - Supports older Intel platforms (Gen9–Gen12).
 - Mature, well-tested, and fully integrated into kernel and userspace stacks.
 - Tests targeting `i915` must include proper documentation (using `igt_describe`) and
   follow test plan validation rules.
 
-#### :material-flash: `Xe` Driver
+##### :material-flash: `Xe` Driver
 
 - Next-generation Intel GPU driver for **DG2 (Arc)** and newer architectures.
 - Designed to replace `i915` for future platforms.
