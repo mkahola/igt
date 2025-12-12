@@ -84,7 +84,7 @@ typedef struct data {
 	igt_fb_t cfb;
 	enum pipe pipe_id;
 	int drm_fd;
-	rect_t or;
+	rect_t rect;
 	uint64_t max_curw;
 	uint64_t max_curh;
 } data_t;
@@ -112,10 +112,10 @@ static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	/* Overlay rectangle for a rect in the center of the screen */
-	data->or.x = data->mode->hdisplay / 4;
-	data->or.y = data->mode->vdisplay / 4;
-	data->or.w = data->mode->hdisplay / 2;
-	data->or.h = data->mode->vdisplay / 2;
+	data->rect.x = data->mode->hdisplay / 4;
+	data->rect.y = data->mode->vdisplay / 4;
+	data->rect.w = data->mode->hdisplay / 2;
+	data->rect.h = data->mode->vdisplay / 2;
 }
 
 /* Common test cleanup. */
@@ -149,13 +149,13 @@ static void test_cursor_pos(data_t *data, int x, int y, unsigned int flags)
 	igt_fb_t *cfb = &data->cfb;
 	int cw = cfb->width;
 	int ch = cfb->height;
-	const rect_t *or = &data->or;
+	const rect_t *rect = &data->rect;
 
 	cr = igt_get_cairo_ctx(ref_fb->fd, ref_fb);
 	igt_paint_color(cr, 0, 0, ref_fb->width, ref_fb->height, 1.0, 1.0, 1.0);
 
 	if (flags & TEST_OVERLAY)
-		igt_paint_color(cr, or->x, or->y, or->w, or->h, 0.5, 0.5, 0.5);
+		igt_paint_color(cr, rect->x, rect->y, rect->w, rect->h, 0.5, 0.5, 0.5);
 
 	igt_paint_color(cr, x, y, cw, ch, 1.0, 0.0, 1.0);
 	igt_put_cairo_ctx(cr);
@@ -173,12 +173,12 @@ static void test_cursor_pos(data_t *data, int x, int y, unsigned int flags)
 
 	if (flags & TEST_OVERLAY) {
 		igt_plane_set_fb(data->overlay, ofb);
-		igt_plane_set_position(data->overlay, or->x, or->y);
-		igt_plane_set_size(data->overlay, or->w, or->h);
-		igt_fb_set_size(ofb, data->overlay, or->w, or->h);
+		igt_plane_set_position(data->overlay, rect->x, rect->y);
+		igt_plane_set_size(data->overlay, rect->w, rect->h);
+		igt_fb_set_size(ofb, data->overlay, rect->w, rect->h);
 		igt_fb_set_position(ofb, data->overlay,
-				    (ofb->width - or->w) / 2,
-				    (ofb->height - or->h) / 2);
+				    (ofb->width - rect->w) / 2,
+				    (ofb->height - rect->h) / 2);
 	}
 
 	igt_plane_set_fb(data->cursor, cfb);
@@ -206,27 +206,27 @@ static void test_cursor_spots(data_t *data, int size, unsigned int flags)
 {
 	int sw = data->mode->hdisplay;
 	int sh = data->mode->vdisplay;
-	const rect_t *or = &data->or;
+	const rect_t *rect = &data->rect;
 	int i;
 	const pos_t pos[] = {
 		/* Test diagonally from top left to bottom right. */
 		{ -size / 3, -size / 3 },
 		{ 0, 0 },
-		{ or->x - size, or->y - size },
-		{ or->x - size / 3, or->y - size / 3 },
-		{ or->x, or->y },
-		{ or->x + size, or->y + size },
+		{ rect->x - size, rect->y - size },
+		{ rect->x - size / 3, rect->y - size / 3 },
+		{ rect->x, rect->y },
+		{ rect->x + size, rect->y + size },
 		{ sw / 2, sh / 2 },
-		{ or->x + or->w - size, or->y + or->h - size },
-		{ or->x + or->w - size / 3, or->y + or->h - size / 3 },
-		{ or->x + or->w + size, or->y + or->h + size },
+		{ rect->x + rect->w - size, rect->y + rect->h - size },
+		{ rect->x + rect->w - size / 3, rect->y + rect->h - size / 3 },
+		{ rect->x + rect->w + size, rect->y + rect->h + size },
 		{ sw - size, sh - size },
 		{ sw - size / 3, sh - size / 3 },
 		/* Test remaining corners. */
 		{ sw - size, 0 },
 		{ 0, sh - size },
-		{ or->x + or->w - size, or->y },
-		{ or->x, or->y + or->h - size }
+		{ rect->x + rect->w - size, rect->y },
+		{ rect->x, rect->y + rect->h - size }
 	};
 
 	for (i = 0; i < ARRAY_SIZE(pos); ++i) {
@@ -265,8 +265,8 @@ static void test_cursor(data_t *data, int size, unsigned int flags)
 			    DRM_FORMAT_MOD_LINEAR, 1.0, 1.0, 1.0, &data->pfb);
 
 	if (flags & TEST_OVERLAY) {
-		int width = (flags & TEST_VIEWPORT) ? data->or.w + pad : data->or.w;
-		int height = (flags & TEST_VIEWPORT) ? data->or.h + pad : data->or.h;
+		int width = (flags & TEST_VIEWPORT) ? data->rect.w + pad : data->rect.w;
+		int height = (flags & TEST_VIEWPORT) ? data->rect.h + pad : data->rect.h;
 
 		igt_create_color_fb(data->drm_fd, width, height, DRM_FORMAT_XRGB8888,
 				    DRM_FORMAT_MOD_LINEAR, 0.5, 0.5, 0.5, &data->ofb);
