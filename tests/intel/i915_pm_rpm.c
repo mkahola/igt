@@ -356,7 +356,7 @@ static bool init_modeset_params_for_type(struct mode_set_data *data,
 	igt_output_t *output = NULL;
 	igt_display_t *display = &data->display;
 
-	if (!data->res || !display)
+	if (!data->res)
 		return false;
 
 	for_each_connected_output(display, output) {
