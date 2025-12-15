@@ -33,6 +33,10 @@
  * Feature: core
  * Test category: GEM_Legacy
  *
+ * SUBTEST: fault-injection
+ * Description: Verify that i915 driver can be successfully bound and unbound with fault injection.
+ * Functionality: fault
+ *
  * SUBTEST: load
  * Description: Check if i915 and friends are not yet loaded, then load them.
  *
@@ -68,6 +72,7 @@
 #include "igt_kmod.h"
 #include "igt_sysfs.h"
 #include "igt_core.h"
+#include "igt_device.h"
 
 #define BAR_SIZE_SHIFT 20
 #define MIN_BAR_SIZE 256
@@ -361,6 +366,285 @@ static uint32_t  driver_load_with_lmem_bar_size(uint32_t lmem_bar_size, bool che
 	return lmem_bar_size;
 }
 
+struct fault_injection_params {
+	/* @probability: Likelihood of failure injection, in percent. */
+	uint32_t probability;
+	/* @interval: Specifies the interval between failures */
+	uint32_t interval;
+	/* @times: Specifies how many times failures may happen at most */
+	int32_t times;
+	/*
+	 * @space: Specifies how many times fault injection is suppressed before
+	 * first injection
+	 */
+	uint32_t space;
+};
+
+static int fail_function_open(void)
+{
+	int debugfs_fail_function_dir_fd;
+	const char *debugfs_root;
+	char path[96];
+
+	debugfs_root = igt_debugfs_mount();
+	igt_assert(debugfs_root);
+
+	sprintf(path, "%s/fail_function", debugfs_root);
+
+	if (access(path, F_OK))
+		return -1;
+
+	debugfs_fail_function_dir_fd = open(path, O_RDONLY);
+	igt_debug_on_f(debugfs_fail_function_dir_fd < 0, "path: %s\n", path);
+
+	return debugfs_fail_function_dir_fd;
+}
+
+static void injection_list_add(const char function_name[])
+{
+	int dir;
+
+	dir = fail_function_open();
+
+	igt_assert_lte(0, dir);
+	igt_assert_lte(0, igt_sysfs_printf(dir, "inject", "%s", function_name));
+
+	close(dir);
+}
+
+/*
+ * Default fault injection parameters which injects fault on first call to the
+ * configured fail_function.
+ */
+static const struct fault_injection_params default_fault_params = {
+	.probability = 100,
+	.interval = 0,
+	.times = -1,
+	.space = 0
+};
+
+/*
+ * See https://docs.kernel.org/fault-injection/fault-injection.html#application-examples
+ */
+static void setup_injection_fault(const struct fault_injection_params *fault_params)
+{
+	int dir;
+
+	if (!fault_params)
+		fault_params = &default_fault_params;
+
+	igt_assert(fault_params->probability >= 0);
+	igt_assert(fault_params->probability <= 100);
+
+	dir = fail_function_open();
+	igt_assert_lte(0, dir);
+
+	igt_debug("probability = %d, interval = %d, times = %d, space = %u\n",
+		  fault_params->probability, fault_params->interval,
+		  fault_params->times, fault_params->space);
+
+	igt_assert_lte(0, igt_sysfs_printf(dir, "task-filter", "N"));
+	igt_sysfs_set_u32(dir, "probability", fault_params->probability);
+	igt_sysfs_set_u32(dir, "interval", fault_params->interval);
+	igt_sysfs_set_s32(dir, "times", fault_params->times);
+	igt_sysfs_set_u32(dir, "space", fault_params->space);
+	igt_sysfs_set_u32(dir, "verbose", 1);
+
+	close(dir);
+}
+
+static void injection_list_clear(void)
+{
+	/* If nothing specified (‘’) injection list is cleared */
+	return injection_list_add("");
+}
+
+/*
+ * The injectable file requires CONFIG_FUNCTION_ERROR_INJECTION in kernel.
+ */
+static bool fail_function_injection_enabled(void)
+{
+	char *contents;
+	int dir;
+
+	dir = fail_function_open();
+	if (dir < 0)
+		return false;
+
+	contents = igt_sysfs_get(dir, "injectable");
+	if (!contents)
+		return false;
+
+	free(contents);
+	close(dir);
+
+	return true;
+}
+
+static void cleanup_injection_fault(int sig)
+{
+	injection_list_clear();
+}
+
+static void set_retval(const char function_name[], long long retval)
+{
+	char path[96];
+	int dir;
+
+	dir = fail_function_open();
+	igt_assert_lte(0, dir);
+
+	sprintf(path, "%s/retval", function_name);
+	igt_assert_lte(0, igt_sysfs_printf(dir, path, "%#016llx", retval));
+
+	close(dir);
+}
+
+static int
+inject_fault_probe(int fd, const char pci_slot[], const char function_name[],
+		   int inject_error, int devicefd)
+{
+	int err = 0;
+
+	injection_list_add(function_name);
+	set_retval(function_name, inject_error);
+
+	igt_assert(igt_sysfs_set(devicefd, "reset", "1"));
+	igt_kmod_bind("i915", pci_slot);
+
+	err = -errno;
+	injection_list_clear();
+	return err;
+}
+
+static char *bus_addr(int fd, char *path)
+{
+	char sysfs[PATH_MAX];
+	char *rp, *addr_pos;
+
+	if (!igt_sysfs_path(fd, sysfs, sizeof(sysfs)))
+		return NULL;
+
+	if (PATH_MAX <= (strlen(sysfs) + strlen("/device")))
+		return NULL;
+
+	strcat(sysfs, "/device");
+
+	rp = realpath(sysfs, path);
+
+	igt_require(strstr(rp, "/sys/devices/pci") == rp);
+	addr_pos = strrchr(rp, '/');
+
+	snprintf(path, PATH_MAX, "%s", addr_pos + 1);
+	return path;
+}
+
+static void test_fault_injection(void)
+{
+	char pci_slot[NAME_MAX], addr[PATH_MAX];
+	int ret = 0;
+	int sysfs = 0;
+	int devicefd = 0;
+	int fd, guc;
+
+	char error_ignore[] =
+		".*Failed to register driver for userspace access!"
+		"|.*Device initialization failed.*"
+		"|.*probe with driver i915 failed with error.*"
+		"|.*GT1: GSC proxy handler failed to init.*"
+		"|.*GT0: GUC: failed with -ENXIO.*"
+		"|.*GuC fw rsa data creation failed -ENXIO.*"
+		"|.*GUC: failed with -ENXIO.*"
+		"|.*Failed to register driver for userspace access.*"
+		"|.*GT0: GuC fw rsa data creation failed -ENXIO.*"
+		;
+
+	struct {
+		const char *test_name;
+		const char *function;
+		int faultcode;
+		int flags; // 0x1 = guc related tests
+	} fail_tests[] = {
+		{"__uc_init", "__uc_init", -ENOMEM, 1},
+		{"i915_driver_mmio_probe", "i915_driver_mmio_probe", -ENODEV, 0},
+		{"i915_driver_hw_probe", "i915_driver_hw_probe", -ENODEV, 0},
+		{"i915_pci_probe", "i915_pci_probe", -ENODEV, 0},
+		{"__fw_domain_init", "__fw_domain_init", -ENOMEM, 1},
+		{"intel_connector_register", "intel_connector_register", -EFAULT, 0},
+		{"i915_driver_early_probe", "i915_driver_early_probe", -ENODEV, 0},
+		{"intel_gt_init-ENODEV", "intel_gt_init", -ENODEV, 1},
+		{"intel_guc_ct_init", "intel_guc_ct_init", -ENXIO, 1},
+		{"uc_fw_rsa_data_create", "uc_fw_rsa_data_create", -ENXIO, 1},
+	};
+
+	igt_require(fail_function_injection_enabled());
+
+	fd = drm_open_driver(DRIVER_INTEL);
+	igt_require(fd);
+
+	guc = gem_submission_method(fd);
+
+	sysfs = igt_sysfs_open(fd);
+	devicefd = openat(sysfs, "device", O_DIRECTORY);
+	bus_addr(fd, addr);
+	igt_install_exit_handler(cleanup_injection_fault);
+
+	igt_device_get_pci_slot_name(fd, pci_slot);
+
+	for (int c = 0; c < ARRAY_SIZE(fail_tests); c++) {
+		igt_dynamic(fail_tests[c].test_name) {
+			if (fail_tests[c].flags & 0x1)
+				igt_require(guc == GEM_SUBMISSION_GUC);
+
+			igt_emit_ignore_dmesg_regex(error_ignore);
+
+			igt_set_timeout(60, "Driver unbind re-bind timeout!");
+			igt_kmod_unbind("i915", pci_slot);
+			setup_injection_fault(&default_fault_params);
+
+			ret = inject_fault_probe(fd, pci_slot,
+						 fail_tests[c].function,
+						 fail_tests[c].faultcode,
+						 devicefd);
+
+			igt_reset_timeout();
+
+			if (ret == fail_tests[c].faultcode) {
+				igt_info("Load failed with expected error %s (%d)\n",
+					 strerror(-ret), ret);
+			} else if (ret == 0) {
+				igt_info("Load succeeded - %s() was *not* executed!\n",
+					 fail_tests[c].function);
+
+				injection_list_clear();
+				igt_assert_f(0, "%s() was *not* executed!\n",
+					     fail_tests[c].function);
+
+			} else {
+				igt_info("Load failed with unexpected error %d (%s)\n",
+					 ret, strerror(-ret));
+
+				close(devicefd);
+				close(sysfs);
+				drm_close_driver(fd);
+
+				igt_i915_driver_unload();
+				igt_i915_driver_load(NULL);
+
+				igt_assert_f(0, "unexpected error %d (%s)\n",
+					     ret, strerror(-ret));
+			}
+		}
+	}
+
+	close(devicefd);
+	close(sysfs);
+	drm_close_driver(fd);
+
+	unload_or_die("i915");
+	igt_i915_driver_load(NULL);
+}
+
 int igt_main()
 {
 	igt_describe("Check if i915 and friends are not yet loaded, then load them.");
@@ -433,6 +717,10 @@ int igt_main()
 
 		unload_or_die("i915");
 	}
+
+	igt_describe("Test i915 fault injection");
+	igt_subtest_with_dynamic_f("fault-injection")
+		test_fault_injection();
 
 	igt_describe("Check whether lmem bar size can be resized to only supported sizes.");
 	igt_subtest("resize-bar") {
