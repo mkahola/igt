@@ -48,10 +48,6 @@
  * Description: Verify that i915 driver can be successfully loaded with disabled display.
  * Feature: core, sriov-core
  *
- * SUBTEST: reload-with-fault-injection
- * Description: Verify that i915 driver can be successfully reloaded at least once with fault injection.
- * Feature: core, sriov-core
- *
  * SUBTEST: resize-bar
  * Description: Check whether lmem bar size can be resized to only supported sizes.
  */
@@ -194,14 +190,6 @@ static void store_all(int i915)
 		igt_assert_eq_u32(engines[i], i);
 }
 
-static int open_parameters(const char *module_name)
-{
-	char path[256];
-
-	snprintf(path, sizeof(path), "/sys/module/%s/parameters", module_name);
-	return open(path, O_RDONLY);
-}
-
 static void unload_or_die(const char *module_name)
 {
 	int err, loop;
@@ -222,40 +210,6 @@ static void unload_or_die(const char *module_name)
 	igt_abort_on_f(err,
 		       "Failed to unload '%s' err:%d after %ds, leaving dangerous modparams intact!\n",
 		       module_name, err, loop);
-}
-
-static void must_unload(int sig)
-{
-	unload_or_die("i915");
-}
-
-static int
-inject_fault(const char *module_name, const char *opt, int fault)
-{
-	char buf[1024];
-	int dir;
-
-	igt_assert_lt(0, fault);
-	snprintf(buf, sizeof(buf), "%s=%d", opt, fault);
-
-	if (igt_kmod_load(module_name, buf)) {
-		igt_warn("Failed to load module '%s' with options '%s'\n",
-			 module_name, buf);
-		return 1;
-	}
-
-	dir = open_parameters(module_name);
-	igt_sysfs_scanf(dir, opt, "%d", &fault);
-	close(dir);
-
-	igt_debug("Loaded '%s %s', result=%d\n", module_name, buf, fault);
-
-	if (strcmp(module_name, "i915")) /* XXX better ideas! */
-		igt_kmod_unload(module_name);
-	else
-		igt_i915_driver_unload();
-
-	return fault;
 }
 
 static void gem_sanitycheck(void)
@@ -679,43 +633,6 @@ int igt_main()
 		igt_assert_eq(igt_i915_driver_load("disable_display=1"), 0);
 
 		igt_i915_driver_unload();
-	}
-
-	igt_describe("Verify that i915 driver can be successfully reloaded at least once"
-		     " with fault injection.");
-	igt_subtest("reload-with-fault-injection") {
-		const char *param;
-		int i;
-
-		igt_i915_driver_unload();
-
-		/*
-		 * inject_fault() leaves the module unloaded, but if that fails
-		 * we must abort the run. Otherwise, we leave a dangerous
-		 * modparam affecting all subsequent tests causing bizarre
-		 * failures.
-		 */
-		igt_install_exit_handler(must_unload);
-
-		i = 0;
-		param = getenv("IGT_SRANDOM");
-		if (param)
-			i = atoi(param);
-		if (!i)
-			i = time(NULL);
-		igt_info("Using IGT_SRANDOM=%d for randomised faults\n", i);
-		srandom(i);
-
-		param = "inject_probe_failure";
-		if (!igt_kmod_has_param("i915", param))
-			param = "inject_load_failure";
-		igt_require(igt_kmod_has_param("i915", param));
-
-		i = 1;
-		while (inject_fault("i915", param, i) == 0)
-			i += 1 + random() % 17;
-
-		unload_or_die("i915");
 	}
 
 	igt_describe("Test i915 fault injection");
