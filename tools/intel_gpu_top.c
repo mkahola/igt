@@ -378,6 +378,7 @@ static struct engines *discover_engines(char *device)
 	while ((dent = readdir(d)) != NULL) {
 		const char *endswith = "-busy";
 		const unsigned int endlen = strlen(endswith);
+		struct engines *engines_tmp;
 		struct engine *engine =
 				engine_ptr(engines, engines->num_engines);
 		char buf[256];
@@ -444,14 +445,15 @@ static struct engines *discover_engines(char *device)
 			break;
 		}
 
-		engines->num_engines++;
-		engines = realloc(engines, sizeof(struct engines) +
-				  engines->num_engines * sizeof(struct engine));
-		if (!engines) {
+		engines_tmp = realloc(engines, sizeof(struct engines) +
+				  (engines->num_engines + 1) * sizeof(struct engine));
+		if (!engines_tmp) {
 			ret = errno;
 			break;
 		}
 
+		engines = engines_tmp;
+		engines->num_engines++;
 		ret = 0;
 	}
 
