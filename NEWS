@@ -1,3 +1,90 @@
+Release 2.03 (2025-12-16)
+-------------------------
+
+General changes:
+
+- Improved C sources to be more Coccinelle friendly. (Ville Syrjälä)
+
+- Improved documentation on freedesktop GitLab pages. (Pawel Sikora and
+  Swati Sharma)
+
+Library changes:
+
+- Fixes for MEM_COPY instruction. (Balasubramani Vivekanandan)
+
+- Added AMDGPU LLVM assembler utility for shader compilation. (Jesse Zhang)
+
+- Added GFX1200 amdgpu family. (Jesse Zhang)
+
+- Added support for basic-modeset for xe driver in kms_prime. (Santhosh Reddy
+  Guddati)
+
+- New Xe survivability test for Intel BMG GPU. (Sk Anirban)
+
+- Added PCI ids for CRI and NovaLake-S. (Kamil Konieczny)
+
+- Added Panthor driver in drmtest lib. (Daniel Almeida)
+
+- Fixed device opening with IGT_FORCE_DRIVER (Kamil Konieczny)
+
+- Corrected MOCS index for displayable surfaces. (Tvrtko Ursulin)
+
+- Added Virtio-GPU driver in drmtest lib. (Mark Yacoub)
+
+Test changes:
+
+- New Xe multi queue test. (Niranjana Vishwanathapura)
+
+- Improved Xe OA testing. (Ashutosh Dixit)
+
+- Improved Xe EUdebug testing. (Andrzej Hajda, Dominik Karol Piątkowski,
+  Jan Maslak, Mika Kuoppala)
+
+- Added subtest for Intel dgfx Package G7 residency in kms_pm_rpm. (Mohammed
+  Thasleem)
+
+- New AMDGPU memory management test suite. (Jesse Zhang)
+
+- New KMS color pipeline and LUT testing. (Alex Hung and Harry Wentland)
+
+- Improved Intel xe_debugfs test. (Piotr Piórkowski)
+
+- Improved Xe SRIOV testing. (Marcin Bernatowicz)
+
+- New subtest for content protection with suspend resume HDCP-MST. (Jeevan B)
+
+- Improved dmabuf test on slow platforms. (Janusz Krzysztofik)
+
+- New Intel kms_sharpness_filter test. (Swati Sharma)
+
+- New tests for Panthor. (Daniel Almeida and Boris Brezillon)
+
+- Added support for MediaTek in few display tests. (Jason-JH Lin)
+
+- New SRIOV test for VF access to VRAM via BAR. (Lukasz Laguna)
+
+- Added timeslice preempt test in xe_exec_reset for validation of the restart
+  paths in the DRM scheduler TDR (Timeout Detection and Recovery). (Matthew
+  Brost)
+
+Tools changes:
+
+- Added iteration option in intel_gpu_top. (Simon Fairweather)
+
+- Added Alderlake-P register definitions. (Naladala Ramanaidu)
+
+- Improved devices filtering in lsgpu. (Zbigniew Kempczyński)
+
+- Improved intel_vbt_decode and intel_display_poller. (Ville Syrjälä)
+
+Scripts changes:
+
+- New script for converting a 3D LUT data to igt_3dlut_t array. (Alex Hung)
+
+
+And many other bug fixes, improvements, cleanups and new tests.
+
+
 Release 2.02 (2025-09-26)
 -------------------------
 
