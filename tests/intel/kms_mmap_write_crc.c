@@ -91,7 +91,6 @@ static void test(data_t *data)
 	igt_output_t *output = data->output;
 	struct igt_fb *fb = &data->fb[1];
 	drmModeModeInfo *mode;
-	cairo_t *cr;
 	char *ptr;
 	void *buf;
 	igt_crc_t crc;
@@ -104,9 +103,7 @@ static void test(data_t *data)
 
 	ptr = dmabuf_mmap_framebuffer(data->drm_fd, fb);
 
-	cr = igt_get_cairo_ctx(data->drm_fd, fb);
-	igt_paint_test_pattern(cr, fb->width, fb->height);
-	igt_put_cairo_ctx(cr);
+	igt_paint_test_pattern_fb(data->drm_fd, fb);
 
 	/* flip to it to make it UC/WC and fully flushed */
 	igt_plane_set_fb(data->primary, fb);
@@ -151,9 +148,7 @@ static void test(data_t *data)
 
 	/* start over, writing non-white to the fb again and flip to it to make it
 	 * fully flushed */
-	cr = igt_get_cairo_ctx(data->drm_fd, fb);
-	igt_paint_test_pattern(cr, fb->width, fb->height);
-	igt_put_cairo_ctx(cr);
+	igt_paint_test_pattern_fb(data->drm_fd, fb);
 
 	igt_plane_set_fb(data->primary, fb);
 	igt_display_commit(display);
