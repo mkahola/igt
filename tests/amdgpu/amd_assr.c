@@ -163,7 +163,6 @@ static void present_visual_pattern(data_t *data, igt_output_t *output)
 	igt_crtc_t *pipe;
 	drmModeModeInfo *mode;
 	igt_fb_t fb;
-	cairo_t *cr;
 
 	mode = igt_output_get_mode(output);
 	igt_assert(mode);
@@ -176,10 +175,7 @@ static void present_visual_pattern(data_t *data, igt_output_t *output)
 
 	igt_create_fb(data->fd, mode->hdisplay, mode->vdisplay,
 			DRM_FORMAT_XRGB8888, 0, &fb);
-	cr = igt_get_cairo_ctx(fb.fd, &fb);
-	igt_paint_test_pattern(cr, fb.width, fb.height);
-
-	igt_put_cairo_ctx(cr);
+	igt_paint_test_pattern_fb(data->fd, &fb);
 
 	igt_plane_set_fb(primary, &fb);
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
