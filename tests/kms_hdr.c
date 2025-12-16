@@ -146,12 +146,7 @@ static void test_cycle_flags(data_t *data, uint32_t test_flags)
 /* Fills the FB with a test HDR pattern. */
 static void draw_hdr_pattern(igt_fb_t *fb)
 {
-	cairo_t *cr = igt_get_cairo_ctx(fb->fd, fb);
-
-	igt_paint_color(cr, 0, 0, fb->width, fb->height, 1.0, 1.0, 1.0);
-	igt_paint_test_pattern(cr, fb->width, fb->height);
-
-	igt_put_cairo_ctx(cr);
+	igt_paint_test_pattern_color_fb(fb->fd, fb, 1.0, 1.0, 1.0);
 }
 
 /* Converts a double to 861-G spec FP format. */
