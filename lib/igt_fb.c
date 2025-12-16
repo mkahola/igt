@@ -2017,6 +2017,48 @@ void igt_paint_test_pattern(cairo_t *cr, int width, int height)
 	igt_assert(!cairo_status(cr));
 }
 
+/**
+ * igt_paint_test_pattern_fb:
+ * @fd: open drm file descriptor
+ * @fb: pointer to an #igt_fb structure
+ *
+ * This function draws the standard IGT test pattern into @fb using cairo.
+ */
+void igt_paint_test_pattern_fb(int fd, struct igt_fb *fb)
+{
+	cairo_t *cr;
+
+	cr = igt_get_cairo_ctx(fd, fb);
+
+	igt_paint_test_pattern(cr, fb->width, fb->height);
+
+	igt_put_cairo_ctx(cr);
+}
+
+/**
+ * igt_paint_test_pattern_color_fb:
+ * @fd: open drm file descriptor
+ * @fb: pointer to an #igt_fb structure
+ * @r: red value to use as fill color
+ * @g: green value to use as fill color
+ * @b: blue value to use as fill color
+ *
+ * This function fills the entire framebuffer with the given color,
+ * and then draws the standard test pattern into the @fb using cario.
+ */
+void igt_paint_test_pattern_color_fb(int fd, struct igt_fb *fb,
+				     double r, double g, double b)
+{
+	cairo_t *cr;
+
+	cr = igt_get_cairo_ctx(fd, fb);
+
+	igt_paint_color(cr, 0, 0, fb->width, fb->height, r, g, b);
+	igt_paint_test_pattern(cr, fb->width, fb->height);
+
+	igt_put_cairo_ctx(cr);
+}
+
 static cairo_status_t
 stdio_read_func(void *closure, unsigned char* data, unsigned int size)
 {
@@ -2277,14 +2319,11 @@ unsigned int igt_create_pattern_fb(int fd, int width, int height,
 				   struct igt_fb *fb /* out */)
 {
 	unsigned int fb_id;
-	cairo_t *cr;
 
 	fb_id = igt_create_fb(fd, width, height, format, modifier, fb);
 	igt_assert(fb_id);
 
-	cr = igt_get_cairo_ctx(fd, fb);
-	igt_paint_test_pattern(cr, width, height);
-	igt_put_cairo_ctx(cr);
+	igt_paint_test_pattern_fb(fd, fb);
 
 	return fb_id;
 }
@@ -2319,15 +2358,11 @@ unsigned int igt_create_color_pattern_fb(int fd, int width, int height,
 					 struct igt_fb *fb /* out */)
 {
 	unsigned int fb_id;
-	cairo_t *cr;
 
 	fb_id = igt_create_fb(fd, width, height, format, modifier, fb);
 	igt_assert(fb_id);
 
-	cr = igt_get_cairo_ctx(fd, fb);
-	igt_paint_color(cr, 0, 0, width, height, r, g, b);
-	igt_paint_test_pattern(cr, width, height);
-	igt_put_cairo_ctx(cr);
+	igt_paint_test_pattern_color_fb(fd, fb, r, g, b);
 
 	return fb_id;
 }

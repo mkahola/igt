@@ -210,6 +210,9 @@ void igt_paint_color_gradient_range(cairo_t *cr, int x, int y, int w, int h,
 				    double sr, double sg, double sb,
 				    double er, double eg, double eb);
 void igt_paint_test_pattern(cairo_t *cr, int width, int height);
+void igt_paint_test_pattern_fb(int fd, struct igt_fb *fb);
+void igt_paint_test_pattern_color_fb(int fd, struct igt_fb *fb,
+				     double r, double g, double b);
 void igt_paint_image(cairo_t *cr, const char *filename,
 			 int dst_x, int dst_y, int dst_width, int dst_height);
 int igt_cairo_printf_line(cairo_t *cr, enum igt_text_align align,
