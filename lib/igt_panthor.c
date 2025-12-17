@@ -234,12 +234,13 @@ void igt_panthor_vm_destroy(int fd, uint32_t vm_id, int err)
  *
  * Bind a buffer object to a virtual address in the specified VM.
  */
-void igt_panthor_vm_bind(int fd, uint32_t vm_id, uint32_t bo_handle,
-			 uint64_t va, uint64_t size, uint32_t flags, int err)
+void igt_panthor_vm_bind_offset(int fd, uint32_t vm_id, uint32_t bo_handle, uint64_t va,
+				uint64_t size, uint64_t offset, uint32_t flags, int err)
 {
 	struct drm_panthor_vm_bind_op bind_op = {
 		.flags = flags,
 		.bo_handle = bo_handle,
+		.bo_offset = offset,
 		.va = va,
 		.size = size,
 	};

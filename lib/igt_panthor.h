@@ -19,8 +19,8 @@ struct panthor_bo {
 void igt_panthor_query(int fd, int32_t type, void *data, size_t size, int err);
 void igt_panthor_vm_create(int fd, uint32_t *vm_id, int err);
 void igt_panthor_vm_destroy(int fd, uint32_t vm_id, int err);
-void igt_panthor_vm_bind(int fd, uint32_t vm_id, uint32_t bo_handle, uint64_t va,
-			 uint64_t size, uint32_t flags, int err);
+void igt_panthor_vm_bind_offset(int fd, uint32_t vm_id, uint32_t bo_handle, uint64_t va,
+				uint64_t size, uint64_t ofsfet, uint32_t flags, int err);
 void igt_panthor_bo_create(int fd, struct panthor_bo *bo, uint64_t size, uint32_t flags, int err);
 uint64_t igt_panthor_bo_mmap_offset(int fd, uint32_t handle, int err);
 void igt_panthor_free_bo(int fd, struct panthor_bo *bo);
@@ -37,6 +37,12 @@ void igt_panthor_group_submit_simple(int fd, uint32_t group_handle,
 				     uint32_t stream_size, uint32_t syncobj_handle,
 				     int err);
 uint64_t igt_panthor_get_first_core(uint64_t cores_present);
+
+static inline void igt_panthor_vm_bind(int fd, uint32_t vm_id, uint32_t bo_handle,
+				       uint64_t va, uint64_t size, uint32_t flags, int err)
+{
+	igt_panthor_vm_bind_offset(fd, vm_id, bo_handle, va, size, 0, flags, err);
+}
 
 enum cs_opcode {
 	CS_OPCODE_NOP = 0,
