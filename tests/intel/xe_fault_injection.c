@@ -242,7 +242,6 @@ static void ignore_fail_dump_in_dmesg(const char function_name[], bool enable)
  *
  * arg[1]:
  * @guc_wait_ucode:			guc_wait_ucode
- * @wait_for_lmem_ready:		wait_for_lmem_ready
  * @xe_add_hw_engine_class_defaults:	xe_add_hw_engine_class_defaults
  * @xe_device_create:			xe_device_create
  * @xe_device_probe_early:		xe_device_probe_early
@@ -567,7 +566,6 @@ int igt_main_args("I:", NULL, help_str, opt_handler, NULL)
 		bool pf_only;
 	} probe_fail_functions[] = {
 		{ "guc_wait_ucode", 0, true },
-		{ "wait_for_lmem_ready" },
 		{ "xe_add_hw_engine_class_defaults" },
 		{ "xe_device_create" },
 		{ "xe_device_probe_early" },
