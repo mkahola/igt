@@ -98,7 +98,7 @@ int igt_main() {
 	}
 
 	igt_describe("Requested unmapping is identical to existing huge page mapping, but only a subset of the object's pages are mapped in the VM");
-	igt_subtest("vm_unbind_identical_hugepage_single") {
+	igt_subtest("vm_unbind_identical_hugepage_single_partial") {
 		uint32_t vm_id;
 		struct panthor_bo bo;
 		uint64_t bo_size = SZ_4M;
