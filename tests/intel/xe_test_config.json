@@ -80,6 +80,7 @@
 			{ "LNL": "../intel-ci/xe.lnl.core.blocklist.txt" },
 			{ "BMG": "../intel-ci/xe.bmg.core.blocklist.txt" },
 			{ "PTL": "../intel-ci/xe.ptl.core.blocklist.txt" },
+			{ "WCL": "../intel-ci/xe.wcl.core.blocklist.txt" },
 			{ "all": "../intel-ci/xe.blocklist.txt" }
 		    ]
 		}
