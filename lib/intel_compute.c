@@ -94,6 +94,7 @@ struct bo_execenv {
 	uint32_t vm;
 	uint32_t exec_queue;
 	uint32_t array_size;
+	unsigned int loop_count;
 
 	/* Xe user-fence */
 	uint32_t bo;
@@ -137,7 +138,7 @@ static float *get_input_data(const struct bo_execenv *execenv,
 		input_data = from_user_pointer(user->input_addr);
 	} else {
 		input_data = (float *) data;
-		bo_randomize(input_data, execenv->array_size);
+		bo_randomize(input_data, execenv->loop_count);
 	}
 
 	return input_data;
@@ -198,6 +199,11 @@ static void bo_execenv_create(int fd, struct bo_execenv *execenv,
 			execenv->array_size = user->array_size;
 		else
 			execenv->array_size = SIZE_DATA;
+
+		if (user && user->loop_count)
+			execenv->loop_count = user->loop_count;
+		else
+			execenv->loop_count = execenv->array_size;
 
 		if (eci) {
 			execenv->exec_queue = xe_exec_queue_create(fd, execenv->vm,
@@ -873,7 +879,7 @@ static void compute_exec(int fd, const unsigned char *kernel,
 	create_dynamic_state(bo_dict[1].data, OFFSET_KERNEL);
 	create_surface_state(bo_dict[2].data, bind_input_addr, bind_output_addr);
 	create_indirect_data(bo_dict[3].data, bind_input_addr, bind_output_addr,
-			     IS_DG1(devid) ? 0x200 : 0x40, execenv.array_size);
+			     IS_DG1(devid) ? 0x200 : 0x40, execenv.loop_count);
 
 	input_data = get_input_data(&execenv, user, bo_dict[4].data);
 	output_data = get_output_data(&execenv, user, bo_dict[5].data);
@@ -894,7 +900,7 @@ static void compute_exec(int fd, const unsigned char *kernel,
 	bo_execenv_exec(&execenv, ADDR_BATCH);
 
 	if (!user || (user && !user->skip_results_check))
-		bo_check_square(input_data, output_data, execenv.array_size);
+		bo_check_square(input_data, output_data, execenv.loop_count);
 
 	bo_execenv_unbind(&execenv, bo_dict, entries);
 	bo_execenv_destroy(&execenv);
@@ -1161,7 +1167,7 @@ static void xehp_compute_exec(int fd, const unsigned char *kernel,
 	create_dynamic_state(bo_dict[1].data, OFFSET_KERNEL);
 	xehp_create_surface_state(bo_dict[2].data, bind_input_addr, bind_output_addr);
 	xehp_create_indirect_data(bo_dict[3].data, bind_input_addr, bind_output_addr,
-				  execenv.array_size);
+				  execenv.loop_count);
 	xehp_create_surface_state(bo_dict[7].data, bind_input_addr, bind_output_addr);
 
 	input_data = get_input_data(&execenv, user, bo_dict[4].data);
@@ -1179,7 +1185,7 @@ static void xehp_compute_exec(int fd, const unsigned char *kernel,
 	bo_execenv_exec(&execenv, ADDR_BATCH);
 
 	if (!user || (user && !user->skip_results_check))
-		bo_check_square(input_data, output_data, execenv.array_size);
+		bo_check_square(input_data, output_data, execenv.loop_count);
 
 	bo_execenv_unbind(&execenv, bo_dict, entries);
 	bo_execenv_destroy(&execenv);
@@ -1374,7 +1380,7 @@ static void xehpc_compute_exec(int fd, const unsigned char *kernel,
 
 	memcpy(bo_dict[0].data, kernel, size);
 	xehpc_create_indirect_data(bo_dict[1].data, bind_input_addr, bind_output_addr,
-				   execenv.array_size);
+				   execenv.loop_count);
 
 	input_data = get_input_data(&execenv, user, bo_dict[2].data);
 	output_data = get_output_data(&execenv, user, bo_dict[3].data);
@@ -1391,7 +1397,7 @@ static void xehpc_compute_exec(int fd, const unsigned char *kernel,
 	bo_execenv_exec(&execenv, ADDR_BATCH);
 
 	if (!user || (user && !user->skip_results_check))
-		bo_check_square(input_data, output_data, execenv.array_size);
+		bo_check_square(input_data, output_data, execenv.loop_count);
 
 	bo_execenv_unbind(&execenv, bo_dict, entries);
 	bo_execenv_destroy(&execenv);
@@ -1771,7 +1777,7 @@ static void xelpg_compute_exec(int fd, const unsigned char *kernel,
 	create_dynamic_state(bo_dict[1].data, OFFSET_KERNEL);
 	xehp_create_surface_state(bo_dict[2].data, bind_input_addr, bind_output_addr);
 	xelpg_create_indirect_data(bo_dict[3].data, bind_input_addr, bind_output_addr,
-				   execenv.array_size);
+				   execenv.loop_count);
 	xehp_create_surface_state(bo_dict[7].data, bind_input_addr, bind_output_addr);
 
 	input_data = get_input_data(&execenv, user, bo_dict[4].data);
@@ -1789,7 +1795,7 @@ static void xelpg_compute_exec(int fd, const unsigned char *kernel,
 	bo_execenv_exec(&execenv, ADDR_BATCH);
 
 	if (!user || (user && !user->skip_results_check))
-		bo_check_square(input_data, output_data, execenv.array_size);
+		bo_check_square(input_data, output_data, execenv.loop_count);
 
 	bo_execenv_unbind(&execenv, bo_dict, entries);
 	bo_execenv_destroy(&execenv);
@@ -1859,7 +1865,7 @@ static void xe2lpg_compute_exec(int fd, const unsigned char *kernel,
 	create_dynamic_state(bo_dict[1].data, OFFSET_KERNEL);
 	xehp_create_surface_state(bo_dict[2].data, bind_input_addr, bind_output_addr);
 	xelpg_create_indirect_data(bo_dict[3].data, bind_input_addr, bind_output_addr,
-				   execenv.array_size);
+				   execenv.loop_count);
 	xehp_create_surface_state(bo_dict[7].data, bind_input_addr, bind_output_addr);
 
 	input_data = get_input_data(&execenv, user, bo_dict[4].data);
@@ -1890,7 +1896,7 @@ static void xe2lpg_compute_exec(int fd, const unsigned char *kernel,
 	}
 
 	if (!user || (user && !user->skip_results_check))
-		bo_check_square(input_data, output_data, execenv.array_size);
+		bo_check_square(input_data, output_data, execenv.loop_count);
 
 	bo_execenv_unbind(&execenv, bo_dict, entries);
 	bo_execenv_destroy(&execenv);
@@ -2219,21 +2225,21 @@ static void xe2lpg_compute_preempt_exec(int fd, const unsigned char *long_kernel
 	output_short = (float *) bo_dict_short[5].data;
 	post_data = (uint64_t *) bo_dict_long[8].data;
 
-	bo_randomize(input_short, SIZE_DATA);
+	bo_randomize(input_short, execenv_short.loop_count);
 
 	xe2lpg_compute_exec_compute(fd,
 				    bo_dict_long[8].data, ADDR_GENERAL_STATE_BASE,
 				    ADDR_SURFACE_STATE_BASE, ADDR_DYNAMIC_STATE_BASE,
 				    ADDR_INSTRUCTION_STATE_BASE, XE2_ADDR_STATE_CONTEXT_DATA_BASE,
 				    OFFSET_INDIRECT_DATA_START, OFFSET_KERNEL, OFFSET_STATE_SIP,
-				    threadgroup_preemption, SIZE_DATA);
+				    threadgroup_preemption, execenv_long.array_size);
 
 	xe2lpg_compute_exec_compute(fd,
 				    bo_dict_short[8].data, ADDR_GENERAL_STATE_BASE,
 				    ADDR_SURFACE_STATE_BASE, ADDR_DYNAMIC_STATE_BASE,
 				    ADDR_INSTRUCTION_STATE_BASE, XE2_ADDR_STATE_CONTEXT_DATA_BASE,
 				    OFFSET_INDIRECT_DATA_START, OFFSET_KERNEL, OFFSET_STATE_SIP,
-				    false, SIZE_DATA);
+				    false, execenv_short.array_size);
 
 	bo_execenv_exec_async(&execenv_long, ADDR_BATCH);
 
@@ -2246,7 +2252,7 @@ static void xe2lpg_compute_preempt_exec(int fd, const unsigned char *long_kernel
 	 * square) must complete first and long job must be still active.
 	 */
 	bo_execenv_exec(&execenv_short, ADDR_BATCH);
-	bo_check_square(input_short, output_short, SIZE_DATA);
+	bo_check_square(input_short, output_short, execenv_short.loop_count);
 
 	/*
 	 * Catch command level preemption instead TG preemption. For TG and WMTP
