@@ -663,8 +663,9 @@ static void test_deep_pkgc_state(data_t *data)
 				 * TODO: Add check for vmin = vmax = flipline if VRR enabled
 				 * when KMD allows for such capability.
 				 */
-				igt_pipe_set_prop_value(display, pipe,
-							IGT_CRTC_VRR_ENABLED, false);
+				igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(display, pipe),
+							    IGT_CRTC_VRR_ENABLED,
+							    false);
 				igt_assert(igt_display_try_commit_atomic(display,
 									 DRM_MODE_ATOMIC_ALLOW_MODESET,
 									 NULL) == 0);

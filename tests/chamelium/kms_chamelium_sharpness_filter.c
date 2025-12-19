@@ -53,15 +53,15 @@ static bool pipe_output_combo_valid(data_t *data, enum pipe pipe)
 
 static void set_filter_strength_on_pipe(data_t *data)
 {
-	igt_pipe_set_prop_value(&data->display, data->pipe_id,
-				IGT_CRTC_SHARPNESS_STRENGTH,
-				data->filter_strength);
+	igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(&data->display, data->pipe_id),
+				    IGT_CRTC_SHARPNESS_STRENGTH,
+				    data->filter_strength);
 }
 
 static void reset_filter_strength_on_pipe(data_t *data)
 {
-	igt_pipe_set_prop_value(&data->display, data->pipe_id,
-				IGT_CRTC_SHARPNESS_STRENGTH, 0);
+	igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(&data->display, data->pipe_id),
+				    IGT_CRTC_SHARPNESS_STRENGTH, 0);
 }
 
 static void paint_image(igt_fb_t *fb)

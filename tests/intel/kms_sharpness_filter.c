@@ -173,9 +173,9 @@ typedef struct {
 
 static void set_filter_strength_on_pipe(data_t *data)
 {
-	igt_pipe_set_prop_value(&data->display, data->pipe_id,
-				IGT_CRTC_SHARPNESS_STRENGTH,
-				data->filter_strength);
+	igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(&data->display, data->pipe_id),
+				    IGT_CRTC_SHARPNESS_STRENGTH,
+				    data->filter_strength);
 }
 
 static bool has_scaling_mode(igt_output_t *output)
