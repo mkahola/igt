@@ -1119,7 +1119,7 @@ extern void igt_crtc_set_prop_enum(igt_crtc_t *pipe,
 extern void igt_crtc_replace_prop_blob(igt_crtc_t *pipe,
 					   enum igt_atomic_crtc_properties prop,
 					   const void *ptr, size_t length);
-void igt_pipe_refresh(igt_display_t *display, enum pipe pipe, bool force);
+void igt_pipe_refresh(igt_crtc_t *pipe_obj, bool force);
 
 void igt_enable_connectors(int drm_fd);
 void igt_reset_connectors(void);

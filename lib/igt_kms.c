@@ -5465,19 +5465,18 @@ bool igt_fit_modes_in_bw(igt_display_t *display)
 
 /**
  * igt_pipe_refresh:
- * @display: a pointer to an #igt_display_t structure
- * @pipe: Pipe to refresh
+ * @pipe_obj: CRTC to refresh
  * @force: Should be set to true if mode_blob is no longer considered
  * to be valid, for example after doing an atomic commit during fork or closing display fd.
  *
- * Requests the pipe to be part of the state on next update.
+ * Requests the CRTC to be part of the state on next update.
  * This is useful when state may have been out of sync after
  * a fork, or we just want to be sure the pipe is included
  * in the next commit.
  */
-void igt_pipe_refresh(igt_display_t *display, enum pipe pipe, bool force)
+void igt_pipe_refresh(igt_crtc_t *pipe_obj, bool force)
 {
-	igt_crtc_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
+	igt_display_t *display = pipe_obj->display;
 
 	if (force && display->is_atomic) {
 		igt_output_t *output = igt_pipe_get_output(pipe_obj);
