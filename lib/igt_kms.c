@@ -964,9 +964,10 @@ igt_atomic_fill_connector_props(igt_display_t *display, igt_output_t *output,
 }
 
 static void
-igt_fill_pipe_props(igt_display_t *display, igt_crtc_t *pipe,
+igt_fill_pipe_props(igt_crtc_t *pipe,
 		    int num_crtc_props, const char * const crtc_prop_names[])
 {
+	igt_display_t *display = pipe->display;
 	drmModeObjectPropertiesPtr props;
 	int i, j, fd;
 
@@ -3123,7 +3124,7 @@ static void igt_crtc_init(igt_display_t *display,
 	pipe->planes = NULL;
 	pipe->num_primary_planes = 0;
 
-	igt_fill_pipe_props(display, pipe, IGT_NUM_CRTC_PROPS, igt_crtc_prop_names);
+	igt_fill_pipe_props(pipe, IGT_NUM_CRTC_PROPS, igt_crtc_prop_names);
 
 	/* Get valid crtc index from crtcs for a pipe */
 	crtc_mask = __get_crtc_mask_for_pipe(resources, pipe);
