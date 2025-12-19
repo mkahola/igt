@@ -78,7 +78,7 @@ static void test_init(struct data *data)
 
 	data->primary = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, data->pipe_id));
+			    data->pipe);
 
 	igt_display_reset(display);
 }

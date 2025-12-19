@@ -446,7 +446,7 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 			}
 
 			igt_output_set_crtc(data->output,
-					    igt_crtc_for_pipe(data->output->display, data->pipe_id));
+					    data->pipe);
 
 			if (!intel_pipe_output_combo_valid(display)) {
 				igt_output_set_crtc(data->output, NULL);

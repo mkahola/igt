@@ -937,7 +937,7 @@ retry:
 				continue;
 
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, i));
+					    pipe);
 			if (intel_pipe_output_combo_valid(&data->display)) {
 				mode = igt_output_get_mode(output);
 
@@ -957,7 +957,7 @@ retry:
 			igt_plane_set_size(plane, mode->hdisplay, mode->vdisplay);
 
 			if (fencing)
-				igt_crtc_request_out_fence(igt_crtc_for_pipe(&data->display, i));
+				igt_crtc_request_out_fence(pipe);
 		} else {
 			igt_plane_set_fb(plane, NULL);
 		}

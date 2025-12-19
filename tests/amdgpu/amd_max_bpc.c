@@ -86,7 +86,7 @@ static void test_init(data_t *data)
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, data->pipe_id));
+			    data->pipe);
 
 	data->w = data->mode->hdisplay;
 	data->h = data->mode->vdisplay;

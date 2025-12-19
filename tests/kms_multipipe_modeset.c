@@ -84,7 +84,7 @@ static void run_test(data_t *data, int valid_outputs)
 						IGT_PIPE_CRC_SOURCE_AUTO);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, i));
+				    pipe);
 		mode = igt_output_get_mode(output);
 		igt_assert(mode);
 
@@ -107,7 +107,7 @@ static void run_test(data_t *data, int valid_outputs)
 		mode = NULL;
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, i));
+				    pipe);
 		mode = igt_output_get_mode(output);
 		igt_assert(mode);
 

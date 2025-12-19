@@ -104,7 +104,7 @@ static void test_init(data_t *data, igt_output_t *output)
 					  AMDGPU_PIPE_CRC_SOURCE_DPRX);
 
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(output->display, data->pipe_id));
+			    data->pipe);
 
 	data->primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 }

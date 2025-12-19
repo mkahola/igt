@@ -226,7 +226,7 @@ static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, data->pipe_id));
+			    data->pipe);
 	igt_output_set_prop_value(data->output, IGT_CONNECTOR_MAX_BPC, 10);
 
 	data->w = data->mode->hdisplay;

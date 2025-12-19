@@ -906,7 +906,7 @@ static void test_display_pxp_fb(int fd, igt_display_t *display)
 		plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 		igt_require(igt_pipe_connector_valid(i, output));
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, i));
+				    pipe);
 
 		commit_fb(display, plane, &ref_fb, mode);
 
@@ -964,7 +964,7 @@ static void test_display_black_pxp_fb(int fd, igt_display_t *display)
 		plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 		igt_require(igt_pipe_connector_valid(i, output));
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, i));
+				    pipe);
 
 		igt_plane_set_fb(plane, &ref_fb);
 		igt_fb_set_size(&ref_fb, plane, mode->hdisplay, mode->vdisplay);
