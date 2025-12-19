@@ -862,11 +862,11 @@ int igt_main() {
 	uint8_t format_idx = 0, tiling_idx = 0;
 
 	igt_fixture() {
-		data.drm_fd = data.display.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
+		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
 
 		kmstest_set_vt_graphics_mode();
 
-		igt_display_require(&data.display, data.display.drm_fd);
+		igt_display_require(&data.display, data.drm_fd);
 		igt_require(data.display.is_atomic);
 		igt_display_require_output(&data.display);
 		data.devid = intel_get_drm_devid(data.drm_fd);
