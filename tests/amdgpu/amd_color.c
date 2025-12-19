@@ -159,7 +159,7 @@ static void set_degamma_lut(data_t *data, lut_t const *lut)
 	size_t size = lut ? sizeof(lut->data[0]) * lut->size : 0;
 	const void *ptr = lut ? lut->data : NULL;
 
-	igt_pipe_obj_replace_prop_blob(data->pipe, IGT_CRTC_DEGAMMA_LUT, ptr,
+	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_DEGAMMA_LUT, ptr,
 				       size);
 }
 
@@ -169,7 +169,7 @@ static void set_regamma_lut(data_t *data, lut_t const *lut)
 	size_t size = lut ? sizeof(lut->data[0]) * lut->size : 0;
 	const void *ptr = lut ? lut->data : NULL;
 
-	igt_pipe_obj_replace_prop_blob(data->pipe, IGT_CRTC_GAMMA_LUT, ptr,
+	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_GAMMA_LUT, ptr,
 				       size);
 }
 
@@ -228,10 +228,10 @@ static void test_crtc_linear_degamma(data_t *data)
 
 	test_init(data);
 
-	igt_require(igt_pipe_obj_has_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT));
+	igt_require(igt_crtc_has_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT));
 
 	data->degamma_lut_size =
-		igt_pipe_obj_get_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT_SIZE);
+		igt_crtc_get_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT_SIZE);
 
 	lut_init(&lut_linear, data->degamma_lut_size);
 	lut_gen_linear(&lut_linear, 0xffff);
@@ -275,10 +275,10 @@ static void test_crtc_linear_regamma(data_t *data)
 
 	test_init(data);
 
-	igt_require(igt_pipe_obj_has_prop(data->pipe, IGT_CRTC_GAMMA_LUT));
+	igt_require(igt_crtc_has_prop(data->pipe, IGT_CRTC_GAMMA_LUT));
 
 	data->regamma_lut_size =
-		igt_pipe_obj_get_prop(data->pipe, IGT_CRTC_GAMMA_LUT_SIZE);
+		igt_crtc_get_prop(data->pipe, IGT_CRTC_GAMMA_LUT_SIZE);
 
 	lut_init(&lut_linear, data->regamma_lut_size);
 	lut_gen_linear(&lut_linear, 0xffff);
@@ -338,14 +338,14 @@ static void test_crtc_lut_accuracy(data_t *data)
 
 	test_init(data);
 
-	igt_require(igt_pipe_obj_has_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT));
-	igt_require(igt_pipe_obj_has_prop(data->pipe, IGT_CRTC_GAMMA_LUT));
+	igt_require(igt_crtc_has_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT));
+	igt_require(igt_crtc_has_prop(data->pipe, IGT_CRTC_GAMMA_LUT));
 
 	data->degamma_lut_size =
-		igt_pipe_obj_get_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT_SIZE);
+		igt_crtc_get_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT_SIZE);
 
 	data->regamma_lut_size =
-		igt_pipe_obj_get_prop(data->pipe, IGT_CRTC_GAMMA_LUT_SIZE);
+		igt_crtc_get_prop(data->pipe, IGT_CRTC_GAMMA_LUT_SIZE);
 
 	lut_init(&lut_degamma, data->degamma_lut_size);
 	lut_gen_degamma_srgb(&lut_degamma, 0xffff);

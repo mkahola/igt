@@ -829,7 +829,7 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 		drmModeModeInfo *mode = NULL;
 
 		if (!(mask & (1 << pipe))) {
-			if (igt_pipe_obj_is_prop_changed(igt_crtc_for_pipe(&data->display, pipe), IGT_CRTC_ACTIVE)) {
+			if (igt_crtc_is_prop_changed(igt_crtc_for_pipe(&data->display, pipe), IGT_CRTC_ACTIVE)) {
 				event_mask |= 1 << pipe;
 				igt_plane_set_fb(plane, NULL);
 			}

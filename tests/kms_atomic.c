@@ -232,7 +232,7 @@ static void crtc_get_current_state(igt_crtc_t *pipe, uint64_t *values)
 			continue;
 		}
 
-		values[i] = igt_pipe_obj_get_prop(pipe, i);
+		values[i] = igt_crtc_get_prop(pipe, i);
 	}
 }
 
@@ -856,20 +856,20 @@ static void crtc_invalid_params(data_t *data, igt_output_t *output)
 	drmModeModeInfo *mode = igt_output_get_mode(output);
 
 	/* Pass a series of invalid object IDs for the mode ID. */
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->primary->drm_plane->plane_id);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->primary->drm_plane->plane_id);
 	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->pipe->crtc_id);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->pipe->crtc_id);
 	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->fb.fb_id);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->fb.fb_id);
 	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, old_mode_id);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, old_mode_id);
 	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_ATOMIC_TEST_ONLY, ATOMIC_RELAX_NONE, 0);
 
 	/* Can we restore mode? */
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, old_mode_id);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, old_mode_id);
 	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_ATOMIC_TEST_ONLY, ATOMIC_RELAX_NONE, 0);
 
 	/*
@@ -882,14 +882,14 @@ static void crtc_invalid_params(data_t *data, igt_output_t *output)
 				     ATOMIC_RELAX_NONE, EINVAL);
 
 	/* Create a blob which is the wrong size to be a valid mode. */
-	igt_pipe_obj_replace_prop_blob(data->pipe, IGT_CRTC_MODE_ID, mode, sizeof(*mode) - 1);
+	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_MODE_ID, mode, sizeof(*mode) - 1);
 	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
-	igt_pipe_obj_replace_prop_blob(data->pipe, IGT_CRTC_MODE_ID, mode, sizeof(*mode) + 1);
+	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_MODE_ID, mode, sizeof(*mode) + 1);
 	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
 	/* Restore the CRTC and check the state matches the old. */
-	igt_pipe_obj_replace_prop_blob(data->pipe, IGT_CRTC_MODE_ID, mode, sizeof(*mode));
+	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_MODE_ID, mode, sizeof(*mode));
 	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
 }
 
@@ -908,7 +908,7 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 	map = mmap(NULL, page_size, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 	igt_assert(map != MAP_FAILED);
 
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)map);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)map);
 	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EFAULT);
 	munmap(map, page_size);
 
@@ -916,7 +916,7 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 	map = mmap(NULL, page_size, PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 	igt_assert(map != MAP_FAILED);
 
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)map);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)map);
 	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EFAULT);
 	munmap(map, page_size);
 
@@ -924,7 +924,7 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 	map = mmap(NULL, page_size, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 	igt_assert(map != MAP_FAILED);
 
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)map);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)map);
 	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EFAULT);
 	munmap(map, page_size);
 
@@ -932,8 +932,8 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 	fence_fd = sw_sync_timeline_create_fence(timeline, 1);
 	igt_plane_set_fence_fd(data->primary, fence_fd);
 
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_ACTIVE, 0);
-	igt_pipe_obj_clear_prop_changed(data->pipe, IGT_CRTC_OUT_FENCE_PTR);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_ACTIVE, 0);
+	igt_crtc_clear_prop_changed(data->pipe, IGT_CRTC_OUT_FENCE_PTR);
 
 	crtc_commit_atomic_flags_err(data->pipe, data->primary, 0, ATOMIC_RELAX_NONE, EINVAL);
 
@@ -947,14 +947,14 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_PAGE_FLIP_EVENT,
 				     ATOMIC_RELAX_NONE, EINVAL);
 
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_ACTIVE, 1);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_ACTIVE, 1);
 
 	/* Configuration should be valid again */
 	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_ATOMIC_TEST_ONLY,
 				     ATOMIC_RELAX_NONE, 0);
 
 	/* Set invalid prop */
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->fb.fb_id);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->fb.fb_id);
 
 	/* valid out fence but invalid prop on crtc */
 	igt_pipe_request_out_fence(data->pipe);
@@ -970,7 +970,7 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 				     ATOMIC_RELAX_NONE, EINVAL);
 
 	/* successful TEST_ONLY with fences set */
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, old_mode_id);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, old_mode_id);
 	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_ATOMIC_TEST_ONLY,
 				     ATOMIC_RELAX_NONE, 0);
 	igt_assert(data->pipe->out_fence_fd == -1);
@@ -979,8 +979,8 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 
 	/* reset fences */
 	igt_plane_set_fence_fd(data->primary, -1);
-	igt_pipe_obj_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, 0);
-	igt_pipe_obj_clear_prop_changed(data->pipe, IGT_CRTC_OUT_FENCE_PTR);
+	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, 0);
+	igt_crtc_clear_prop_changed(data->pipe, IGT_CRTC_OUT_FENCE_PTR);
 	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
 
 	/* out fence ptr but not page flip event */

@@ -227,7 +227,7 @@ void set_degamma(data_t *data,
 	struct drm_color_lut *lut = coeffs_to_lut(data, gamma,
 						  data->color_depth, 0);
 
-	igt_pipe_obj_replace_prop_blob(pipe, IGT_CRTC_DEGAMMA_LUT, lut, size);
+	igt_crtc_replace_prop_blob(pipe, IGT_CRTC_DEGAMMA_LUT, lut, size);
 
 	free(lut);
 }
@@ -239,7 +239,7 @@ void set_gamma(data_t *data,
 	struct drm_color_lut *lut = coeffs_to_lut(data, gamma,
 						  data->color_depth, 0);
 
-	igt_pipe_obj_replace_prop_blob(pipe, IGT_CRTC_GAMMA_LUT, lut, size);
+	igt_crtc_replace_prop_blob(pipe, IGT_CRTC_GAMMA_LUT, lut, size);
 
 	free(lut);
 }
@@ -261,13 +261,13 @@ void set_ctm(igt_crtc_t *pipe, const double *coefficients)
 				((int64_t) 1L << 32));
 	}
 
-	igt_pipe_obj_replace_prop_blob(pipe, IGT_CRTC_CTM, &ctm, sizeof(ctm));
+	igt_crtc_replace_prop_blob(pipe, IGT_CRTC_CTM, &ctm, sizeof(ctm));
 }
 
 void disable_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop)
 {
-	if (igt_pipe_obj_has_prop(pipe, prop))
-		igt_pipe_obj_replace_prop_blob(pipe, prop, NULL, 0);
+	if (igt_crtc_has_prop(pipe, prop))
+		igt_crtc_replace_prop_blob(pipe, prop, NULL, 0);
 }
 
 drmModePropertyBlobPtr
@@ -275,7 +275,7 @@ get_blob(data_t *data, igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop)
 {
 	uint64_t prop_value;
 
-	prop_value = igt_pipe_obj_get_prop(pipe, prop);
+	prop_value = igt_crtc_get_prop(pipe, prop);
 
 	if (prop_value == 0)
 		return NULL;
@@ -290,15 +290,15 @@ pipe_set_property_blob_id(igt_crtc_t *pipe,
 {
 	int ret;
 
-	igt_pipe_obj_replace_prop_blob(pipe, prop, NULL, 0);
+	igt_crtc_replace_prop_blob(pipe, prop, NULL, 0);
 
-	igt_pipe_obj_set_prop_value(pipe, prop, blob_id);
+	igt_crtc_set_prop_value(pipe, prop, blob_id);
 
 	ret = igt_display_try_commit2(pipe->display,
 				      pipe->display->is_atomic ?
 				      COMMIT_ATOMIC : COMMIT_LEGACY);
 
-	igt_pipe_obj_set_prop_value(pipe, prop, 0);
+	igt_crtc_set_prop_value(pipe, prop, 0);
 
 	return ret;
 }
@@ -308,7 +308,7 @@ pipe_set_property_blob(igt_crtc_t *pipe,
 		       enum igt_atomic_crtc_properties prop,
 		       void *ptr, size_t length)
 {
-	igt_pipe_obj_replace_prop_blob(pipe, prop, ptr, length);
+	igt_crtc_replace_prop_blob(pipe, prop, ptr, length);
 
 	return igt_display_try_commit2(pipe->display,
 				       pipe->display->is_atomic ?
@@ -324,7 +324,7 @@ invalid_lut_sizes(data_t *data, enum pipe p,
 	struct drm_color_lut *lut;
 	size_t lut_size = size * sizeof(lut[0]);
 
-	igt_require(igt_pipe_obj_has_prop(pipe, prop));
+	igt_require(igt_crtc_has_prop(pipe, prop));
 
 	lut = malloc(lut_size * 2);
 
@@ -366,7 +366,7 @@ void invalid_ctm_matrix_sizes(data_t *data, enum pipe p)
 	igt_crtc_t *pipe = igt_crtc_for_pipe(display, p);
 	void *ptr;
 
-	igt_require(igt_pipe_obj_has_prop(pipe, IGT_CRTC_CTM));
+	igt_require(igt_crtc_has_prop(pipe, IGT_CRTC_CTM));
 
 	ptr = malloc(sizeof(struct drm_color_ctm) * 4);
 

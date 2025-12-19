@@ -548,7 +548,7 @@ static bool has_vrr(igt_output_t *output)
 /* Toggles variable refresh rate on the pipe. */
 static void set_vrr_on_pipe(data_t *data, enum pipe pipe, bool enabled)
 {
-	igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(&data->display, pipe),
+	igt_crtc_set_prop_value(igt_crtc_for_pipe(&data->display, pipe),
 				    IGT_CRTC_VRR_ENABLED,
 				    enabled);
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);

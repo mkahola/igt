@@ -80,7 +80,7 @@ static bool test_pipe_degamma(data_t *data,
 	};
 	bool ret;
 
-	igt_require(igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT));
+	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT));
 
 	degamma_full = generate_table_max(data->degamma_lut_size);
 
@@ -169,7 +169,7 @@ static bool test_pipe_gamma(data_t *data,
 	};
 	bool ret;
 
-	igt_require(igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_GAMMA_LUT));
+	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_GAMMA_LUT));
 
 	gamma_full = generate_table_max(data->gamma_lut_size);
 
@@ -255,7 +255,7 @@ static bool test_pipe_ctm(data_t *data,
 	int fb_id, fb_modeset_id, fbref_id;
 	bool ret = true;
 
-	igt_require(igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_CTM));
+	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_CTM));
 
 	degamma_linear = generate_table(data->degamma_lut_size, 1.0);
 	gamma_linear = generate_table(data->gamma_lut_size, 1.0);
@@ -358,7 +358,7 @@ static bool test_pipe_limited_range_ctm(data_t *data,
 	int fb_id0, fb_id1;
 	bool ret = false;
 
-	igt_require(igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_CTM));
+	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_CTM));
 
 	degamma_linear = generate_table(data->degamma_lut_size, 1.0);
 	gamma_linear = generate_table(data->gamma_lut_size, 1.0);
@@ -433,16 +433,16 @@ prep_pipe(data_t *data, enum pipe p)
 {
 	igt_require_pipe(&data->display, p);
 
-	if (igt_pipe_obj_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_DEGAMMA_LUT_SIZE)) {
+	if (igt_crtc_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_DEGAMMA_LUT_SIZE)) {
 		data->degamma_lut_size =
-			igt_pipe_obj_get_prop(igt_crtc_for_pipe(&data->display, p),
+			igt_crtc_get_prop(igt_crtc_for_pipe(&data->display, p),
 					      IGT_CRTC_DEGAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->degamma_lut_size);
 	}
 
-	if (igt_pipe_obj_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_GAMMA_LUT_SIZE)) {
+	if (igt_crtc_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_GAMMA_LUT_SIZE)) {
 		data->gamma_lut_size =
-			igt_pipe_obj_get_prop(igt_crtc_for_pipe(&data->display, p),
+			igt_crtc_get_prop(igt_crtc_for_pipe(&data->display, p),
 					      IGT_CRTC_GAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->gamma_lut_size);
 	}

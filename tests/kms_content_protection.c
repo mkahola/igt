@@ -484,11 +484,11 @@ static void test_content_protection_on_output(igt_output_t *output,
 		test_cp_lic(output);
 
 	if (data.cp_tests & CP_DPMS) {
-		igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(display, pipe),
+		igt_crtc_set_prop_value(igt_crtc_for_pipe(display, pipe),
 					    IGT_CRTC_ACTIVE, 0);
 		igt_display_commit2(display, commit_style);
 
-		igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(display, pipe),
+		igt_crtc_set_prop_value(igt_crtc_for_pipe(display, pipe),
 					    IGT_CRTC_ACTIVE, 1);
 		igt_display_commit2(display, commit_style);
 

@@ -309,7 +309,7 @@ static bool vrr_capable(igt_output_t *output)
 static void set_vrr_on_pipe(data_t *data, enum pipe pipe,
 			    bool need_modeset, bool enabled)
 {
-	igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(&data->display, pipe),
+	igt_crtc_set_prop_value(igt_crtc_for_pipe(&data->display, pipe),
 				    IGT_CRTC_VRR_ENABLED,
 				    enabled);
 
@@ -406,7 +406,7 @@ static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
 	/* Clear vrr_enabled state before enabling it, because
 	 * it might be left enabled if the previous test fails.
 	 */
-	igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(&data->display, pipe),
+	igt_crtc_set_prop_value(igt_crtc_for_pipe(&data->display, pipe),
 				    IGT_CRTC_VRR_ENABLED, 0);
 
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
@@ -970,7 +970,7 @@ test_cmrr(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 
 static void test_cleanup(data_t *data, enum pipe pipe, igt_output_t *output)
 {
-	igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(&data->display, pipe),
+	igt_crtc_set_prop_value(igt_crtc_for_pipe(&data->display, pipe),
 				    IGT_CRTC_VRR_ENABLED, false);
 
 	if (data->primary)

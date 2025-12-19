@@ -1038,7 +1038,7 @@ extern void igt_output_replace_prop_blob(igt_output_t *output,
 					 enum igt_atomic_connector_properties prop,
 					 const void *ptr, size_t length);
 /**
- * igt_pipe_obj_has_prop:
+ * igt_crtc_has_prop:
  * @pipe: Pipe to check.
  * @prop: Property to check.
  *
@@ -1047,76 +1047,76 @@ extern void igt_output_replace_prop_blob(igt_output_t *output,
  * Returns: True if the property is supported, otherwise false.
  */
 static inline bool
-igt_pipe_obj_has_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop)
+igt_crtc_has_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop)
 {
 	return pipe->props[prop];
 }
 
-uint64_t igt_pipe_obj_get_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop);
+uint64_t igt_crtc_get_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop);
 
 /**
- * igt_pipe_obj_is_prop_changed:
+ * igt_crtc_is_prop_changed:
  * @pipe_obj: Pipe object to check.
  * @prop: Property to check.
  *
  * Check whether a given @prop changed for the @pipe_obj.
  */
-static inline bool igt_pipe_obj_is_prop_changed(igt_crtc_t *pipe_obj,
+static inline bool igt_crtc_is_prop_changed(igt_crtc_t *pipe_obj,
 						enum igt_atomic_crtc_properties prop)
 {
 	return pipe_obj->changed & (1 << prop);
 }
 
 /**
- * igt_pipe_obj_set_prop_changed:
+ * igt_crtc_set_prop_changed:
  * @pipe_obj: Pipe object to check.
  * @prop: Property to check.
  *
  * Sets the given @prop for the @pipe_obj.
  */
-static inline void igt_pipe_obj_set_prop_changed(igt_crtc_t *pipe_obj,
+static inline void igt_crtc_set_prop_changed(igt_crtc_t *pipe_obj,
 						 enum igt_atomic_crtc_properties prop)
 {
 	pipe_obj->changed |= 1 << prop;
 }
 
 /**
- * igt_pipe_obj_clear_prop_changed:
+ * igt_crtc_clear_prop_changed:
  * @pipe_obj: Pipe object to check.
  * @prop: Property to check.
  *
  * Clears the given @prop for the @pipe_obj.
  */
-static inline void igt_pipe_obj_clear_prop_changed(igt_crtc_t *pipe_obj,
+static inline void igt_crtc_clear_prop_changed(igt_crtc_t *pipe_obj,
 						   enum igt_atomic_crtc_properties prop)
 {
 	pipe_obj->changed &= ~(1 << prop);
 }
 
 /**
- * igt_pipe_obj_set_prop_value:
+ * igt_crtc_set_prop_value:
  * @pipe_obj: Pipe object to check.
  * @prop: Property to check.
  * @value: Value to set.
  *
  * Sets the given @prop with the @value for the @pipe_obj.
  */
-static inline void igt_pipe_obj_set_prop_value(igt_crtc_t *pipe_obj,
+static inline void igt_crtc_set_prop_value(igt_crtc_t *pipe_obj,
 					       enum igt_atomic_crtc_properties prop,
 					       uint64_t value)
 {
 	pipe_obj->values[prop] = value;
-	igt_pipe_obj_set_prop_changed(pipe_obj, prop);
+	igt_crtc_set_prop_changed(pipe_obj, prop);
 }
 
-extern bool igt_pipe_obj_try_prop_enum(igt_crtc_t *pipe,
+extern bool igt_crtc_try_prop_enum(igt_crtc_t *pipe,
 				       enum igt_atomic_crtc_properties prop,
 				       const char *val);
 
-extern void igt_pipe_obj_set_prop_enum(igt_crtc_t *pipe,
+extern void igt_crtc_set_prop_enum(igt_crtc_t *pipe,
 				       enum igt_atomic_crtc_properties prop,
 				       const char *val);
-extern void igt_pipe_obj_replace_prop_blob(igt_crtc_t *pipe,
+extern void igt_crtc_replace_prop_blob(igt_crtc_t *pipe,
 					   enum igt_atomic_crtc_properties prop,
 					   const void *ptr, size_t length);
 void igt_pipe_refresh(igt_display_t *display, enum pipe pipe, bool force);

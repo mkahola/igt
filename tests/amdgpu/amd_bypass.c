@@ -359,9 +359,9 @@ static void bypass_8bpc_test(data_t *data)
 	 *   no regamma
 	 *   no CTM
 	 */
-	igt_pipe_obj_replace_prop_blob(data->pipe, IGT_CRTC_DEGAMMA_LUT, NULL, 0);
-	igt_pipe_obj_replace_prop_blob(data->pipe, IGT_CRTC_GAMMA_LUT, NULL, 0);
-	igt_pipe_obj_replace_prop_blob(data->pipe, IGT_CRTC_CTM, NULL, 0);
+	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_DEGAMMA_LUT, NULL, 0);
+	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_GAMMA_LUT, NULL, 0);
+	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_CTM, NULL, 0);
 
 	igt_plane_set_fb(data->primary, &fb);
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);

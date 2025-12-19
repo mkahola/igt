@@ -265,7 +265,7 @@ static void set_regamma_lut(data_t *data, lut_t const *lut, int n)
 {
 	size_t size = lut ? sizeof(lut->data) * lut->size : 0;
 	const void *ptr = lut ? lut->data : NULL;
-	igt_pipe_obj_replace_prop_blob(data->pipe[n], IGT_CRTC_GAMMA_LUT, ptr,
+	igt_crtc_replace_prop_blob(data->pipe[n], IGT_CRTC_GAMMA_LUT, ptr,
 				       size);
 }
 
@@ -627,7 +627,7 @@ static void test_display_mpo(data_t *data, enum test test, uint32_t format, int 
 	igt_skip_on_f(valid_outputs < display_count,
 			"Valid outputs (%d) should be equal or greater than %d\n", valid_outputs, display_count);
 
-	regamma_lut_size = igt_pipe_obj_get_prop(data->pipe[0], IGT_CRTC_GAMMA_LUT_SIZE);
+	regamma_lut_size = igt_crtc_get_prop(data->pipe[0], IGT_CRTC_GAMMA_LUT_SIZE);
 	igt_assert_lt(0, regamma_lut_size);
 	lut_init(&lut, regamma_lut_size);
 	lut_gen(&lut);

@@ -2733,27 +2733,27 @@ static void igt_plane_reset(igt_plane_t *plane)
 
 static void igt_pipe_reset(igt_crtc_t *pipe)
 {
-	igt_pipe_obj_set_prop_value(pipe, IGT_CRTC_MODE_ID, 0);
-	igt_pipe_obj_set_prop_value(pipe, IGT_CRTC_ACTIVE, 0);
-	igt_pipe_obj_clear_prop_changed(pipe, IGT_CRTC_OUT_FENCE_PTR);
+	igt_crtc_set_prop_value(pipe, IGT_CRTC_MODE_ID, 0);
+	igt_crtc_set_prop_value(pipe, IGT_CRTC_ACTIVE, 0);
+	igt_crtc_clear_prop_changed(pipe, IGT_CRTC_OUT_FENCE_PTR);
 
-	if (igt_pipe_obj_has_prop(pipe, IGT_CRTC_CTM))
-		igt_pipe_obj_set_prop_value(pipe, IGT_CRTC_CTM, 0);
+	if (igt_crtc_has_prop(pipe, IGT_CRTC_CTM))
+		igt_crtc_set_prop_value(pipe, IGT_CRTC_CTM, 0);
 
-	if (igt_pipe_obj_has_prop(pipe, IGT_CRTC_GAMMA_LUT))
-		igt_pipe_obj_set_prop_value(pipe, IGT_CRTC_GAMMA_LUT, 0);
+	if (igt_crtc_has_prop(pipe, IGT_CRTC_GAMMA_LUT))
+		igt_crtc_set_prop_value(pipe, IGT_CRTC_GAMMA_LUT, 0);
 
-	if (igt_pipe_obj_has_prop(pipe, IGT_CRTC_DEGAMMA_LUT))
-		igt_pipe_obj_set_prop_value(pipe, IGT_CRTC_DEGAMMA_LUT, 0);
+	if (igt_crtc_has_prop(pipe, IGT_CRTC_DEGAMMA_LUT))
+		igt_crtc_set_prop_value(pipe, IGT_CRTC_DEGAMMA_LUT, 0);
 
-	if (igt_pipe_obj_has_prop(pipe, IGT_CRTC_SCALING_FILTER))
-		igt_pipe_obj_set_prop_enum(pipe, IGT_CRTC_SCALING_FILTER, "Default");
+	if (igt_crtc_has_prop(pipe, IGT_CRTC_SCALING_FILTER))
+		igt_crtc_set_prop_enum(pipe, IGT_CRTC_SCALING_FILTER, "Default");
 
-	if (igt_pipe_obj_has_prop(pipe, IGT_CRTC_VRR_ENABLED))
-		igt_pipe_obj_set_prop_value(pipe, IGT_CRTC_VRR_ENABLED, 0);
+	if (igt_crtc_has_prop(pipe, IGT_CRTC_VRR_ENABLED))
+		igt_crtc_set_prop_value(pipe, IGT_CRTC_VRR_ENABLED, 0);
 
-	if (igt_pipe_obj_has_prop(pipe, IGT_CRTC_SHARPNESS_STRENGTH))
-		igt_pipe_obj_set_prop_value(pipe, IGT_CRTC_SHARPNESS_STRENGTH, 0);
+	if (igt_crtc_has_prop(pipe, IGT_CRTC_SHARPNESS_STRENGTH))
+		igt_crtc_set_prop_value(pipe, IGT_CRTC_SHARPNESS_STRENGTH, 0);
 
 	pipe->out_fence_fd = -1;
 }
@@ -4061,7 +4061,7 @@ static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
 
 	if (!igt_plane_is_prop_changed(primary, IGT_PLANE_FB_ID) &&
 	    !(primary->changed & IGT_PLANE_COORD_CHANGED_MASK) &&
-	    !igt_pipe_obj_is_prop_changed(primary->pipe, IGT_CRTC_MODE_ID))
+	    !igt_crtc_is_prop_changed(primary->pipe, IGT_CRTC_MODE_ID))
 		return 0;
 
 	crtc_id = pipe->crtc_id;
@@ -4210,7 +4210,7 @@ static int igt_pipe_commit(igt_crtc_t *pipe,
 	int ret;
 
 	for (i = 0; i < IGT_NUM_CRTC_PROPS; i++)
-		if (igt_pipe_obj_is_prop_changed(pipe, i) &&
+		if (igt_crtc_is_prop_changed(pipe, i) &&
 		    !is_atomic_prop(i)) {
 			igt_assert(pipe->props[i]);
 
@@ -4659,7 +4659,7 @@ igt_output_replace_prop_blob(igt_output_t *output, enum igt_atomic_connector_pro
 }
 
 /**
- * igt_pipe_obj_get_prop:
+ * igt_crtc_get_prop:
  * @pipe: Target pipe.
  * @prop: Property to return.
  *
@@ -4669,16 +4669,16 @@ igt_output_replace_prop_blob(igt_output_t *output, enum igt_atomic_connector_pro
  * is a blob, the blob id is returned. This can be passed
  * to drmModeGetPropertyBlob() to get the contents of the blob.
  */
-uint64_t igt_pipe_obj_get_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop)
+uint64_t igt_crtc_get_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop)
 {
-	igt_assert(igt_pipe_obj_has_prop(pipe, prop));
+	igt_assert(igt_crtc_has_prop(pipe, prop));
 
 	return igt_mode_object_get_prop(pipe->display, DRM_MODE_OBJECT_CRTC,
 					pipe->crtc_id, pipe->props[prop]);
 }
 
 /**
- * igt_pipe_obj_try_prop_enum:
+ * igt_crtc_try_prop_enum:
  * @pipe_obj: Target pipe object.
  * @prop: Property to check.
  * @val: Value to set.
@@ -4686,7 +4686,7 @@ uint64_t igt_pipe_obj_get_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties
  * Returns: False if the given @pipe_obj doesn't have the enum @prop or
  * failed to set the enum property @val else True.
  */
-bool igt_pipe_obj_try_prop_enum(igt_crtc_t *pipe_obj,
+bool igt_crtc_try_prop_enum(igt_crtc_t *pipe_obj,
 				enum igt_atomic_crtc_properties prop,
 				const char *val)
 {
@@ -4699,12 +4699,12 @@ bool igt_pipe_obj_try_prop_enum(igt_crtc_t *pipe_obj,
 						 pipe_obj->props[prop], val, &uval))
 		return false;
 
-	igt_pipe_obj_set_prop_value(pipe_obj, prop, uval);
+	igt_crtc_set_prop_value(pipe_obj, prop, uval);
 	return true;
 }
 
 /**
- * igt_pipe_obj_set_prop_enum:
+ * igt_crtc_set_prop_enum:
  * @pipe_obj: Target pipe object.
  * @prop: Property to check.
  * @val: Value to set.
@@ -4712,15 +4712,15 @@ bool igt_pipe_obj_try_prop_enum(igt_crtc_t *pipe_obj,
  * This function tries to set given enum property @prop value @val to
  * the given @pipe_obj, and terminate the execution if its failed.
  */
-void igt_pipe_obj_set_prop_enum(igt_crtc_t *pipe_obj,
+void igt_crtc_set_prop_enum(igt_crtc_t *pipe_obj,
 				enum igt_atomic_crtc_properties prop,
 				const char *val)
 {
-	igt_assert(igt_pipe_obj_try_prop_enum(pipe_obj, prop, val));
+	igt_assert(igt_crtc_try_prop_enum(pipe_obj, prop, val));
 }
 
 /**
- * igt_pipe_obj_replace_prop_blob:
+ * igt_crtc_replace_prop_blob:
  * @pipe: pipe to set property on.
  * @prop: property for which the blob will be replaced.
  * @ptr: Pointer to contents for the property.
@@ -4736,7 +4736,7 @@ void igt_pipe_obj_set_prop_enum(igt_crtc_t *pipe_obj,
  * it works better with legacy commit.
  */
 void
-igt_pipe_obj_replace_prop_blob(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop, const void *ptr, size_t length)
+igt_crtc_replace_prop_blob(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop, const void *ptr, size_t length)
 {
 	igt_display_t *display = pipe->display;
 	uint64_t *blob = &pipe->values[prop];
@@ -4751,7 +4751,7 @@ igt_pipe_obj_replace_prop_blob(igt_crtc_t *pipe, enum igt_atomic_crtc_properties
 						     ptr, length, &blob_id) == 0);
 
 	*blob = blob_id;
-	igt_pipe_obj_set_prop_changed(pipe, prop);
+	igt_crtc_set_prop_changed(pipe, prop);
 }
 
 /*
@@ -4762,7 +4762,7 @@ static void igt_atomic_prepare_crtc_commit(igt_crtc_t *pipe_obj, drmModeAtomicRe
 	int i;
 
 	for (i = 0; i < IGT_NUM_CRTC_PROPS; i++) {
-		if (!igt_pipe_obj_is_prop_changed(pipe_obj, i))
+		if (!igt_crtc_is_prop_changed(pipe_obj, i))
 			continue;
 
 		igt_debug("Pipe %s: Setting property \"%s\" to 0x%"PRIx64"/%"PRIi64"\n",
@@ -4876,7 +4876,7 @@ display_commit_changed(igt_display_t *display, enum igt_commit_style s)
 		igt_plane_t *plane;
 
 		if (s == COMMIT_ATOMIC) {
-			if (igt_pipe_obj_is_prop_changed(pipe_obj, IGT_CRTC_OUT_FENCE_PTR))
+			if (igt_crtc_is_prop_changed(pipe_obj, IGT_CRTC_OUT_FENCE_PTR))
 				igt_assert(pipe_obj->out_fence_fd >= 0);
 
 			pipe_obj->values[IGT_CRTC_OUT_FENCE_PTR] = 0;
@@ -4884,11 +4884,11 @@ display_commit_changed(igt_display_t *display, enum igt_commit_style s)
 		} else {
 			for (i = 0; i < IGT_NUM_CRTC_PROPS; i++)
 				if (!is_atomic_prop(i))
-					igt_pipe_obj_clear_prop_changed(pipe_obj, i);
+					igt_crtc_clear_prop_changed(pipe_obj, i);
 
 			if (s != COMMIT_UNIVERSAL) {
-				igt_pipe_obj_clear_prop_changed(pipe_obj, IGT_CRTC_MODE_ID);
-				igt_pipe_obj_clear_prop_changed(pipe_obj, IGT_CRTC_ACTIVE);
+				igt_crtc_clear_prop_changed(pipe_obj, IGT_CRTC_MODE_ID);
+				igt_crtc_clear_prop_changed(pipe_obj, IGT_CRTC_ACTIVE);
 			}
 		}
 
@@ -5274,9 +5274,9 @@ void igt_output_override_mode(igt_output_t *output, const drmModeModeInfo *mode)
 
 	if (pipe) {
 		if (output->display->is_atomic)
-			igt_pipe_obj_replace_prop_blob(pipe, IGT_CRTC_MODE_ID, igt_output_get_mode(output), sizeof(*mode));
+			igt_crtc_replace_prop_blob(pipe, IGT_CRTC_MODE_ID, igt_output_get_mode(output), sizeof(*mode));
 		else
-			igt_pipe_obj_set_prop_changed(pipe, IGT_CRTC_MODE_ID);
+			igt_crtc_set_prop_changed(pipe, IGT_CRTC_MODE_ID);
 	}
 }
 
@@ -5334,11 +5334,11 @@ void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *pipe_obj)
 		old_output = igt_pipe_get_output(old_pipe);
 		if (!old_output) {
 			if (display->is_atomic)
-				igt_pipe_obj_replace_prop_blob(old_pipe, IGT_CRTC_MODE_ID, NULL, 0);
+				igt_crtc_replace_prop_blob(old_pipe, IGT_CRTC_MODE_ID, NULL, 0);
 			else
-				igt_pipe_obj_set_prop_changed(old_pipe, IGT_CRTC_MODE_ID);
+				igt_crtc_set_prop_changed(old_pipe, IGT_CRTC_MODE_ID);
 
-			igt_pipe_obj_set_prop_value(old_pipe, IGT_CRTC_ACTIVE, 0);
+			igt_crtc_set_prop_value(old_pipe, IGT_CRTC_ACTIVE, 0);
 		}
 	}
 
@@ -5349,11 +5349,11 @@ void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *pipe_obj)
 
 	if (pipe_obj) {
 		if (display->is_atomic)
-			igt_pipe_obj_replace_prop_blob(pipe_obj, IGT_CRTC_MODE_ID, igt_output_get_mode(output), sizeof(drmModeModeInfo));
+			igt_crtc_replace_prop_blob(pipe_obj, IGT_CRTC_MODE_ID, igt_output_get_mode(output), sizeof(drmModeModeInfo));
 		else
-			igt_pipe_obj_set_prop_changed(pipe_obj, IGT_CRTC_MODE_ID);
+			igt_crtc_set_prop_changed(pipe_obj, IGT_CRTC_MODE_ID);
 
-		igt_pipe_obj_set_prop_value(pipe_obj, IGT_CRTC_ACTIVE, 1);
+		igt_crtc_set_prop_value(pipe_obj, IGT_CRTC_ACTIVE, 1);
 	}
 }
 
@@ -5484,9 +5484,9 @@ void igt_pipe_refresh(igt_display_t *display, enum pipe pipe, bool force)
 
 		pipe_obj->values[IGT_CRTC_MODE_ID] = 0;
 		if (output)
-			igt_pipe_obj_replace_prop_blob(pipe_obj, IGT_CRTC_MODE_ID, igt_output_get_mode(output), sizeof(drmModeModeInfo));
+			igt_crtc_replace_prop_blob(pipe_obj, IGT_CRTC_MODE_ID, igt_output_get_mode(output), sizeof(drmModeModeInfo));
 	} else
-		igt_pipe_obj_set_prop_changed(pipe_obj, IGT_CRTC_MODE_ID);
+		igt_crtc_set_prop_changed(pipe_obj, IGT_CRTC_MODE_ID);
 }
 
 /**
@@ -5805,7 +5805,7 @@ void igt_plane_set_rotation(igt_plane_t *plane, igt_rotation_t rotation)
  */
 void igt_pipe_request_out_fence(igt_crtc_t *pipe)
 {
-	igt_pipe_obj_set_prop_value(pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)&pipe->out_fence_fd);
+	igt_crtc_set_prop_value(pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)&pipe->out_fence_fd);
 }
 
 /**

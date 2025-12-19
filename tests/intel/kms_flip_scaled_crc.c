@@ -709,7 +709,7 @@ static void set_lut(data_t *data, enum pipe pipe)
 		lut[i].blue = v;
 	}
 
-	igt_pipe_obj_replace_prop_blob(pipe_obj, IGT_CRTC_GAMMA_LUT,
+	igt_crtc_replace_prop_blob(pipe_obj, IGT_CRTC_GAMMA_LUT,
 				       lut, sizeof(lut[0]) * lut_size);
 
 	free(lut);
@@ -719,7 +719,7 @@ static void clear_lut(data_t *data, enum pipe pipe)
 {
 	igt_crtc_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
 
-	igt_pipe_obj_set_prop_value(pipe_obj, IGT_CRTC_GAMMA_LUT, 0);
+	igt_crtc_set_prop_value(pipe_obj, IGT_CRTC_GAMMA_LUT, 0);
 }
 
 static void test_flip_to_scaled(data_t *data, uint32_t index,

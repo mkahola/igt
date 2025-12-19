@@ -94,8 +94,8 @@ static bool test_pipe_degamma(data_t *data,
 	int fb_id, fb_modeset_id;
 	bool ret;
 
-	igt_require(igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT));
-	igt_require(igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_GAMMA_LUT));
+	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT));
+	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_GAMMA_LUT));
 
 	degamma_linear = generate_table(data->degamma_lut_size, 1.0);
 	degamma_full = generate_table_max(data->degamma_lut_size);
@@ -183,7 +183,7 @@ static bool test_pipe_gamma(data_t *data,
 	int fb_id, fb_modeset_id;
 	bool ret;
 
-	igt_require(igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_GAMMA_LUT));
+	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_GAMMA_LUT));
 
 	gamma_full = generate_table_max(data->gamma_lut_size);
 
@@ -378,9 +378,9 @@ static bool test_pipe_legacy_gamma_reset(data_t *data,
 	igt_output_t *output = data->output;
 	bool ret = true;
 
-	igt_require(igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_GAMMA_LUT));
+	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_GAMMA_LUT));
 
-	if (igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT))
+	if (igt_crtc_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT))
 		degamma_linear = generate_table(data->degamma_lut_size, 1.0);
 	gamma_zero = generate_table_zero(data->gamma_lut_size);
 
@@ -397,14 +397,14 @@ static bool test_pipe_legacy_gamma_reset(data_t *data,
 	 * properties and verify the content of the
 	 * properties.
 	 */
-	if (igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT))
+	if (igt_crtc_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT))
 		set_degamma(data, primary->pipe, degamma_linear);
-	if (igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_CTM))
+	if (igt_crtc_has_prop(primary->pipe, IGT_CRTC_CTM))
 		set_ctm(primary->pipe, ctm_identity);
 	set_gamma(data, primary->pipe, gamma_zero);
 	igt_display_commit(&data->display);
 
-	if (igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT)) {
+	if (igt_crtc_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT)) {
 		blob = get_blob(data, primary->pipe, IGT_CRTC_DEGAMMA_LUT);
 		igt_assert(blob &&
 			   blob->length == (sizeof(struct drm_color_lut) *
@@ -412,7 +412,7 @@ static bool test_pipe_legacy_gamma_reset(data_t *data,
 		drmModeFreePropertyBlob(blob);
 	}
 
-	if (igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_CTM)) {
+	if (igt_crtc_has_prop(primary->pipe, IGT_CRTC_CTM)) {
 		blob = get_blob(data, primary->pipe, IGT_CRTC_CTM);
 		igt_assert(blob &&
 			   blob->length == sizeof(struct drm_color_ctm));
@@ -459,11 +459,11 @@ static bool test_pipe_legacy_gamma_reset(data_t *data,
 					  red_lut, green_lut, blue_lut), 0);
 	igt_display_commit(&data->display);
 
-	if (igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT))
+	if (igt_crtc_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT))
 		igt_assert(get_blob(data, primary->pipe,
 				    IGT_CRTC_DEGAMMA_LUT) == NULL);
 
-	if (igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_CTM))
+	if (igt_crtc_has_prop(primary->pipe, IGT_CRTC_CTM))
 		igt_assert(get_blob(data, primary->pipe, IGT_CRTC_CTM) == NULL);
 
 	blob = get_blob(data, primary->pipe, IGT_CRTC_GAMMA_LUT);
@@ -514,7 +514,7 @@ static bool test_pipe_ctm(data_t *data,
 	igt_crc_t crc_software, crc_hardware;
 	int fb_id, fb_modeset_id;
 
-	igt_require(igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_CTM));
+	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_CTM));
 
 	igt_output_set_crtc(output, primary->pipe);
 	igt_output_override_mode(output, mode);
@@ -546,7 +546,7 @@ static bool test_pipe_ctm(data_t *data,
 	 * rounding issues and inaccuracies leading to crc mismatch.
 	 */
 	if (is_intel_device(data->drm_fd) && memcmp(before, after, sizeof(color_t))) {
-		igt_require(igt_pipe_obj_has_prop(primary->pipe, IGT_CRTC_GAMMA_LUT));
+		igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_GAMMA_LUT));
 
 		gamma_linear = generate_table(256, 1.0);
 
@@ -714,16 +714,16 @@ prep_pipe(data_t *data, enum pipe p)
 {
 	igt_require_pipe(&data->display, p);
 
-	if (igt_pipe_obj_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_DEGAMMA_LUT_SIZE)) {
+	if (igt_crtc_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_DEGAMMA_LUT_SIZE)) {
 		data->degamma_lut_size =
-			igt_pipe_obj_get_prop(igt_crtc_for_pipe(&data->display, p),
+			igt_crtc_get_prop(igt_crtc_for_pipe(&data->display, p),
 					      IGT_CRTC_DEGAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->degamma_lut_size);
 	}
 
-	if (igt_pipe_obj_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_GAMMA_LUT_SIZE)) {
+	if (igt_crtc_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_GAMMA_LUT_SIZE)) {
 		data->gamma_lut_size =
-			igt_pipe_obj_get_prop(igt_crtc_for_pipe(&data->display, p),
+			igt_crtc_get_prop(igt_crtc_for_pipe(&data->display, p),
 					      IGT_CRTC_GAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->gamma_lut_size);
 	}

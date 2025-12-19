@@ -389,7 +389,7 @@ static void set_c8_lut(data_t *data)
 		lut[i].blue = ((i & 0x03) >> 0) * 0xffff / 0x3;
 	}
 
-	igt_pipe_obj_replace_prop_blob(pipe, IGT_CRTC_GAMMA_LUT, lut,
+	igt_crtc_replace_prop_blob(pipe, IGT_CRTC_GAMMA_LUT, lut,
 				       lut_size * sizeof(lut[0]));
 
 	free(lut);
@@ -399,7 +399,7 @@ static void unset_lut(data_t *data)
 {
 	igt_crtc_t *pipe = igt_crtc_for_pipe(&data->display, data->pipe);
 
-	igt_pipe_obj_replace_prop_blob(pipe, IGT_CRTC_GAMMA_LUT, NULL, 0);
+	igt_crtc_replace_prop_blob(pipe, IGT_CRTC_GAMMA_LUT, NULL, 0);
 }
 
 static bool test_plane(data_t *data)
@@ -518,7 +518,7 @@ static bool test_pipe(data_t *data)
 		 kmstest_pipe_name(data->pipe), igt_output_name(data->output));
 
 	if (data->format == DRM_FORMAT_C8 &&
-	    !igt_pipe_obj_has_prop(igt_crtc_for_pipe(&data->display, data->pipe),
+	    !igt_crtc_has_prop(igt_crtc_for_pipe(&data->display, data->pipe),
 				   IGT_CRTC_GAMMA_LUT))
 		return false;
 

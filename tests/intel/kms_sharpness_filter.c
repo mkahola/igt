@@ -173,7 +173,7 @@ typedef struct {
 
 static void set_filter_strength_on_pipe(data_t *data)
 {
-	igt_pipe_obj_set_prop_value(igt_crtc_for_pipe(&data->display, data->pipe_id),
+	igt_crtc_set_prop_value(igt_crtc_for_pipe(&data->display, data->pipe_id),
 				    IGT_CRTC_SHARPNESS_STRENGTH,
 				    data->filter_strength);
 }
@@ -419,7 +419,7 @@ static void test_sharpness_filter(data_t *data,  enum test_type type)
 
 static bool has_sharpness_filter(igt_crtc_t *pipe)
 {
-	return igt_pipe_obj_has_prop(pipe, IGT_CRTC_SHARPNESS_STRENGTH);
+	return igt_crtc_has_prop(pipe, IGT_CRTC_SHARPNESS_STRENGTH);
 }
 
 static void
