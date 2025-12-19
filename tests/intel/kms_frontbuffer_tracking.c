@@ -1116,7 +1116,7 @@ static void init_mode_params(struct modeset_params *params,
 	params->output = output;
 	params->mode = *mode;
 
-	params->primary.plane = igt_pipe_get_plane_type(igt_crtc_for_pipe(&drm.display, pipe),
+	params->primary.plane = igt_crtc_get_plane_type(igt_crtc_for_pipe(&drm.display, pipe),
 							DRM_PLANE_TYPE_PRIMARY);
 	params->primary.fb = NULL;
 	params->primary.x = 0;
@@ -1124,7 +1124,7 @@ static void init_mode_params(struct modeset_params *params,
 	params->primary.w = mode->hdisplay;
 	params->primary.h = mode->vdisplay;
 
-	params->cursor.plane = igt_pipe_get_plane_type(igt_crtc_for_pipe(&drm.display, pipe),
+	params->cursor.plane = igt_crtc_get_plane_type(igt_crtc_for_pipe(&drm.display, pipe),
 						       DRM_PLANE_TYPE_CURSOR);
 	params->cursor.fb = NULL;
 	params->cursor.x = 0;
@@ -1132,7 +1132,7 @@ static void init_mode_params(struct modeset_params *params,
 	params->cursor.w = 64;
 	params->cursor.h = 64;
 
-	params->sprite.plane = igt_pipe_get_plane_type(igt_crtc_for_pipe(&drm.display, pipe),
+	params->sprite.plane = igt_crtc_get_plane_type(igt_crtc_for_pipe(&drm.display, pipe),
 						       DRM_PLANE_TYPE_OVERLAY);
 	igt_require(params->sprite.plane);
 	params->sprite.fb = NULL;

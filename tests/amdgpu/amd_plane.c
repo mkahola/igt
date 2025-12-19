@@ -157,13 +157,13 @@ static void test_init(data_t *data)
 	for_each_pipe(display, i) {
 		data->pipe_id[i] = PIPE_A + i;
 		data->pipe[i] = igt_crtc_for_pipe(display, data->pipe_id[i]);
-		data->primary[i] = igt_pipe_get_plane_type(
+		data->primary[i] = igt_crtc_get_plane_type(
 			data->pipe[i], DRM_PLANE_TYPE_PRIMARY);
-		data->overlay[i] = igt_pipe_get_plane_type_index(
+		data->overlay[i] = igt_crtc_get_plane_type_index(
 			data->pipe[i], DRM_PLANE_TYPE_OVERLAY, 0);
-		data->overlay2[i] = igt_pipe_get_plane_type_index(
+		data->overlay2[i] = igt_crtc_get_plane_type_index(
 			data->pipe[i], DRM_PLANE_TYPE_OVERLAY, 1);
-		data->cursor[i] = igt_pipe_get_plane_type(
+		data->cursor[i] = igt_crtc_get_plane_type(
 			data->pipe[i], DRM_PLANE_TYPE_CURSOR);
 		data->pipe_crc[i] =
 			igt_pipe_crc_new(data->fd, data->pipe_id[i],

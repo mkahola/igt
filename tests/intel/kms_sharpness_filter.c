@@ -338,7 +338,7 @@ static void test_sharpness_filter(data_t *data,  enum test_type type)
 	igt_pipe_crc_t *pipe_crc = NULL;
 	int ret;
 
-	data->plane[0] = igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
+	data->plane[0] = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
 	igt_skip_on_f(!igt_plane_has_format_mod(data->plane[0], data->format, data->modifier),
 		      "No requested format/modifier on pipe %s\n", kmstest_pipe_name(data->pipe_id));
 

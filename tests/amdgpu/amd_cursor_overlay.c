@@ -141,16 +141,16 @@ static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 	data->pipe = &data->display.pipes[data->pipe_id];
 	data->output = output;
 	data->mode = igt_output_get_mode(data->output);
-	data->primary = igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
-	data->cursor = igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_CURSOR);
+	data->primary = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
+	data->cursor = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_CURSOR);
 
 	if (flags & TEST_MAX_PLANES)
 		for (i = 0; i < available_overlay_planes - 1; i++)
-			data->overlays[i] = igt_pipe_get_plane_type_index(data->pipe,
+			data->overlays[i] = igt_crtc_get_plane_type_index(data->pipe,
 						DRM_PLANE_TYPE_OVERLAY, i);
 	if (flags & TEST_NO_AVAILABLE_PLANES)
 		for (i = 0; i < available_overlay_planes; i++)
-			data->overlays[i] = igt_pipe_get_plane_type_index(data->pipe,
+			data->overlays[i] = igt_crtc_get_plane_type_index(data->pipe,
 						DRM_PLANE_TYPE_OVERLAY, i);
 
 	igt_info("Using (pipe %s + %s) to run the subtest.\n",

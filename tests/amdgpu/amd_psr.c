@@ -185,13 +185,13 @@ static void test_init(data_t *data)
 	kmstest_dump_mode(data->mode);
 
 	data->primary =
-		igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
+		igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
 
 	data->cursor =
-		igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_CURSOR);
+		igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_CURSOR);
 
 	data->overlay =
-		igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_OVERLAY);
+		igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_OVERLAY);
 
 	data->pipe_crc = igt_pipe_crc_new(data->fd, data->pipe_id,
 					  IGT_PIPE_CRC_SOURCE_AUTO);

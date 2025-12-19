@@ -233,7 +233,7 @@ test_plane_position_with_output(data_t *data, enum pipe pipe, int max_planes,
 	bool loop_forever = opt.iterations == LOOP_FOREVER ? true : false;
 	int ret;
 
-	igt_pipe_refresh(igt_crtc_for_pipe(&data->display, pipe), true);
+	igt_crtc_refresh(igt_crtc_for_pipe(&data->display, pipe), true);
 
 	i = 0;
 	while (i < iterations || loop_forever) {

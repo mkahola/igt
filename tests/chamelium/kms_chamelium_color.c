@@ -459,7 +459,7 @@ static int test_setup(data_t *data, enum pipe p)
 	pipe = igt_crtc_for_pipe(&data->display, p);
 	igt_require(pipe->n_planes >= 0);
 
-	data->primary = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+	data->primary = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 
 	/*
 	 * Prefer to run this test on HDMI connector if its connected, since on DP we

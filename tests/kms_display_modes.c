@@ -105,9 +105,9 @@ static void run_extendedmode_basic(data_t *data,
 	igt_create_color_fb(data->drm_fd, mode[1]->hdisplay, mode[1]->vdisplay,
 			    DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, 0, 0, 1, &fbs[1]);
 
-	plane[0] = igt_pipe_get_plane_type(igt_crtc_for_pipe(display, pipe1),
+	plane[0] = igt_crtc_get_plane_type(igt_crtc_for_pipe(display, pipe1),
 					   DRM_PLANE_TYPE_PRIMARY);
-	plane[1] = igt_pipe_get_plane_type(igt_crtc_for_pipe(display, pipe2),
+	plane[1] = igt_crtc_get_plane_type(igt_crtc_for_pipe(display, pipe2),
 					   DRM_PLANE_TYPE_PRIMARY);
 
 	igt_plane_set_fb(plane[0], &fbs[0]);
@@ -161,10 +161,10 @@ static void run_extendedmode_basic(data_t *data,
 	igt_output_set_crtc(output1, NULL);
 	igt_output_set_crtc(output2, NULL);
 
-	igt_plane_set_fb(igt_pipe_get_plane_type(igt_crtc_for_pipe(display, pipe1),
+	igt_plane_set_fb(igt_crtc_get_plane_type(igt_crtc_for_pipe(display, pipe1),
 						 DRM_PLANE_TYPE_PRIMARY),
 			 NULL);
-	igt_plane_set_fb(igt_pipe_get_plane_type(igt_crtc_for_pipe(display, pipe2),
+	igt_plane_set_fb(igt_crtc_get_plane_type(igt_crtc_for_pipe(display, pipe2),
 						 DRM_PLANE_TYPE_PRIMARY),
 			 NULL);
 	igt_assert_f(igt_fit_modes_in_bw(display), "Unable to fit modes in bw\n");

@@ -938,12 +938,12 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 	crtc_commit_atomic_flags_err(data->pipe, data->primary, 0, ATOMIC_RELAX_NONE, EINVAL);
 
 	/* valid out fence ptr and flip event but not allowed prop on crtc */
-	igt_pipe_request_out_fence(data->pipe);
+	igt_crtc_request_out_fence(data->pipe);
 	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_PAGE_FLIP_EVENT,
 				     ATOMIC_RELAX_NONE, EINVAL);
 
 	/* valid flip event but not allowed prop on crtc */
-	igt_pipe_request_out_fence(data->pipe);
+	igt_crtc_request_out_fence(data->pipe);
 	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_PAGE_FLIP_EVENT,
 				     ATOMIC_RELAX_NONE, EINVAL);
 
@@ -957,7 +957,7 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->fb.fb_id);
 
 	/* valid out fence but invalid prop on crtc */
-	igt_pipe_request_out_fence(data->pipe);
+	igt_crtc_request_out_fence(data->pipe);
 	crtc_commit_atomic_flags_err(data->pipe, data->primary, 0,
 				     ATOMIC_RELAX_NONE, EINVAL);
 
@@ -984,7 +984,7 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
 
 	/* out fence ptr but not page flip event */
-	igt_pipe_request_out_fence(data->pipe);
+	igt_crtc_request_out_fence(data->pipe);
 	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
 
 	igt_assert(data->pipe->out_fence_fd != -1);
@@ -1333,7 +1333,7 @@ static void atomic_setup(data_t *data, enum pipe pipe, igt_output_t *output)
 	igt_display_reset(&data->display);
 	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
-	data->primary = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
+	data->primary = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
 						DRM_PLANE_TYPE_PRIMARY);
 	data->pipe = igt_crtc_for_pipe(&data->display, pipe);
 	mode = igt_output_get_mode(output);
@@ -1419,7 +1419,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_subtest_with_dynamic("plane-overlay-legacy") {
 		for_each_pipe_with_single_output(&data.display, pipe, output) {
 			igt_plane_t *overlay =
-				igt_pipe_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
+				igt_crtc_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
 							DRM_PLANE_TYPE_OVERLAY);
 			uint32_t format = plane_get_igt_format(overlay);
 
@@ -1458,7 +1458,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_subtest_with_dynamic("plane-primary-overlay-mutable-zpos") {
 		for_each_pipe_with_single_output(&data.display, pipe, output) {
 			igt_plane_t *overlay =
-				igt_pipe_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
+				igt_crtc_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
 							DRM_PLANE_TYPE_OVERLAY);
 
 			if (!pipe_output_combo_valid(&data.display, pipe, output))
@@ -1530,7 +1530,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_subtest_with_dynamic("plane-cursor-legacy") {
 		for_each_pipe_with_single_output(&data.display, pipe, output) {
 			igt_plane_t *cursor =
-				igt_pipe_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
+				igt_crtc_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
 							DRM_PLANE_TYPE_CURSOR);
 
 			if (!pipe_output_combo_valid(&data.display, pipe, output))

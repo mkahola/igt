@@ -297,7 +297,7 @@ static void run_plane_test(igt_display_t *display, enum pipe pipe, igt_output_t 
 
 	/* The mode is unset by the forked helper, force a refresh here */
 	if (test_type == test_legacy_modeset || test_type == test_atomic_modeset)
-		igt_pipe_refresh(igt_crtc_for_pipe(display, pipe), true);
+		igt_crtc_refresh(igt_crtc_for_pipe(display, pipe), true);
 
 	igt_plane_set_fb(plane, NULL);
 	igt_plane_set_fb(primary, NULL);

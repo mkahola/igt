@@ -41,7 +41,7 @@ static void test_init(data_t *data)
 	for_each_pipe(display, i) {
 		igt_output_t *output = &display->outputs[i];
 
-		data->primary[i] = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->display, i),
+		data->primary[i] = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, i),
 							   DRM_PLANE_TYPE_PRIMARY);
 
 		data->output[i] = output;

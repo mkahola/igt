@@ -99,10 +99,10 @@ static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 
 	data->mode = igt_output_get_mode(data->output);
 
-	data->primary = igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
+	data->primary = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
 	if (flags & TEST_OVERLAY)
-		data->overlay = igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_OVERLAY);
-	data->cursor = igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_CURSOR);
+		data->overlay = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_OVERLAY);
+	data->cursor = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_CURSOR);
 
 	igt_info("Using (pipe %s + %s) to run the subtest.\n",
 		 kmstest_pipe_name(data->pipe_id), igt_output_name(data->output));
@@ -328,7 +328,7 @@ int igt_main()
 		igt_subtest_with_dynamic_f("%s", tests[i].name) {
 			for_each_pipe_with_single_output(&data.display, pipe, output) {
 				if ((tests[i].flags & TEST_OVERLAY) &&
-				    !igt_pipe_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
+				    !igt_crtc_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
 							     DRM_PLANE_TYPE_OVERLAY))
 					continue;
 

@@ -161,7 +161,7 @@ static void test_init(struct data_t *data)
 		 */
 		output = igt_get_single_output_for_pipe(display, i);
 		pipes = igt_crtc_for_pipe(display, i);
-		data->primary[i] = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->display, i),
+		data->primary[i] = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, i),
 							   DRM_PLANE_TYPE_PRIMARY);
 		data->output[i] = output;
 

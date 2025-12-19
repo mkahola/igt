@@ -509,7 +509,7 @@ static void unprepare_fencing(data_t *data, enum pipe pipe)
 static void atomic_commit(data_t *data_v, enum pipe pipe, unsigned int flags, void *data, bool fencing)
 {
 	if (fencing)
-		igt_pipe_request_out_fence(igt_crtc_for_pipe(&data_v->display, pipe));
+		igt_crtc_request_out_fence(igt_crtc_for_pipe(&data_v->display, pipe));
 
 	igt_display_commit_atomic(&data_v->display, flags, data);
 }
@@ -610,7 +610,7 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 		wm_setup_plane(data, pipe, iter_max - 1, parms, false);
 
 		if (fencing)
-			igt_pipe_request_out_fence(pipe_obj);
+			igt_crtc_request_out_fence(pipe_obj);
 
 		ret = igt_display_try_commit_atomic(&data->display, DRM_MODE_ATOMIC_TEST_ONLY | DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 		igt_assert(!is_atomic_check_failure_errno(ret));
@@ -805,7 +805,7 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 	unset_output_pipe(&data->display);
 
 	for_each_pipe(&data->display, pipe) {
-		igt_plane_t *plane = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
+		igt_plane_t *plane = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
 							     DRM_PLANE_TYPE_PRIMARY);
 
 		enum pipe old_pipe = plane->ref->pipe->pipe;
@@ -815,7 +815,7 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 		 * currently is holding the plane
 		 */
 		if (old_pipe != pipe) {
-			igt_plane_t *old_plane = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->display, old_pipe),
+			igt_plane_t *old_plane = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, old_pipe),
 									 DRM_PLANE_TYPE_PRIMARY);
 
 			igt_plane_set_fb(old_plane, NULL);
@@ -824,7 +824,7 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 	}
 
 	for_each_pipe(&data->display, pipe) {
-		igt_plane_t *plane = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
+		igt_plane_t *plane = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
 							     DRM_PLANE_TYPE_PRIMARY);
 		drmModeModeInfo *mode = NULL;
 
@@ -922,7 +922,7 @@ retry:
 
 	for_each_pipe(&data->display, i) {
 		igt_crtc_t *pipe = igt_crtc_for_pipe(&data->display, i);
-		igt_plane_t *plane = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+		igt_plane_t *plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 		drmModeModeInfo *mode = NULL;
 
 		/* count enable pipes to set max iteration */
@@ -957,7 +957,7 @@ retry:
 			igt_plane_set_size(plane, mode->hdisplay, mode->vdisplay);
 
 			if (fencing)
-				igt_pipe_request_out_fence(igt_crtc_for_pipe(&data->display, i));
+				igt_crtc_request_out_fence(igt_crtc_for_pipe(&data->display, i));
 		} else {
 			igt_plane_set_fb(plane, NULL);
 		}

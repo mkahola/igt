@@ -79,7 +79,7 @@ static void prepare_test(data_t *data, igt_output_t *output, enum pipe p)
 	igt_assert(pipe);
 
 	data->primary =
-		igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+		igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 
 	igt_output_set_crtc(output, pipe);
 }

@@ -161,7 +161,7 @@ static void flip_to_fb(igt_display_t *dpy, int pipe,
 		gem_quiescent_gpu(dpy->drm_fd);
 
 		/* Clear old mode blob. */
-		igt_pipe_refresh(igt_crtc_for_pipe(dpy, pipe), true);
+		igt_crtc_refresh(igt_crtc_for_pipe(dpy, pipe), true);
 
 		igt_output_set_crtc(output,
 				    igt_crtc_for_pipe(output->display, pipe));

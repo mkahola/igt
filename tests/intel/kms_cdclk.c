@@ -242,7 +242,7 @@ static void set_mode(data_t *data, int count, drmModeModeInfo *mode,
 
 	for (int i = 0; i < count; i++) {
 		pipe = igt_crtc_for_pipe(display, i);
-		plane = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+		plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 
 		igt_output_override_mode(valid_outputs[i], &mode[i]);
 

@@ -472,7 +472,7 @@ find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 static void flip_nonblocking(igt_display_t *display, enum pipe pipe_id, bool atomic, struct igt_fb *fb, void *data)
 {
 	igt_crtc_t *pipe = igt_crtc_for_pipe(display, pipe_id);
-	igt_plane_t *primary = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+	igt_plane_t *primary = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 	int ret;
 
 	igt_set_timeout(5, "Scheduling page flip\n");
@@ -536,8 +536,8 @@ static void transition_nonblocking(igt_display_t *display, enum pipe pipe_id,
 				   bool hide_sprite)
 {
 	igt_crtc_t *pipe = igt_crtc_for_pipe(display, pipe_id);
-	igt_plane_t *primary = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
-	igt_plane_t *sprite = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_OVERLAY);
+	igt_plane_t *primary = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+	igt_plane_t *sprite = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_OVERLAY);
 
 	if (hide_sprite) {
 		igt_plane_set_fb(primary, prim_fb);
@@ -636,7 +636,7 @@ static void flip(igt_display_t *display,
 
 	if (mode == flip_test_atomic_transitions ||
 		mode == flip_test_atomic_transitions_varying_size) {
-		igt_require(igt_pipe_get_plane_type(igt_crtc_for_pipe(display, flip_pipe),
+		igt_require(igt_crtc_get_plane_type(igt_crtc_for_pipe(display, flip_pipe),
 						    DRM_PLANE_TYPE_OVERLAY));
 	}
 

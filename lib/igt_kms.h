@@ -604,18 +604,18 @@ drmModeModeInfo *igt_std_1024_mode_get(int vrefresh);
 void igt_output_set_writeback_fb(igt_output_t *output, struct igt_fb *fb);
 void igt_modeset_disable_all_outputs(igt_display_t *display);
 
-igt_plane_t *igt_pipe_get_plane_type(igt_crtc_t *pipe, int plane_type);
-int igt_pipe_count_plane_type(igt_crtc_t *pipe, int plane_type);
-igt_plane_t *igt_pipe_get_plane_type_index(igt_crtc_t *pipe, int plane_type,
+igt_plane_t *igt_crtc_get_plane_type(igt_crtc_t *pipe, int plane_type);
+int igt_crtc_count_plane_type(igt_crtc_t *pipe, int plane_type);
+igt_plane_t *igt_crtc_get_plane_type_index(igt_crtc_t *pipe, int plane_type,
 					   int index);
 bool output_is_internal_panel(igt_output_t *output);
 igt_output_t *igt_get_single_output_for_pipe(igt_display_t *display, enum pipe pipe);
 
-void igt_pipe_request_out_fence(igt_crtc_t *pipe);
+void igt_crtc_request_out_fence(igt_crtc_t *pipe);
 
 void igt_plane_set_fb(igt_plane_t *plane, struct igt_fb *fb);
 void igt_plane_set_fence_fd(igt_plane_t *plane, int fence_fd);
-void igt_plane_set_pipe(igt_plane_t *plane, igt_crtc_t *pipe);
+void igt_plane_set_crtc(igt_plane_t *plane, igt_crtc_t *pipe);
 void igt_plane_set_position(igt_plane_t *plane, int x, int y);
 void igt_plane_set_size(igt_plane_t *plane, int w, int h);
 void igt_plane_set_rotation(igt_plane_t *plane, igt_rotation_t rotation);
@@ -1119,7 +1119,7 @@ extern void igt_crtc_set_prop_enum(igt_crtc_t *pipe,
 extern void igt_crtc_replace_prop_blob(igt_crtc_t *pipe,
 					   enum igt_atomic_crtc_properties prop,
 					   const void *ptr, size_t length);
-void igt_pipe_refresh(igt_crtc_t *pipe_obj, bool force);
+void igt_crtc_refresh(igt_crtc_t *pipe_obj, bool force);
 
 void igt_enable_connectors(int drm_fd);
 void igt_reset_connectors(void);

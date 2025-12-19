@@ -58,7 +58,7 @@ static void test_setup(data_t *data, enum pipe p)
 
 	igt_output_set_crtc(data->output, pipe);
 
-	data->primary = igt_pipe_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+	data->primary = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 	data->mode = igt_output_get_mode(data->output);
 	igt_require(data->mode);
 

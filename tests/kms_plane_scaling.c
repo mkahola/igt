@@ -1029,11 +1029,11 @@ test_invalid_num_scalers(data_t *d, enum pipe pipe, igt_output_t *output)
 	width = height = 20;
 	mode = igt_output_get_mode(output);
 
-	plane[0] = igt_pipe_get_plane_type_index(pipe_obj, DRM_PLANE_TYPE_OVERLAY, 0);
+	plane[0] = igt_crtc_get_plane_type_index(pipe_obj, DRM_PLANE_TYPE_OVERLAY, 0);
 	igt_require(plane[0]);
-	plane[1] = igt_pipe_get_plane_type_index(pipe_obj, DRM_PLANE_TYPE_OVERLAY, 1);
+	plane[1] = igt_crtc_get_plane_type_index(pipe_obj, DRM_PLANE_TYPE_OVERLAY, 1);
 	igt_require(plane[1]);
-	plane[2] = igt_pipe_get_plane_type_index(pipe_obj, DRM_PLANE_TYPE_OVERLAY, 2);
+	plane[2] = igt_crtc_get_plane_type_index(pipe_obj, DRM_PLANE_TYPE_OVERLAY, 2);
 	igt_require(plane[2]);
 
 	igt_create_fb(display->drm_fd,

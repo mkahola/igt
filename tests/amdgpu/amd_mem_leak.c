@@ -65,7 +65,7 @@ static void test_init(data_t *data)
 	igt_assert(data->mode);
 
 	data->primary =
-		igt_pipe_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
+		igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
 
 	igt_output_set_crtc(data->output,
 			    igt_crtc_for_pipe(data->output->display, data->pipe_id));

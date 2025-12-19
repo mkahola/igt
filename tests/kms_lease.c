@@ -909,7 +909,7 @@ static void invalid_create_leases(data_t *data)
 	igt_assert_eq(create_lease(data->master.fd, &mcl, NULL), -EINVAL);
 
 	/* sanity check */
-	object_ids[2] = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
+	object_ids[2] = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
 						DRM_PLANE_TYPE_PRIMARY)->drm_plane->plane_id;
 	mcl.object_count = 3;
 	igt_assert_eq(create_lease(data->master.fd, &mcl, NULL), 0);
@@ -1076,7 +1076,7 @@ static int _create_simple_lease(int master_fd, data_t *data, int expected_ret)
 
 	object_ids[0] = igt_crtc_for_pipe(&data->master.display, 0)->crtc_id;
 	object_ids[1] = data->master.display.outputs[0].id;
-	object_ids[2] = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
+	object_ids[2] = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
 						DRM_PLANE_TYPE_PRIMARY)->drm_plane->plane_id;
 	mcl.object_ids = (uint64_t) (uintptr_t) object_ids;
 	mcl.object_count = 3;
@@ -1164,12 +1164,12 @@ static void implicit_plane_lease(data_t *data)
 	struct drm_mode_create_lease mcl;
 	struct drm_mode_get_lease mgl;
 	int ret;
-	uint32_t cursor_id = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
+	uint32_t cursor_id = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
 						     DRM_PLANE_TYPE_CURSOR)->drm_plane->plane_id;
 
 	object_ids[0] = igt_crtc_for_pipe(&data->master.display, 0)->crtc_id;
 	object_ids[1] = data->master.display.outputs[0].id;
-	object_ids[2] = igt_pipe_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
+	object_ids[2] = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->master.display, 0),
 						DRM_PLANE_TYPE_PRIMARY)->drm_plane->plane_id;
 	mcl.object_ids = (uint64_t) (uintptr_t) object_ids;
 	mcl.object_count = 3;
@@ -1302,7 +1302,7 @@ int igt_main()
 										 data.pipe)->crtc_id;
 						data.connector_id = output->id;
 						data.plane_id =
-							igt_pipe_get_plane_type(igt_crtc_for_pipe(&data.master.display, data.pipe),
+							igt_crtc_get_plane_type(igt_crtc_for_pipe(&data.master.display, data.pipe),
 										DRM_PLANE_TYPE_PRIMARY)->drm_plane->plane_id;
 						f->func(&data);
 					}
