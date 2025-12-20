@@ -669,9 +669,11 @@ static inline bool igt_output_is_connected(igt_output_t *output)
  *
  * Checks whether the given pipe and output can be used together.
  */
-#define igt_pipe_connector_valid(pipe, output) \
-	(igt_output_is_connected((output)) && \
-	       (output->config.valid_crtc_idx_mask & (1 << (pipe))))
+static inline bool igt_pipe_connector_valid(enum pipe pipe, igt_output_t *output)
+{
+	return igt_output_is_connected(output) &&
+		output->config.valid_crtc_idx_mask & (1 << (pipe));
+}
 
 #define for_each_if(condition) if (!(condition)) {} else
 
