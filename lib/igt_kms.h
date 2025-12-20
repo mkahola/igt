@@ -775,27 +775,6 @@ static inline bool igt_crtc_connector_valid(igt_crtc_t *crtc, igt_output_t *outp
 		for_each_if ((crtc)->valid)
 
 /**
- * for_each_pipe_with_valid_output:
- * @display: a pointer to an #igt_display_t structure
- * @pipe: The pipe for which this @pipe / @output combination is valid.
- * @output: The output for which this @pipe / @output combination is valid.
- *
- * This for loop is called over all connected outputs. This function
- * will try every combination of @pipe and @output.
- *
- * If you only need to test a single output for each pipe, use
- * for_each_pipe_with_single_output(), if you only need an
- * output for a single pipe, use igt_get_single_output_for_pipe().
- */
-#define for_each_pipe_with_valid_output(display, pipe, output) \
-	for (int con__ = (pipe) = 0; \
-	     assert(igt_can_fail()), (pipe) < igt_display_n_crtcs(display) && con__ < (display)->n_outputs; \
-	     con__ = (con__ + 1 < (display)->n_outputs) ? con__ + 1 : (pipe = pipe + 1, 0)) \
-		for_each_if(igt_crtc_for_pipe((display), (pipe))->valid) \
-			for_each_if ((((output) = &(display)->outputs[con__]), \
-						igt_pipe_connector_valid((pipe), (output))))
-
-/**
  * for_each_crtc_with_valid_output:
  * @display: a pointer to an #igt_display_t structure
  * @crtc: CRTC for which this @crtc / @output combination is valid.
@@ -818,23 +797,6 @@ static inline bool igt_crtc_connector_valid(igt_crtc_t *crtc, igt_output_t *outp
 
 igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display,
 					   igt_output_t **chosen_outputs);
-
-/**
- * for_each_pipe_with_single_output:
- * @display: a pointer to an #igt_display_t structure
- * @pipe: The pipe for which this @pipe / @output combination is valid.
- * @output: The output for which this @pipe / @output combination is valid.
- *
- * This loop is called over all pipes, and will try to find a compatible output
- * for each pipe. Unlike for_each_pipe_with_valid_output(), this function will
- * be called at most once for each pipe.
- */
-#define for_each_pipe_with_single_output(display, pipe, output) \
-	for (igt_output_t *__outputs[igt_display_n_crtcs(display)], \
-	     **__output = __igt_pipe_populate_outputs((display), __outputs); \
-		 __output < &__outputs[igt_display_n_crtcs(display)]; __output++) \
-		for_each_if (*__output && \
-			     ((pipe) = (__output - __outputs), (output) = *__output, 1))
 
 /**
  * for_each_crtc_with_single_output:
