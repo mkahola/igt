@@ -682,6 +682,19 @@ static inline bool igt_pipe_connector_valid(enum pipe pipe, igt_output_t *output
 		output->config.valid_crtc_idx_mask & (1 << (pipe));
 }
 
+/**
+ * igt_crtc_connector_valid:
+ * @crtc: CRTC to check.
+ * @output: #igt_output_t to check.
+ *
+ * Checks whether the given CRTC and output can be used together.
+ */
+static inline bool igt_crtc_connector_valid(igt_crtc_t *crtc, igt_output_t *output)
+{
+	return igt_output_is_connected(output) &&
+		output->config.valid_crtc_idx_mask & (1 << crtc->pipe);
+}
+
 #define for_each_if(condition) if (!(condition)) {} else
 
 /**
@@ -745,6 +758,23 @@ static inline bool igt_pipe_connector_valid(enum pipe pipe, igt_output_t *output
 		for_each_if(igt_crtc_for_pipe((display), (pipe))->valid)
 
 /**
+ * for_each_crtc:
+ * @display: a pointer to an #igt_display_t structure
+ * @crtc: The CRTC
+ *
+ * This for loop iterates over all CRTCs.
+ *
+ * Note that this cannot be used to enumerate per-CRTC subtest names since it
+ * depends upon runtime probing of the actual kms driver that is being tested.
+ * Use #for_each_pipe_static instead.
+ */
+#define for_each_crtc(display, crtc) \
+	for ((crtc) = &(display)->crtcs[0]; \
+	     (crtc) < &(display)->crtcs[(display)->n_crtcs]; \
+	     (crtc)++) \
+		for_each_if ((crtc)->valid)
+
+/**
  * for_each_pipe_with_valid_output:
  * @display: a pointer to an #igt_display_t structure
  * @pipe: The pipe for which this @pipe / @output combination is valid.
@@ -765,6 +795,27 @@ static inline bool igt_pipe_connector_valid(enum pipe pipe, igt_output_t *output
 			for_each_if ((((output) = &(display)->outputs[con__]), \
 						igt_pipe_connector_valid((pipe), (output))))
 
+/**
+ * for_each_crtc_with_valid_output:
+ * @display: a pointer to an #igt_display_t structure
+ * @crtc: CRTC for which this @crtc / @output combination is valid.
+ * @output: The output for which this @crtc / @output combination is valid.
+ *
+ * This for loop is called over all connected outputs. This function
+ * will try every combination of @crtc and @output.
+ *
+ * If you only need to test a single output for each pipe, use
+ * for_each_crtc_with_single_output(), if you only need an
+ * output for a single CRTC, use igt_get_single_output_for_pipe().
+ */
+#define for_each_crtc_with_valid_output(display, crtc, output) \
+	for ((output) = &(display)->outputs[0], (crtc) = &(display)->crtcs[0]; \
+	     assert(igt_can_fail()), (crtc) < &(display)->crtcs[(display)->n_crtcs] && \
+		     (output) < &(display)->outputs[(display)->n_outputs]; \
+	     (output) = (output) + 1 < &(display)->outputs[(display)->n_outputs] ? \
+		     (output) + 1 : ((crtc)++, &(display)->outputs[0])) \
+		for_each_if ((crtc)->valid && igt_crtc_connector_valid((crtc), (output)))
+
 igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display,
 					   igt_output_t **chosen_outputs);
 
@@ -784,6 +835,23 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display,
 		 __output < &__outputs[igt_display_n_crtcs(display)]; __output++) \
 		for_each_if (*__output && \
 			     ((pipe) = (__output - __outputs), (output) = *__output, 1))
+
+/**
+ * for_each_crtc_with_single_output:
+ * @display: a pointer to an #igt_display_t structure
+ * @crtc: The CRTC for which this @crtc / @output combination is valid.
+ * @output: The output for which this @crtc / @output combination is valid.
+ *
+ * This loop is called over all CRTCs, and will try to find a compatible output
+ * for each CRTC. Unlike for_each_pipe_with_valid_output(), this function will
+ * be called at most once for each pipe.
+ */
+#define for_each_crtc_with_single_output(display, crtc, output) \
+	for (igt_output_t *__outputs[igt_display_n_crtcs(display)], \
+	     **__output = __igt_pipe_populate_outputs((display), __outputs); \
+		 __output < &__outputs[igt_display_n_crtcs(display)]; __output++) \
+		for_each_if (*__output && \
+			     ((crtc) = igt_crtc_for_pipe((display), (__output - __outputs)), (output) = *__output, 1))
 
 /**
  * for_each_valid_output_on_pipe:
