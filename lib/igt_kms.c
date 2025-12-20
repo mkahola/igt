@@ -3186,6 +3186,8 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 	display->drm_fd = drm_fd;
 	is_intel_dev = is_intel_device(drm_fd);
 
+	igt_require(igt_has_drm_cap(drm_fd, DRM_CAP_VBLANK_HIGH_CRTC));
+
 	if (drmSetClientCap(drm_fd, DRM_CLIENT_CAP_ATOMIC, 1) == 0)
 		display->is_atomic = 1;
 
@@ -6125,19 +6127,13 @@ void igt_cleanup_uevents(struct udev_monitor *mon)
  */
 uint32_t kmstest_get_vbl_flag(int crtc_offset)
 {
-	uint32_t pipe_id;
+	uint32_t flag;
 
-	if (crtc_offset == 0)
-		pipe_id = 0;
-	else if (crtc_offset == 1)
-		pipe_id = _DRM_VBLANK_SECONDARY;
-	else {
-		uint32_t pipe_flag = crtc_offset << 1;
-		igt_assert(!(pipe_flag & ~DRM_VBLANK_HIGH_CRTC_MASK));
-		pipe_id = pipe_flag;
-	}
+	flag = crtc_offset << DRM_VBLANK_HIGH_CRTC_SHIFT;
 
-	return pipe_id;
+	igt_assert_eq(flag & ~DRM_VBLANK_HIGH_CRTC_MASK, 0);
+
+	return flag;
 }
 
 static inline const uint32_t *
