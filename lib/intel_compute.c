@@ -157,6 +157,24 @@ static float *get_output_data(const struct bo_execenv *execenv,
 	return output_data;
 }
 
+static uint16_t get_engine_class(int fd)
+{
+	struct drm_xe_engine_class_instance *hwe;
+	bool has_render = false;
+
+	xe_for_each_engine(fd, hwe) {
+		if (hwe->engine_class == DRM_XE_ENGINE_CLASS_RENDER)
+			has_render = true;
+		if (hwe->engine_class == DRM_XE_ENGINE_CLASS_COMPUTE)
+			return hwe->engine_class;
+	}
+
+	igt_assert_f(has_render == true,
+		     "Can't submit compute job, there's no COMPUTE/RENDER engines\n");
+
+	return DRM_XE_ENGINE_CLASS_RENDER;
+}
+
 static void bo_execenv_create(int fd, struct bo_execenv *execenv,
 			      struct drm_xe_engine_class_instance *eci,
 			      struct user_execenv *user)
@@ -185,17 +203,8 @@ static void bo_execenv_create(int fd, struct bo_execenv *execenv,
 			execenv->exec_queue = xe_exec_queue_create(fd, execenv->vm,
 								   eci, 0);
 		} else {
-			uint16_t engine_class;
-			uint32_t devid = intel_get_drm_devid(fd);
-			const struct intel_device_info *info = intel_get_device_info(devid);
-
-			if (info->graphics_ver >= 12 && info->graphics_rel < 60)
-				engine_class = DRM_XE_ENGINE_CLASS_RENDER;
-			else
-				engine_class = DRM_XE_ENGINE_CLASS_COMPUTE;
-
 			execenv->exec_queue = xe_exec_queue_create_class(fd, execenv->vm,
-									 engine_class);
+									 get_engine_class(fd));
 		}
 	}
 }
