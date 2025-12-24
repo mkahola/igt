@@ -1,4 +1,5 @@
 msm_progs = [
+	'msm_bo',
 	'msm_mapping',
 	'msm_recovery',
 	'msm_shrink',
