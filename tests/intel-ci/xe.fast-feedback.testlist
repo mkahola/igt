@@ -202,6 +202,7 @@ igt@xe_vm@munmap-style-unbind-userptr-end
 igt@xe_vm@munmap-style-unbind-userptr-front
 igt@xe_vm@munmap-style-unbind-userptr-inval-end
 igt@xe_vm@munmap-style-unbind-userptr-inval-front
+igt@xe_pat@pat-sanity
 igt@xe_pat@userptr-coh-none
 igt@xe_pat@prime-self-import-coh
 igt@xe_pat@prime-external-import-coh
