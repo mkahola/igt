@@ -4,6 +4,7 @@
 #define _INTEL_GPU_COMMANDS_SCAFFOLD_H_
 
 #include <stdint.h>
+#include <strings.h>
 
 typedef uint8_t  u8;
 typedef uint16_t u16;
@@ -50,5 +51,10 @@ static inline s64 sign_extend64(u64 value, int index)
 #define BITS_PER_TYPE(t) (sizeof(t) * BITS_PER_BYTE)
 #define BITS_PER_LONG BITS_PER_TYPE(long)
 #define BITS_PER_LONG_LONG BITS_PER_TYPE(long long)
+
+#define __bf_shf(x) (ffsll(x) - 1)
+
+#define FIELD_GET(mask, reg) \
+	(typeof(mask))(((reg) & (mask)) >> __bf_shf(mask))
 
 #endif /* _INTEL_GPU_COMMANDS_SCAFFOLD_H_ */
