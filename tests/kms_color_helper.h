@@ -38,7 +38,6 @@
 #include "igt.h"
 #include "igt_edid.h"
 
-
 /* Internal */
 typedef struct {
 	double r, g, b;

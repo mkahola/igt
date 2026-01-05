@@ -19,12 +19,21 @@
 const struct igt_color_tf srgb_eotf = {2.4f, (float)(1/1.055), (float)(0.055/1.055), (float)(1/12.92), 0.04045f, 0, 0};
 const struct igt_color_tf bt2020_inv_oetf = {(float)(1/0.45f), (float)(1/1.0993f), (float)(0.0993f/1.0993f), (float)(1/4.5f), (float)(0.081), 0, 0};
 
+const struct igt_color_tf linear_tf = {1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f};
+const struct igt_color_tf max_tf = {1.0f, 0.0f, 1.0f, 0.0f, 1.0e-6f, 0.0f, 0.0f};
+
 const struct igt_color_tf_pq pq_eotf = {-107/128.0f, 1.0f, 32/2523.0f, 2413/128.0f, -2392/128.0f, 8192/1305.0f };
 
 igt_1dlut_t igt_1dlut_srgb_inv_eotf = { {
 } };
 
 igt_1dlut_t igt_1dlut_srgb_eotf = { {
+} };
+
+igt_1dlut_t igt_1dlut_linear = { {
+} };
+
+igt_1dlut_t igt_1dlut_max = { {
 } };
 
 static float clamp(float val, float min, float max)
@@ -128,6 +137,16 @@ void igt_color_srgb_eotf(igt_pixel_t *pixel)
 void igt_color_srgb_inv_eotf(igt_pixel_t *pixel)
 {
 	igt_color_inv_tf(pixel, &srgb_eotf);
+}
+
+void igt_color_linear(igt_pixel_t *pixel)
+{
+	igt_color_tf(pixel, &linear_tf);
+}
+
+void igt_color_max(igt_pixel_t *pixel)
+{
+	igt_color_tf(pixel, &max_tf);
 }
 
 void igt_color_bt2020_inv_oetf(igt_pixel_t *pixel)

@@ -45,6 +45,9 @@ typedef struct igt_1dlut {
 extern igt_1dlut_t igt_1dlut_srgb_inv_eotf;
 extern igt_1dlut_t igt_1dlut_srgb_eotf;
 
+extern igt_1dlut_t igt_1dlut_linear;
+extern igt_1dlut_t igt_1dlut_max;
+
 typedef struct igt_matrix_3x4 {
 	/*
 	 * out   matrix          in
@@ -92,6 +95,9 @@ void igt_colorop_set_3dlut(igt_display_t *display,
 
 void igt_color_srgb_inv_eotf(igt_pixel_t *pixel);
 void igt_color_srgb_eotf(igt_pixel_t *pixel);
+
+void igt_color_max(igt_pixel_t *pixel);
+void igt_color_linear(igt_pixel_t *pixel);
 
 void igt_color_pq_inv_eotf(igt_pixel_t *pixel);
 void igt_color_pq_eotf(igt_pixel_t *pixel);
