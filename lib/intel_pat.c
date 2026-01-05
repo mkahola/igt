@@ -3,6 +3,7 @@
  * Copyright © 2023 Intel Corporation
  */
 
+#include <fcntl.h>
 #include "igt.h"
 #include "intel_pat.h"
 
