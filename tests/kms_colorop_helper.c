@@ -300,9 +300,9 @@ static void fill_custom_1dlut(igt_display_t *display, kms_colorop_t *colorop)
 
 		colorop->transform(&pixel);
 
-		colorop->lut1d->lut[i].red = pixel.r * UINT_MAX;
-		colorop->lut1d->lut[i].green = pixel.g * UINT_MAX;
-		colorop->lut1d->lut[i].blue = pixel.b * UINT_MAX;
+		colorop->lut1d->lut[i].red = (double)pixel.r * UINT_MAX;
+		colorop->lut1d->lut[i].green = (double)pixel.g * UINT_MAX;
+		colorop->lut1d->lut[i].blue = (double)pixel.b * UINT_MAX;
 	}
 }
 
