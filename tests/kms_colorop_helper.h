@@ -8,6 +8,7 @@
 
 #include "igt.h"
 #include "igt_color.h"
+#include "igt_color_lut.h"
 
 typedef bool (*compare_fb_t)(igt_fb_t *in, igt_fb_t *out);
 

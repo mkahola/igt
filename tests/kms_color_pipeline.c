@@ -30,6 +30,7 @@
  * @ctm3x4-lut1d:		3X4 CTM --> 1D LUT
  * @lut1d-lut1d:		1D LUT --> 1D LUT
  * @lut1d-ctm3x4-lut1d:		1D LUT --> 3X4 CTM --> 1D LUT
+ * @lut3d-green-only:		3D LUT
  */
 
 IGT_TEST_DESCRIPTION("Test DRM colorops at plane level");
@@ -166,6 +167,16 @@ run_tests_for_plane(data_t *data)
 		{ 0.0, 1.0, 0.0 },
 		{ 0.0, 0.0, 1.0 },
 	};
+	static const color_t colors_red_and_green[] = {
+		{ 1.0, 1.0, 0.0 },
+		{ 1.0, 1.0, 0.0 },
+		{ 1.0, 1.0, 0.0 }
+	};
+	static const color_t colors_only_green[] = {
+		{ 0.0, 1.0, 0.0 },
+		{ 0.0, 1.0, 0.0 },
+		{ 0.0, 1.0, 0.0 }
+	};
 	const igt_matrix_3x4_t ctm_red_to_blue = { {
 		0.0, 0.0, 0.0, 0.0,
 		0.0, 1.0, 0.0, 0.0,
@@ -187,6 +198,16 @@ run_tests_for_plane(data_t *data)
 		.lut1d = &igt_1dlut_max,
 		.name = "Pre/Post CSC GAMMA (max LUT)",
 		.transform = &igt_color_max,
+	};
+	kms_colorop_t lut3d = {
+		.type = KMS_COLOROP_LUT3D,
+		.lut3d = &igt_3dlut_17_green_only,
+		.lut3d_info = {
+			.size = 17,
+			.interpolation = DRM_COLOROP_LUT3D_INTERPOLATION_TETRAHEDRAL,
+		},
+		.name = "3dlut passing only green channel (RGB order)",
+		.transform = NULL,
 	};
 	kms_colorop_t ctm_3x4 = {
 		.type = KMS_COLOROP_CTM_3X4,
@@ -244,6 +265,11 @@ run_tests_for_plane(data_t *data)
 		  .fb_colors = colors_rgb,
 		  .exp_colors = colors_red_to_blue,
 		  .colorops = { &lut1d_linear, &ctm_3x4, &lut1d_max, NULL },
+		},
+		{ .name = "lut3d-green-only",
+		  .fb_colors = colors_red_and_green,
+		  .exp_colors = colors_only_green,
+		  .colorops = { &lut3d, NULL },
 		},
 	};
 
