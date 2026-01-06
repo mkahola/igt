@@ -238,7 +238,7 @@ static void select_valid_pipe_output_combo(data_t *data)
 
 int igt_main()
 {
-	data_t data;
+	data_t data = { 0 };
 
 	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
