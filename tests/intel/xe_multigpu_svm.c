@@ -27,7 +27,7 @@
  *		including cross-GPU access, atomic operations, coherency
  *
  * Category: Multi-GPU
- * Mega feature: SVM, GPU virtualization
+ * Mega feature: MultiGPU
  * Sub-category: SVM, memory management, performance
  * Functionality: Multi-GPU SVM, migration, coherency, atomic ops
  * Test category: functional, performance, stress
