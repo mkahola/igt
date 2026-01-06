@@ -172,3 +172,8 @@ igt@kms_vrr@seamless-rr-switch-drrs
 igt@kms_vrr@seamless-rr-switch-vrr
 igt@kms_dirtyfb@drrs-dirtyfb-ioctl
 igt@kms_frontbuffer_tracking@.*drrs.*
+#########################################
+# Valid Skip : Not supported on igfx
+#########################################
+igt@kms_pm_rpm@package-g7
+#########################################
