@@ -101,7 +101,8 @@
  * @type-0:       Type 0
  * @type-0-hdcp14: Type 0 with HDCP1.4
  * @type-1:       Type 1
- * @suspend-resume: Suspend and resume the system
+ * @type-0-suspend-resume: Type 0 with suspend and resume the system
+ * @type-1-suspend-resume: Type 1 with suspend and resume the system
  */
 
 IGT_TEST_DESCRIPTION("Test content protection (HDCP)");
@@ -1137,8 +1138,13 @@ static const struct {
 	  .content_type = HDCP_CONTENT_TYPE_1,
 	  .is_force_hdcp14 = false,
 	},
+	{ .desc = "Test Content protection(Type 0) over DP MST with suspend resume.",
+	  .name = "dp-mst-type-0-suspend-resume",
+	  .cp_tests = SUSPEND_RESUME,
+	  .content_type = HDCP_CONTENT_TYPE_0,
+	},
 	{ .desc = "Test Content protection(Type 1) over DP MST with suspend resume.",
-	  .name = "dp-mst-suspend-resume",
+	  .name = "dp-mst-type-1-suspend-resume",
 	  .cp_tests = SUSPEND_RESUME,
 	  .content_type = HDCP_CONTENT_TYPE_1,
 	},
