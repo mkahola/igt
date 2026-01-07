@@ -411,6 +411,8 @@
  *
  * @rgb101010:      FORMAT_RGB101010
  * @rgb565:         FORMAT_RGB565
+ * @argb161616f:    FORMAT_ARGB161616F
+ * @abgr161616f:    FORMAT_ABGR161616F
  *
  * arg[2]:
  *
@@ -444,6 +446,8 @@
  *
  * @rgb101010:      FORMAT_RGB101010
  * @rgb565:         FORMAT_RGB565
+ * @argb161616f:    FORMAT_ARGB161616F
+ * @abgr161616f:    FORMAT_ABGR161616F
  *
  * arg[2]:
  *
@@ -865,6 +869,8 @@ struct test_mode {
 		FORMAT_RGB888 = 0,
 		FORMAT_RGB565,
 		FORMAT_RGB101010,
+		FORMAT_ARGB161616F,
+		FORMAT_ABGR161616F,
 		FORMAT_COUNT,
 		FORMAT_DEFAULT = FORMAT_RGB888,
 	} format;
@@ -909,7 +915,7 @@ struct rect {
 	int y;
 	int w;
 	int h;
-	uint32_t color;
+	uint64_t color;
 };
 
 struct {
@@ -1277,6 +1283,22 @@ static void create_fb(enum pixel_format pformat, int width, int height,
 		else
 			format = DRM_FORMAT_XRGB8888;
 		break;
+	case FORMAT_ARGB161616F:
+		if (plane == PLANE_PRI)
+			format = DRM_FORMAT_ARGB16161616F;
+		else if (plane == PLANE_CUR)
+			format = DRM_FORMAT_ARGB8888;
+		else
+			format = DRM_FORMAT_ARGB16161616F;
+		break;
+	case FORMAT_ABGR161616F:
+		if (plane == PLANE_PRI)
+			format = DRM_FORMAT_ABGR16161616F;
+		else if (plane == PLANE_CUR)
+			format = DRM_FORMAT_ARGB8888;
+		else
+			format = DRM_FORMAT_ABGR16161616F;
+		break;
 	default:
 		igt_assert(false);
 	}
@@ -1288,9 +1310,9 @@ static void create_fb(enum pixel_format pformat, int width, int height,
 	igt_create_fb(drm.fd, width, height, format, modifier, fb);
 }
 
-static uint32_t pick_color(struct igt_fb *fb, enum color ecolor)
+static uint64_t pick_color(struct igt_fb *fb, enum color ecolor)
 {
-	uint32_t color, r, g, b, b2, a;
+	uint64_t color, r, g, b, b2, a;
 	bool alpha = false;
 
 	switch (fb->drm_format) {
@@ -1318,6 +1340,22 @@ static uint32_t pick_color(struct igt_fb *fb, enum color ecolor)
 		g = 0x3FF << 10;
 		b = 0x3FF;
 		b2 = 0x200;
+		break;
+	case DRM_FORMAT_ARGB16161616F:
+		alpha = true;
+		a = 0x3C00ULL << 48;
+		r = 0x3C00ULL << 32;
+		g = 0x3C00ULL << 16;
+		b = 0x3C00ULL;
+		b2 = 0x3800ULL;
+		break;
+	case DRM_FORMAT_ABGR16161616F:
+		alpha = true;
+		a = 0x3C00ULL << 48;
+		b = 0x3C00ULL << 32;
+		g = 0x3C00ULL << 16;
+		r = 0x3C00ULL;
+		b2 = 0x3800ULL;
 		break;
 	default:
 		igt_assert(false);
@@ -1838,7 +1876,7 @@ static void fill_fb_region(struct fb_region *region,
 			   enum igt_draw_method method,
 			   enum color ecolor)
 {
-	uint32_t color = pick_color(region->fb, ecolor);
+	uint64_t color = pick_color(region->fb, ecolor);
 
 	igt_draw_rect_fb(drm.fd, drm.bops, 0, region->fb, method,
 			 region->x, region->y, region->w, region->h,
@@ -2474,7 +2512,7 @@ static void set_region_for_test(const struct test_mode *t,
 static void set_plane_for_test_fbc(const struct test_mode *t, igt_plane_t *plane)
 {
 	struct igt_fb fb;
-	uint32_t color;
+	uint64_t color;
 
 	igt_info("Testing fbc on plane %i%s\n", plane->index + 1, kmstest_pipe_name(prim_mode_params.pipe));
 
@@ -2950,6 +2988,9 @@ static bool format_is_valid(int feature_flags,
 		return true;
 	case FORMAT_RGB101010:
 		return false;
+	case FORMAT_ARGB161616F:
+	case FORMAT_ABGR161616F:
+		return true;
 	default:
 		igt_assert(false);
 	}
@@ -4021,6 +4062,10 @@ static const char *format_str(enum pixel_format format)
 		return "rgb565";
 	case FORMAT_RGB101010:
 		return "rgb101010";
+	case FORMAT_ARGB161616F:
+		return "argb161616f";
+	case FORMAT_ABGR161616F:
+		return "abgr161616f";
 	default:
 		igt_assert(false);
 	}
@@ -4367,6 +4412,9 @@ int igt_main_args("", long_options, help_str, opt_handler, NULL)
 				      format_str(t.format),
 				      igt_draw_get_method_name(t.method))
 			{
+				if (t.format == FORMAT_ARGB161616F ||
+				    t.format == FORMAT_ABGR161616F)
+					igt_require(drm.display_ver >= 35);
 				igt_require(igt_draw_supports_method(drm.fd, t.method));
 				format_draw_subtest(&t);
 			}
