@@ -82,23 +82,24 @@
  *              of %arg[1] modifier with max hardware stride length, %arg[2]-bpp,
  *              and %arg[3]-rotation
  *
+ * SUBTEST: %s-max-hw-stride-%dbpp-rotate-%d-hflip
+ * Description: Test maximum hardware supported stride length for given combination
+ *              of %arg[1] modifier with max hardware stride length, %arg[2]-bpp,
+ *              and %arg[3]-rotation with H-flip mode
+ *
  * arg[1]:
  *
  * @4-tiled:            TILE-4 modifier
  * @x-tiled:            TILE-X modifier
  * @y-tiled:            TILE-Y modifier
  * @yf-tiled:           TILE-YF modifier
+ * @linear:             LINEAR modifier
  *
  * arg[2].values:       32, 64
  * arg[3].values:       0, 180
  */
 
 /**
- * SUBTEST: %s-max-hw-stride-%dbpp-rotate-%d-hflip
- * Description: Test maximum hardware supported stride length for given combination
- *              of %arg[1] modifier with max hardware stride length, %arg[2]-bpp,
- *              and %arg[3]-rotation with H-flip mode
- *
  * SUBTEST: %s-max-hw-stride-%dbpp-rotate-%d-%s
  * Description: Test maximum hardware supported stride length for given combination
  *              of %arg[1] modifier with max hardware stride length, %arg[2]-bpp,
@@ -1106,15 +1107,18 @@ int igt_main()
 				for (int k = 0; k < ARRAY_SIZE(rotations); k++) {
 					data.rotation = rotations[k].rotation | fliptab[l].flip;
 
-					// this combination will never happen.
-					if (igt_rotation_90_or_270(data.rotation) ||
-					    (fliptab[l].flip == IGT_REFLECT_X && modifiers[i].modifier == DRM_FORMAT_MOD_LINEAR))
+					if (igt_rotation_90_or_270(data.rotation))
 						continue;
 
 					igt_describe("test maximum hardware supported stride length for given bpp and modifiers.");
 					igt_subtest_f("%s-max-hw-stride-%dbpp-rotate-%d%s", modifiers[i].name,
 						formats[j].bpp, rotations[k].angle, fliptab[l].flipname) {
 						igt_require(intel_display_ver(intel_get_drm_devid(data.drm_fd)) >= 5);
+
+						if(fliptab[l].flip == IGT_REFLECT_X &&
+						   modifiers[i].modifier == DRM_FORMAT_MOD_LINEAR)
+							igt_require(intel_display_ver(data.devid) >= 35);
+
 						data.max_hw_fb_width = min(data.hw_stride / (formats[j].bpp >> 3), data.max_fb_width);
 
 						test_scanout(&data);
