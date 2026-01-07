@@ -61,7 +61,8 @@
 			{ "LNL": "../intel-ci/xe.lnl.display.blocklist.txt" },
 			{ "BMG": "../intel-ci/xe.bmg.display.blocklist.txt" },
 			{ "PTL": "../intel-ci/xe.ptl.display.blocklist.txt" },
-			{ "LNL, BMG, PTL": "../intel-ci/xe.blocklist.txt" },
+			{ "NVL": "../intel-ci/xe.nvl.display.blocklist.txt" },
+			{ "LNL, BMG, PTL, NVL": "../intel-ci/xe.blocklist.txt" },
 			{ "ADLP, ADLS, DG2, MTL": "../intel-ci/i915.blocklist.txt" }
 		    ]
 		}
