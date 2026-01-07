@@ -1,0 +1,132 @@
+##############################################################################
+# non-KMS tests
+##############################################################################
+igt@(?!.*kms|testdisplay|.*display-vs-wb-transient|fbdev)(.*)
+##############################################################################
+# Valid skip: Y and Yf-Tiling not supported
+##############################################################################
+igt@kms_(big_fb|ccs|rotation_crc)@.*(y|yf)-tiled.*
+igt@kms_(plane_lowres|frontbuffer_tracking|plane_multiple)@.*tiling-y.*
+igt@kms_flip_scaled_crc@.*(yf|y)tile.*
+igt@kms_addfb_basic@addfb25-y-tiled-small-legacy
+igt@kms_pipe_stress@stress-xrgb8888-(y|yf)tiled
+##############################################################################
+# Valid skip: Test skip due to hybrid config requirement
+##############################################################################
+igt@kms_addfb_basic@invalid-smem-bo-on-discrete
+##############################################################################
+# Valid skip: 90/270 rotation not supported
+##############################################################################
+igt@kms_big_fb@.*rotate-(90|270)
+igt@kms_rotation_crc@.*rotation-(90|270).*
+igt@kms_rotation_crc@bad-(pixel-format|tiling)
+##############################################################################
+# Valid skip: Mutable zpos not supported
+##############################################################################
+igt@kms_atomic@plane-primary-overlay-mutable-zpos
+##############################################################################
+# Valid skip: Cursor size = 32 and Cursor size > 256
+# are not supported
+##############################################################################
+igt@kms_cursor_crc@.*-max-size
+igt@kms_cursor_crc@.*-(32x10|32x32|512x).*
+igt@kms_cursor_crc@cursor.*(21|42|85)
+##############################################################################
+# Valid skip: !cursor_slowpath(&display, i)
+##############################################################################
+igt@kms_cursor_legacy@(short|basic)-busy-flip-before.*
+##############################################################################
+# Valid skip: Use of a single CRTC for two connectors
+##############################################################################
+igt@kms_setmode@basic-clone-single-crtc
+##############################################################################
+# Valid skip: Connector uses CRTC that is incompatible
+# with the connector
+##############################################################################
+igt@kms_setmode@invalid-clone-exclusive-crtc
+##############################################################################
+# Valid skip: Requires TV connector
+##############################################################################
+igt@kms_tv_load_detect@load-detect
+##############################################################################
+# Valid skip: WB feature not enabled
+##############################################################################
+igt@kms_writeback@.*
+##############################################################################
+# Valid skip: Scaling mode none not supported
+##############################################################################
+igt@kms_scaling_modes@scaling-mode-none
+##############################################################################
+# Valid skip: DG2/MTL/BMG specific CCS tests
+##############################################################################
+igt@kms_ccs@.*-dg2-.*
+igt@kms_ccs@.*-mtl-.*
+igt@kms_flip_scaled_crc@.*dg2rcccs.*
+igt@kms_ccs@.*4-tiled-bmg-ccs
+##############################################################################
+# Valid skip: Valid for display ver < 13
+##############################################################################
+igt@kms_psr2_su@.*
+##############################################################################
+# Valid skip: Downscaling factor not supported
+##############################################################################
+igt@kms_plane_scaling@.*downscale-factor-0-25.*
+##############################################################################
+# Valid skip: Downscaling not supported on second plane MTLP+
+##############################################################################
+igt@kms_plane_scaling@planes-downscale-factor-0-(5|75)$
+igt@kms_plane_scaling@planes-.*upscale-.*downscale.*
+##############################################################################
+# Valid skip: Simulation specific
+##############################################################################
+igt@kms_pm_dc@dc3co-vpb-simulation
+igt@kms_simulation_hpd@sim-hpd
+##############################################################################
+# Valid skip: Mei interface not supported MTL+
+##############################################################################
+igt@kms_content_protection@mei-interface
+##############################################################################
+# Valid skip: VGA subtests on chamelium are expected skips for PTL+
+##############################################################################
+igt@kms_chamelium.*@.*(vga).*
+##############################################################################
+# Valid skip: Use either of connected/non-connected kms_bw
+##############################################################################
+igt@kms_bw@linear-tiling-.*-display.*
+##############################################################################
+# Valid skip: Horizontal flip is not supported with tile4 surface formats
+##############################################################################
+igt@kms_big_fb@4-tiled.*hflip.*
+igt@kms_rotation_crc@primary-4-tiled-reflect-x.*
+##############################################################################
+# Valid skip: X tile defeatured
+##############################################################################
+igt@kms_(plane_lowres|plane_multiple|rotation_crc|big_fb|flip_scaled_crc)@.*(x-tile|xtile|tiling-x).*
+igt@kms_pipe_stress@stress-xrgb8888-xtiled
+##############################################################################
+# Valid skip: DRRS not supported on LNL+
+##############################################################################
+igt@kms_vrr@seamless-rr-switch-drrs
+igt@kms_vrr@seamless-rr-switch-vrr
+igt@kms_dirtyfb@drrs-dirtyfb-ioctl
+igt@kms_frontbuffer_tracking@.*drrs.*
+##############################################################################
+# Valid skip: PTL+(igfx), UJ not supported
+# Bspec: 69556
+##############################################################################
+igt@kms_joiner@.*ultra-joiner.*
+##############################################################################
+# Valid skip: Display 12+ is not supporting FBC with PSR2
+# in case of selective update.
+# Recommendation is to keep this combination disabled
+# Bspec: 50422 HSD: 14010260002
+# *PR selective update + FBC is not valid.
+# *PR full frame update/PSR1 + FBC are valid.
+##############################################################################
+igt@kms_psr@fbc-psr2-.*
+igt@kms_psr2_sf@fbc-(psr2|pr)-.*
+##############################################################################
+# Valid skip: Not supported on igfx
+##############################################################################
+igt@kms_pm_rpm@package-g7
+##############################################################################
