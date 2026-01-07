@@ -150,6 +150,7 @@ igt@kms_setmode@invalid-clone-exclusive-crtc
 # Valid skip :- For display ver < 20
 ##########################################
 igt@kms_frontbuffer_tracking@plane-fbc-rte
+igt@.*sharpness_filter.*
 #########################################
 # Valid skip :- Unsupported for platform with Wa_16023588340
 #########################################
