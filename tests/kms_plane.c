@@ -1322,6 +1322,9 @@ static void test_planar_settings(data_t *data)
 				     DRM_FORMAT_MOD_LINEAR)) {
 		int expected_rval = -EINVAL;
 
+		if (display_ver >= 35)
+			expected_rval = 0;
+
 		igt_create_fb(data->drm_fd, 810, 590,
 			      DRM_FORMAT_NV12, DRM_FORMAT_MOD_LINEAR, &fb);
 		igt_plane_set_fb(primary, &fb);
