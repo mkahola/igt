@@ -47,48 +47,30 @@ static bool within_expected_range(uint32_t freq, uint32_t val)
 		(freq >= val - FREQ_UNIT_MHZ);
 }
 
-static uint32_t get_throttle(int fd, int gt_id, const char *throttle_file)
-{
-	uint32_t val;
-	char throttle_attr[40];
-	int gt_fd;
-
-	snprintf(throttle_attr, sizeof(throttle_attr),
-		 "freq0/throttle/%s", throttle_file);
-	gt_fd = xe_sysfs_gt_open(fd, gt_id);
-	igt_assert_lte(0, gt_fd);
-
-	igt_sysfs_scanf(gt_fd, throttle_attr, "%u", &val);
-
-	igt_debug("gt%d/freq0/throttle/%s: %u\n", gt_id, throttle_file, val);
-
-	close(gt_fd);
-	return val;
-}
-
 /**
  * SUBTEST: throttle_basic_api
- * Description: Test basic throttle API
+ * Description: Validate throttle reasons reporting during C6 idle state
  */
 
 static void test_throttle_basic_api(int fd, int gt_id)
 {
-	uint32_t status, reasons;
+	char *throttle_reasons;
+	int gt_fd;
 
-	status = get_throttle(fd, gt_id, "status");
-	reasons = get_throttle(fd, gt_id, "reason_pl1");
-	reasons |= get_throttle(fd, gt_id, "reason_pl2");
-	reasons |= get_throttle(fd, gt_id, "reason_pl4");
-	reasons |= get_throttle(fd, gt_id, "reason_prochot");
-	reasons |= get_throttle(fd, gt_id, "reason_ratl");
-	reasons |= get_throttle(fd, gt_id, "reason_thermal");
-	reasons |= get_throttle(fd, gt_id, "reason_vr_tdc");
-	reasons |= get_throttle(fd, gt_id, "reason_vr_thermalert");
+	igt_assert_f(igt_wait(xe_gt_is_in_c6(fd, gt_id), 1000, 10),
+		     "GT %d should be in C6\n", gt_id);
 
-	if (status)
-		igt_assert(reasons);
-	else
-		igt_assert(!reasons);
+	gt_fd = xe_sysfs_gt_open(fd, gt_id);
+	igt_assert_lte(0, gt_fd);
+
+	throttle_reasons = igt_sysfs_get(gt_fd, "freq0/throttle/reasons");
+	igt_assert(throttle_reasons);
+
+	igt_assert_f(!strcmp(throttle_reasons, "none"),
+		     "GT %d is throttled due to: %s\n", gt_id, throttle_reasons);
+
+	free(throttle_reasons);
+	close(gt_fd);
 }
 
 /**
