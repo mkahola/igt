@@ -70,6 +70,11 @@ int amdgpu_test_exec_cs_helper(amdgpu_device_handle device, unsigned int ip_type
 	memcpy(ring_ptr, ring_context->pm4, ring_context->pm4_dw * sizeof(*ring_context->pm4));
 
 	if (user_queue) {
+		if (expect_failure)
+			ring_context->submit_mode = UQ_SUBMIT_NO_SYNC;
+		else
+			ring_context->submit_mode = UQ_SUBMIT_NORMAL;
+
 		r = ip_block->funcs->userq_submit(device, ring_context, ip_type, ib_result_mc_address);
 		if (!expect_failure)
 			igt_assert_eq(r, 0);
@@ -180,7 +185,6 @@ static void amdgpu_create_ip_queues(amdgpu_device_handle device,
 		ring_context[ring_id].pm4_size = pm4_dw;
 		ring_context[ring_id].res_cnt = 1;
 		ring_context[ring_id].user_queue = user_queue;
-		ring_context[ring_id].time_out = 0;
 		igt_assert(ring_context[ring_id].pm4);
 
 		/* Copy the previously queried HW IP info instead of querying again */
@@ -370,7 +374,6 @@ void amdgpu_command_submission_write_linear_helper(amdgpu_device_handle device,
 	ring_context->pm4_size = pm4_dw;
 	ring_context->res_cnt = 1;
 	ring_context->user_queue = user_queue;
-	ring_context->time_out = 0;
 	igt_assert(ring_context->pm4);
 
 	r = amdgpu_query_hw_ip_info(device, ip_block->type, 0, &ring_context->hw_ip_info);
@@ -503,7 +506,6 @@ void amdgpu_command_submission_const_fill_helper(amdgpu_device_handle device,
 	ring_context->pm4_size = pm4_dw;
 	ring_context->res_cnt = 1;
 	ring_context->user_queue = user_queue;
-	ring_context->time_out = 0;
 	igt_assert(ring_context->pm4);
 	r = amdgpu_query_hw_ip_info(device, ip_block->type, 0, &ring_context->hw_ip_info);
 	igt_assert_eq(r, 0);
@@ -604,7 +606,6 @@ void amdgpu_command_submission_copy_linear_helper(amdgpu_device_handle device,
 	ring_context->pm4_size = pm4_dw;
 	ring_context->res_cnt = 2;
 	ring_context->user_queue = user_queue;
-	ring_context->time_out = 0;
 	igt_assert(ring_context->pm4);
 	r = amdgpu_query_hw_ip_info(device, ip_block->type, 0, &ring_context->hw_ip_info);
 	igt_assert_eq(r, 0);
@@ -927,7 +928,6 @@ cmd_context_t* cmd_context_create(amdgpu_device_handle device,
 	ctx->ring_ctx->ring_id = ring_id;
 	ctx->ring_ctx->secure = false;
 	ctx->ring_ctx->user_queue = user_queue;
-	ctx->ring_ctx->time_out = 0;
 
 	if (user_queue) {
 	/* Initialize user queue if requested */

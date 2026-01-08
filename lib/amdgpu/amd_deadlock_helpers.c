@@ -347,7 +347,6 @@ bad_access_helper(amdgpu_device_handle device_handle, unsigned int cmd_error,
 	ring_context->res_cnt = 1;
 	ring_context->ring_id = 0;
 	ring_context->user_queue = user_queue;
-	ring_context->time_out = 0x7ffff;
 	igt_assert(ring_context->pm4);
 	r = amdgpu_bo_alloc_and_map_sync(device_handle,
 				    ring_context->write_length * sizeof(uint32_t),
