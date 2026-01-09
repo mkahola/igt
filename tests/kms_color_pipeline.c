@@ -143,6 +143,7 @@ static bool test_plane_colorops(data_t *data,
 	ret = igt_check_crc_equal(&crc_ref, &crc_pipe);
 
 	/* Cleanup per-test state */
+	set_color_pipeline_bypass(plane);
 	reset_colorops(colorops);
 	igt_plane_set_fb(plane, NULL);
 	igt_display_commit2(display, COMMIT_ATOMIC);
