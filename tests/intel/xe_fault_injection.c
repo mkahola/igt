@@ -260,7 +260,7 @@ static void ignore_fail_dump_in_dmesg(const char function_name[], bool enable)
  * @xe_wopcm_init:			xe_wopcm_init
  */
 static int
-inject_fault_probe(int fd, const char pci_slot[], const char function_name[])
+inject_fault_probe(const char pci_slot[], const char function_name[])
 {
 	int err = 0;
 	igt_info("Injecting error \"%s\" (%d) in function \"%s\"\n",
@@ -289,7 +289,7 @@ inject_fault_probe(int fd, const char pci_slot[], const char function_name[])
  * @xe_guc_mmio_send_recv:     Inject an error when calling xe_guc_mmio_send_recv
  * @xe_guc_ct_send_recv:       Inject an error when calling xe_guc_ct_send_recv
  */
-static void probe_fail_guc(int fd, const char pci_slot[], const char function_name[],
+static void probe_fail_guc(const char pci_slot[], const char function_name[],
 			   struct fault_injection_params *fault_params)
 {
 	int iter_start = 0, iter_end = 0, iter = 0;
@@ -308,7 +308,7 @@ static void probe_fail_guc(int fd, const char pci_slot[], const char function_na
 		fault_params->space = i;
 		fault_params->times = MAX_INJECTIONS_PER_ITER;
 		setup_injection_fault(fault_params);
-		inject_fault_probe(fd, pci_slot, function_name);
+		inject_fault_probe(pci_slot, function_name);
 		igt_audio_driver_unload(NULL);
 		igt_kmod_unbind("xe", pci_slot);
 
@@ -663,6 +663,8 @@ int igt_main_args("I:", NULL, help_str, opt_handler, NULL)
 			oa_add_config_fail(fd, sysfs, devid, pci_slot, s->name);
 
 	igt_fixture() {
+		close(sysfs);
+		drm_close_driver(fd);
 		igt_audio_driver_unload(NULL);
 		igt_kmod_unbind("xe", pci_slot);
 	}
@@ -672,7 +674,7 @@ int igt_main_args("I:", NULL, help_str, opt_handler, NULL)
 			bool should_pass = s->pf_only && is_vf_device;
 			int err;
 
-			err = inject_fault_probe(fd, pci_slot, s->name);
+			err = inject_fault_probe(pci_slot, s->name);
 
 			igt_assert_eq(should_pass ? 0 : INJECT_ERRNO, err);
 			igt_audio_driver_unload(NULL);
@@ -683,12 +685,10 @@ int igt_main_args("I:", NULL, help_str, opt_handler, NULL)
 		igt_subtest_f("probe-fail-guc-%s", s->name) {
 			memcpy(&fault_params, &default_fault_params,
 					sizeof(struct fault_injection_params));
-			probe_fail_guc(fd, pci_slot, s->name, &fault_params);
+			probe_fail_guc(pci_slot, s->name, &fault_params);
 		}
 
 	igt_fixture() {
-		close(sysfs);
-		drm_close_driver(fd);
 		injection_list_clear();
 		igt_kmod_bind("xe", pci_slot);
 	}
