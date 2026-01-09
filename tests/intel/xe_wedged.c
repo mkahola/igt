@@ -18,6 +18,7 @@
 #include "igt.h"
 #include "igt_device.h"
 #include "igt_kmod.h"
+#include "igt_sriov_device.h"
 #include "igt_syncobj.h"
 #include "igt_sysfs.h"
 
@@ -247,11 +248,16 @@ int igt_main()
 		int err;
 
 		igt_require(igt_debugfs_exists(fd, "wedged_mode", O_RDWR));
+		igt_require(!intel_is_vf_device(fd));
+
+		igt_debugfs_write(fd, "wedged_mode", "2");
+		igt_skip_on_f(igt_sriov_is_pf(fd) && errno == EPERM,
+			      "On PF, upon-any-hang-no-reset (2) wedged mode is restricted to debug builds only\n");
+
 		ignore_wedged_in_dmesg();
 
 		hang_sync.handle = syncobj_create(fd, 0);
 
-		igt_debugfs_write(fd, "wedged_mode", "2");
 		simple_hang(fd, &hang_sync);
 
 		/*
@@ -282,8 +288,12 @@ int igt_main()
 
 	igt_subtest_f("wedged-mode-toggle") {
 		igt_require(igt_debugfs_exists(fd, "wedged_mode", O_RDWR));
+		igt_require(!intel_is_vf_device(fd));
 
 		igt_debugfs_write(fd, "wedged_mode", "2");
+		igt_skip_on_f(igt_sriov_is_pf(fd) && errno == EPERM,
+			      "On PF, upon-any-hang-no-reset (2) wedged mode is restricted to debug builds only\n");
+
 		igt_assert_eq(simple_ioctl(fd), 0);
 		igt_debugfs_write(fd, "wedged_mode", "1");
 		ignore_wedged_in_dmesg();
