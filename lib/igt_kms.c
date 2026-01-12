@@ -5198,6 +5198,21 @@ const char *igt_output_name(igt_output_t *output)
 }
 
 /**
+ * kmstest_mode_is_valid:
+ * @mode: pointer to drmModeModeInfo
+ *
+ * Returns: True if the mode is non-NULL and has valid
+ * width, height and refresh rate.
+ */
+bool kmstest_mode_is_valid(const drmModeModeInfo *mode)
+{
+	return mode &&
+	       mode->hdisplay > 0 &&
+	       mode->vdisplay > 0 &&
+	       mode->vrefresh > 0;
+}
+
+/**
  * igt_output_get_mode:
  * @output: Target output
  *
