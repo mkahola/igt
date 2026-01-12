@@ -169,3 +169,7 @@ igt@kms_big_fb@linear-max-hw-stride.*hflip
 #########################################
 igt@kms_pm_dc@dc5-retention-flops
 #########################################
+# Valid skip : 3D LUT is supported NVL+
+########################################
+igt@kms_color_pipeline@plane-lut3d-green-only
+########################################

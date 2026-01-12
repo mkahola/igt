@@ -179,3 +179,7 @@ igt@kms_frontbuffer_tracking@.*drrs.*
 ########################################
 igt@kms_pm_rpm@package-g7
 ########################################
+# Valid skip : 3D LUT is supported NVL+
+########################################
+igt@kms_color_pipeline@plane-lut3d-green-only
+########################################

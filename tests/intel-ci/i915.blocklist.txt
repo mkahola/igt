@@ -198,3 +198,7 @@ igt@kms_chamelium_edid@hdmi-edid-stress-resolution-4k
 igt@kms_writeback@writeback.*
 igt@kms_colorop@.*
 ##################################################################
+# Valid skip : 3D LUT is supported NVL+
+##################################################################
+igt@kms_color_pipeline@plane-lut3d-green-only
+##################################################################
