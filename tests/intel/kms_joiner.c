@@ -378,6 +378,7 @@ static void test_invalid_modeset_two_joiner(data_t *data,
 			} else {
 				mode = *igt_output_get_mode(output);
 			}
+			igt_assert(kmstest_mode_is_valid(&mode));
 
 			igt_output_set_crtc(output,
 					    igt_crtc_for_pipe(output->display, data->pipe_seq[i + j]));
