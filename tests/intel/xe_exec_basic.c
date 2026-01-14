@@ -349,38 +349,56 @@ int igt_main()
 		fd = drm_open_driver(DRIVER_XE);
 
 	for (const struct section *s = sections; s->name; s++) {
-		igt_subtest_f("once-%s", s->name)
+		igt_subtest_with_dynamic_f("once-%s", s->name)
 			xe_for_each_engine(fd, hwe)
-				test_exec(fd, hwe, 1, 1, 1, s->flags);
+				igt_dynamic_f("%s%d",
+					      xe_engine_class_short_string(hwe->engine_class),
+					      hwe->engine_instance)
+					test_exec(fd, hwe, 1, 1, 1, s->flags);
 
-		igt_subtest_f("twice-%s", s->name)
+		igt_subtest_with_dynamic_f("twice-%s", s->name)
 			xe_for_each_engine(fd, hwe)
-				test_exec(fd, hwe, 1, 2, 1, s->flags);
+				igt_dynamic_f("%s%d",
+					      xe_engine_class_short_string(hwe->engine_class),
+					      hwe->engine_instance)
+					test_exec(fd, hwe, 1, 2, 1, s->flags);
 
-		igt_subtest_f("many-%s", s->name)
+		igt_subtest_with_dynamic_f("many-%s", s->name)
 			xe_for_each_engine(fd, hwe)
-				test_exec(fd, hwe, 1,
+				igt_dynamic_f("%s%d",
+					      xe_engine_class_short_string(hwe->engine_class),
+					      hwe->engine_instance)
+					test_exec(fd, hwe, 1,
 					  s->flags & (REBIND | INVALIDATE) ?
 					  64 : 1024, 1,
 					  s->flags);
 
-		igt_subtest_f("many-execqueues-%s", s->name)
+		igt_subtest_with_dynamic_f("many-execqueues-%s", s->name)
 			xe_for_each_engine(fd, hwe)
-				test_exec(fd, hwe, 16,
+				igt_dynamic_f("%s%d",
+					      xe_engine_class_short_string(hwe->engine_class),
+					      hwe->engine_instance)
+					test_exec(fd, hwe, 16,
 					  s->flags & (REBIND | INVALIDATE) ?
 					  64 : 1024, 1,
 					  s->flags);
 
-		igt_subtest_f("many-execqueues-many-vm-%s", s->name)
+		igt_subtest_with_dynamic_f("many-execqueues-many-vm-%s", s->name)
 			xe_for_each_engine(fd, hwe)
-				test_exec(fd, hwe, 16,
+				igt_dynamic_f("%s%d",
+					      xe_engine_class_short_string(hwe->engine_class),
+					      hwe->engine_instance)
+					test_exec(fd, hwe, 16,
 					  s->flags & (REBIND | INVALIDATE) ?
 					  64 : 1024, 16,
 					  s->flags);
 
-		igt_subtest_f("no-exec-%s", s->name)
+		igt_subtest_with_dynamic_f("no-exec-%s", s->name)
 			xe_for_each_engine(fd, hwe)
-				test_exec(fd, hwe, 1, 0, 1, s->flags);
+				igt_dynamic_f("%s%d",
+					      xe_engine_class_short_string(hwe->engine_class),
+					      hwe->engine_instance)
+					test_exec(fd, hwe, 1, 0, 1, s->flags);
 	}
 
 	igt_fixture()
