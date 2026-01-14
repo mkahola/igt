@@ -270,7 +270,8 @@ test_exec(int fd, struct drm_xe_engine_class_instance *eci,
 
 			if (flags & RACE) {
 				map_fd = open("/tmp", O_TMPFILE | O_RDWR,
-					      0x666);
+					      0666);
+				igt_assert_neq(map_fd, -1);
 				igt_assert_eq(write(map_fd, data, bo_size),
 				              bo_size);
 				data = mmap((void *)MAP_ADDRESS, bo_size,
