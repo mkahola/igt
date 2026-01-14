@@ -44,6 +44,7 @@
 #include "igt_hook.h"
 #include "igt_kmod.h"
 #include "igt_ktap.h"
+#include "igt_pci.h"
 #include "igt_sysfs.h"
 #include "igt_taints.h"
 
@@ -598,43 +599,58 @@ int __igt_intel_driver_unload(char **who, const char *driver)
 	return 0;
 }
 
+static char *kmod_pci_driver_from_module_alloc(const char *mod_name)
+{
+	char dirpath[PATH_MAX];
+	struct dirent *de;
+	DIR *d;
+
+	snprintf(dirpath, sizeof(dirpath), "/sys/module/%s/drivers", mod_name);
+	d = opendir(dirpath);
+	if (!d)
+		return NULL;
+
+	while ((de = readdir(d))) {
+		if (!strncmp(de->d_name, "pci:", 4)) {
+			char *drv = strdup(de->d_name + 4);
+
+			closedir(d);
+			return drv;
+		}
+	}
+
+	closedir(d);
+	return NULL;
+}
+
 /**
  * igt_kmod_unbind: Unbind driver from devices. Currently supports only PCI bus
  * @mod_name: name of the module to unbind
  * @pci_device: if provided, unbind only this device, otherwise unbind all devices
+ *
+ * Deprecated: bind/unbind is a driver operation. Prefer using:
+ *   - igt_pci_driver_unbind()/igt_pci_driver_unbind_all()
+ *   - igt_pci_device_unbind()
+ *
+ * This helper remains for backwards compatibility and for “unbind before
+ * module unload” workflows.
  */
 int igt_kmod_unbind(const char *mod_name, const char *pci_device)
 {
 	struct igt_hook *igt_hook = NULL;
-	char path[PATH_MAX];
-	struct dirent *de;
-	int dirlen;
-	DIR *dir;
+	char *driver;
+	int ret;
 
-	dirlen = snprintf(path, sizeof(path), "/sys/module/%s/drivers/pci:%s/",
-			  mod_name, mod_name);
-	igt_assert(dirlen < sizeof(path));
+	driver = kmod_pci_driver_from_module_alloc(mod_name);
+	if (!driver)
+		return 0; /* module not loaded / no pci driver */
 
-	dir = opendir(path);
+	if (pci_device)
+		ret = igt_pci_driver_unbind(driver, pci_device);
+	else
+		ret = igt_pci_driver_unbind_all(driver);
 
-	/* Module not loaded, nothing to unbind */
-	if (!dir)
-		return 0;
-
-	while ((de = readdir(dir))) {
-		bool ret;
-
-		if (de->d_type != DT_LNK || !isdigit(de->d_name[0]))
-			continue;
-
-		if (pci_device && strcmp(pci_device, de->d_name) != 0)
-			continue;
-
-		ret = igt_sysfs_set(dirfd(dir), "unbind", de->d_name);
-		igt_assert(ret);
-	}
-
-	closedir(dir);
+	free(driver);
 
 	igt_hook = igt_core_get_igt_hook();
 	igt_hook_event_notify(igt_hook, &(struct igt_hook_evt){
@@ -642,7 +658,7 @@ int igt_kmod_unbind(const char *mod_name, const char *pci_device)
 		.target_name = mod_name,
 	});
 
-	return 0;
+	return ret;
 }
 
 /**
@@ -651,25 +667,21 @@ int igt_kmod_unbind(const char *mod_name, const char *pci_device)
  * @pci_device: device to bind
  *
  * Module should already be loaded
+ *
+ * Deprecated: prefer igt_pci_driver_bind().
  */
 int igt_kmod_bind(const char *mod_name, const char *pci_device)
 {
-	char path[PATH_MAX];
-	int dirlen, dirfd;
+	char *driver;
 	int ret;
 
-	dirlen = snprintf(path, sizeof(path), "/sys/module/%s/drivers/pci:%s/",
-			  mod_name, mod_name);
-	igt_assert(dirlen < sizeof(path));
+	driver = kmod_pci_driver_from_module_alloc(mod_name);
+	if (!driver)
+		return -ENOENT;
 
-	dirfd = open(path, O_RDONLY | O_CLOEXEC);
-	if (dirfd < 0)
-		return dirfd;
+	ret = igt_pci_driver_bind(driver, pci_device);
 
-	ret = igt_sysfs_set(dirfd, "bind", pci_device);
-
-	close(dirfd);
-
+	free(driver);
 	return ret;
 }
 
