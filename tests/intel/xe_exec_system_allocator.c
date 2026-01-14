@@ -1922,11 +1922,12 @@ test_exec(int fd, struct drm_xe_engine_class_instance *eci,
 		/*
 		 * Due how system allocations work, we can't make this check
 		 * 100% reliable, rather than fail the test, just print a
-		 * warning message.
+		 * message.
 		 */
-		if (pf_count != pf_count_after)
-			igt_warn("pf_count(%d) != pf_count_after(%d)\n",
+		if (pf_count != pf_count_after) {
+			igt_info("Pagefault count: before=%d, after=%d\n",
 				 pf_count, pf_count_after);
+		}
 	}
 
 cleanup:
