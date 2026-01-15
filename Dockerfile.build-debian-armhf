@@ -27,7 +27,7 @@ RUN apt-get install -y \
 			libudev-dev:armhf \
 			libgsl-dev:armhf \
 			libasound2-dev:armhf \
-			libjson-c-dev:armhf \
+			libjansson-dev:armhf \
 			libcurl4-openssl-dev:armhf \
 			libxrandr-dev:armhf \
 			libxv-dev:armhf \

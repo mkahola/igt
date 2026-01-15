@@ -27,7 +27,7 @@ RUN apt-get install -y \
 			libudev-dev:arm64 \
 			libgsl-dev:arm64 \
 			libasound2-dev:arm64 \
-			libjson-c-dev:arm64 \
+			libjansson-dev:arm64 \
 			libcurl4-openssl-dev:arm64 \
 			libxrandr-dev:arm64 \
 			libxv-dev:arm64 \

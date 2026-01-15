@@ -19,7 +19,7 @@ RUN dnf install -y \
 	'pkgconfig(xmlrpc)' \
 	'pkgconfig(xmlrpc_util)' \
 	'pkgconfig(xmlrpc_client)' \
-	'pkgconfig(json-c)' \
+	'pkgconfig(jansson)' \
 	'pkgconfig(gtk-doc)' \
 	'pkgconfig(xv)' \
 	'pkgconfig(xrandr)' \
