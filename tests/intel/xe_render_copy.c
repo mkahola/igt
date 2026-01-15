@@ -710,6 +710,8 @@ int igt_main_args("dpiW:H:", NULL, help_str, opt_handler, NULL)
 	for (int id = 0; id <= COPY_FULL_COMPRESSED; id++) {
 		igt_subtest_with_dynamic_f("render-%s", testname[id]) {
 			igt_require(xe_has_engine_class(xe, DRM_XE_ENGINE_CLASS_RENDER));
+			if (id == COPY_FULL_COMPRESSED)
+				igt_require(HAS_FLATCCS(buf_ops_get_devid(bops)));
 
 			for_each_tiling(tiling) {
 				if (!render_supports_tiling(xe, tiling,
