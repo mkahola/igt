@@ -2,121 +2,84 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <json.h>
+#include <jansson.h>
 
 #include "igt.h"
 #include "resultgen.h"
 
 static char testdatadir[] = JSON_TESTS_DIRECTORY;
 
-static struct json_object *read_json(int fd)
+static void compare(struct json_t *one,
+		    struct json_t *two);
+
+static void compare_objects(struct json_t *one, struct json_t *two)
 {
-	struct json_object *obj;
-	struct json_tokener *tok = json_tokener_new();
-	enum json_tokener_error err;
-	char buf[512];
-	ssize_t s;
+	const char *key;
+	json_t *one_value, *two_value;
 
-	do {
-		s = read(fd, buf, sizeof(buf));
-		obj = json_tokener_parse_ex(tok, buf, s);
-	} while ((err = json_tokener_get_error(tok)) == json_tokener_continue);
-
-	igt_assert_eq(err, json_tokener_success);
-
-	json_tokener_free(tok);
-	return obj;
-}
-
-static void compare(struct json_object *one,
-		    struct json_object *two);
-
-static void compare_objects(struct json_object *one,
-			    struct json_object *two)
-{
-	json_object_iter iter;
-	struct json_object *subobj;
-
-	json_object_object_foreachC(one, iter) {
-		igt_debug("Key %s\n", iter.key);
-
-		igt_assert(json_object_object_get_ex(two, iter.key, &subobj));
-
-		compare(iter.val, subobj);
+	json_object_foreach(one, key, one_value) {
+		igt_debug("Key %s\n", key);
+		igt_assert(two_value = json_object_get(two, key));
+		compare(one_value, two_value);
 	}
 }
 
-static void compare_arrays(struct json_object *one,
-			   struct json_object *two)
+static void compare_arrays(struct json_t *one, struct json_t *two)
 {
-	size_t i;
-
-	for (i = 0; i < json_object_array_length(one); i++) {
+	for (size_t i = 0; i < json_array_size(one); i++) {
 		igt_debug("Array index %zd\n", i);
-		compare(json_object_array_get_idx(one, i),
-			json_object_array_get_idx(two, i));
+		compare(json_array_get(one, i),
+			json_array_get(two, i));
 	}
 }
 
-static bool compatible_types(struct json_object *one,
-			     struct json_object *two)
+static bool compatible_types(struct json_t *one, struct json_t *two)
 {
 	/*
-	 * A double of value 0.0 gets written as "0", which gets read
-	 * as an int.
+	 * Numbers should be compatible with each other. A double of
+	 * value 0.0 gets written as "0", which gets read as an int.
 	 */
-	json_type onetype = json_object_get_type(one);
-	json_type twotype = json_object_get_type(two);
+	if (json_is_number(one))
+		return json_is_number(two);
 
-	switch (onetype) {
-	case json_type_boolean:
-	case json_type_string:
-	case json_type_object:
-	case json_type_array:
-	case json_type_null:
-		return onetype == twotype;
-		break;
-	case json_type_double:
-	case json_type_int:
-		return twotype == json_type_double || twotype == json_type_int;
-		break;
-	}
+	if (json_is_boolean(one))
+		return json_is_boolean(two);
 
-	igt_assert(!"Cannot be reached");
-	return false;
+	return json_typeof(one) == json_typeof(two);
 }
 
-static void compare(struct json_object *one,
-		    struct json_object *two)
+static void compare(struct json_t *one,
+		    struct json_t *two)
 {
 	igt_assert(compatible_types(one, two));
 
-	switch (json_object_get_type(one)) {
-	case json_type_boolean:
-		igt_assert_eq(json_object_get_boolean(one), json_object_get_boolean(two));
+	switch (json_typeof(one)) {
+	case JSON_NULL:
+	case JSON_TRUE:
+	case JSON_FALSE:
+		/* These values are singletons: */
+		igt_assert(one == two);
 		break;
-	case json_type_double:
-	case json_type_int:
+	case JSON_REAL:
+	case JSON_INTEGER:
 		/*
 		 * A double of value 0.0 gets written as "0", which
 		 * gets read as an int. Both yield 0.0 with
 		 * json_object_get_double(). Comparing doubles with ==
 		 * considered crazy but it's good enough.
 		 */
-		igt_assert(json_object_get_double(one) == json_object_get_double(two));
+		igt_assert_eq_double(json_number_value(one), json_number_value(two));
 		break;
-	case json_type_string:
-		igt_assert(!strcmp(json_object_get_string(one), json_object_get_string(two)));
+	case JSON_STRING:
+		igt_assert(!strcmp(json_string_value(one), json_string_value(two)));
 		break;
-	case json_type_object:
-		igt_assert_eq(json_object_object_length(one), json_object_object_length(two));
+	case JSON_OBJECT:
+		igt_assert_eq(json_object_size(one), json_object_size(two));
 		compare_objects(one, two);
 		break;
-	case json_type_array:
-		igt_assert_eq(json_object_array_length(one), json_object_array_length(two));
+	case JSON_ARRAY:
+		igt_assert_eq(json_array_size(one), json_array_size(two));
 		compare_arrays(one, two);
-		break;
-	case json_type_null:
 		break;
 	default:
 		igt_assert(!"Cannot be reached");
@@ -127,7 +90,8 @@ static void run_results_and_compare(int dirfd, const char *dirname)
 {
 	int testdirfd = openat(dirfd, dirname, O_RDONLY | O_DIRECTORY);
 	int reference;
-	struct json_object *resultsobj, *referenceobj;
+	struct json_t *resultsobj, *referenceobj;
+	struct json_error_t error;
 
 	igt_assert_fd(testdirfd);
 
@@ -137,14 +101,15 @@ static void run_results_and_compare(int dirfd, const char *dirname)
 	close(testdirfd);
 
 	igt_assert_fd(reference);
-	referenceobj = read_json(reference);
+	referenceobj = json_loadfd(reference, 0, &error);
 	close(reference);
-	igt_assert(referenceobj != NULL);
+	igt_assert_f(referenceobj, "JSON loading error for %s/%s:%d:%d - %s\n",
+		     dirname, "reference.json", error.line, error.column, error.text);
 
 	igt_debug("Root object\n");
 	compare(resultsobj, referenceobj);
-	igt_assert_eq(json_object_put(resultsobj), 1);
-	igt_assert_eq(json_object_put(referenceobj), 1);
+	json_decref(resultsobj);
+	json_decref(referenceobj);
 }
 
 static const char *dirnames[] = {

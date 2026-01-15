@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <json.h>
+#include <jansson.h>
 
 #include "igt.h"
 #include "runnercomms.h"
@@ -34,20 +34,21 @@ static const char testdatadir[] = TESTDATA_DIRECTORY;
 /* The total number of test binaries in runner/testdata/ */
 #define NUM_TESTDATA_BINARIES 8
 
-static const char *igt_get_result(struct json_object *tests, const char* testname)
+static const char *igt_get_result(struct json_t *tests, const char *testname)
 {
-	struct json_object *obj;
+	struct json_t *obj;
 
-	igt_assert(json_object_object_get_ex(tests, testname, &obj));
-	igt_assert(json_object_object_get_ex(obj, "result", &obj));
+	igt_assert(obj = json_object_get(tests, testname));
+	igt_assert(obj = json_object_get(obj, "result"));
 
-	return json_object_get_string(obj);
+	return json_string_value(obj);
 }
 
-static void igt_assert_no_result_for(struct json_object *tests, const char* testname)
+static void igt_assert_no_result_for(struct json_t *tests, const char *testname)
 {
-	struct json_object *obj;
-	igt_assert(!json_object_object_get_ex(tests, testname, &obj));
+	struct json_t *obj;
+
+	igt_assert(!(obj = json_object_get(tests, testname)));
 }
 
 
@@ -1807,7 +1808,7 @@ int igt_main()
 
 		igt_subtest("dynamic-subtests-in-testlist") {
 			struct execute_state state;
-			struct json_object *results, *tests;
+			struct json_t *results, *tests;
 			const char *argv[] = { "runner",
 					       "--allow-non-root",
 					       "--test-list", filename,
@@ -1829,7 +1830,7 @@ int igt_main()
 			igt_assert_f((results = generate_results_json(dirfd)) != NULL,
 				     "Results parsing failed\n");
 
-			igt_assert(json_object_object_get_ex(results, "tests", &tests));
+			igt_assert(tests = json_object_get(results, "tests"));
 
 			/* Check that the dynamic subtest we didn't request is not reported */
 			igt_assert_no_result_for(tests, "igt@dynamic@dynamic-subtest@failing");
@@ -1837,7 +1838,7 @@ int igt_main()
 			/* Check that the dynamic subtest we did request is */
 			igt_assert_eqstr(igt_get_result(tests, "igt@dynamic@dynamic-subtest@passing"), "pass");
 
-			igt_assert_eq(json_object_put(results), 1);
+			json_decref(results);
 		}
 
 		igt_fixture() {
@@ -1958,7 +1959,7 @@ int igt_main()
 
 		igt_subtest("dynamic-subtest-failure-should-not-cause-warn") {
 			struct execute_state state;
-			struct json_object *results, *tests;
+			struct json_t *results, *tests;
 			const char *argv[] = { "runner",
 					       "--allow-non-root",
 					       "-t", "^dynamic$",
@@ -1976,11 +1977,11 @@ int igt_main()
 			igt_assert_f((results = generate_results_json(dirfd)) != NULL,
 				     "Results parsing failed\n");
 
-			igt_assert(json_object_object_get_ex(results, "tests", &tests));
+			igt_assert(tests = json_object_get(results, "tests"));
 
 			igt_assert_eqstr(igt_get_result(tests, "igt@dynamic@dynamic-subtest@passing"), "pass");
 
-			igt_assert_eq(json_object_put(results), 1);
+			json_decref(results);
 		}
 
 		igt_fixture() {
@@ -2004,7 +2005,7 @@ int igt_main()
 
 		igt_subtest("execute-abort-simple") {
 			struct execute_state state;
-			struct json_object *results, *tests;
+			struct json_t *results, *tests;
 			const char *argv[] = { "runner",
 					       "--allow-non-root",
 					       "-t", "^abort-simple$",
@@ -2022,11 +2023,11 @@ int igt_main()
 			igt_assert_f((results = generate_results_json(dirfd)) != NULL,
 				     "Results parsing failed\n");
 
-			igt_assert(json_object_object_get_ex(results, "tests", &tests));
+			igt_assert(tests = json_object_get(results, "tests"));
 
 			igt_assert_eqstr(igt_get_result(tests, "igt@abort-simple"), "abort");
 
-			igt_assert_eq(json_object_put(results), 1);
+			json_decref(results);
 		}
 
 		igt_fixture() {
@@ -2052,7 +2053,7 @@ int igt_main()
 
 			igt_subtest_f("execute-abort%s", multiple ? "-multiple" : "") {
 				struct execute_state state;
-				struct json_object *results, *tests;
+				struct json_t *results, *tests;
 				const char *argv[] = { "runner",
 						       "--allow-non-root",
 						       "-t", "^abort$",
@@ -2071,7 +2072,7 @@ int igt_main()
 				igt_assert_f((results = generate_results_json(dirfd)) != NULL,
 					     "Results parsing failed\n");
 
-				igt_assert(json_object_object_get_ex(results, "tests", &tests));
+				igt_assert(tests = json_object_get(results, "tests"));
 
 				igt_assert_eqstr(igt_get_result(tests, "igt@abort@a-subtest"), "pass");
 				igt_assert_eqstr(igt_get_result(tests, "igt@abort@b-subtest"), "abort");
@@ -2081,7 +2082,7 @@ int igt_main()
 				else
 					igt_assert_eqstr(igt_get_result(tests, "igt@abort@c-subtest"), "notrun");
 
-				igt_assert_eq(json_object_put(results), 1);
+				json_decref(results);
 			}
 
 			igt_fixture() {
@@ -2108,7 +2109,7 @@ int igt_main()
 
 			igt_subtest_f("execute-abort-fixture%s", multiple ? "-multiple" : "") {
 				struct execute_state state;
-				struct json_object *results, *tests;
+				struct json_t *results, *tests;
 				const char *argv[] = { "runner", multiple ? "--multiple-mode" : "--sync",
 						       "--allow-non-root",
 						       "-t", "^abort-fixture$",
@@ -2126,7 +2127,7 @@ int igt_main()
 				igt_assert_f((results = generate_results_json(dirfd)) != NULL,
 					     "Results parsing failed\n");
 
-				igt_assert(json_object_object_get_ex(results, "tests", &tests));
+				igt_assert(tests = json_object_get(results, "tests"));
 
 				if (multiple) {
 					/*
@@ -2141,7 +2142,7 @@ int igt_main()
 					igt_assert_eqstr(igt_get_result(tests, "igt@abort-fixture@b-subtest"), "notrun");
 				}
 
-				igt_assert_eq(json_object_put(results), 1);
+				json_decref(results);
 			}
 
 			igt_fixture() {
@@ -2175,7 +2176,7 @@ int igt_main()
 
 			igt_subtest_f("execute-abort-fixture-testlist%s", multiple ? "-multiple" : "") {
 				struct execute_state state;
-				struct json_object *results, *tests;
+				struct json_t *results, *tests;
 				const char *argv[] = { "runner", multiple ? "--multiple-mode" : "--sync",
 						       "--allow-non-root",
 						       "--test-list", filename,
@@ -2193,7 +2194,7 @@ int igt_main()
 				igt_assert_f((results = generate_results_json(dirfd)) != NULL,
 					     "Results parsing failed\n");
 
-				igt_assert(json_object_object_get_ex(results, "tests", &tests));
+				igt_assert(tests = json_object_get(results, "tests"));
 
 				if (multiple) /* multiple mode = no notruns */
 					igt_assert_no_result_for(tests, "igt@abort-fixture@a-subtest");
@@ -2203,7 +2204,7 @@ int igt_main()
 
 				igt_assert_eqstr(igt_get_result(tests, "igt@abort-fixture@b-subtest"), "abort");
 
-				igt_assert_eq(json_object_put(results), 1);
+				json_decref(results);
 			}
 
 			igt_fixture() {
@@ -2231,7 +2232,7 @@ int igt_main()
 
 			igt_subtest_f("execute-abort-dynamic%s", multiple ? "-multiple" : "") {
 				struct execute_state state;
-				struct json_object *results, *tests;
+				struct json_t *results, *tests;
 				const char *argv[] = { "runner", multiple ? "--multiple-mode" : "--sync",
 						       "--allow-non-root",
 						       "-t", "^abort-dynamic$",
@@ -2249,7 +2250,7 @@ int igt_main()
 				igt_assert_f((results = generate_results_json(dirfd)) != NULL,
 					     "Results parsing failed\n");
 
-				igt_assert(json_object_object_get_ex(results, "tests", &tests));
+				igt_assert(tests = json_object_get(results, "tests"));
 
 				igt_assert_eqstr(igt_get_result(tests, "igt@abort-dynamic@a-subtest@dynamic-1"), "pass");
 				igt_assert_eqstr(igt_get_result(tests, "igt@abort-dynamic@b-subtest@dynamic-1"), "pass");
@@ -2262,7 +2263,7 @@ int igt_main()
 				else
 					igt_assert_eqstr(igt_get_result(tests, "igt@abort-dynamic@c-subtest"), "notrun");
 
-				igt_assert_eq(json_object_put(results), 1);
+				json_decref(results);
 			}
 
 			igt_fixture() {

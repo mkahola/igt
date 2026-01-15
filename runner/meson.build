@@ -16,8 +16,8 @@ runner_test_sources = [ 'runner_tests.c' ]
 runner_json_test_sources = [ 'runner_json_tests.c' ]
 runner_kmemleak_test_sources = [ 'runner_kmemleak_test.c' ]
 
-jsonc = dependency('json-c', required: build_runner)
-runner_deps = [jsonc, glib]
+jansson = dependency('jansson', required: build_runner, version: '>=2.12')
+runner_deps = [jansson, glib]
 runner_c_args = []
 
 liboping = dependency('liboping', required: get_option('oping'))
@@ -26,7 +26,7 @@ if liboping.found()
 	runner_c_args += '-DHAVE_OPING=1'
 endif
 
-if jsonc.found() and build_tests
+if jansson.found() and build_tests
 	subdir('testdata')
 
 	runnerlib = static_library('igt_runner', runnerlib_sources,
@@ -66,14 +66,14 @@ if jsonc.found() and build_tests
 				 c_args : '-DTESTDATA_DIRECTORY="@0@"'.format(testdata_dir),
 				 link_with : runnerlib,
 				 install : false,
-				 dependencies : [igt_deps, jsonc])
+				 dependencies : [igt_deps, jansson])
 	test('runner', runner_test, timeout : 300)
 
 	runner_json_test = executable('runner_json_test', runner_json_test_sources,
 				      c_args : '-DJSON_TESTS_DIRECTORY="@0@"'.format(join_paths(meson.current_source_dir(), 'json_tests_data')),
 				      link_with : runnerlib,
 				      install : false,
-				      dependencies : [igt_deps, jsonc])
+				      dependencies : [igt_deps, jansson])
 	test('runner_json', runner_json_test, timeout : 300)
 
 	runner_kmemleak_test = executable('runner_kmemleak_test',
