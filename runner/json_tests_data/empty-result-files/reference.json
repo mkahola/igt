@@ -15,7 +15,7 @@
 	"err":"",
 	"dmesg":"",
 	"result":"incomplete"
-    },
+    }
   },
   "totals":{
     "":{
@@ -56,7 +56,7 @@
       "notrun":0,
       "fail":0,
       "warn":0
-    },
+    }
   },
   "runtimes":{
   }

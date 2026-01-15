@@ -50,7 +50,7 @@
 	"out":"Aborted after: successtest (first-subtest)\n\nKernel tainted (0x200)\n",
 	"result":"fail",
 	"err":"",
-	"dmesg":"",
+	"dmesg":""
     }
   },
   "totals":{
@@ -131,7 +131,7 @@
       "notrun":0,
       "fail":1,
       "warn":0
-    },
+    }
   },
   "runtimes":{
     "igt@successtest":{
@@ -140,6 +140,6 @@
         "start":0,
         "end":0.014
       }
-    },
+    }
   }
 }

@@ -44,7 +44,7 @@
 	"out":"Aborted after: startup\n\nKernel tainted (0x200)\n",
 	"result":"fail",
 	"err":"",
-	"dmesg":"",
+	"dmesg":""
     }
   },
   "totals":{
@@ -125,7 +125,7 @@
       "notrun":0,
       "fail":1,
       "warn":0
-    },
+    }
   },
   "runtimes":{
   }
