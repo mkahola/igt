@@ -545,6 +545,7 @@ static const struct intel_device_info intel_novalake_s_info = {
 	.display_ver = 35,
 	.has_4tile = true,
 	.has_oam = true,
+	.has_flatccs = true,
 	.is_novalake_s = true,
 	.codename = "novalake_s",
 	.cmds_info = &xe2_cmds_info,
