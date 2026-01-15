@@ -89,11 +89,16 @@ static void compare(struct json_t *one,
 static void run_results_and_compare(int dirfd, const char *dirname)
 {
 	int testdirfd = openat(dirfd, dirname, O_RDONLY | O_DIRECTORY);
-	int reference;
+	int skipfd, reference;
 	struct json_t *resultsobj, *referenceobj;
 	struct json_error_t error;
 
 	igt_assert_fd(testdirfd);
+
+	skipfd = openat(testdirfd, "SKIP_ME", O_RDONLY);
+	igt_skip_on_f(skipfd != -1, "SKIP_ME marker exists - see the README "
+				    "for this test for more information.\n");
+	close(skipfd);
 
 	igt_assert((resultsobj = generate_results_json(testdirfd)) != NULL);
 
@@ -134,6 +139,7 @@ static const char *dirnames[] = {
 	"dynamic-subtest-name-in-multiple-subtests",
 	"unprintable-characters",
 	"empty-result-files",
+	"really-large-files",
 	"graceful-notrun",
 };
 
