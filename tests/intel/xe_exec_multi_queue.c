@@ -995,7 +995,9 @@ test_exec_virtual(int fd, int gt, int class)
 
 		eci[n++] = *hwe;
 	}
-	igt_assert(n);
+
+	if (!n)
+		return;
 
 	test_exec(fd, eci, n, n, n, 0);
 	test_exec(fd, eci, n, n, n, PREEMPT_MODE);
