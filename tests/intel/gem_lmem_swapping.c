@@ -9,6 +9,7 @@
 #include "i915/intel_memory_region.h"
 #include "igt.h"
 #include "igt_kmod.h"
+#include "runnercomms.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -19,6 +20,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/syslog.h>
 #include <sys/time.h>
 #include <sys/wait.h>
 #include "drm.h"
@@ -661,6 +663,35 @@ static void gem_leak(int fd, uint64_t alloc)
 	gem_madvise(fd, handle, I915_MADV_DONTNEED);
 }
 
+static int printk = -1;
+static char log_levels[4];
+
+static void printk_exit_handler(int sig)
+{
+	char msg[80] = {};
+	int len;
+
+	if (printk < 0)
+		return;
+
+	len = strlen(log_levels);
+	if (!len)
+		snprintf(msg, sizeof(msg), "%s\n",
+			 "no defaults saved, unable to restore /proc/sys/kernel/printk");
+	else if (write(printk, log_levels, len) != len)
+		snprintf(msg, sizeof(msg),
+			 "restoring /proc/sys/kernel/printk defaults failed, errno: %d\n",
+			 errno);
+	close(printk);
+
+	if (*msg) {
+		log_to_runner_sig_safe(msg, strlen(msg));
+		abort();
+	}
+
+	printk = -1;
+}
+
 static int *lmem_done;
 
 static void smem_oom_exit_handler(int sig)
@@ -861,8 +892,63 @@ int igt_main_args("", long_options, help_str, opt_handler, NULL)
 	}
 
 	igt_describe("Exercise local memory swapping during exhausting system memory");
-	dynamic_lmem_subtest(region, regions, "smem-oom")
-		test_smem_oom(i915, ctx, region);
+	igt_subtest_with_dynamic("smem-oom") {
+		int console_log_level, default_log_level;
+		unsigned int fd, i = 0;
+		FILE *stream = NULL;
+
+		/*
+		 * This subtest can result in oom-killer being triggered, which
+		 * then dumps a call trace from a process that triggered it.
+		 * If that happens to be a process that executes drm or i915
+		 * functions then the call trace dump contains lines recognized
+		 * by igt_runner as warnings and a dmesg-warn result is
+		 * reported.  To avoid false failure reports, relax kernel
+		 * default log level to INFO for those lines to be ignored by
+		 * igt_runner in piglit mode, at an expense of call traces from
+		 * potential real issues not contributing to the igt_runner
+		 * reported result.  Since those call traces are still available
+		 * to developers, only displayed with relaxed severity, that
+		 * shouldn't hurt as long as igt_runner still abandons further
+		 * execution and reports an abort result on a kernel taint.
+		 */
+		fd = open("/proc/sys/kernel/printk", O_RDWR);
+		if (!igt_debug_on(fd < 0))
+			stream = fdopen(fd, "r+");
+
+		if (igt_debug_on(!stream))
+			close(fd);
+		else
+			i = fscanf(stream, "%d %d", &console_log_level, &default_log_level);
+
+		if (igt_debug_on(i != 2) || igt_debug_on(default_log_level >= LOG_INFO))
+			i = 0;
+		else
+			i = snprintf(log_levels, sizeof(log_levels), "%d %d",
+				     console_log_level, default_log_level);
+
+		if (!igt_debug_on(i != 3))
+			printk = dup(fd);
+
+		if (!igt_debug_on(printk < 0)) {
+			igt_install_exit_handler(printk_exit_handler);
+
+			rewind(stream);
+			igt_debug_on(fprintf(stream, "%d %d", console_log_level, LOG_INFO) != 3);
+		}
+
+		if (stream)
+			igt_debug_on(fclose(stream) == EOF);
+
+		for (i = 0; i < regions->num_regions; i++) {
+			region = &regions->regions[i];
+			if (region->region.memory_class == I915_MEMORY_CLASS_DEVICE)
+				igt_dynamic_f("lmem%u", region->region.memory_instance)
+					test_smem_oom(i915, ctx, region);
+		}
+
+		printk_exit_handler(0);
+	}
 
 	igt_fixture() {
 		intel_allocator_multiprocess_stop();
