@@ -57,3 +57,7 @@ igt@xe_pmu@gt-frequency
 # The feature query_cs_cycles is not supported on VF
 #
 igt@xe_query@.*cs-cycles
+#
+# Tests that need to be executed in VM instead.
+#
+igt@xe_live_ktest.*
