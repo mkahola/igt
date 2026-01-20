@@ -50,6 +50,8 @@
 #define OFFSET_BINDING_TABLE		0x10000
 
 #define XE2_ADDR_STATE_CONTEXT_DATA_BASE	0x9000000ULL
+#define XE2_STATE_CONTEXT_DATA_BASE_ADDRESS ((3 << 29) | (0 << 27) | (1 << 24) | (11 << 16) | (1 << 0))
+
 #define OFFSET_STATE_SIP			0xFFFF0000
 
 #define USER_FENCE_VALUE			0xdeadbeefdeadbeefull
@@ -66,6 +68,7 @@
 #define DP_PIPELINE_FLUSH		(1 << 2)
 #define WRITE_IMM_DATA			(1 << 0)
 #define WRITE_TIMESTAMP		(3 << 0)
+#define XE3P_WRITE_IMM_DATA		(1 << 16)
 
 /*
  * TGP  - ThreadGroup Preemption
@@ -107,6 +110,17 @@ struct bo_execenv {
 	struct drm_i915_gem_exec_object2 *obj;
 
 	struct user_execenv *user;
+};
+
+struct inline_data {
+	union {
+		uint32_t dw[16];
+
+		struct {
+			uint32_t indirect_addr_lo;
+			uint32_t indirect_addr_hi;
+		} xe3p;
+	};
 };
 
 static void bo_randomize(float *ptr, int size)
@@ -1578,7 +1592,6 @@ static void xe2lpg_compute_exec_compute(int fd,
 	addr_bo_buffer_batch[b++] = 0xE0004000;
 	addr_bo_buffer_batch[b++] = 0x00000000;
 
-#define XE2_STATE_CONTEXT_DATA_BASE_ADDRESS ((3 << 29) | (0 << 27) | (1 << 24) | (11 << 16) | (1 << 0))
 	addr_bo_buffer_batch[b++] = XE2_STATE_CONTEXT_DATA_BASE_ADDRESS;
 	// Split into low and high 32 bits
 	addr_bo_buffer_batch[b++] = addr_state_contect_data_base & 0xFFFFFFFF; // Mask the low 32 bits ;
@@ -1902,6 +1915,218 @@ static void xe2lpg_compute_exec(int fd, const unsigned char *kernel,
 	bo_execenv_destroy(&execenv);
 }
 
+static void xe3p_compute_exec_compute(int fd,
+				      const struct inline_data *idata,
+				      uint32_t *addr_bo_buffer_batch,
+				      uint64_t kernel_start_pointer,
+				      uint64_t context_data_base_addr,
+				      bool threadgroup_preemption,
+				      uint32_t work_size)
+{
+	int b = 0;
+	uint8_t uc_mocs = intel_get_uc_mocs_index(fd);
+
+	igt_assert(idata);
+	igt_debug("kernel addr         : %"PRIx64"\n", kernel_start_pointer);
+
+	addr_bo_buffer_batch[b++] = STATE_BASE_ADDRESS  | 0x14; /* dw0 */
+	addr_bo_buffer_batch[b++] = 0x00000040; /* dw1 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw2 */
+	addr_bo_buffer_batch[b++] = 0x40048000; /* dw3 */
+	addr_bo_buffer_batch[b++] = 0x00000040; /* dw4 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw5 */
+	addr_bo_buffer_batch[b++] = 0x00000040; /* dw6 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw7 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw8 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw9 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw10 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw11 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw12 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw13 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw14 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw15 */
+	addr_bo_buffer_batch[b++] = 0x00000040; /* dw16 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw17 */
+	addr_bo_buffer_batch[b++] = 0xFFFFFFFE; /* dw18 */
+	addr_bo_buffer_batch[b++] = 0x00000040; /* dw19 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw20 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw21 */
+
+	addr_bo_buffer_batch[b++] = XEHP_STATE_COMPUTE_MODE | 1;
+	addr_bo_buffer_batch[b++] = 0x14001400;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+
+	addr_bo_buffer_batch[b++] = XE2_STATE_CONTEXT_DATA_BASE_ADDRESS;
+	addr_bo_buffer_batch[b++] = context_data_base_addr;
+	addr_bo_buffer_batch[b++] = context_data_base_addr >> 32;
+
+	addr_bo_buffer_batch[b++] = XE3P_COMPUTE_WALKER2 | 0x3e; /* dw0 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw1 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw2 */
+	addr_bo_buffer_batch[b++] = 0x008004A0; /* dw3 */
+	addr_bo_buffer_batch[b++] = 0xBE040000; /* dw4 */
+	addr_bo_buffer_batch[b++] = 0xFFFFFFFF; /* dw5 */
+	addr_bo_buffer_batch[b++] = 0x000001FF; /* dw6 */
+
+	if (threadgroup_preemption)
+		addr_bo_buffer_batch[b++] = XE2_THREADGROUP_PREEMPT_XDIM; // Thread Group ID X Dimension
+	else
+		addr_bo_buffer_batch[b++] = size_thread_group_x(work_size);
+
+	addr_bo_buffer_batch[b++] = THREAD_GROUP_Y; /* dw8 */
+	addr_bo_buffer_batch[b++] = THREAD_GROUP_Z; /* dw9 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw10 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw11 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw12 */
+	addr_bo_buffer_batch[b++] = 0x00010000; /* dw13 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw14 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw15 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw16 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw17 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw18 */
+	addr_bo_buffer_batch[b++] = kernel_start_pointer; /* dw19 */
+	addr_bo_buffer_batch[b++] = kernel_start_pointer >> 32; /* dw20 */
+	if (threadgroup_preemption)
+		addr_bo_buffer_batch[b++] = 0x00000002;
+	else
+		addr_bo_buffer_batch[b++] = 0x00100002; // Enable Mid Thread Preemption BitField:20
+
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw22 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw23 */
+	addr_bo_buffer_batch[b++] = 0x0C000010; /* dw24 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw25 */
+	addr_bo_buffer_batch[b++] = 0x00000400; /* dw26 */
+
+	addr_bo_buffer_batch[b++] = DP_SS_CACHE_FLUSH | uc_mocs << 4 |
+				    DP_PIPELINE_FLUSH | XE3P_WRITE_IMM_DATA; /* dw27 */
+	addr_bo_buffer_batch[b++] = ADDR_BATCH;		/* dw28 (postsync addr) */
+	addr_bo_buffer_batch[b++] = ADDR_BATCH >> 32;	/* dw29 */
+	addr_bo_buffer_batch[b++] = (uint32_t) POST_SYNC_VALUE;		/* dw30 */
+	addr_bo_buffer_batch[b++] = (uint32_t) (POST_SYNC_VALUE >> 32);	/* dw31 */
+
+	/* inline data 32 - 47 */
+	memcpy(&addr_bo_buffer_batch[b], idata, sizeof(*idata));
+	b += 16;
+
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw48 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw49 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw50 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw51 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw52 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw53 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw54 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw55 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw56 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw57 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw58 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw59 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw60 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw61 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw62 */
+	addr_bo_buffer_batch[b++] = 0x00000000; /* dw63 */
+
+	addr_bo_buffer_batch[b++] = MI_BATCH_BUFFER_END;
+}
+
+static void xe3p_create_indirect_data(uint32_t *addr_bo_buffer_batch,
+				      uint64_t addr_input,
+				      uint64_t addr_output,
+				      uint32_t loop_count)
+{
+	int b = 0;
+
+	addr_bo_buffer_batch[b++] = addr_input & 0xffffffff;
+	addr_bo_buffer_batch[b++] = addr_input >> 32;
+	addr_bo_buffer_batch[b++] = addr_output & 0xffffffff;
+	addr_bo_buffer_batch[b++] = addr_output >> 32;
+	addr_bo_buffer_batch[b++] = loop_count;
+	addr_bo_buffer_batch[b++] = 0x00000200;
+	addr_bo_buffer_batch[b++] = 0x00000001;
+	addr_bo_buffer_batch[b++] = 0x00000001;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+}
+
+/**
+ * xe3p_compute_exec - run a pipeline compatible with XE3P
+ *
+ * @fd: file descriptor of the opened DRM device
+ * @kernel: GPU Kernel binary to be executed
+ * @size: size of @kernel
+ * @eci: engine instance class
+ * @user: user defined exec environment
+ * @alloc_prefs: memory allocation preference
+ */
+static void xe3p_compute_exec(int fd, const unsigned char *kernel,
+			      unsigned int size,
+			      struct drm_xe_engine_class_instance *eci,
+			      struct user_execenv *user,
+			      enum execenv_alloc_prefs alloc_prefs)
+{
+	struct bo_dict_entry bo_dict[] = {
+		{ .addr = ADDR_INSTRUCTION_STATE_BASE + OFFSET_KERNEL,
+		  .name = "instr state base"},
+		{ .addr = ADDR_GENERAL_STATE_BASE + OFFSET_INDIRECT_DATA_START,
+		  .size =  0x1000,
+		  .name = "indirect object base"},
+		{ .addr = ADDR_INPUT,
+		  .name = "addr input"},
+		{ .addr = ADDR_OUTPUT,
+		  .name = "addr output" },
+		{ .addr = ADDR_BATCH,
+		  .size = SIZE_BATCH,
+		  .name = "batch" },
+		{ .addr = XE2_ADDR_STATE_CONTEXT_DATA_BASE,
+		  .size = 0x10000,
+		  .name = "state context data base"},
+	};
+	struct inline_data idata = {};
+	struct bo_execenv execenv;
+	float *input_data, *output_data;
+	uint64_t indirect_addr = ADDR_GENERAL_STATE_BASE + OFFSET_INDIRECT_DATA_START;
+	int entries = ARRAY_SIZE(bo_dict);
+
+	bo_execenv_create(fd, &execenv, eci, user);
+
+	/* Sets Kernel size */
+	bo_dict[0].size = ALIGN(size, 0x1000);
+	bo_dict[2].size = size_input(execenv.array_size);
+	bo_dict[3].size = size_output(execenv.array_size);
+
+	bo_execenv_bind(&execenv, alloc_prefs, bo_dict, entries);
+
+	memcpy(bo_dict[0].data, kernel, size);
+	memset(bo_dict[1].data, 0, 4096);
+
+	xe3p_create_indirect_data(bo_dict[1].data, ADDR_INPUT, ADDR_OUTPUT,
+				  execenv.loop_count);
+	idata.xe3p.indirect_addr_lo = indirect_addr;
+	idata.xe3p.indirect_addr_hi = indirect_addr >> 32;
+
+	input_data = get_input_data(&execenv, user, bo_dict[2].data);
+	output_data = get_output_data(&execenv, user, bo_dict[3].data);
+
+	xe3p_compute_exec_compute(fd, &idata,
+				  bo_dict[4].data,
+				  ADDR_INSTRUCTION_STATE_BASE + OFFSET_KERNEL,
+				  XE2_ADDR_STATE_CONTEXT_DATA_BASE, false,
+				  execenv.array_size);
+
+	bo_execenv_exec(&execenv, ADDR_BATCH);
+
+	if (!user || (user && !user->skip_results_check))
+		bo_check_square(input_data, output_data, execenv.array_size);
+
+	bo_execenv_unbind(&execenv, bo_dict, entries);
+	bo_execenv_destroy(&execenv);
+}
+
 /*
  * Compatibility flags.
  *
@@ -1966,6 +2191,11 @@ static const struct {
 	{
 		.ip_ver = IP_VER(30, 04),
 		.compute_exec = xe2lpg_compute_exec,
+		.compat = COMPAT_DRIVER_XE,
+	},
+	{
+		.ip_ver = IP_VER(35, 11),
+		.compute_exec = xe3p_compute_exec,
 		.compat = COMPAT_DRIVER_XE,
 	},
 };

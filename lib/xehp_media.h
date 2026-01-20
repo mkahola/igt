@@ -18,6 +18,7 @@
 #define XEHP_STATE_COMPUTE_MODE		GFXPIPE(0, 1, 5)
 #define XEHP_CFE_STATE			GFXPIPE_XEHP(2, 2, 0)
 #define XEHP_COMPUTE_WALKER		GFXPIPE_XEHP(2, 2, 2)
+#define XE3P_COMPUTE_WALKER2		GFXPIPE_XEHP(2, 2, 8)
 
 #define BITRANGE(start, end) (end - start + 1)
 
