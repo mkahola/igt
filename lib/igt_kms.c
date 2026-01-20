@@ -92,7 +92,7 @@
 #define MAX_CONNECTORS 32
 #define MAX_EDID 2
 #define DISPLAY_TILE_BLOCK 0x12
-#define MAX_NUM_COLOROPS 128
+#define MAX_NUM_COLOROPS 256
 
 typedef bool (*igt_connector_attr_set)(int dir, const char *attr, const char *value);
 
