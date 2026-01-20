@@ -167,7 +167,7 @@ static void test_read_crc(data_t *data, enum pipe pipe,
 		if (flags & TEST_NONBLOCK) {
 			igt_pipe_crc_t *pipe_crc;
 
-			pipe_crc = igt_pipe_crc_new_nonblock(data->drm_fd, pipe,
+			pipe_crc = igt_crtc_crc_new_nonblock(igt_crtc_for_pipe(&data->display, pipe),
 							     IGT_PIPE_CRC_SOURCE_AUTO);
 			igt_wait_for_vblank(igt_crtc_for_pipe(display, pipe));
 			igt_pipe_crc_start(pipe_crc);

@@ -284,7 +284,7 @@ static void prepare_crtc(data_t *data)
 	data->jump_y = (mode->vdisplay - data->curh) / 2;
 
 	/* create the pipe_crc object for this pipe */
-	data->pipe_crc = igt_pipe_crc_new_nonblock(data->drm_fd, data->pipe,
+	data->pipe_crc = igt_crtc_crc_new_nonblock(igt_crtc_for_pipe(&data->display, data->pipe),
 						   IGT_PIPE_CRC_SOURCE_AUTO);
 
 	/* get reference crc w/o cursor */
