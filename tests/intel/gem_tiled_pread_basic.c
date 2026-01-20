@@ -35,19 +35,19 @@
  * other systems.
  */
 
-#include "igt.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
-#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/ioctl.h>
 
 #include "drm.h"
 #include "i915/gem_create.h"
+#include "igt.h"
 /**
  * TEST: gem tiled pread basic
  * Description: Test pread behavior on tiled objects with respect to the reported swizzling value.
@@ -57,7 +57,8 @@
  * Functionality: tiled pread/pwrite
  * Feature: gtt, mapping
  *
- * SUBTEST:
+ * SUBTEST: basic
+ * Description: Basic test to check swizzled offsets and values.
  */
 
 IGT_TEST_DESCRIPTION("Test pread behavior on tiled objects with respect to the"
@@ -127,19 +128,16 @@ calculate_expected(int offset, struct offset *dbg)
 	return (dbg->base_y + dbg->tile_y) * WIDTH + dbg->base_x + dbg->tile_x;
 }
 
-int igt_simple_main()
+static void
+basic_test(int fd)
 {
-	int fd;
 	int i, iter = 100;
 	uint32_t tiling, swizzle;
 	uint32_t handle;
 	uint32_t devid;
 
-	fd = drm_open_driver(DRIVER_INTEL);
-	igt_require(gem_available_fences(fd) > 0);
 	handle = create_bo(fd);
 	igt_require(gem_get_tiling(fd, handle, &tiling, &swizzle));
-	gem_require_pread_pwrite(fd);
 
 	devid = intel_get_drm_devid(fd);
 
@@ -231,7 +229,23 @@ int igt_simple_main()
 				     offset, offset + len,
 				     swizzle_str);
 		}
+	} /* for i < iter */
+}
+
+int igt_main()
+{
+	int fd;
+
+	igt_fixture() {
+		fd = drm_open_driver(DRIVER_INTEL);
+		igt_require(gem_available_fences(fd) > 0);
+		gem_require_pread_pwrite(fd);
 	}
 
-	drm_close_driver(fd);
+	igt_subtest("basic")
+		basic_test(fd);
+
+	igt_fixture()
+		drm_close_driver(fd);
+
 }
