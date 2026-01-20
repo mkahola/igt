@@ -92,6 +92,8 @@ const struct intel_compute_kernels intel_compute_square_kernels[] = {
 		.kernel = xe3p_kernel_square_bin,
 		.long_kernel = xe3p_kernel_count_bin,
 		.long_kernel_size = sizeof(xe3p_kernel_count_bin),
+		.sip_kernel = xe3p_xpc_sip_bin,
+		.sip_kernel_size = sizeof(xe3p_xpc_sip_bin),
 		.loop_kernel = xe3p_kernel_loop_bin,
 		.loop_kernel_size = sizeof(xe3p_kernel_loop_bin),
 	},

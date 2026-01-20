@@ -2516,6 +2516,146 @@ static void xe2lpg_compute_preempt_exec(int fd, const unsigned char *long_kernel
 	bo_execenv_destroy(&execenv_long);
 }
 
+static void xe3p_compute_preempt_exec(int fd, const unsigned char *long_kernel,
+				      unsigned int long_kernel_size,
+				      const unsigned char *short_kernel,
+				      unsigned int short_kernel_size,
+				      const unsigned char *sip_kernel,
+				      unsigned int sip_kernel_size,
+				      const unsigned char *loop_kernel,
+				      unsigned int loop_kernel_size,
+				      struct drm_xe_engine_class_instance *eci,
+				      bool threadgroup_preemption,
+				      enum execenv_alloc_prefs alloc_prefs)
+{
+	struct bo_dict_entry bo_dict_long[] = {
+		{ .addr = ADDR_INSTRUCTION_STATE_BASE + OFFSET_KERNEL,
+		  .name = "instr state base"},
+		{ .addr = ADDR_GENERAL_STATE_BASE + OFFSET_INDIRECT_DATA_START,
+		  .size =  0x1000,
+		  .name = "indirect object base"},
+		{ .addr = ADDR_INPUT, .size = MAX(sizeof(float) * SIZE_DATA, 0x10000),
+		  .name = "addr input"},
+		{ .addr = ADDR_OUTPUT, .size = MAX(sizeof(float) * SIZE_DATA, 0x10000),
+		  .name = "addr output" },
+		{ .addr = ADDR_BATCH,
+		  .size = SIZE_BATCH,
+		  .name = "batch" },
+		{ .addr = XE2_ADDR_STATE_CONTEXT_DATA_BASE,
+		  .size = 0x8000000,
+		  .name = "state context data base"},
+		{ .addr = ADDR_INSTRUCTION_STATE_BASE + OFFSET_STATE_SIP,
+		  .size = ALIGN(sip_kernel_size, 0x1000),
+		  .name = "sip kernel"},
+	};
+
+	uint64_t indirect_addr = ADDR_GENERAL_STATE_BASE + OFFSET_INDIRECT_DATA_START;
+	struct inline_data idata = {};
+	struct bo_dict_entry bo_dict_short[ARRAY_SIZE(bo_dict_long)];
+	struct bo_execenv execenv_short, execenv_long;
+	float *input_short, *output_short, *input_long;
+	uint64_t *post_data;
+	unsigned int kernel_loop_count = 0; /* unused for wmtp */
+	int64_t timeout_one_ns = 1;
+	bool use_loop_kernel = loop_kernel && !threadgroup_preemption;
+	int entries = ARRAY_SIZE(bo_dict_long);
+
+	if (threadgroup_preemption)
+		kernel_loop_count = TGP_long_kernel_loop_count;
+
+	for (int i = 0; i < entries; ++i)
+		bo_dict_short[i] = bo_dict_long[i];
+
+	bo_execenv_create(fd, &execenv_short, eci, NULL);
+	bo_execenv_create(fd, &execenv_long, eci, NULL);
+
+	if (use_loop_kernel)
+		bo_dict_long[0].size = ALIGN(loop_kernel_size, 0x1000);
+	else
+		bo_dict_long[0].size = ALIGN(long_kernel_size, 0x1000);
+	bo_dict_short[0].size = ALIGN(short_kernel_size, 0x1000);
+
+	bo_execenv_bind(&execenv_long, alloc_prefs, bo_dict_long, entries);
+	bo_execenv_bind(&execenv_short, alloc_prefs, bo_dict_short, entries);
+
+	if (use_loop_kernel)
+		memcpy(bo_dict_long[0].data, loop_kernel, loop_kernel_size);
+	else
+		memcpy(bo_dict_long[0].data, long_kernel, long_kernel_size);
+	memcpy(bo_dict_short[0].data, short_kernel, short_kernel_size);
+
+	memcpy(bo_dict_long[6].data, sip_kernel, sip_kernel_size);
+	memcpy(bo_dict_short[6].data, sip_kernel, sip_kernel_size);
+
+	xe3p_create_indirect_data(bo_dict_long[1].data, ADDR_INPUT, ADDR_OUTPUT,
+				  kernel_loop_count);
+	xe3p_create_indirect_data(bo_dict_short[1].data, ADDR_INPUT, ADDR_OUTPUT,
+				  execenv_short.loop_count);
+
+	input_long = (float *) bo_dict_long[2].data;
+	input_short = (float *) bo_dict_short[2].data;
+	output_short = (float *) bo_dict_short[3].data;
+	post_data = (uint64_t *) bo_dict_long[4].data;
+
+	bo_randomize(input_short, execenv_short.loop_count);
+
+	idata.xe3p.indirect_addr_lo = indirect_addr;
+	idata.xe3p.indirect_addr_hi = indirect_addr >> 32;
+
+	xe3p_compute_exec_compute(fd, &idata,
+				  bo_dict_long[4].data,
+				  ADDR_INSTRUCTION_STATE_BASE + OFFSET_KERNEL,
+				  XE2_ADDR_STATE_CONTEXT_DATA_BASE,
+				  ADDR_INSTRUCTION_STATE_BASE + OFFSET_STATE_SIP,
+				  threadgroup_preemption,
+				  execenv_long.array_size);
+
+	xe3p_compute_exec_compute(fd, &idata,
+				  bo_dict_short[4].data,
+				  ADDR_INSTRUCTION_STATE_BASE + OFFSET_KERNEL,
+				  XE2_ADDR_STATE_CONTEXT_DATA_BASE,
+				  ADDR_INSTRUCTION_STATE_BASE + OFFSET_STATE_SIP, false,
+				  execenv_short.array_size);
+
+	bo_execenv_exec_async(&execenv_long, ADDR_BATCH);
+
+	/* Wait until multiple LR jobs will start to occupy gpu */
+	if (use_loop_kernel)
+		sleep(1);
+
+	/*
+	 * Regardless scenario - wmtp or threadgroup short job (compute
+	 * square) must complete first and long job must be still active.
+	 */
+	bo_execenv_exec(&execenv_short, ADDR_BATCH);
+	bo_check_square(input_short, output_short, execenv_short.loop_count);
+
+	/*
+	 * Catch command level preemption instead TG preemption. For TG and WMTP
+	 * post sync can't be visible at this point yet.
+	 */
+	igt_assert_neq_u64(POST_SYNC_VALUE, *post_data);
+
+	/* Check that the long kernel has not completed yet */
+	igt_assert_neq(0, __xe_wait_ufence(fd, &execenv_long.bo_sync->sync, USER_FENCE_VALUE,
+					   execenv_long.exec_queue, &timeout_one_ns));
+	/*
+	 * For threadgroup preemption it breaks the loop. So rest shaders exit
+	 * immediately without reaching whole loop count.
+	 */
+
+	((int *)input_long)[0] = MAGIC_LOOP_STOP;
+
+	bo_execenv_sync(&execenv_long);
+	igt_assert_eq_u64(POST_SYNC_VALUE, *post_data);
+
+	bo_execenv_unbind(&execenv_short, bo_dict_short, entries);
+	bo_execenv_unbind(&execenv_long, bo_dict_long, entries);
+
+	bo_execenv_destroy(&execenv_short);
+	bo_execenv_destroy(&execenv_long);
+}
+
 static const struct {
 	unsigned int ip_ver;
 	void (*compute_exec)(int fd, const unsigned char *long_kernel,
@@ -2555,6 +2695,12 @@ static const struct {
 		.compute_exec = xe2lpg_compute_preempt_exec,
 		.compat = COMPAT_DRIVER_XE,
 		.preempt_type = PREEMPT_TGP | PREEMPT_WMTP,
+	},
+	{
+		.ip_ver = IP_VER(35, 11),
+		.compute_exec = xe3p_compute_preempt_exec,
+		.compat = COMPAT_DRIVER_XE,
+		.preempt_type = PREEMPT_WMTP,
 	},
 };
 
