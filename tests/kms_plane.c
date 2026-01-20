@@ -72,13 +72,32 @@
  */
 
 /**
- * SUBTEST: pixel-%s
+ * SUBTEST: pixel-format-%s-modifier
  * Description: verify the pixel formats for given plane and pipe
+ *
+ * SUBTEST: pixel-format-%s-modifier-source-clamping
+ * Description: verify the pixel formats for given plane and pipe with source clamping
  *
  * arg[1]:
  *
- * @format:
- * @format-source-clamping:          with source clamping
+ * @x-tiled:                     x tiled
+ * @y-tiled:                     y tiled
+ * @yf-tiled:                    yf tiled
+ * @y-tiled-ccs:                 y tiled ccs
+ * @yf-tiled-ccs:                yf tiled ccs
+ * @y-tiled-gen12-rc-ccs:        y tiled gen12 rc ccs
+ * @y-tiled-gen12-mc-ccs:        y tiled gen12 mc ccs
+ * @y-tiled-gen12-rc-ccs-cc:     y tiled gen12 rc ccs cc
+ * @4-tiled:                     4 tiled
+ * @4-tiled-dg2-rc-ccs:          4 tiled dg2 rc ccs
+ * @4-tiled-dg2-mc-ccs:          4 tiled dg2 mc ccs
+ * @4-tiled-dg2-rc-ccs-cc:       4 tiled dg2 rc ccs cc
+ * @4-tiled-mtl-rc-ccs:          4 tiled mtl rc ccs
+ * @4-tiled-mtl-mc-ccs:          4 tiled mtl mc ccs
+ * @4-tiled-mtl-rc-ccs-cc:       4 tiled mtl rc ccs cc
+ * @4-tiled-lnl-ccs:             4 tiled lnl ccs
+ * @4-tiled-bmg-ccs:             4 tiled bmg ccs
+ * @linear:                      linear
  */
 
 /*
@@ -114,6 +133,7 @@ typedef struct {
 	uint32_t crop;
 	bool extended;
 	unsigned int flags;
+	uint64_t mod;
 } data_t;
 
 static bool all_pipes;
@@ -147,6 +167,30 @@ enum {
 	TEST_PANNING_TOP_LEFT           = 1 << 2,
 	TEST_PANNING_BOTTOM_RIGHT       = 1 << 3,
 	TEST_SUSPEND_RESUME             = 1 << 4,
+};
+
+static const struct {
+	uint64_t modifier;
+	const char *str;
+} modifiers[] = {
+	{I915_FORMAT_MOD_X_TILED, "x-tiled"},
+	{I915_FORMAT_MOD_Y_TILED, "y-tiled"},
+	{I915_FORMAT_MOD_Yf_TILED, "yf-tiled"},
+	{I915_FORMAT_MOD_Y_TILED_CCS, "y-tiled-ccs"},
+	{I915_FORMAT_MOD_Yf_TILED_CCS, "yf-tiled-ccs"},
+	{I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS, "y-tiled-gen12-rc-ccs"},
+	{I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS, "y-tiled-gen12-mc-ccs"},
+	{I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS_CC, "y-tiled-gen12-rc-ccs-cc"},
+	{I915_FORMAT_MOD_4_TILED, "4-tiled"},
+	{I915_FORMAT_MOD_4_TILED_DG2_RC_CCS, "4-tiled-dg2-rc-ccs"},
+	{I915_FORMAT_MOD_4_TILED_DG2_MC_CCS, "4-tiled-dg2-mc-ccs"},
+	{I915_FORMAT_MOD_4_TILED_DG2_RC_CCS_CC, "4-tiled-dg2-rc-ccs-cc"},
+	{I915_FORMAT_MOD_4_TILED_MTL_RC_CCS, "4-tiled-mtl-rc-ccs"},
+	{I915_FORMAT_MOD_4_TILED_MTL_MC_CCS, "4-tiled-mtl-mc-ccs"},
+	{I915_FORMAT_MOD_4_TILED_MTL_RC_CCS_CC, "4-tiled-mtl-rc-ccs-cc"},
+	{I915_FORMAT_MOD_4_TILED_LNL_CCS, "4-tiled-lnl-ccs"},
+	{I915_FORMAT_MOD_4_TILED_BMG_CCS, "4-tiled-bmg-ccs"},
+	{DRM_FORMAT_MOD_LINEAR, "linear"},
 };
 
 /*
@@ -1040,12 +1084,24 @@ static void test_format_plane(data_t *data, enum pipe pipe,
 	struct format_mod ref = {};
 	igt_crc_t* crcset;
 	bool result = true;
+	bool found = false;
 
 	/*
 	 * No clamping test for cursor plane
 	 */
 	if (data->crop != 0 && plane->type == DRM_PLANE_TYPE_CURSOR)
 		return;
+
+	for (int i = 0; i < plane->format_mod_count; i++) {
+		if (data->mod == plane->modifiers[i]) {
+			found = true;
+			break;
+		}
+	}
+
+	igt_skip_on_f(!found,
+		      "Modifier " IGT_MODIFIER_FMT " not supported on plane %d\n",
+		      IGT_MODIFIER_ARGS(data->mod), plane->index);
 
 	igt_vec_init(&tested_formats, sizeof(struct format_mod));
 
@@ -1100,6 +1156,9 @@ static void test_format_plane(data_t *data, enum pipe pipe,
 			.format = plane->formats[i],
 			.modifier = plane->modifiers[i],
 		};
+
+		if (data->mod != f.modifier)
+			continue;
 
 		if (f.format == ref.format &&
 		    f.modifier == ref.modifier)
@@ -1433,17 +1492,25 @@ static void dynamic_test_handler(data_t *data, enum pipe pipe)
 static void
 run_tests_for_pipe_plane(data_t *data)
 {
-	igt_describe("verify the pixel formats for given plane and pipe");
-	igt_subtest_with_dynamic_f("pixel-format")
-		run_test(data, test_pixel_formats);
-
-	igt_describe("verify the pixel formats for given plane and pipe with source clamping");
-	igt_subtest_with_dynamic_f("pixel-format-source-clamping") {
-		data->crop = 4;
-		run_test(data, test_pixel_formats);
+	for (int i = 0; i < ARRAY_SIZE(modifiers); i++) {
+		igt_describe("verify the pixel formats for given plane and pipe");
+		igt_subtest_with_dynamic_f("pixel-format-%s-modifier", modifiers[i].str) {
+			data->mod = modifiers[i].modifier;
+			run_test(data, test_pixel_formats);
+		}
 	}
 
-	data->crop = 0;
+	for (int i = 0; i < ARRAY_SIZE(modifiers); i++) {
+		igt_describe("verify the pixel formats for given plane and pipe with source clamping");
+		igt_subtest_with_dynamic_f("pixel-format-%s-modifier-source-clamping",
+					   modifiers[i].str) {
+			data->mod = modifiers[i].modifier;
+			data->crop = 4;
+			run_test(data, test_pixel_formats);
+		}
+		data->crop = 0;
+	}
+
 	igt_describe("verify plane position using two planes to create a fully covered screen");
 	igt_subtest_with_dynamic_f("plane-position-covered") {
 		data->flags = 0;
