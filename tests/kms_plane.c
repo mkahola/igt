@@ -1094,7 +1094,7 @@ static void test_format_plane(data_t *data, enum pipe pipe,
 	 * No clamping test for cursor plane
 	 */
 	if (data->crop != 0 && plane->type == DRM_PLANE_TYPE_CURSOR)
-		return;
+		igt_skip("Clamping is invalid for the cursor plane.\n");
 
 	for (int i = 0; i < plane->format_mod_count; i++) {
 		if (data->mod == plane->modifiers[i]) {
@@ -1116,10 +1116,9 @@ static void test_format_plane(data_t *data, enum pipe pipe,
 		ref.format = DRM_FORMAT_XRGB8888;
 		ref.modifier = DRM_FORMAT_MOD_LINEAR;
 	} else {
-		if (!plane->drm_plane) {
-			igt_debug("Only legacy cursor ioctl supported, skipping cursor plane\n");
-			return;
-		}
+		if (!plane->drm_plane)
+			igt_skip("Only legacy cursor ioctl supported, skipping cursor plane\n");
+
 		do_or_die(drmGetCap(data->drm_fd, DRM_CAP_CURSOR_WIDTH, &width));
 		do_or_die(drmGetCap(data->drm_fd, DRM_CAP_CURSOR_HEIGHT, &height));
 		ref.format = DRM_FORMAT_ARGB8888;
