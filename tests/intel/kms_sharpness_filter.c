@@ -369,7 +369,7 @@ static void test_sharpness_filter(data_t *data,  enum test_type type)
 		ret = igt_display_try_commit2(&data->display, COMMIT_ATOMIC);
 
 	if (type == TEST_FILTER_DPMS || type == TEST_FILTER_SUSPEND) {
-		pipe_crc = igt_pipe_crc_new(data->drm_fd, data->pipe_id,
+		pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe_id),
 					    IGT_PIPE_CRC_SOURCE_AUTO);
 		igt_pipe_crc_collect_crc(pipe_crc, &ref_crc);
 	}

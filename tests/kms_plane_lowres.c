@@ -307,7 +307,7 @@ static void run_test(data_t *data, uint64_t modifier)
 			if (!intel_pipe_output_combo_valid(&data->display))
 				continue;
 
-			data->pipe_crc = igt_pipe_crc_new(data->drm_fd, data->pipe,
+			data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
 							  IGT_PIPE_CRC_SOURCE_AUTO);
 
 			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), data->output->name)

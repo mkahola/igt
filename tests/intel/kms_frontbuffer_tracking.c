@@ -1987,7 +1987,7 @@ static void init_blue_crc(enum pixel_format format, enum tiling_type tiling)
 	igt_display_commit(&drm.display);
 
 	if (!pipe_crc) {
-		pipe_crc = igt_pipe_crc_new(drm.fd, prim_mode_params.pipe,
+		pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&drm.display, prim_mode_params.pipe),
 					    IGT_PIPE_CRC_SOURCE_AUTO);
 		igt_assert(pipe_crc);
 	}

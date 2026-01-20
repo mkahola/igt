@@ -807,7 +807,7 @@ static void prepare_test(struct data *data)
 		if (data->highest_mode[i]) {
 			igt_info("Using mode: \n");
 			kmstest_dump_mode(data->highest_mode[i]);
-			data->pipe_crc[i] = igt_pipe_crc_new(data->drm_fd, i,
+			data->pipe_crc[i] = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, i),
 							     IGT_PIPE_CRC_SOURCE_AUTO);
 		} else
 			data->pipe_crc[i] = NULL;

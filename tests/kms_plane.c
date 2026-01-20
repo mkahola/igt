@@ -130,7 +130,7 @@ static void test_init(data_t *data, enum pipe pipe)
 	igt_require(igt_crtc_for_pipe(&data->display, pipe)->n_planes > 0);
 	if (data->pipe_crc)
 		igt_pipe_crc_free(data->pipe_crc);
-	data->pipe_crc = igt_pipe_crc_new(data->drm_fd, pipe,
+	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe),
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 	igt_display_reset(&data->display);
 }
@@ -1364,8 +1364,8 @@ static void test_planar_settings(data_t *data)
 		if (rval == 0) {
 			set_legacy_lut(data, pipe, LUT_MASK);
 			igt_wait_for_vblank_count(igt_crtc_for_pipe(&data->display, pipe), 1);
-			data->pipe_crc = igt_pipe_crc_new(data->drm_fd, pipe,
-						IGT_PIPE_CRC_SOURCE_AUTO);
+			data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe),
+							  IGT_PIPE_CRC_SOURCE_AUTO);
 			igt_pipe_crc_collect_crc(data->pipe_crc, &crc);
 
 			igt_create_color_fb(data->drm_fd, 256, 256,

@@ -475,7 +475,7 @@ plane_immutable_zpos(data_t *data, igt_output_t *output, enum pipe pipe, int n_p
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 	/* create the pipe_crc object for this pipe */
-	pipe_crc = igt_pipe_crc_new(data->drm_fd, pipe,
+	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe),
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
 	/* get reference crc */

@@ -122,7 +122,7 @@ static void test_ctx_flip_detection(data_t *data)
 	int start = -1, frame, start_color = -1, i;
 	bool found_skip = false;
 
-	pipe_crc = igt_pipe_crc_new(data->drm_fd, data->pipe,
+	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
 	create_crc_colors(data, colors, n_colors, pipe_crc);
@@ -233,7 +233,8 @@ static void test_ctx_flip_skip_current_frame(data_t *data)
 	const int n_colors = ARRAY_SIZE(colors);
 	const int n_crcs = 30;
 
-	pipe_crc = igt_pipe_crc_new(fd, data->pipe, IGT_PIPE_CRC_SOURCE_AUTO);
+	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
+				    IGT_PIPE_CRC_SOURCE_AUTO);
 	create_crc_colors(data, colors, n_colors, pipe_crc);
 
 	set_crc_flip_threshold(data, 5);
@@ -263,10 +264,10 @@ static void test_ctx_flip_skip_current_frame(data_t *data)
 static void test_ctx_flip_threshold_reset_after_capture(data_t *data)
 {
 	igt_pipe_crc_t *pipe_crc;
-	const int fd = data->drm_fd;
 	uint32_t value = 0;
 
-	pipe_crc = igt_pipe_crc_new(fd, data->pipe, IGT_PIPE_CRC_SOURCE_AUTO);
+	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
+				    IGT_PIPE_CRC_SOURCE_AUTO);
 
 	set_crc_flip_threshold(data, 5);
 	igt_pipe_crc_start(pipe_crc);
@@ -281,7 +282,8 @@ static void test_ctx_flip_threshold_reset_after_capture(data_t *data)
 
 static void test_source(data_t *data, const char *source)
 {
-	igt_pipe_crc_t *pipe_crc = igt_pipe_crc_new(data->drm_fd, data->pipe, source);
+	igt_pipe_crc_t *pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
+						    source);
 	igt_crc_t *crcs;
 
 	igt_pipe_crc_start(pipe_crc);
@@ -302,10 +304,10 @@ static void test_source_outp_inactive(data_t *data)
 		{ .r = 0.0, .g = 1.0, .b = 0.0 },
 	};
 	igt_pipe_crc_t *pipe_crc;
-	const int fd = data->drm_fd;
 	const int n_colors = ARRAY_SIZE(colors);
 
-	pipe_crc = igt_pipe_crc_new(fd, data->pipe, "outp-inactive");
+	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
+				    "outp-inactive");
 	create_crc_colors(data, colors, n_colors, pipe_crc);
 
 	/* Changing the color should not change what's outside the active raster */

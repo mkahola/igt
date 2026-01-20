@@ -232,8 +232,8 @@ static void prepare(data_t *data)
 	igt_output_set_crtc(data->output,
 			    igt_crtc_for_pipe(data->output->display, data->pipe));
 
-	data->pipe_crc = igt_pipe_crc_new(data->drm_fd, data->pipe,
-					 IGT_PIPE_CRC_SOURCE_AUTO);
+	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
+					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_create_color_fb(data->drm_fd, data->mode->hdisplay,
 			    data->mode->vdisplay, DRM_FORMAT_XRGB8888,

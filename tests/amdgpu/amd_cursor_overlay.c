@@ -157,7 +157,7 @@ static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 		 kmstest_pipe_name(data->pipe_id), igt_output_name(data->output));
 
 	igt_require_pipe_crc(data->drm_fd);
-	data->pipe_crc = igt_pipe_crc_new(data->drm_fd, data->pipe_id,
+	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe_id),
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 }
 

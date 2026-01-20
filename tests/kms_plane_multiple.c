@@ -107,8 +107,8 @@ struct {
  */
 static void test_init(data_t *data, enum pipe pipe, int n_planes)
 {
-	data->pipe_crc1 = igt_pipe_crc_new(data->drm_fd, pipe,
-					  IGT_PIPE_CRC_SOURCE_AUTO);
+	data->pipe_crc1 = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe),
+					   IGT_PIPE_CRC_SOURCE_AUTO);
 
 	data->plane1 = calloc(n_planes, sizeof(*data->plane1));
 	igt_assert_f(data->plane1 != NULL, "Failed to allocate memory for planes\n");
@@ -417,9 +417,9 @@ test_plane_position(data_t *data, enum pipe pipe, igt_output_t *output, uint64_t
 
 static void test_init_2_display(data_t *data, enum pipe pipe1, enum pipe pipe2, int n_planes)
 {
-	data->pipe_crc1 = igt_pipe_crc_new(data->drm_fd, pipe1,
+	data->pipe_crc1 = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe1),
 					   IGT_PIPE_CRC_SOURCE_AUTO);
-	data->pipe_crc2 = igt_pipe_crc_new(data->drm_fd, pipe2,
+	data->pipe_crc2 = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe2),
 					   IGT_PIPE_CRC_SOURCE_AUTO);
 
 	data->plane1 = calloc(n_planes, sizeof(*data->plane1));

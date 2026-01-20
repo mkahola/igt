@@ -1611,7 +1611,7 @@ static void flip_vs_cursor_crc(igt_display_t *display, bool atomic)
 
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
-	pipe_crc = igt_pipe_crc_new(display->drm_fd, pipe,
+	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
 	cursor = set_cursor_on_pipe(display, pipe, &cursor_fb);
@@ -1692,7 +1692,7 @@ static void flip_vs_cursor_busy_crc(igt_display_t *display, bool atomic)
 
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
-	pipe_crc = igt_pipe_crc_new(display->drm_fd, pipe,
+	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
 	cursor = set_cursor_on_pipe(display, pipe, &cursor_fb);

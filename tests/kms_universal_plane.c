@@ -96,7 +96,7 @@ functional_test_init(functional_test_t *test, igt_output_t *output, enum pipe pi
 	data_t *data = test->data;
 	drmModeModeInfo *mode;
 
-	test->pipe_crc = igt_pipe_crc_new(data->drm_fd, pipe,
+	test->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe),
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));

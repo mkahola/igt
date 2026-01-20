@@ -97,8 +97,10 @@ static void run_extendedmode_basic(data_t *data,
 
 	igt_assert_f(igt_fit_modes_in_bw(display), "Unable to fit modes in bw\n");
 
-	pipe_crc[0] = igt_pipe_crc_new(data->drm_fd, pipe1, IGT_PIPE_CRC_SOURCE_AUTO);
-	pipe_crc[1] = igt_pipe_crc_new(data->drm_fd, pipe2, IGT_PIPE_CRC_SOURCE_AUTO);
+	pipe_crc[0] = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe1),
+				       IGT_PIPE_CRC_SOURCE_AUTO);
+	pipe_crc[1] = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe2),
+				       IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_create_color_fb(data->drm_fd, mode[0]->hdisplay, mode[0]->vdisplay,
 			    DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, 1, 0, 0, &fbs[0]);
