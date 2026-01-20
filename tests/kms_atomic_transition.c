@@ -929,7 +929,7 @@ retry:
 		j += 1;
 
 		if (is_intel_device(data->drm_fd))
-			data->pipe_crcs[i] = igt_pipe_crc_new(data->drm_fd, i,
+			data->pipe_crcs[i] = igt_crtc_crc_new(pipe,
 							      IGT_PIPE_CRC_SOURCE_AUTO);
 
 		for_each_valid_output_on_pipe(&data->display, i, output) {

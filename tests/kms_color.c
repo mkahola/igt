@@ -740,8 +740,7 @@ static void test_setup(data_t *data, enum pipe p)
 	igt_require(pipe->n_planes >= 0);
 
 	data->primary = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
-	data->pipe_crc = igt_pipe_crc_new(data->drm_fd,
-					  data->primary->pipe->pipe,
+	data->pipe_crc = igt_crtc_crc_new(data->primary->pipe,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_display_reset(&data->display);

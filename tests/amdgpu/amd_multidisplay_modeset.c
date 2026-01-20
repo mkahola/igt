@@ -174,13 +174,12 @@ static void test_init(struct data_t *data)
 			ret = dpcd_read_byte(data->fd, output->config.connector,
 				DPCD_TEST_SINK_MISC, &dpcd_246h);
 			if (ret && ((dpcd_246h & 0x20) != 0x0))
-				data->pipe_crc_dprx[i] = igt_pipe_crc_new(
-					data->fd, pipes->pipe,
-					AMDGPU_PIPE_CRC_SOURCE_DPRX);
+				data->pipe_crc_dprx[i] = igt_crtc_crc_new(pipes,
+									  AMDGPU_PIPE_CRC_SOURCE_DPRX);
 		}
 
-		data->pipe_crc_otg[i] = igt_pipe_crc_new(data->fd, pipes->pipe,
-						IGT_PIPE_CRC_SOURCE_AUTO);
+		data->pipe_crc_otg[i] = igt_crtc_crc_new(pipes,
+							 IGT_PIPE_CRC_SOURCE_AUTO);
 		/* disable eDP PSR */
 		if (data->output[i]->config.connector->connector_type ==
 				DRM_MODE_CONNECTOR_eDP) {

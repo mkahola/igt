@@ -846,7 +846,7 @@ static void compare_crcs(int fd, igt_display_t *display, igt_fb_t *ref_fb, igt_f
 	for_each_connected_output(display, output) {
 		mode = igt_output_get_mode(output);
 		pipe = igt_crtc_for_pipe(display, output->pending_pipe);
-		pipe_crc = igt_pipe_crc_new(fd, pipe->pipe,
+		pipe_crc = igt_crtc_crc_new(pipe,
 					    IGT_PIPE_CRC_SOURCE_AUTO);
 		plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
 		igt_require(igt_pipe_connector_valid(pipe->pipe, output));

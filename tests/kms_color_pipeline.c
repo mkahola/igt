@@ -62,8 +62,7 @@ static void test_setup(data_t *data, enum pipe p)
 	data->mode = igt_output_get_mode(data->output);
 	igt_require(data->mode);
 
-	data->pipe_crc = igt_pipe_crc_new(data->drm_fd,
-					  data->primary->pipe->pipe,
+	data->pipe_crc = igt_crtc_crc_new(data->primary->pipe,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);

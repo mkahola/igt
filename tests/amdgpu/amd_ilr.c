@@ -100,7 +100,7 @@ static void test_init(data_t *data, igt_output_t *output)
 
 	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
 
-	data->pipe_crc = igt_pipe_crc_new(data->drm_fd, data->pipe_id,
+	data->pipe_crc = igt_crtc_crc_new(data->pipe,
 					  AMDGPU_PIPE_CRC_SOURCE_DPRX);
 
 	igt_output_set_crtc(output,

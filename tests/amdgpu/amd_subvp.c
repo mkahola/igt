@@ -69,8 +69,7 @@ static void test_init(struct data *data)
 						  data->pipe_id[i]);
 		data->primary[i] = igt_crtc_get_plane_type(data->pipe[i],
 							   DRM_PLANE_TYPE_PRIMARY);
-		data->pipe_crc[i] = igt_pipe_crc_new(data->fd,
-						     data->pipe_id[i],
+		data->pipe_crc[i] = igt_crtc_crc_new(data->pipe[i],
 						     IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 

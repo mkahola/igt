@@ -166,7 +166,7 @@ static void test_init(data_t *data)
 		data->cursor[i] = igt_crtc_get_plane_type(
 			data->pipe[i], DRM_PLANE_TYPE_CURSOR);
 		data->pipe_crc[i] =
-			igt_pipe_crc_new(data->fd, data->pipe_id[i],
+			igt_crtc_crc_new(data->pipe[i],
 					 IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
