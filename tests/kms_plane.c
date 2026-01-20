@@ -968,6 +968,10 @@ static bool test_format_plane_yuv(data_t *data, enum pipe pipe,
 						     igt_color_range_to_str(r)))
 				continue;
 
+			if (r != IGT_COLOR_YCBCR_FULL_RANGE &&
+			    igt_run_in_simulation())
+				continue;
+
 			igt_info("Testing format " IGT_FORMAT_FMT " / modifier " IGT_MODIFIER_FMT
 				 " (%s, %s) on %s.%u\n", IGT_FORMAT_ARGS(format),
 				 IGT_MODIFIER_ARGS(modifier),
