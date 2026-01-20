@@ -401,7 +401,7 @@ static void test_crc(int exporter_fd, int importer_fd)
 	output = setup_display(importer_fd, &display, &pipe);
 
 	mode = igt_output_get_mode(output);
-	pipe_crc = igt_pipe_crc_new(importer_fd, pipe,
+	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&display, pipe),
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
 	for (i = 0; i < ARRAY_SIZE(colors); i++) {

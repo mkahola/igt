@@ -104,7 +104,8 @@ static void find_modeset_params(void)
 			continue;
 
 		mode = igt_output_get_mode(output);
-		pipe_crc = igt_pipe_crc_new(drm_fd, pipe, IGT_PIPE_CRC_SOURCE_AUTO);
+		pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&display, pipe),
+					    IGT_PIPE_CRC_SOURCE_AUTO);
 		/*Only one pipe/output is enough*/
 		break;
 	}
