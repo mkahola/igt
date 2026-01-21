@@ -312,8 +312,21 @@ test_compute_mode(int fd, uint32_t vm, uint64_t addr, uint64_t userptr,
 	igt_assert(exec_sync != MAP_FAILED);
 	memset(exec_sync, 0, sync_size);
 
-	for (i = 0; i < n_exec_queues; i++)
-		exec_queues[i] = xe_exec_queue_create(fd, vm, eci, 0);
+	for (i = 0; i < n_exec_queues; i++) {
+		if (flags & MULTI_QUEUE) {
+			struct drm_xe_ext_set_property multi_queue = {
+				.base.next_extension = 0,
+				.base.name = DRM_XE_EXEC_QUEUE_EXTENSION_SET_PROPERTY,
+				.property = DRM_XE_EXEC_QUEUE_SET_PROPERTY_MULTI_GROUP,
+			};
+			uint64_t ext = to_user_pointer(&multi_queue);
+
+			multi_queue.value = i ? exec_queues[0] : DRM_XE_MULTI_GROUP_CREATE;
+			exec_queues[i] = xe_exec_queue_create(fd, vm, eci, ext);
+		} else {
+			exec_queues[i] = xe_exec_queue_create(fd, vm, eci, 0);
+		}
+	}
 
 	pthread_barrier_wait(&barrier);
 
@@ -1074,6 +1087,42 @@ static void *thread(void *data)
  *	multi-queue-mixed fd userptr invalidate
  * @multi-queue-mixed-fd-userptr-invalidate-race:
  *	multi-queue-mixed fd userptr invalidate race
+ * @multi-queue-cm-basic:
+ * 	multi-queue cm basic
+ * @multi-queue-cm-fd-basic:
+ * 	multi-queue cm fd basic
+ * @multi-queue-cm-userptr:
+ *	multi-queue compute mode userptr
+ * @multi-queue-cm-rebind:
+ *	multi-queue compute mode rebind
+ * @multi-queue-cm-userptr-rebind:
+ *	multi-queue compute mode userptr rebind
+ * @multi-queue-cm-userptr-invalidate:
+ *	multi-queue compute mode userptr invalidate
+ * @multi-queue-cm-userptr-invalidate-race:
+ *	multi-queue compute mode userptr invalidate race
+ * @multi-queue-cm-shared-vm-basic:
+ *	multi-queue compute mode shared vm basic
+ * @multi-queue-cm-shared-vm-userptr:
+ *	multi-queue compute mode shared vm userptr
+ * @multi-queue-cm-shared-vm-rebind:
+ *	multi-queue compute mode shared vm rebind
+ * @multi-queue-cm-shared-vm-userptr-rebind:
+ *	multi-queue compute mode shared vm userptr rebind
+ * @multi-queue-cm-shared-vm-userptr-invalidate:
+ *	multi-queue compute mode shared vm userptr invalidate
+ * @multi-queue-cm-shared-vm-userptr-invalidate-race:
+ *	multi-queue compute mode shared vm userptr invalidate race
+ * @multi-queue-cm-fd-userptr:
+ *	multi-queue compute mode fd userptr
+ * @multi-queue-cm-fd-rebind:
+ *	multi-queue compute mode fd rebind
+ * @multi-queue-cm-fd-userptr-rebind:
+ *	multi-queue compute mode fd userptr rebind
+ * @multi-queue-cm-fd-userptr-invalidate:
+ *	multi-queue compute mode fd userptr invalidate
+ * @multi-queue-cm-fd-userptr-invalidate-race:
+ *	multi-queue compute mode fd userptr invalidate race
  */
 
 static void threads(int fd, int flags)
@@ -1433,6 +1482,32 @@ int igt_main()
 		{ "multi-queue-mixed-fd-userptr-invalidate", MULTI_QUEUE | MIXED_MODE | FD |
 			USERPTR | INVALIDATE },
 		{ "multi-queue-mixed-fd-userptr-invalidate-race", MULTI_QUEUE | MIXED_MODE | FD |
+			USERPTR | INVALIDATE | RACE },
+		{ "multi-queue-cm-basic", MULTI_QUEUE | COMPUTE_MODE },
+		{ "multi-queue-cm-userptr", MULTI_QUEUE | COMPUTE_MODE | USERPTR },
+		{ "multi-queue-cm-rebind", MULTI_QUEUE | COMPUTE_MODE | REBIND },
+		{ "multi-queue-cm-userptr-rebind", MULTI_QUEUE | COMPUTE_MODE | USERPTR | REBIND },
+		{ "multi-queue-cm-userptr-invalidate", MULTI_QUEUE | COMPUTE_MODE | USERPTR |
+			INVALIDATE },
+		{ "multi-queue-cm-userptr-invalidate-race", MULTI_QUEUE | COMPUTE_MODE | USERPTR |
+			INVALIDATE | RACE },
+		{ "multi-queue-cm-shared-vm-basic", MULTI_QUEUE | COMPUTE_MODE | SHARED_VM },
+		{ "multi-queue-cm-shared-vm-userptr", MULTI_QUEUE | COMPUTE_MODE | SHARED_VM | USERPTR },
+		{ "multi-queue-cm-shared-vm-rebind", MULTI_QUEUE | COMPUTE_MODE | SHARED_VM | REBIND },
+		{ "multi-queue-cm-shared-vm-userptr-rebind", MULTI_QUEUE | COMPUTE_MODE | SHARED_VM |
+			USERPTR | REBIND },
+		{ "multi-queue-cm-shared-vm-userptr-invalidate", MULTI_QUEUE | COMPUTE_MODE | SHARED_VM |
+			USERPTR | INVALIDATE },
+		{ "multi-queue-cm-shared-vm-userptr-invalidate-race", MULTI_QUEUE | COMPUTE_MODE |
+			SHARED_VM | USERPTR | INVALIDATE | RACE },
+		{ "multi-queue-cm-fd-basic", MULTI_QUEUE | COMPUTE_MODE | FD },
+		{ "multi-queue-cm-fd-userptr", MULTI_QUEUE | COMPUTE_MODE | FD | USERPTR },
+		{ "multi-queue-cm-fd-rebind", MULTI_QUEUE | COMPUTE_MODE | FD | REBIND },
+		{ "multi-queue-cm-fd-userptr-rebind", MULTI_QUEUE | COMPUTE_MODE | FD | USERPTR |
+			REBIND },
+		{ "multi-queue-cm-fd-userptr-invalidate", MULTI_QUEUE | COMPUTE_MODE | FD |
+			USERPTR | INVALIDATE },
+		{ "multi-queue-cm-fd-userptr-invalidate-race", MULTI_QUEUE | COMPUTE_MODE | FD |
 			USERPTR | INVALIDATE | RACE },
 		{ NULL },
 	};
