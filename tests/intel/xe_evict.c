@@ -563,6 +563,7 @@ static unsigned int working_set(uint64_t vram_size, uint64_t system_size,
  * @small-multi-queue-priority:
  * 				small multi queue priority
  * @small-external:		small external
+ * @small-external-multi-queue: small external multi queue
  * @small-multi-vm:		small multi VM
  * @beng-small:			small bind exec_queue
  * @beng-small-external:	small external bind exec_queue
@@ -596,6 +597,8 @@ static unsigned int working_set(uint64_t vram_size, uint64_t system_size,
  * @small-multi-queue-priority-cm:
  * 				small multi queue priority compute machine
  * @small-external-cm:		small external compute machine
+ * @small-external-multi-queue-cm:
+ * 				small external compute machine multi queue
  * @small-multi-vm-cm:		small multi VM compute machine
  * @beng-small-cm:		small bind exec_queue compute machine
  * @beng-small-external-cm:	small external bind exec_queue compute machine
@@ -626,6 +629,8 @@ static unsigned int working_set(uint64_t vram_size, uint64_t system_size,
  * arg[1]:
  *
  * @mixed-threads-small:	mixed threads small
+ * @mixed-threads-small-multi-queue:
+ * 				mixed threads small multi queue
  * @mixed-many-threads-small:	mixed many threads small
  * @mixed-threads-small-multi-vm:
  * 				mixed threads small multi vm
@@ -663,6 +668,8 @@ static unsigned int working_set(uint64_t vram_size, uint64_t system_size,
  *
  * arg[1]:
  * @cm-threads-small:		compute mode threads small
+ * @cm-threads-small-multi-queue:
+ * 				compute mode threads small multi queue
  * @cm-threads-small-multi-vm:	compute mode threads small multi vm
  * @beng-cm-threads-small:	bind exec_queue compute mode threads small
  * @beng-cm-threads-small-multi-vm:
@@ -693,6 +700,7 @@ static unsigned int working_set(uint64_t vram_size, uint64_t system_size,
  *
  * @threads-small:		threads small
  * @beng-threads-small:		bind exec_queue threads small
+ * @threads-small-multi-queue:	threads small multi queue
  * @threads-small-multi-vm:	threads small multi vm
  * @beng-threads-small-multi-vm:
  *				bind exec_queue threads small multi vm
@@ -740,6 +748,7 @@ int igt_main()
 		{ "small-multi-queue", 16, 448, 1, 128, MULTI_QUEUE },
 		{ "small-multi-queue-priority", 16, 448, 1, 128, MULTI_QUEUE | PRIORITY },
 		{ "small-external", 16, 448, 1, 128, EXTERNAL_OBJ },
+		{ "small-external-multi-queue", 16, 448, 1, 128, EXTERNAL_OBJ | MULTI_QUEUE },
 		{ "small-multi-vm", 16, 256, 1, 128, MULTI_VM },
 		{ "large", 4, 16, 1, 4, 0 },
 		{ "large-external", 4, 16, 1, 4, EXTERNAL_OBJ },
@@ -767,6 +776,7 @@ int igt_main()
 		{ "small-multi-queue-cm", 16, 448, 1, 128, MULTI_QUEUE },
 		{ "small-multi-queue-priority-cm", 16, 448, 1, 128, MULTI_QUEUE | PRIORITY },
 		{ "small-external-cm", 16, 448, 1, 128, EXTERNAL_OBJ },
+		{ "small-external-multi-queue-cm", 16, 448, 1, 128, EXTERNAL_OBJ | MULTI_QUEUE },
 		{ "small-multi-vm-cm", 16, 256, 1, 128, MULTI_VM },
 		{ "large-cm", 4, 16, 1, 4, 0 },
 		{ "large-external-cm", 4, 16, 1, 4, EXTERNAL_OBJ },
@@ -794,10 +804,16 @@ int igt_main()
 	} sections_threads[] = {
 		{ "threads-small", 2, 16, 128, 1, 128,
 			THREADED },
+		{ "threads-small-multi-queue", 2, 16, 128, 1, 128,
+			THREADED | MULTI_QUEUE },
 		{ "cm-threads-small", 2, 16, 128, 1, 128,
 			COMPUTE_THREAD | THREADED },
+		{ "cm-threads-small-multi-queue", 2, 16, 128, 1, 128,
+			COMPUTE_THREAD | THREADED | MULTI_QUEUE },
 		{ "mixed-threads-small", 2, 16, 128, 1, 128,
 			MIXED_THREADS | THREADED },
+		{ "mixed-threads-small-multi-queue", 2, 16, 128, 1, 128,
+			MIXED_THREADS | THREADED | MULTI_QUEUE },
 		{ "mixed-many-threads-small", 3, 16, 128, 1, 128,
 			THREADED },
 		{ "threads-large", 2, 2, 16, 3, 32,
