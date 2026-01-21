@@ -670,9 +670,6 @@ const struct {
 static void setup_fb(data_t *data, struct igt_fb *newfb, uint32_t width,
 		     uint32_t height, uint64_t format, uint64_t modifier)
 {
-	igt_require(igt_display_has_format_mod(&data->display, format,
-					       modifier));
-
 	igt_create_color_fb(data->drm_fd, width, height,
 			    format, modifier, 0, 1, 0, newfb);
 }
@@ -901,6 +898,18 @@ int igt_main()
 	for (int index = 0; index < ARRAY_SIZE(flip_scenario_test); index++) {
 		igt_describe(flip_scenario_test[index].describe);
 		igt_subtest_with_dynamic(flip_scenario_test[index].name) {
+			igt_require(igt_display_has_format_mod(&data.display,
+							       flip_scenario_test[index].firstformat,
+							       flip_scenario_test[index].firstmodifier));
+			igt_require(igt_display_has_format_mod(&data.display,
+							       flip_scenario_test[index].secondformat,
+							       flip_scenario_test[index].secondmodifier));
+
+			if (flip_scenario_test[index].secondmodifier == DRM_FORMAT_MOD_LINEAR &&
+			    flip_scenario_test[index].secondrotation & IGT_REFLECT_X)
+				igt_require_f(data.gen >= 35,
+					      "Linear fb with REFLECT_X unsupported\n");
+
 			free_fbs(&data);
 			for_each_pipe(&data.display, pipe) {
 				bool found = false;
