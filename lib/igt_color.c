@@ -575,14 +575,37 @@ bool igt_cmp_fb_component(uint16_t comp1, uint16_t comp2, uint8_t up, uint8_t do
 bool igt_cmp_fb_pixels(igt_fb_t *fb1, igt_fb_t *fb2, uint8_t up, uint8_t down)
 {
 	uint32_t *ptr1, *ptr2;
+	uint32_t *map1, *map2;
 	uint32_t pixel1, pixel2, i, j;
-	bool matched = true;
+	uint32_t *cached_p1 = NULL, *cached_p2 = NULL;
+	bool result = true;
 
-	ptr1 = igt_fb_map_buffer(fb1->fd, fb1);
-	ptr2 = igt_fb_map_buffer(fb2->fd, fb2);
+	map1 = ptr1 = igt_fb_map_buffer(fb1->fd, fb1);
+	map2 = ptr2 = igt_fb_map_buffer(fb2->fd, fb2);
+	igt_assert(map1);
+	igt_assert(map2);
 
 	igt_assert(fb1->drm_format == fb2->drm_format);
 	igt_assert(fb1->size == fb2->size);
+
+	/*
+	 * Copy WC memory to cached buffer for faster reads.
+	 * Reading from WC memory is extremely slow so this is important
+	 * on dGPUs where framebuffer mappings are typically Write-Combining.
+	 */
+	cached_p1 = malloc(fb1->size);
+	cached_p2 = malloc(fb2->size);
+	if (cached_p1 && cached_p2) {
+		igt_memcpy_from_wc(cached_p1, ptr1, fb1->size);
+		igt_memcpy_from_wc(cached_p2, ptr2, fb2->size);
+		ptr1 = cached_p1;
+		ptr2 = cached_p2;
+	} else {
+		free(cached_p1);
+		free(cached_p2);
+		cached_p1 = NULL;
+		cached_p2 = NULL;
+	}
 
 	for (i = 0; i < fb1->size / sizeof(uint32_t); i++) {
 		uint16_t mask = 0xff;
@@ -614,15 +637,18 @@ bool igt_cmp_fb_pixels(igt_fb_t *fb1, igt_fb_t *fb2, uint8_t up, uint8_t down)
 			if (!igt_cmp_fb_component(comp1, comp2, up, down)) {
 				igt_info("i %d j %d shift %d mask %x comp1 %x comp2 %x, pixel1 %x pixel2 %x\n",
 					 i, j, shift, mask, comp1, comp2, pixel1, pixel2);
-				return false;
+				result = false;
+				goto cleanup;
 			}
 		}
 	}
 
-	igt_fb_unmap_buffer(fb1, ptr1);
-	igt_fb_unmap_buffer(fb2, ptr2);
-
-	return matched;
+cleanup:
+	igt_fb_unmap_buffer(fb1, map1);
+	igt_fb_unmap_buffer(fb2, map2);
+	free(cached_p1);
+	free(cached_p2);
+	return result;
 }
 
 void igt_dump_fb(igt_display_t *display, igt_fb_t *fb,
