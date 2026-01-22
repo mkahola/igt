@@ -1694,6 +1694,13 @@ static void xe2lpg_compute_exec_compute(int fd,
 	addr_bo_buffer_batch[b++] = 0x00000000;
 	addr_bo_buffer_batch[b++] = 0x00000000;
 
+	addr_bo_buffer_batch[b++] = PIPE_CONTROL;
+	addr_bo_buffer_batch[b++] = 0x00100000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+
 	addr_bo_buffer_batch[b++] = MI_BATCH_BUFFER_END;
 }
 
@@ -2031,6 +2038,13 @@ static void xe3p_compute_exec_compute(int fd,
 	addr_bo_buffer_batch[b++] = 0x00000000; /* dw61 */
 	addr_bo_buffer_batch[b++] = 0x00000000; /* dw62 */
 	addr_bo_buffer_batch[b++] = 0x00000000; /* dw63 */
+
+	addr_bo_buffer_batch[b++] = PIPE_CONTROL;
+	addr_bo_buffer_batch[b++] = 0x00100000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
+	addr_bo_buffer_batch[b++] = 0x00000000;
 
 	addr_bo_buffer_batch[b++] = MI_BATCH_BUFFER_END;
 }
