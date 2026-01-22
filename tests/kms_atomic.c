@@ -494,8 +494,8 @@ plane_immutable_zpos(data_t *data, igt_output_t *output, enum pipe pipe, int n_p
 			continue;
 
 		zpos = igt_plane_get_prop(temp, IGT_PLANE_ZPOS);
-
-		plane_ptr[zpos] = temp;
+		if (zpos >= 0 && zpos < n_planes)
+			plane_ptr[zpos] = temp;
 	}
 
 	fb_id_lower = igt_create_color_fb(data->drm_fd,
