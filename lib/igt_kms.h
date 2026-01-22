@@ -533,7 +533,7 @@ struct igt_display {
 	igt_output_t *outputs;
 	igt_plane_t *planes;
 	igt_colorop_t *colorops;
-	igt_crtc_t *pipes;
+	igt_crtc_t *crtcs;
 	bool has_cursor_plane;
 	bool is_atomic;
 	bool has_virt_cursor_plane;
@@ -581,7 +581,7 @@ static inline igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pi
 	if (pipe == PIPE_NONE)
 		return NULL;
 
-	return &display->pipes[pipe];
+	return &display->crtcs[pipe];
 }
 
 typedef struct _igt_pipe_crc igt_pipe_crc_t;

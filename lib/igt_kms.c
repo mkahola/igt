@@ -3219,9 +3219,10 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 		     resources->count_crtcs, IGT_MAX_PIPES);
 
 	display->n_crtcs = IGT_MAX_PIPES;
-	display->pipes = calloc(igt_display_n_crtcs(display),
+	display->crtcs = calloc(igt_display_n_crtcs(display),
 				sizeof(igt_crtc_t));
-	igt_assert_f(display->pipes, "Failed to allocate memory for %d pipes\n",
+	igt_assert_f(display->crtcs,
+		     "Failed to allocate memory for %d CRTCs\n",
 		     igt_display_n_crtcs(display));
 
 	for (i = 0; i < resources->count_crtcs; i++) {
@@ -3485,8 +3486,8 @@ void igt_display_fini(igt_display_t *display)
 
 	free(display->outputs);
 	display->outputs = NULL;
-	free(display->pipes);
-	display->pipes = NULL;
+	free(display->crtcs);
+	display->crtcs = NULL;
 	free(display->planes);
 	display->planes = NULL;
 	free(display->colorops);

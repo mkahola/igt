@@ -138,7 +138,7 @@ static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 
 	data->pipe_id = pipe_id;
 	data->available_overlay_planes = available_overlay_planes;
-	data->pipe = &data->display.pipes[data->pipe_id];
+	data->pipe = &data->display.crtcs[data->pipe_id];
 	data->output = output;
 	data->mode = igt_output_get_mode(data->output);
 	data->primary = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
