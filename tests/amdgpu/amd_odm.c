@@ -23,7 +23,7 @@ struct data {
 	igt_display_t display;
 	igt_plane_t *primary;
 	igt_output_t *output;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	drmModeModeInfoPtr mode;
 	enum pipe pipe_id;
 	int fd;
@@ -49,7 +49,7 @@ static void test_init(struct data *data)
 
 	/* It doesn't matter which pipe we choose on amdpgu. */
 	data->pipe_id = PIPE_A;
-	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(&data->display, data->pipe_id);
 
 	igt_display_reset(display);
 
@@ -76,9 +76,10 @@ static void test_init(struct data *data)
 		      data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_HDMIB,
 		      "ODM Combine isn't supported on HDMI 1.x\n");
 
-	data->primary = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
+	data->primary = igt_crtc_get_plane_type(data->crtc,
+						DRM_PLANE_TYPE_PRIMARY);
 	igt_output_set_crtc(data->output,
-			    data->pipe);
+			    data->crtc);
 
 	igt_display_reset(display);
 }

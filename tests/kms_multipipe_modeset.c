@@ -55,7 +55,7 @@ static void run_test(data_t *data, int valid_outputs)
 	igt_crc_t ref_crcs[IGT_MAX_PIPES], new_crcs[IGT_MAX_PIPES];
 	igt_display_t *display = &data->display;
 	uint16_t width = 0, height = 0;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	igt_plane_t *plane;
 	drmModeModeInfo *mode;
 	int i = 0;
@@ -75,16 +75,16 @@ static void run_test(data_t *data, int valid_outputs)
 
 	/* Collect reference CRC by Committing individually on all outputs*/
 	for_each_connected_output(display, output) {
-		pipe = igt_crtc_for_pipe(display, i);
-		plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+		crtc = igt_crtc_for_pipe(display, i);
+		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 
 		mode = NULL;
 
-		pipe_crcs[i] = igt_crtc_crc_new(pipe,
+		pipe_crcs[i] = igt_crtc_crc_new(crtc,
 						IGT_PIPE_CRC_SOURCE_AUTO);
 
 		igt_output_set_crtc(output,
-				    pipe);
+				    crtc);
 		mode = igt_output_get_mode(output);
 		igt_assert(mode);
 
@@ -101,13 +101,13 @@ static void run_test(data_t *data, int valid_outputs)
 	i = 0;
 	/* Simultaneously commit on all outputs */
 	for_each_connected_output(display, output) {
-		pipe = igt_crtc_for_pipe(display, i);
-		plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+		crtc = igt_crtc_for_pipe(display, i);
+		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 
 		mode = NULL;
 
 		igt_output_set_crtc(output,
-				    pipe);
+				    crtc);
 		mode = igt_output_get_mode(output);
 		igt_assert(mode);
 

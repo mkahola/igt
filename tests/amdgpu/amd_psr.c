@@ -56,7 +56,7 @@ typedef struct data {
 	igt_plane_t *cursor;
 	igt_plane_t *overlay;
 	igt_output_t *output;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	igt_pipe_crc_t *pipe_crc;
 	igt_fb_t ov_fb[2];
 	igt_fb_t pm_fb[2];
@@ -172,7 +172,7 @@ static void test_init(data_t *data)
 
 	/* It doesn't matter which pipe we choose on amdpgu. */
 	data->pipe_id = PIPE_A;
-	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(&data->display, data->pipe_id);
 
 	igt_display_reset(display);
 
@@ -185,19 +185,19 @@ static void test_init(data_t *data)
 	kmstest_dump_mode(data->mode);
 
 	data->primary =
-		igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
+		igt_crtc_get_plane_type(data->crtc, DRM_PLANE_TYPE_PRIMARY);
 
 	data->cursor =
-		igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_CURSOR);
+		igt_crtc_get_plane_type(data->crtc, DRM_PLANE_TYPE_CURSOR);
 
 	data->overlay =
-		igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_OVERLAY);
+		igt_crtc_get_plane_type(data->crtc, DRM_PLANE_TYPE_OVERLAY);
 
-	data->pipe_crc = igt_crtc_crc_new(data->pipe,
+	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_output_set_crtc(data->output,
-			    data->pipe);
+			    data->crtc);
 
 	data->w = data->mode->hdisplay;
 	data->h = data->mode->vdisplay;

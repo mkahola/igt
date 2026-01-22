@@ -556,9 +556,9 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 {
 	drmModeModeInfo *mode, override_mode;
 	igt_plane_t *plane;
-	igt_crtc_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
+	igt_crtc_t *crtc = igt_crtc_for_pipe(&data->display, pipe);
 	uint32_t iter_max, i;
-	struct plane_parms parms[pipe_obj->n_planes];
+	struct plane_parms parms[crtc->n_planes];
 	unsigned flags = 0;
 	int ret;
 
@@ -584,7 +584,7 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 	igt_create_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
 		      DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, &data->fbs[0]);
 
-	igt_output_set_crtc(output, pipe_obj);
+	igt_output_set_crtc(output, crtc);
 
 	wm_setup_plane(data, pipe, 0, NULL, false);
 
@@ -594,7 +594,7 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 		igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 		igt_output_set_crtc(output,
-				    pipe_obj);
+				    crtc);
 	}
 
 	setup_parms(data, pipe, mode, &data->fbs[0], &data->argb_fb, &data->sprite_fb, parms, &iter_max);
@@ -610,12 +610,12 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 		wm_setup_plane(data, pipe, iter_max - 1, parms, false);
 
 		if (fencing)
-			igt_crtc_request_out_fence(pipe_obj);
+			igt_crtc_request_out_fence(crtc);
 
 		ret = igt_display_try_commit_atomic(&data->display, DRM_MODE_ATOMIC_TEST_ONLY | DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 		igt_assert(!is_atomic_check_failure_errno(ret));
 
-		if (!is_atomic_check_plane_size_errno(ret) || pipe_obj->n_planes < 3)
+		if (!is_atomic_check_plane_size_errno(ret) || crtc->n_planes < 3)
 			break;
 
 		ret = 0;
@@ -645,8 +645,8 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 
 		atomic_commit(data, pipe, flags, (void *)(unsigned long)0, fencing);
 		if (fencing) {
-			fence_fd = pipe_obj->out_fence_fd;
-			pipe_obj->out_fence_fd = -1;
+			fence_fd = crtc->out_fence_fd;
+			crtc->out_fence_fd = -1;
 		}
 
 		/* force planes to be part of commit */
@@ -672,11 +672,11 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 
 		if (type == TRANSITION_MODESET_FAST &&
 		    n_enable_planes > 1 &&
-		    n_enable_planes < pipe_obj->n_planes)
+		    n_enable_planes < crtc->n_planes)
 			continue;
 
 		igt_output_set_crtc(output,
-				    pipe_obj);
+				    crtc);
 
 		if (!wm_setup_plane(data, pipe, i, parms, fencing))
 			continue;
@@ -701,7 +701,7 @@ run_transition_test(data_t *data, enum pipe pipe, igt_output_t *output,
 
 				if (type == TRANSITION_MODESET_FAST &&
 				    n_enable_planes > 1 &&
-				    n_enable_planes < pipe_obj->n_planes)
+				    n_enable_planes < crtc->n_planes)
 					continue;
 
 				if (!wm_setup_plane(data, pipe, j, parms, fencing))
@@ -921,15 +921,16 @@ retry:
 				    DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, .5, .5, .5, &data->fbs[1]);
 
 	for_each_pipe(&data->display, i) {
-		igt_crtc_t *pipe = igt_crtc_for_pipe(&data->display, i);
-		igt_plane_t *plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+		igt_crtc_t *crtc = igt_crtc_for_pipe(&data->display, i);
+		igt_plane_t *plane = igt_crtc_get_plane_type(crtc,
+							     DRM_PLANE_TYPE_PRIMARY);
 		drmModeModeInfo *mode = NULL;
 
 		/* count enable pipes to set max iteration */
 		j += 1;
 
 		if (is_intel_device(data->drm_fd))
-			data->pipe_crcs[i] = igt_crtc_crc_new(pipe,
+			data->pipe_crcs[i] = igt_crtc_crc_new(crtc,
 							      IGT_PIPE_CRC_SOURCE_AUTO);
 
 		for_each_valid_output_on_pipe(&data->display, i, output) {
@@ -937,7 +938,7 @@ retry:
 				continue;
 
 			igt_output_set_crtc(output,
-					    pipe);
+					    crtc);
 			if (intel_pipe_output_combo_valid(&data->display)) {
 				mode = igt_output_get_mode(output);
 
@@ -957,7 +958,7 @@ retry:
 			igt_plane_set_size(plane, mode->hdisplay, mode->vdisplay);
 
 			if (fencing)
-				igt_crtc_request_out_fence(pipe);
+				igt_crtc_request_out_fence(crtc);
 		} else {
 			igt_plane_set_fb(plane, NULL);
 		}

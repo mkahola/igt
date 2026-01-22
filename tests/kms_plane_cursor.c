@@ -75,7 +75,7 @@ typedef struct data {
 	igt_plane_t *overlay;
 	igt_plane_t *cursor;
 	igt_output_t *output;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	igt_pipe_crc_t *pipe_crc;
 	drmModeModeInfo *mode;
 	igt_fb_t ref_fb;
@@ -94,21 +94,24 @@ static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 		      unsigned int flags)
 {
 	data->pipe_id = pipe_id;
-	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(&data->display, data->pipe_id);
 	data->output = output;
 
 	data->mode = igt_output_get_mode(data->output);
 
-	data->primary = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
+	data->primary = igt_crtc_get_plane_type(data->crtc,
+						DRM_PLANE_TYPE_PRIMARY);
 	if (flags & TEST_OVERLAY)
-		data->overlay = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_OVERLAY);
-	data->cursor = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_CURSOR);
+		data->overlay = igt_crtc_get_plane_type(data->crtc,
+							DRM_PLANE_TYPE_OVERLAY);
+	data->cursor = igt_crtc_get_plane_type(data->crtc,
+					       DRM_PLANE_TYPE_CURSOR);
 
 	igt_info("Using (pipe %s + %s) to run the subtest.\n",
 		 kmstest_pipe_name(data->pipe_id), igt_output_name(data->output));
 
 	igt_require_pipe_crc(data->drm_fd);
-	data->pipe_crc = igt_crtc_crc_new(data->pipe,
+	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	/* Overlay rectangle for a rect in the center of the screen */

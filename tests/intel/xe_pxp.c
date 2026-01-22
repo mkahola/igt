@@ -839,18 +839,18 @@ static void compare_crcs(int fd, igt_display_t *display, igt_fb_t *ref_fb, igt_f
 	igt_output_t *output;
 	drmModeModeInfo *mode;
 	igt_plane_t *plane;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	igt_pipe_crc_t *pipe_crc;
 	igt_crc_t ref_crc, new_crc;
 
 	for_each_connected_output(display, output) {
 		mode = igt_output_get_mode(output);
-		pipe = igt_output_get_driving_crtc(output);
-		pipe_crc = igt_crtc_crc_new(pipe,
+		crtc = igt_output_get_driving_crtc(output);
+		pipe_crc = igt_crtc_crc_new(crtc,
 					    IGT_PIPE_CRC_SOURCE_AUTO);
-		plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
-		igt_require(igt_pipe_connector_valid(pipe->pipe, output));
-		igt_output_set_crtc(output, pipe);
+		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
+		igt_require(igt_pipe_connector_valid(crtc->pipe, output));
+		igt_output_set_crtc(output, crtc);
 
 		commit_fb(display, plane, ref_fb, mode);
 		igt_pipe_crc_collect_crc(pipe_crc, &ref_crc);
@@ -881,7 +881,7 @@ static void test_display_pxp_fb(int fd, igt_display_t *display)
 	drmModeModeInfo *mode;
 	igt_fb_t ref_fb, pxp_fb;
 	igt_plane_t *plane;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	int width = 0, height = 0, i = 0;
 	uint32_t q;
 	uint32_t vm;
@@ -902,11 +902,11 @@ static void test_display_pxp_fb(int fd, igt_display_t *display)
 	/* Do a modeset on all outputs */
 	for_each_connected_output(display, output) {
 		mode = igt_output_get_mode(output);
-		pipe = igt_crtc_for_pipe(display, i);
-		plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+		crtc = igt_crtc_for_pipe(display, i);
+		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 		igt_require(igt_pipe_connector_valid(i, output));
 		igt_output_set_crtc(output,
-				    pipe);
+				    crtc);
 
 		commit_fb(display, plane, &ref_fb, mode);
 
@@ -938,7 +938,7 @@ static void test_display_black_pxp_fb(int fd, igt_display_t *display)
 	drmModeModeInfo *mode;
 	igt_fb_t ref_fb, pxp_fb;
 	igt_plane_t *plane;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	int width = 0, height = 0, i = 0;
 	uint32_t q;
 	uint32_t vm;
@@ -960,11 +960,11 @@ static void test_display_black_pxp_fb(int fd, igt_display_t *display)
 	/* Do a modeset on all outputs */
 	for_each_connected_output(display, output) {
 		mode = igt_output_get_mode(output);
-		pipe = igt_crtc_for_pipe(display, i);
-		plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+		crtc = igt_crtc_for_pipe(display, i);
+		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 		igt_require(igt_pipe_connector_valid(i, output));
 		igt_output_set_crtc(output,
-				    pipe);
+				    crtc);
 
 		igt_plane_set_fb(plane, &ref_fb);
 		igt_fb_set_size(&ref_fb, plane, mode->hdisplay, mode->vdisplay);

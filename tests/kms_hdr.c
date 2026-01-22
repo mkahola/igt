@@ -111,7 +111,7 @@ typedef struct data {
 	igt_display_t display;
 	igt_plane_t *primary;
 	igt_output_t *output;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	igt_pipe_crc_t *pipe_crc;
 	drmModeModeInfo *mode;
 	enum pipe pipe_id;
@@ -208,8 +208,8 @@ static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
 	igt_display_t *display = &data->display;
 
 	data->pipe_id = pipe;
-	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
-	igt_assert(data->pipe);
+	data->crtc = igt_crtc_for_pipe(&data->display, data->pipe_id);
+	igt_assert(data->crtc);
 
 	igt_display_reset(display);
 
@@ -220,13 +220,13 @@ static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
 	igt_assert(data->mode);
 
 	data->primary =
-		igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
+		igt_crtc_get_plane_type(data->crtc, DRM_PLANE_TYPE_PRIMARY);
 
-	data->pipe_crc = igt_crtc_crc_new(data->pipe,
+	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_output_set_crtc(data->output,
-			    data->pipe);
+			    data->crtc);
 	igt_output_set_prop_value(data->output, IGT_CONNECTOR_MAX_BPC, 10);
 
 	data->w = data->mode->hdisplay;

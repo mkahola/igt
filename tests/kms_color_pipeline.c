@@ -48,17 +48,17 @@ static void test_cleanup(data_t *data)
 
 static void test_setup(data_t *data, enum pipe p)
 {
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 
 	igt_require_pipe_crc(data->drm_fd);
 
-	pipe = igt_crtc_for_pipe(&data->display, p);
-	igt_require(pipe);
-	igt_require(pipe->n_planes > 0);
+	crtc = igt_crtc_for_pipe(&data->display, p);
+	igt_require(crtc);
+	igt_require(crtc->n_planes > 0);
 
-	igt_output_set_crtc(data->output, pipe);
+	igt_output_set_crtc(data->output, crtc);
 
-	data->primary = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+	data->primary = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 	data->mode = igt_output_get_mode(data->output);
 	igt_require(data->mode);
 

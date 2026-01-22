@@ -158,7 +158,7 @@ prepare_planes(data_t *data, enum pipe pipe, int max_planes,
 	       igt_output_t *output)
 {
 	drmModeModeInfo *mode;
-	igt_crtc_t *p;
+	igt_crtc_t *crtc;
 	igt_plane_t *primary;
 	int *x;
 	int *y;
@@ -169,16 +169,19 @@ prepare_planes(data_t *data, enum pipe pipe, int max_planes,
 	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
-	p = primary->crtc;
+	crtc = primary->crtc;
 
-	x = malloc(p->n_planes * sizeof(*x));
-	igt_assert_f(x, "Failed to allocate %ld bytes for variable x\n", (long int) (p->n_planes * sizeof(*x)));
+	x = malloc(crtc->n_planes * sizeof(*x));
+	igt_assert_f(x, "Failed to allocate %ld bytes for variable x\n",
+		     (long int) (crtc->n_planes * sizeof(*x)));
 
-	y = malloc(p->n_planes * sizeof(*y));
-	igt_assert_f(y, "Failed to allocate %ld bytes for variable y\n", (long int) (p->n_planes * sizeof(*y)));
+	y = malloc(crtc->n_planes * sizeof(*y));
+	igt_assert_f(y, "Failed to allocate %ld bytes for variable y\n",
+		     (long int) (crtc->n_planes * sizeof(*y)));
 
-	size = malloc(p->n_planes * sizeof(*size));
-	igt_assert_f(size, "Failed to allocate %ld bytes for variable size\n", (long int) (p->n_planes * sizeof(*size)));
+	size = malloc(crtc->n_planes * sizeof(*size));
+	igt_assert_f(size, "Failed to allocate %ld bytes for variable size\n",
+		     (long int) (crtc->n_planes * sizeof(*size)));
 
 	mode = igt_output_get_mode(output);
 

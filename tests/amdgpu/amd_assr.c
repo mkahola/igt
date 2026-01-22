@@ -160,18 +160,18 @@ static bool get_internal_display_flag(data_t *data, igt_output_t *output)
 static void present_visual_pattern(data_t *data, igt_output_t *output)
 {
 	igt_plane_t *primary;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	drmModeModeInfo *mode;
 	igt_fb_t fb;
 
 	mode = igt_output_get_mode(output);
 	igt_assert(mode);
 
-	pipe = igt_crtc_for_pipe(&data->display, PIPE_A);
+	crtc = igt_crtc_for_pipe(&data->display, PIPE_A);
 	primary =
-		igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+		igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 	igt_output_set_crtc(output,
-			    pipe);
+			    crtc);
 
 	igt_create_fb(data->fd, mode->hdisplay, mode->vdisplay,
 			DRM_FORMAT_XRGB8888, 0, &fb);

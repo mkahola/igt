@@ -965,16 +965,17 @@ igt_atomic_fill_connector_props(igt_display_t *display, igt_output_t *output,
 }
 
 static void
-igt_fill_crtc_props(igt_crtc_t *pipe,
+igt_fill_crtc_props(igt_crtc_t *crtc,
 		    int num_crtc_props, const char * const crtc_prop_names[])
 {
-	igt_display_t *display = pipe->display;
+	igt_display_t *display = crtc->display;
 	drmModeObjectPropertiesPtr props;
 	int i, j, fd;
 
 	fd = display->drm_fd;
 
-	props = drmModeObjectGetProperties(fd, pipe->crtc_id, DRM_MODE_OBJECT_CRTC);
+	props = drmModeObjectGetProperties(fd, crtc->crtc_id,
+					   DRM_MODE_OBJECT_CRTC);
 	igt_assert(props);
 
 	for (i = 0; i < props->count_props; i++) {
@@ -985,7 +986,7 @@ igt_fill_crtc_props(igt_crtc_t *pipe,
 			if (strcmp(prop->name, crtc_prop_names[j]) != 0)
 				continue;
 
-			pipe->props[j] = props->props[i];
+			crtc->props[j] = props->props[i];
 			break;
 		}
 
@@ -995,7 +996,8 @@ igt_fill_crtc_props(igt_crtc_t *pipe,
 	drmModeFreeObjectProperties(props);
 }
 
-static igt_plane_t *igt_get_assigned_primary(igt_output_t *output, igt_crtc_t *pipe)
+static igt_plane_t *igt_get_assigned_primary(igt_output_t *output,
+					     igt_crtc_t *crtc)
 {
 	int drm_fd = output->display->drm_fd;
 	drmModeModeInfo *mode;
@@ -1011,7 +1013,7 @@ static igt_plane_t *igt_get_assigned_primary(igt_output_t *output, igt_crtc_t *p
 						DRM_FORMAT_MOD_LINEAR,
 						1.0, 1.0, 1.0, &fb);
 
-	crtc_id = pipe->crtc_id;
+	crtc_id = crtc->crtc_id;
 
 	/*
 	 * Do a legacy SETCRTC to start things off, so that we know that
@@ -1023,14 +1025,14 @@ static igt_plane_t *igt_get_assigned_primary(igt_output_t *output, igt_crtc_t *p
 	igt_assert(drmModeSetCrtc(output->display->drm_fd, crtc_id, fb.fb_id,
 							  0, 0, &output->id, 1, mode) == 0);
 
-	for(i = 0; i < pipe->n_planes; i++) {
-		if (pipe->planes[i].type != DRM_PLANE_TYPE_PRIMARY)
+	for(i = 0; i < crtc->n_planes; i++) {
+		if (crtc->planes[i].type != DRM_PLANE_TYPE_PRIMARY)
 			continue;
 
-		if (igt_plane_get_prop(&pipe->planes[i], IGT_PLANE_CRTC_ID) != crtc_id)
+		if (igt_plane_get_prop(&crtc->planes[i], IGT_PLANE_CRTC_ID) != crtc_id)
 			continue;
 
-		plane = &pipe->planes[i];
+		plane = &crtc->planes[i];
 		break;
 	}
 
@@ -2649,8 +2651,8 @@ void igt_output_refresh(igt_output_t *output)
 static int
 igt_plane_set_property(igt_plane_t *plane, uint32_t prop_id, uint64_t value)
 {
-	igt_crtc_t *pipe = plane->crtc;
-	igt_display_t *display = pipe->display;
+	igt_crtc_t *crtc = plane->crtc;
+	igt_display_t *display = crtc->display;
 
 	return drmModeObjectSetProperty(display->drm_fd, plane->drm_plane->plane_id,
 				 DRM_MODE_OBJECT_PLANE, prop_id, value);
@@ -2733,31 +2735,32 @@ static void igt_plane_reset(igt_plane_t *plane)
 	plane->gem_handle = 0;
 }
 
-static void igt_crtc_reset(igt_crtc_t *pipe)
+static void igt_crtc_reset(igt_crtc_t *crtc)
 {
-	igt_crtc_set_prop_value(pipe, IGT_CRTC_MODE_ID, 0);
-	igt_crtc_set_prop_value(pipe, IGT_CRTC_ACTIVE, 0);
-	igt_crtc_clear_prop_changed(pipe, IGT_CRTC_OUT_FENCE_PTR);
+	igt_crtc_set_prop_value(crtc, IGT_CRTC_MODE_ID, 0);
+	igt_crtc_set_prop_value(crtc, IGT_CRTC_ACTIVE, 0);
+	igt_crtc_clear_prop_changed(crtc, IGT_CRTC_OUT_FENCE_PTR);
 
-	if (igt_crtc_has_prop(pipe, IGT_CRTC_CTM))
-		igt_crtc_set_prop_value(pipe, IGT_CRTC_CTM, 0);
+	if (igt_crtc_has_prop(crtc, IGT_CRTC_CTM))
+		igt_crtc_set_prop_value(crtc, IGT_CRTC_CTM, 0);
 
-	if (igt_crtc_has_prop(pipe, IGT_CRTC_GAMMA_LUT))
-		igt_crtc_set_prop_value(pipe, IGT_CRTC_GAMMA_LUT, 0);
+	if (igt_crtc_has_prop(crtc, IGT_CRTC_GAMMA_LUT))
+		igt_crtc_set_prop_value(crtc, IGT_CRTC_GAMMA_LUT, 0);
 
-	if (igt_crtc_has_prop(pipe, IGT_CRTC_DEGAMMA_LUT))
-		igt_crtc_set_prop_value(pipe, IGT_CRTC_DEGAMMA_LUT, 0);
+	if (igt_crtc_has_prop(crtc, IGT_CRTC_DEGAMMA_LUT))
+		igt_crtc_set_prop_value(crtc, IGT_CRTC_DEGAMMA_LUT, 0);
 
-	if (igt_crtc_has_prop(pipe, IGT_CRTC_SCALING_FILTER))
-		igt_crtc_set_prop_enum(pipe, IGT_CRTC_SCALING_FILTER, "Default");
+	if (igt_crtc_has_prop(crtc, IGT_CRTC_SCALING_FILTER))
+		igt_crtc_set_prop_enum(crtc, IGT_CRTC_SCALING_FILTER,
+				       "Default");
 
-	if (igt_crtc_has_prop(pipe, IGT_CRTC_VRR_ENABLED))
-		igt_crtc_set_prop_value(pipe, IGT_CRTC_VRR_ENABLED, 0);
+	if (igt_crtc_has_prop(crtc, IGT_CRTC_VRR_ENABLED))
+		igt_crtc_set_prop_value(crtc, IGT_CRTC_VRR_ENABLED, 0);
 
-	if (igt_crtc_has_prop(pipe, IGT_CRTC_SHARPNESS_STRENGTH))
-		igt_crtc_set_prop_value(pipe, IGT_CRTC_SHARPNESS_STRENGTH, 0);
+	if (igt_crtc_has_prop(crtc, IGT_CRTC_SHARPNESS_STRENGTH))
+		igt_crtc_set_prop_value(crtc, IGT_CRTC_SHARPNESS_STRENGTH, 0);
 
-	pipe->out_fence_fd = -1;
+	crtc->out_fence_fd = -1;
 }
 
 static void igt_output_reset(igt_output_t *output)
@@ -2831,13 +2834,13 @@ void igt_display_reset(igt_display_t *display)
 	display->first_commit = true;
 
 	for_each_pipe(display, pipe) {
-		igt_crtc_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
+		igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 		igt_plane_t *plane;
 
 		for_each_plane_on_pipe(display, pipe, plane)
 			igt_plane_reset(plane);
 
-		igt_crtc_reset(pipe_obj);
+		igt_crtc_reset(crtc);
 	}
 
 	for (i = 0; i < display->n_outputs; i++) {
@@ -2869,13 +2872,13 @@ void igt_require_pipe(igt_display_t *display, enum pipe pipe)
 
 /* Get crtc mask for a pipe using crtc id */
 static int
-__get_crtc_mask_for_pipe(drmModeRes *resources, igt_crtc_t *pipe)
+__get_crtc_mask_for_pipe(drmModeRes *resources, igt_crtc_t *crtc)
 {
 	int offset;
 
 	for (offset = 0; offset < resources->count_crtcs; offset++)
 	{
-		if(pipe->crtc_id == resources->crtcs[offset])
+		if(crtc->crtc_id == resources->crtcs[offset])
 			break;
 	}
 
@@ -3005,7 +3008,7 @@ void igt_display_reset_outputs(igt_display_t *display)
 	igt_display_reset(display);
 
 	for_each_pipe(display, i) {
-		igt_crtc_t *pipe = igt_crtc_for_pipe(display, i);
+		igt_crtc_t *crtc = igt_crtc_for_pipe(display, i);
 		igt_output_t *output;
 
 		if (!igt_pipe_has_valid_output(display, i))
@@ -3013,10 +3016,10 @@ void igt_display_reset_outputs(igt_display_t *display)
 
 		output = igt_get_single_output_for_pipe(display, i);
 
-		if (pipe->num_primary_planes > 1) {
-			igt_plane_t *old_primary = &pipe->planes[0];
+		if (crtc->num_primary_planes > 1) {
+			igt_plane_t *old_primary = &crtc->planes[0];
 			igt_plane_t *new_primary =
-				igt_get_assigned_primary(output, pipe);
+				igt_get_assigned_primary(output, crtc);
 
 			/*
 			 * If the driver-assigned primary plane isn't at
@@ -3060,7 +3063,7 @@ static int plane_type_index(igt_crtc_t *crtc, int type)
 }
 
 static void igt_crtc_plane_init(igt_display_t *display,
-				igt_crtc_t *pipe,
+				igt_crtc_t *crtc,
 				drmModeRes *resources,
 				igt_plane_t *global_plane)
 {
@@ -3071,7 +3074,7 @@ static void igt_crtc_plane_init(igt_display_t *display,
 
 	switch (type) {
 	case DRM_PLANE_TYPE_PRIMARY:
-		pipe->num_primary_planes++;
+		crtc->num_primary_planes++;
 		break;
 	case DRM_PLANE_TYPE_CURSOR:
 		display->has_cursor_plane = true;
@@ -3080,24 +3083,24 @@ static void igt_crtc_plane_init(igt_display_t *display,
 		break;
 	}
 
-	index = plane_type_index(pipe, type);
+	index = plane_type_index(crtc, type);
 
-	if (index < 0 || pipe->planes[index].index >= 0) {
-		for (index = 1; index < pipe->n_planes; index++) {
-			if (pipe->planes[index].index < 0)
+	if (index < 0 || crtc->planes[index].index >= 0) {
+		for (index = 1; index < crtc->n_planes; index++) {
+			if (crtc->planes[index].index < 0)
 				break;
 		}
 	}
 
-	igt_assert_lt(index, pipe->n_planes);
+	igt_assert_lt(index, crtc->n_planes);
 
-	plane = &pipe->planes[index];
+	plane = &crtc->planes[index];
 
 	igt_assert_lt(plane->index, 0);
 
 	plane->index = index;
 	plane->type = type;
-	plane->crtc = pipe;
+	plane->crtc = crtc;
 	plane->drm_plane = drm_plane;
 	plane->values[IGT_PLANE_IN_FENCE_FD] = ~0ULL;
 	plane->ref = global_plane;
@@ -3107,7 +3110,7 @@ static void igt_crtc_plane_init(igt_display_t *display,
 	 * it can go on.
 	 */
 	if (!global_plane->ref)
-		igt_plane_set_crtc(plane, pipe);
+		igt_plane_set_crtc(plane, crtc);
 
 	igt_fill_plane_props(display, plane, IGT_NUM_PLANE_PROPS, igt_plane_prop_names);
 
@@ -3117,18 +3120,18 @@ static void igt_crtc_plane_init(igt_display_t *display,
 static void igt_crtc_init(igt_display_t *display,
 			  drmModeRes *resources, int i)
 {
-	igt_crtc_t *pipe = igt_crtc_for_pipe(display, i);
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, i);
 	int crtc_mask = 0;
 	int j;
 
-	pipe->display = display;
-	pipe->planes = NULL;
-	pipe->num_primary_planes = 0;
+	crtc->display = display;
+	crtc->planes = NULL;
+	crtc->num_primary_planes = 0;
 
-	igt_fill_crtc_props(pipe, IGT_NUM_CRTC_PROPS, igt_crtc_prop_names);
+	igt_fill_crtc_props(crtc, IGT_NUM_CRTC_PROPS, igt_crtc_prop_names);
 
 	/* Get valid crtc index from crtcs for a pipe */
-	crtc_mask = __get_crtc_mask_for_pipe(resources, pipe);
+	crtc_mask = __get_crtc_mask_for_pipe(resources, crtc);
 
 	/* count number of valid planes */
 	for (j = 0; j < display->n_planes; j++) {
@@ -3136,16 +3139,17 @@ static void igt_crtc_init(igt_display_t *display,
 		igt_assert(drm_plane);
 
 		if (drm_plane->possible_crtcs & crtc_mask)
-			pipe->n_planes++;
+			crtc->n_planes++;
 	}
 
-	igt_assert_lt(0, pipe->n_planes);
-	pipe->planes = calloc(pipe->n_planes, sizeof(igt_plane_t));
-	igt_assert_f(pipe->planes, "Failed to allocate memory for %d planes\n",
-		     pipe->n_planes);
+	igt_assert_lt(0, crtc->n_planes);
+	crtc->planes = calloc(crtc->n_planes, sizeof(igt_plane_t));
+	igt_assert_f(crtc->planes,
+		     "Failed to allocate memory for %d planes\n",
+		     crtc->n_planes);
 
-	for (j = 0; j < pipe->n_planes; j++)
-		pipe->planes[j].index = -1;
+	for (j = 0; j < crtc->n_planes; j++)
+		crtc->planes[j].index = -1;
 
 	/* add the planes that can be used with that pipe */
 	for (j = 0; j < display->n_planes; j++) {
@@ -3155,11 +3159,11 @@ static void igt_crtc_init(igt_display_t *display,
 		if (!(drm_plane->possible_crtcs & crtc_mask))
 			continue;
 
-		igt_crtc_plane_init(display, pipe, resources, global_plane);
+		igt_crtc_plane_init(display, crtc, resources, global_plane);
 	}
 
-	for (j = 0; j < pipe->n_planes; j++)
-		igt_assert_lte(0, pipe->planes[j].index);
+	for (j = 0; j < crtc->n_planes; j++)
+		igt_assert_lte(0, crtc->planes[j].index);
 }
 
 /**
@@ -3226,18 +3230,18 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 		     igt_display_n_crtcs(display));
 
 	for (i = 0; i < resources->count_crtcs; i++) {
-		igt_crtc_t *pipe;
+		igt_crtc_t *crtc;
 		int pipe_enum = (is_intel_dev)?
 			__intel_get_pipe_from_crtc_id(drm_fd,
 						      resources->crtcs[i], i) : i;
 
-		pipe = igt_crtc_for_pipe(display, pipe_enum);
-		pipe->pipe = pipe_enum;
+		crtc = igt_crtc_for_pipe(display, pipe_enum);
+		crtc->pipe = pipe_enum;
 
-		pipe->valid = true;
-		pipe->crtc_id = resources->crtcs[i];
+		crtc->valid = true;
+		crtc->crtc_id = resources->crtcs[i];
 		/* offset of a pipe in crtcs list */
-		pipe->crtc_offset = i;
+		crtc->crtc_offset = i;
 	}
 
 	drmSetClientCap(drm_fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
@@ -3437,13 +3441,13 @@ void igt_modeset_disable_all_outputs(igt_display_t *display)
 
 }
 
-static void igt_crtc_fini(igt_crtc_t *pipe)
+static void igt_crtc_fini(igt_crtc_t *crtc)
 {
-	free(pipe->planes);
-	pipe->planes = NULL;
+	free(crtc->planes);
+	crtc->planes = NULL;
 
-	if (pipe->out_fence_fd != -1)
-		close(pipe->out_fence_fd);
+	if (crtc->out_fence_fd != -1)
+		close(crtc->out_fence_fd);
 }
 
 static void igt_output_fini(igt_output_t *output)
@@ -3553,58 +3557,58 @@ igt_crtc_t *igt_output_get_driving_crtc(igt_output_t *output)
 	return igt_crtc_for_pipe(display, pipe);
 }
 
-static igt_plane_t *igt_crtc_get_plane(igt_crtc_t *pipe, int plane_idx)
+static igt_plane_t *igt_crtc_get_plane(igt_crtc_t *crtc, int plane_idx)
 {
-	igt_require_f(plane_idx >= 0 && plane_idx < pipe->n_planes,
+	igt_require_f(plane_idx >= 0 && plane_idx < crtc->n_planes,
 		      "Valid pipe->planes plane_idx not found, plane_idx=%d n_planes=%d",
-		      plane_idx, pipe->n_planes);
+		      plane_idx, crtc->n_planes);
 
-	return &pipe->planes[plane_idx];
+	return &crtc->planes[plane_idx];
 }
 
 /**
  * igt_crtc_get_plane_type:
- * @pipe: Target pipe
+ * @crtc: Target CRTC
  * @plane_type: Cursor, primary or an overlay plane
  *
- * Finds a valid plane type for the given @pipe otherwise
- * it skips the test if the right combination of @pipe/@plane_type is not found
+ * Finds a valid plane type for the given @crtc otherwise
+ * it skips the test if the right combination of @crtc/@plane_type is not found
  *
  * Returns: A #igt_plane_t structure that matches the requested plane type
  */
-igt_plane_t *igt_crtc_get_plane_type(igt_crtc_t *pipe, int plane_type)
+igt_plane_t *igt_crtc_get_plane_type(igt_crtc_t *crtc, int plane_type)
 {
-	int plane_idx = plane_type_index(pipe, plane_type);
+	int plane_idx = plane_type_index(crtc, plane_type);
 
 	if (plane_idx < 0) {
-		for (plane_idx = 0; plane_idx < pipe->n_planes; plane_idx++) {
-			if (pipe->planes[plane_idx].type == plane_type)
+		for (plane_idx = 0; plane_idx < crtc->n_planes; plane_idx++) {
+			if (crtc->planes[plane_idx].type == plane_type)
 				break;
 		}
 	}
 
-	igt_require_f(plane_idx >= 0 && plane_idx < pipe->n_planes,
+	igt_require_f(plane_idx >= 0 && plane_idx < crtc->n_planes,
 		      "Valid pipe->planes idx not found. plane_idx=%d plane_type=%d n_planes=%d\n",
-		      plane_idx, plane_type, pipe->n_planes);
+		      plane_idx, plane_type, crtc->n_planes);
 
-	return &pipe->planes[plane_idx];
+	return &crtc->planes[plane_idx];
 }
 
 /**
  * igt_crtc_count_plane_type:
- * @pipe: Target pipe
+ * @crtc: Target CRTC
  * @plane_type: Cursor, primary or an overlay plane
  *
- * Counts the number of planes of type @plane_type for the provided @pipe.
+ * Counts the number of planes of type @plane_type for the provided @crtc.
  *
  * Returns: The number of planes that match the requested plane type
  */
-int igt_crtc_count_plane_type(igt_crtc_t *pipe, int plane_type)
+int igt_crtc_count_plane_type(igt_crtc_t *crtc, int plane_type)
 {
 	int i, count = 0;
 
-	for(i = 0; i < pipe->n_planes; i++)
-		if (pipe->planes[i].type == plane_type)
+	for(i = 0; i < crtc->n_planes; i++)
+		if (crtc->planes[i].type == plane_type)
 			count++;
 
 	return count;
@@ -3612,25 +3616,25 @@ int igt_crtc_count_plane_type(igt_crtc_t *pipe, int plane_type)
 
 /**
  * igt_crtc_get_plane_type_index:
- * @pipe: Target pipe
+ * @crtc: Target CRTC
  * @plane_type: Cursor, primary or an overlay plane
  * @index: the index of the plane among planes of the same type
  *
- * Get the @index th plane of type @plane_type for the provided @pipe.
+ * Get the @index th plane of type @plane_type for the provided @crtc.
  *
  * Returns: The @index th plane that matches the requested plane type
  */
-igt_plane_t *igt_crtc_get_plane_type_index(igt_crtc_t *pipe, int plane_type,
+igt_plane_t *igt_crtc_get_plane_type_index(igt_crtc_t *crtc, int plane_type,
 					   int index)
 {
 	int i, type_index = 0;
 
-	for(i = 0; i < pipe->n_planes; i++) {
-		if (pipe->planes[i].type != plane_type)
+	for(i = 0; i < crtc->n_planes; i++) {
+		if (crtc->planes[i].type != plane_type)
 			continue;
 
 		if (type_index == index)
-			return &pipe->planes[i];
+			return &crtc->planes[i];
 
 		type_index++;
 	}
@@ -3667,8 +3671,8 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 	       sizeof(*chosen_outputs) * igt_display_n_crtcs(display));
 
 	for (i = 0; i < igt_display_n_crtcs(display); i++) {
-		igt_crtc_t *pipe = igt_crtc_for_pipe(display, i);
-		if (pipe->valid)
+		igt_crtc_t *crtc = igt_crtc_for_pipe(display, i);
+		if (crtc->valid)
 			full_pipe_mask |= (1 << i);
 	}
 
@@ -3744,15 +3748,15 @@ igt_output_t *igt_get_single_output_for_pipe(igt_display_t *display, enum pipe p
 	return chosen_outputs[pipe];
 }
 
-static igt_output_t *igt_crtc_get_output(igt_crtc_t *pipe)
+static igt_output_t *igt_crtc_get_output(igt_crtc_t *crtc)
 {
-	igt_display_t *display = pipe->display;
+	igt_display_t *display = crtc->display;
 	int i;
 
 	for (i = 0; i < display->n_outputs; i++) {
 		igt_output_t *output = &display->outputs[i];
 
-		if (output->pending_pipe == pipe->pipe)
+		if (output->pending_pipe == crtc->pipe)
 			return output;
 	}
 
@@ -3771,9 +3775,9 @@ static uint32_t igt_plane_get_fb_id(igt_plane_t *plane)
 }
 
 static bool
-igt_atomic_ignore_plane_prop(igt_crtc_t *pipe, uint32_t prop)
+igt_atomic_ignore_plane_prop(igt_crtc_t *crtc, uint32_t prop)
 {
-	igt_display_t *display = pipe->display;
+	igt_display_t *display = crtc->display;
 
 	switch (prop) {
 	case IGT_PLANE_COLOR_ENCODING:
@@ -3790,24 +3794,25 @@ igt_atomic_ignore_plane_prop(igt_crtc_t *pipe, uint32_t prop)
  * Add position and fb changes of a plane to the atomic property set
  */
 static void
-igt_atomic_prepare_plane_commit(igt_plane_t *plane, igt_crtc_t *pipe,
-	drmModeAtomicReq *req)
+igt_atomic_prepare_plane_commit(igt_plane_t *plane, igt_crtc_t *crtc,
+				drmModeAtomicReq *req)
 {
-	igt_display_t *display = pipe->display;
+	igt_display_t *display = crtc->display;
 	int i;
 
 	igt_assert(plane->drm_plane);
 
 	LOG(display,
 	    "populating plane data: %s.%d, fb %u\n",
-	    kmstest_pipe_name(pipe->pipe),
+	    kmstest_pipe_name(crtc->pipe),
 	    plane->index,
 	    igt_plane_get_fb_id(plane));
 
 	for (i = 0; i < IGT_NUM_PLANE_PROPS; i++) {
-		if (igt_atomic_ignore_plane_prop(pipe, i)) {
+		if (igt_atomic_ignore_plane_prop(crtc, i)) {
 			igt_debug("plane %s.%d: Ignoring property \"%s\" to 0x%"PRIx64"/%"PRIi64"\n",
-				   kmstest_pipe_name(pipe->pipe), plane->index, igt_plane_prop_names[i],
+				   kmstest_pipe_name(crtc->pipe),
+				   plane->index, igt_plane_prop_names[i],
 				   plane->values[i], plane->values[i]);
 			continue;
 		}
@@ -3819,7 +3824,8 @@ igt_atomic_prepare_plane_commit(igt_plane_t *plane, igt_crtc_t *pipe,
 		igt_assert(plane->props[i]);
 
 		igt_debug("plane %s.%d: Setting property \"%s\" to 0x%"PRIx64"/%"PRIi64"\n",
-			kmstest_pipe_name(pipe->pipe), plane->index, igt_plane_prop_names[i],
+			kmstest_pipe_name(crtc->pipe), plane->index,
+			igt_plane_prop_names[i],
 			plane->values[i], plane->values[i]);
 
 		igt_assert_lt(0, drmModeAtomicAddProperty(req, plane->drm_plane->plane_id,
@@ -3832,16 +3838,16 @@ igt_atomic_prepare_plane_commit(igt_plane_t *plane, igt_crtc_t *pipe,
  * Add colorop properties
  */
 static void
-igt_atomic_prepare_colorop_commit(igt_colorop_t *colorop, igt_crtc_t *pipe,
-	drmModeAtomicReq *req)
+igt_atomic_prepare_colorop_commit(igt_colorop_t *colorop, igt_crtc_t *crtc,
+				  drmModeAtomicReq *req)
 {
-	igt_display_t *display = pipe->display;
+	igt_display_t *display = crtc->display;
 	int i, next_val;
 
 	while (colorop) {
 		LOG(display,
 		    "populating colorop data: %s.%d\n",
-		    kmstest_pipe_name(pipe->pipe),
+		    kmstest_pipe_name(crtc->pipe),
 		    colorop->id);
 
 		for (i = 0; i < IGT_NUM_COLOROP_PROPS; i++) {
@@ -3852,7 +3858,8 @@ igt_atomic_prepare_colorop_commit(igt_colorop_t *colorop, igt_crtc_t *pipe,
 			igt_assert(colorop->props[i]);
 
 			igt_debug("colorop %s.%d: Setting property \"%s\" to 0x%"PRIx64"/%"PRIi64"\n",
-				kmstest_pipe_name(pipe->pipe), colorop->id, igt_colorop_prop_names[i],
+				kmstest_pipe_name(crtc->pipe), colorop->id,
+				igt_colorop_prop_names[i],
 				colorop->values[i], colorop->values[i]);
 
 			igt_assert_lt(0, drmModeAtomicAddProperty(req, colorop->id,
@@ -3891,10 +3898,10 @@ igt_atomic_prepare_colorop_commit(igt_colorop_t *colorop, igt_crtc_t *pipe,
  * tests that expect a specific error code).
  */
 static int igt_drm_plane_commit(igt_plane_t *plane,
-				igt_crtc_t *pipe,
+				igt_crtc_t *crtc,
 				bool fail_on_error)
 {
-	igt_display_t *display = pipe->display;
+	igt_display_t *display = crtc->display;
 	uint32_t fb_id, crtc_id;
 	int ret, i;
 	uint32_t src_x;
@@ -3913,12 +3920,12 @@ static int igt_drm_plane_commit(igt_plane_t *plane,
 	igt_assert(plane->drm_plane);
 
 	fb_id = igt_plane_get_fb_id(plane);
-	crtc_id = pipe->crtc_id;
+	crtc_id = crtc->crtc_id;
 
 	if (setplane && fb_id == 0) {
 		LOG(display,
 		    "SetPlane pipe %s, plane %d, disabling\n",
-		    kmstest_pipe_name(pipe->pipe),
+		    kmstest_pipe_name(crtc->pipe),
 		    plane->index);
 
 		ret = drmModeSetPlane(display->drm_fd,
@@ -3947,7 +3954,7 @@ static int igt_drm_plane_commit(igt_plane_t *plane,
 		LOG(display,
 		    "SetPlane %s.%d, fb %u, src = (%d, %d) "
 			"%ux%u dst = (%u, %u) %ux%u\n",
-		    kmstest_pipe_name(pipe->pipe),
+		    kmstest_pipe_name(crtc->pipe),
 		    plane->index,
 		    fb_id,
 		    src_x >> 16, src_y >> 16, src_w >> 16, src_h >> 16,
@@ -3973,7 +3980,8 @@ static int igt_drm_plane_commit(igt_plane_t *plane,
 			continue;
 
 		LOG(display, "SetProp plane %s.%d \"%s\" to 0x%"PRIx64"/%"PRIi64"\n",
-			kmstest_pipe_name(pipe->pipe), plane->index, igt_plane_prop_names[i],
+			kmstest_pipe_name(crtc->pipe), plane->index,
+			igt_plane_prop_names[i],
 			plane->values[i], plane->values[i]);
 
 		igt_assert(plane->props[i]);
@@ -3995,11 +4003,11 @@ static int igt_drm_plane_commit(igt_plane_t *plane,
  * code).
  */
 static int igt_cursor_commit_legacy(igt_plane_t *cursor,
-				    igt_crtc_t *pipe,
+				    igt_crtc_t *crtc,
 				    bool fail_on_error)
 {
-	igt_display_t *display = pipe->display;
-	uint32_t crtc_id = pipe->crtc_id;
+	igt_display_t *display = crtc->display;
+	uint32_t crtc_id = crtc->crtc_id;
 	int ret;
 
 	if (igt_plane_is_prop_changed(cursor, IGT_PLANE_FB_ID) ||
@@ -4008,14 +4016,14 @@ static int igt_cursor_commit_legacy(igt_plane_t *cursor,
 		if (cursor->gem_handle)
 			LOG(display,
 			    "SetCursor pipe %s, fb %u %dx%d\n",
-			    kmstest_pipe_name(pipe->pipe),
+			    kmstest_pipe_name(crtc->pipe),
 			    cursor->gem_handle,
 			    (unsigned)cursor->values[IGT_PLANE_CRTC_W],
 			    (unsigned)cursor->values[IGT_PLANE_CRTC_H]);
 		else
 			LOG(display,
 			    "SetCursor pipe %s, disabling\n",
-			    kmstest_pipe_name(pipe->pipe));
+			    kmstest_pipe_name(crtc->pipe));
 
 		ret = drmModeSetCursor(display->drm_fd, crtc_id,
 				       cursor->gem_handle,
@@ -4031,7 +4039,7 @@ static int igt_cursor_commit_legacy(igt_plane_t *cursor,
 
 		LOG(display,
 		    "MoveCursor pipe %s, (%d, %d)\n",
-		    kmstest_pipe_name(pipe->pipe),
+		    kmstest_pipe_name(crtc->pipe),
 		    x, y);
 
 		ret = drmModeMoveCursor(display->drm_fd, crtc_id, x, y);
@@ -4046,11 +4054,11 @@ static int igt_cursor_commit_legacy(igt_plane_t *cursor,
  * (setmode).
  */
 static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
-					   igt_crtc_t *pipe,
+					   igt_crtc_t *crtc,
 					   bool fail_on_error)
 {
 	struct igt_display *display = primary->crtc->display;
-	igt_output_t *output = igt_crtc_get_output(pipe);
+	igt_output_t *output = igt_crtc_get_output(crtc);
 	drmModeModeInfo *mode;
 	uint32_t fb_id, crtc_id;
 	int ret;
@@ -4059,7 +4067,7 @@ static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
 	igt_assert((primary->values[IGT_PLANE_CRTC_X] == 0 && primary->values[IGT_PLANE_CRTC_Y] == 0));
 
 	/* nor rotated */
-	if (!pipe->display->first_commit)
+	if (!crtc->display->first_commit)
 		igt_assert(!igt_plane_is_prop_changed(primary, IGT_PLANE_ROTATION));
 
 	if (!igt_plane_is_prop_changed(primary, IGT_PLANE_FB_ID) &&
@@ -4067,7 +4075,7 @@ static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
 	    !igt_crtc_is_prop_changed(primary->crtc, IGT_CRTC_MODE_ID))
 		return 0;
 
-	crtc_id = pipe->crtc_id;
+	crtc_id = crtc->crtc_id;
 	fb_id = output ? igt_plane_get_fb_id(primary) : 0;
 	if (fb_id)
 		mode = igt_output_get_mode(output);
@@ -4082,7 +4090,7 @@ static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
 		    "%s: SetCrtc pipe %s, fb %u, src (%d, %d), "
 		    "mode %dx%d\n",
 		    igt_output_name(output),
-		    kmstest_pipe_name(pipe->pipe),
+		    kmstest_pipe_name(crtc->pipe),
 		    fb_id,
 		    src_x, src_y,
 		    mode->hdisplay, mode->vdisplay);
@@ -4097,7 +4105,7 @@ static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
 	} else {
 		LOG(display,
 		    "SetCrtc pipe %s, disabling\n",
-		    kmstest_pipe_name(pipe->pipe));
+		    kmstest_pipe_name(crtc->pipe));
 
 		ret = drmModeSetCrtc(display->drm_fd,
 				     crtc_id,
@@ -4114,15 +4122,15 @@ static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
 }
 
 static int igt_plane_fixup_rotation(igt_plane_t *plane,
-				    igt_crtc_t *pipe)
+				    igt_crtc_t *crtc)
 {
 	int ret;
 
 	if (!igt_plane_has_prop(plane, IGT_PLANE_ROTATION))
 		return 0;
 
-	LOG(pipe->display, "Fixing up initial rotation pipe %s, plane %d\n",
-	    kmstest_pipe_name(pipe->pipe), plane->index);
+	LOG(crtc->display, "Fixing up initial rotation pipe %s, plane %d\n",
+	    kmstest_pipe_name(crtc->pipe), plane->index);
 
 	/* First try the easy case, can we change rotation without problems? */
 	ret = igt_plane_set_property(plane, plane->props[IGT_PLANE_ROTATION],
@@ -4131,9 +4139,9 @@ static int igt_plane_fixup_rotation(igt_plane_t *plane,
 		return 0;
 
 	/* Disable the plane, while we tinker with rotation */
-	ret = drmModeSetPlane(pipe->display->drm_fd,
+	ret = drmModeSetPlane(crtc->display->drm_fd,
 			      plane->drm_plane->plane_id,
-			      pipe->crtc_id, 0, /* fb_id */
+			      crtc->crtc_id, 0, /* fb_id */
 			      0, /* flags */
 			      0, 0, 0, 0, /* crtc_x, crtc_y, crtc_w, crtc_h */
 			      IGT_FIXED(0,0), IGT_FIXED(0,0), /* src_x, src_y */
@@ -4144,8 +4152,8 @@ static int igt_plane_fixup_rotation(igt_plane_t *plane,
 
 	/* For primary plane, fall back to disabling the crtc. */
 	if (ret) {
-		ret = drmModeSetCrtc(pipe->display->drm_fd,
-				     pipe->crtc_id, 0, 0, 0, NULL, 0, NULL);
+		ret = drmModeSetCrtc(crtc->display->drm_fd,
+				     crtc->crtc_id, 0, 0, 0, NULL, 0, NULL);
 
 		if (ret)
 			return ret;
@@ -4161,27 +4169,28 @@ static int igt_plane_fixup_rotation(igt_plane_t *plane,
  * which API is used to do the programming.
  */
 static int igt_plane_commit(igt_plane_t *plane,
-			    igt_crtc_t *pipe,
+			    igt_crtc_t *crtc,
 			    enum igt_commit_style s,
 			    bool fail_on_error)
 {
-	igt_plane_t *plane_primary = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+	igt_plane_t *plane_primary = igt_crtc_get_plane_type(crtc,
+							     DRM_PLANE_TYPE_PRIMARY);
 
-	if (pipe->display->first_commit || (s == COMMIT_UNIVERSAL &&
-	     igt_plane_is_prop_changed(plane, IGT_PLANE_ROTATION))) {
+	if (crtc->display->first_commit || (s == COMMIT_UNIVERSAL &&
+					    igt_plane_is_prop_changed(plane, IGT_PLANE_ROTATION))) {
 		int ret;
 
-		ret = igt_plane_fixup_rotation(plane, pipe);
+		ret = igt_plane_fixup_rotation(plane, crtc);
 		CHECK_RETURN(ret, fail_on_error);
 	}
 
 	if (plane->type == DRM_PLANE_TYPE_CURSOR && s == COMMIT_LEGACY) {
-		return igt_cursor_commit_legacy(plane, pipe, fail_on_error);
+		return igt_cursor_commit_legacy(plane, crtc, fail_on_error);
 	} else if (plane == plane_primary && s == COMMIT_LEGACY) {
-		return igt_primary_plane_commit_legacy(plane, pipe,
+		return igt_primary_plane_commit_legacy(plane, crtc,
 						       fail_on_error);
 	} else {
-		return igt_drm_plane_commit(plane, pipe, fail_on_error);
+		return igt_drm_plane_commit(plane, crtc, fail_on_error);
 	}
 }
 
@@ -4205,7 +4214,7 @@ static bool is_atomic_prop(enum igt_atomic_crtc_properties prop)
  * further programming will take place, which may result in some changes
  * taking effect and others not taking effect.
  */
-static int igt_crtc_commit(igt_crtc_t *pipe,
+static int igt_crtc_commit(igt_crtc_t *crtc,
 			   enum igt_commit_style s,
 			   bool fail_on_error)
 {
@@ -4213,25 +4222,27 @@ static int igt_crtc_commit(igt_crtc_t *pipe,
 	int ret;
 
 	for (i = 0; i < IGT_NUM_CRTC_PROPS; i++)
-		if (igt_crtc_is_prop_changed(pipe, i) &&
+		if (igt_crtc_is_prop_changed(crtc, i) &&
 		    !is_atomic_prop(i)) {
-			igt_assert(pipe->props[i]);
+			igt_assert(crtc->props[i]);
 
-			ret = drmModeObjectSetProperty(pipe->display->drm_fd,
-				pipe->crtc_id, DRM_MODE_OBJECT_CRTC,
-				pipe->props[i], pipe->values[i]);
+			ret = drmModeObjectSetProperty(crtc->display->drm_fd,
+						       crtc->crtc_id,
+						       DRM_MODE_OBJECT_CRTC,
+						       crtc->props[i],
+						       crtc->values[i]);
 
 			CHECK_RETURN(ret, fail_on_error);
 		}
 
-	for (i = 0; i < pipe->n_planes; i++) {
-		igt_plane_t *plane = &pipe->planes[i];
+	for (i = 0; i < crtc->n_planes; i++) {
+		igt_plane_t *plane = &crtc->planes[i];
 
 		/* skip planes that are handled by another pipe */
-		if (plane->ref->crtc != pipe)
+		if (plane->ref->crtc != crtc)
 			continue;
 
-		ret = igt_plane_commit(plane, pipe, s, fail_on_error);
+		ret = igt_plane_commit(plane, crtc, s, fail_on_error);
 		CHECK_RETURN(ret, fail_on_error);
 	}
 
@@ -4664,68 +4675,69 @@ igt_output_replace_prop_blob(igt_output_t *output, enum igt_atomic_connector_pro
 
 /**
  * igt_crtc_get_prop:
- * @pipe: Target pipe.
+ * @crtc: Target CRTC.
  * @prop: Property to return.
  *
- * Return current value on a pipe for a given property.
+ * Return current value on a CRTC for a given property.
  *
  * Returns: The value the property is set to, if this
  * is a blob, the blob id is returned. This can be passed
  * to drmModeGetPropertyBlob() to get the contents of the blob.
  */
-uint64_t igt_crtc_get_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop)
+uint64_t igt_crtc_get_prop(igt_crtc_t *crtc,
+			   enum igt_atomic_crtc_properties prop)
 {
-	igt_assert(igt_crtc_has_prop(pipe, prop));
+	igt_assert(igt_crtc_has_prop(crtc, prop));
 
-	return igt_mode_object_get_prop(pipe->display, DRM_MODE_OBJECT_CRTC,
-					pipe->crtc_id, pipe->props[prop]);
+	return igt_mode_object_get_prop(crtc->display, DRM_MODE_OBJECT_CRTC,
+					crtc->crtc_id, crtc->props[prop]);
 }
 
 /**
  * igt_crtc_try_prop_enum:
- * @pipe_obj: Target pipe object.
+ * @crtc: Target CRTC
  * @prop: Property to check.
  * @val: Value to set.
  *
- * Returns: False if the given @pipe_obj doesn't have the enum @prop or
+ * Returns: False if the given @crtc doesn't have the enum @prop or
  * failed to set the enum property @val else True.
  */
-bool igt_crtc_try_prop_enum(igt_crtc_t *pipe_obj,
+bool igt_crtc_try_prop_enum(igt_crtc_t *crtc,
 				enum igt_atomic_crtc_properties prop,
 				const char *val)
 {
-	igt_display_t *display = pipe_obj->display;
+	igt_display_t *display = crtc->display;
 	uint64_t uval;
 
-	igt_assert(pipe_obj->props[prop]);
+	igt_assert(crtc->props[prop]);
 
 	if (!igt_mode_object_get_prop_enum_value(display->drm_fd,
-						 pipe_obj->props[prop], val, &uval))
+						 crtc->props[prop], val, &uval))
 		return false;
 
-	igt_crtc_set_prop_value(pipe_obj, prop, uval);
+	igt_crtc_set_prop_value(crtc, prop, uval);
 	return true;
 }
 
 /**
  * igt_crtc_set_prop_enum:
- * @pipe_obj: Target pipe object.
+ * @crtc: Target CRTC
  * @prop: Property to check.
  * @val: Value to set.
  *
  * This function tries to set given enum property @prop value @val to
- * the given @pipe_obj, and terminate the execution if its failed.
+ * the given @crtc, and terminate the execution if its failed.
  */
-void igt_crtc_set_prop_enum(igt_crtc_t *pipe_obj,
+void igt_crtc_set_prop_enum(igt_crtc_t *crtc,
 				enum igt_atomic_crtc_properties prop,
 				const char *val)
 {
-	igt_assert(igt_crtc_try_prop_enum(pipe_obj, prop, val));
+	igt_assert(igt_crtc_try_prop_enum(crtc, prop, val));
 }
 
 /**
  * igt_crtc_replace_prop_blob:
- * @pipe: pipe to set property on.
+ * @crtc: CRTC to set property on
  * @prop: property for which the blob will be replaced.
  * @ptr: Pointer to contents for the property.
  * @length: Length of contents.
@@ -4740,10 +4752,12 @@ void igt_crtc_set_prop_enum(igt_crtc_t *pipe_obj,
  * it works better with legacy commit.
  */
 void
-igt_crtc_replace_prop_blob(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop, const void *ptr, size_t length)
+igt_crtc_replace_prop_blob(igt_crtc_t *crtc,
+			   enum igt_atomic_crtc_properties prop,
+			   const void *ptr, size_t length)
 {
-	igt_display_t *display = pipe->display;
-	uint64_t *blob = &pipe->values[prop];
+	igt_display_t *display = crtc->display;
+	uint64_t *blob = &crtc->values[prop];
 	uint32_t blob_id = 0;
 
 	if (*blob != 0)
@@ -4755,30 +4769,32 @@ igt_crtc_replace_prop_blob(igt_crtc_t *pipe, enum igt_atomic_crtc_properties pro
 						     ptr, length, &blob_id) == 0);
 
 	*blob = blob_id;
-	igt_crtc_set_prop_changed(pipe, prop);
+	igt_crtc_set_prop_changed(crtc, prop);
 }
 
 /*
  * Add crtc property changes to the atomic property set
  */
-static void igt_atomic_prepare_crtc_commit(igt_crtc_t *pipe_obj, drmModeAtomicReq *req)
+static void igt_atomic_prepare_crtc_commit(igt_crtc_t *crtc,
+					   drmModeAtomicReq *req)
 {
 	int i;
 
 	for (i = 0; i < IGT_NUM_CRTC_PROPS; i++) {
-		if (!igt_crtc_is_prop_changed(pipe_obj, i))
+		if (!igt_crtc_is_prop_changed(crtc, i))
 			continue;
 
 		igt_debug("Pipe %s: Setting property \"%s\" to 0x%"PRIx64"/%"PRIi64"\n",
-			kmstest_pipe_name(pipe_obj->pipe), igt_crtc_prop_names[i],
-			pipe_obj->values[i], pipe_obj->values[i]);
+			kmstest_pipe_name(crtc->pipe), igt_crtc_prop_names[i],
+			crtc->values[i], crtc->values[i]);
 
-		igt_assert_lt(0, drmModeAtomicAddProperty(req, pipe_obj->crtc_id, pipe_obj->props[i], pipe_obj->values[i]));
+		igt_assert_lt(0,
+			      drmModeAtomicAddProperty(req, crtc->crtc_id, crtc->props[i], crtc->values[i]));
 	}
 
-	if (pipe_obj->out_fence_fd != -1) {
-		close(pipe_obj->out_fence_fd);
-		pipe_obj->out_fence_fd = -1;
+	if (crtc->out_fence_fd != -1) {
+		close(crtc->out_fence_fd);
+		crtc->out_fence_fd = -1;
 	}
 }
 
@@ -4825,26 +4841,27 @@ static int igt_atomic_commit(igt_display_t *display, uint32_t flags, void *user_
 	req = drmModeAtomicAlloc();
 
 	for_each_pipe(display, pipe) {
-		igt_crtc_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
+		igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 		igt_plane_t *plane;
 
 		/*
 		 * Add CRTC Properties to the property set
 		 */
-		if (pipe_obj->changed)
-			igt_atomic_prepare_crtc_commit(pipe_obj, req);
+		if (crtc->changed)
+			igt_atomic_prepare_crtc_commit(crtc, req);
 
 		for_each_plane_on_pipe(display, pipe, plane) {
 			/* skip planes that are handled by another pipe */
-			if (plane->ref->crtc != pipe_obj)
+			if (plane->ref->crtc != crtc)
 				continue;
 
 			if (plane->changed)
-				igt_atomic_prepare_plane_commit(plane, pipe_obj, req);
+				igt_atomic_prepare_plane_commit(plane, crtc,
+								req);
 
 			if (plane->assigned_color_pipeline)
 				igt_atomic_prepare_colorop_commit(plane->assigned_color_pipeline,
-								  pipe_obj, req);
+								  crtc, req);
 		}
 
 	}
@@ -4876,23 +4893,25 @@ display_commit_changed(igt_display_t *display, enum igt_commit_style s)
 	enum pipe pipe;
 
 	for_each_pipe(display, pipe) {
-		igt_crtc_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
+		igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 		igt_plane_t *plane;
 
 		if (s == COMMIT_ATOMIC) {
-			if (igt_crtc_is_prop_changed(pipe_obj, IGT_CRTC_OUT_FENCE_PTR))
-				igt_assert(pipe_obj->out_fence_fd >= 0);
+			if (igt_crtc_is_prop_changed(crtc, IGT_CRTC_OUT_FENCE_PTR))
+				igt_assert(crtc->out_fence_fd >= 0);
 
-			pipe_obj->values[IGT_CRTC_OUT_FENCE_PTR] = 0;
-			pipe_obj->changed = 0;
+			crtc->values[IGT_CRTC_OUT_FENCE_PTR] = 0;
+			crtc->changed = 0;
 		} else {
 			for (i = 0; i < IGT_NUM_CRTC_PROPS; i++)
 				if (!is_atomic_prop(i))
-					igt_crtc_clear_prop_changed(pipe_obj, i);
+					igt_crtc_clear_prop_changed(crtc, i);
 
 			if (s != COMMIT_UNIVERSAL) {
-				igt_crtc_clear_prop_changed(pipe_obj, IGT_CRTC_MODE_ID);
-				igt_crtc_clear_prop_changed(pipe_obj, IGT_CRTC_ACTIVE);
+				igt_crtc_clear_prop_changed(crtc,
+							    IGT_CRTC_MODE_ID);
+				igt_crtc_clear_prop_changed(crtc,
+							    IGT_CRTC_ACTIVE);
 			}
 		}
 
@@ -4979,10 +4998,10 @@ static int do_display_commit(igt_display_t *display,
 		ret = igt_atomic_commit(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 	} else {
 		for_each_pipe(display, pipe) {
-			igt_crtc_t *pipe_obj = igt_crtc_for_pipe(display,
+			igt_crtc_t *crtc = igt_crtc_for_pipe(display,
 								 pipe);
 
-			ret = igt_crtc_commit(pipe_obj, s, fail_on_error);
+			ret = igt_crtc_commit(crtc, s, fail_on_error);
 			if (ret)
 				break;
 		}
@@ -5269,18 +5288,20 @@ drmModeModeInfo *igt_output_get_lowres_mode(igt_output_t *output)
  */
 void igt_output_override_mode(igt_output_t *output, const drmModeModeInfo *mode)
 {
-	igt_crtc_t *pipe = igt_output_get_driving_crtc(output);
+	igt_crtc_t *crtc = igt_output_get_driving_crtc(output);
 
 	if (mode)
 		output->override_mode = *mode;
 
 	output->use_override_mode = !!mode;
 
-	if (pipe) {
+	if (crtc) {
 		if (output->display->is_atomic)
-			igt_crtc_replace_prop_blob(pipe, IGT_CRTC_MODE_ID, igt_output_get_mode(output), sizeof(*mode));
+			igt_crtc_replace_prop_blob(crtc, IGT_CRTC_MODE_ID,
+						   igt_output_get_mode(output),
+						   sizeof(*mode));
 		else
-			igt_crtc_set_prop_changed(pipe, IGT_CRTC_MODE_ID);
+			igt_crtc_set_prop_changed(crtc, IGT_CRTC_MODE_ID);
 	}
 }
 
@@ -5326,12 +5347,12 @@ static const char *igt_crtc_name(igt_crtc_t *crtc)
 /**
  * igt_output_set_crtc:
  * @output: Target output for which the pipe is being set to
- * @pipe_obj: CRTC to set to
+ * @crtc: CRTC to set to
  *
  * This function sets a @crtc to a specific @output connector by
  * setting the CRTC_ID property of the @crtc.
  */
-void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *pipe_obj)
+void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *crtc)
 {
 	igt_display_t *display = output->display;
 	igt_crtc_t *old_crtc = NULL;
@@ -5342,8 +5363,8 @@ void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *pipe_obj)
 		old_crtc = igt_output_get_driving_crtc(output);
 
 	LOG(display, "%s: set_crtc(%s)\n", igt_output_name(output),
-	    igt_crtc_name(pipe_obj));
-	output->pending_pipe = pipe_obj ? pipe_obj->pipe : PIPE_NONE;
+	    igt_crtc_name(crtc));
+	output->pending_pipe = crtc ? crtc->pipe : PIPE_NONE;
 
 	if (old_crtc) {
 		igt_output_t *old_output;
@@ -5363,17 +5384,19 @@ void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *pipe_obj)
 	}
 
 	igt_output_set_prop_value(output, IGT_CONNECTOR_CRTC_ID,
-				  pipe_obj ? pipe_obj->crtc_id : 0);
+				  crtc ? crtc->crtc_id : 0);
 
 	igt_output_refresh(output);
 
-	if (pipe_obj) {
+	if (crtc) {
 		if (display->is_atomic)
-			igt_crtc_replace_prop_blob(pipe_obj, IGT_CRTC_MODE_ID, igt_output_get_mode(output), sizeof(drmModeModeInfo));
+			igt_crtc_replace_prop_blob(crtc, IGT_CRTC_MODE_ID,
+						   igt_output_get_mode(output),
+						   sizeof(drmModeModeInfo));
 		else
-			igt_crtc_set_prop_changed(pipe_obj, IGT_CRTC_MODE_ID);
+			igt_crtc_set_prop_changed(crtc, IGT_CRTC_MODE_ID);
 
-		igt_crtc_set_prop_value(pipe_obj, IGT_CRTC_ACTIVE, 1);
+		igt_crtc_set_prop_value(crtc, IGT_CRTC_ACTIVE, 1);
 	}
 }
 
@@ -5485,7 +5508,7 @@ bool igt_fit_modes_in_bw(igt_display_t *display)
 
 /**
  * igt_crtc_refresh:
- * @pipe_obj: CRTC to refresh
+ * @crtc: CRTC to refresh
  * @force: Should be set to true if mode_blob is no longer considered
  * to be valid, for example after doing an atomic commit during fork or closing display fd.
  *
@@ -5494,18 +5517,20 @@ bool igt_fit_modes_in_bw(igt_display_t *display)
  * a fork, or we just want to be sure the pipe is included
  * in the next commit.
  */
-void igt_crtc_refresh(igt_crtc_t *pipe_obj, bool force)
+void igt_crtc_refresh(igt_crtc_t *crtc, bool force)
 {
-	igt_display_t *display = pipe_obj->display;
+	igt_display_t *display = crtc->display;
 
 	if (force && display->is_atomic) {
-		igt_output_t *output = igt_crtc_get_output(pipe_obj);
+		igt_output_t *output = igt_crtc_get_output(crtc);
 
-		pipe_obj->values[IGT_CRTC_MODE_ID] = 0;
+		crtc->values[IGT_CRTC_MODE_ID] = 0;
 		if (output)
-			igt_crtc_replace_prop_blob(pipe_obj, IGT_CRTC_MODE_ID, igt_output_get_mode(output), sizeof(drmModeModeInfo));
+			igt_crtc_replace_prop_blob(crtc, IGT_CRTC_MODE_ID,
+						   igt_output_get_mode(output),
+						   sizeof(drmModeModeInfo));
 	} else
-		igt_crtc_set_prop_changed(pipe_obj, IGT_CRTC_MODE_ID);
+		igt_crtc_set_prop_changed(crtc, IGT_CRTC_MODE_ID);
 }
 
 /**
@@ -5521,12 +5546,12 @@ void igt_crtc_refresh(igt_crtc_t *pipe_obj, bool force)
  */
 igt_plane_t *igt_output_get_plane(igt_output_t *output, int plane_idx)
 {
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 
-	pipe = igt_output_get_driving_crtc(output);
-	igt_assert(pipe);
+	crtc = igt_output_get_driving_crtc(output);
+	igt_assert(crtc);
 
-	return igt_crtc_get_plane(pipe, plane_idx);
+	return igt_crtc_get_plane(crtc, plane_idx);
 }
 
 /**
@@ -5541,12 +5566,12 @@ igt_plane_t *igt_output_get_plane(igt_output_t *output, int plane_idx)
  */
 igt_plane_t *igt_output_get_plane_type(igt_output_t *output, int plane_type)
 {
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 
-	pipe = igt_output_get_driving_crtc(output);
-	igt_assert(pipe);
+	crtc = igt_output_get_driving_crtc(output);
+	igt_assert(crtc);
 
-	return igt_crtc_get_plane_type(pipe, plane_type);
+	return igt_crtc_get_plane_type(crtc, plane_type);
 }
 
 /**
@@ -5560,10 +5585,10 @@ igt_plane_t *igt_output_get_plane_type(igt_output_t *output, int plane_type)
  */
 int igt_output_count_plane_type(igt_output_t *output, int plane_type)
 {
-	igt_crtc_t *pipe = igt_output_get_driving_crtc(output);
-	igt_assert(pipe);
+	igt_crtc_t *crtc = igt_output_get_driving_crtc(output);
+	igt_assert(crtc);
 
-	return igt_crtc_count_plane_type(pipe, plane_type);
+	return igt_crtc_count_plane_type(crtc, plane_type);
 }
 
 /**
@@ -5579,10 +5604,10 @@ int igt_output_count_plane_type(igt_output_t *output, int plane_type)
 igt_plane_t *igt_output_get_plane_type_index(igt_output_t *output,
 					     int plane_type, int index)
 {
-	igt_crtc_t *pipe = igt_output_get_driving_crtc(output);
-	igt_assert(pipe);
+	igt_crtc_t *crtc = igt_output_get_driving_crtc(output);
+	igt_assert(crtc);
 
-	return igt_crtc_get_plane_type_index(pipe, plane_type, index);
+	return igt_crtc_get_plane_type_index(crtc, plane_type, index);
 }
 
 /**
@@ -5597,13 +5622,15 @@ igt_plane_t *igt_output_get_plane_type_index(igt_output_t *output,
  */
 void igt_plane_set_fb(igt_plane_t *plane, struct igt_fb *fb)
 {
-	igt_crtc_t *pipe = plane->crtc;
-	igt_display_t *display = pipe->display;
+	igt_crtc_t *crtc = plane->crtc;
+	igt_display_t *display = crtc->display;
 
-	LOG(display, "%s.%d: plane_set_fb(%d)\n", kmstest_pipe_name(pipe->pipe),
+	LOG(display, "%s.%d: plane_set_fb(%d)\n",
+	    kmstest_pipe_name(crtc->pipe),
 	    plane->index, fb ? fb->fb_id : 0);
 
-	igt_plane_set_prop_value(plane, IGT_PLANE_CRTC_ID, fb ? pipe->crtc_id : 0);
+	igt_plane_set_prop_value(plane, IGT_PLANE_CRTC_ID,
+				 fb ? crtc->crtc_id : 0);
 	igt_plane_set_prop_value(plane, IGT_PLANE_FB_ID, fb ? fb->fb_id : 0);
 
 	if (plane->type == DRM_PLANE_TYPE_CURSOR && fb)
@@ -5631,7 +5658,7 @@ void igt_plane_set_fb(igt_plane_t *plane, struct igt_fb *fb)
 		}
 
 		/* Hack to prioritize the plane on the pipe that last set fb */
-		igt_plane_set_crtc(plane, pipe);
+		igt_plane_set_crtc(plane, crtc);
 	} else {
 		igt_plane_set_size(plane, 0, 0);
 
@@ -5669,9 +5696,9 @@ void igt_plane_set_fence_fd(igt_plane_t *plane, int fence_fd)
 /**
  * igt_plane_set_crtc:
  * @plane: Target plane pointer
- * @pipe: The pipe to assign the plane to
+ * @crtc: The CRTC to assign the plane to
  */
-void igt_plane_set_crtc(igt_plane_t *plane, igt_crtc_t *pipe)
+void igt_plane_set_crtc(igt_plane_t *plane, igt_crtc_t *crtc)
 {
 	/*
 	 * HACK: Point the global plane back to the local plane.
@@ -5679,7 +5706,7 @@ void igt_plane_set_crtc(igt_plane_t *plane, igt_crtc_t *pipe)
 	 * we're moving away from the single pipe per plane model.
 	 */
 	plane->ref->ref = plane;
-	plane->ref->crtc = pipe;
+	plane->ref->crtc = crtc;
 }
 
 /**
@@ -5693,11 +5720,11 @@ void igt_plane_set_crtc(igt_plane_t *plane, igt_crtc_t *pipe)
  */
 void igt_plane_set_position(igt_plane_t *plane, int x, int y)
 {
-	igt_crtc_t *pipe = plane->crtc;
-	igt_display_t *display = pipe->display;
+	igt_crtc_t *crtc = plane->crtc;
+	igt_display_t *display = crtc->display;
 
 	LOG(display, "%s.%d: plane_set_position(%d,%d)\n",
-	    kmstest_pipe_name(pipe->pipe), plane->index, x, y);
+	    kmstest_pipe_name(crtc->pipe), plane->index, x, y);
 
 	igt_plane_set_prop_value(plane, IGT_PLANE_CRTC_X, x);
 	igt_plane_set_prop_value(plane, IGT_PLANE_CRTC_Y, y);
@@ -5715,11 +5742,11 @@ void igt_plane_set_position(igt_plane_t *plane, int x, int y)
  */
 void igt_plane_set_size(igt_plane_t *plane, int w, int h)
 {
-	igt_crtc_t *pipe = plane->crtc;
-	igt_display_t *display = pipe->display;
+	igt_crtc_t *crtc = plane->crtc;
+	igt_display_t *display = crtc->display;
 
 	LOG(display, "%s.%d: plane_set_size (%dx%d)\n",
-	    kmstest_pipe_name(pipe->pipe), plane->index, w, h);
+	    kmstest_pipe_name(crtc->pipe), plane->index, w, h);
 
 	igt_plane_set_prop_value(plane, IGT_PLANE_CRTC_W, w);
 	igt_plane_set_prop_value(plane, IGT_PLANE_CRTC_H, h);
@@ -5738,11 +5765,11 @@ void igt_plane_set_size(igt_plane_t *plane, int w, int h)
 void igt_fb_set_position(struct igt_fb *fb, igt_plane_t *plane,
 	uint32_t x, uint32_t y)
 {
-	igt_crtc_t *pipe = plane->crtc;
-	igt_display_t *display = pipe->display;
+	igt_crtc_t *crtc = plane->crtc;
+	igt_display_t *display = crtc->display;
 
 	LOG(display, "%s.%d: fb_set_position(%d,%d)\n",
-	    kmstest_pipe_name(pipe->pipe), plane->index, x, y);
+	    kmstest_pipe_name(crtc->pipe), plane->index, x, y);
 
 	igt_plane_set_prop_value(plane, IGT_PLANE_SRC_X, IGT_FIXED(x, 0));
 	igt_plane_set_prop_value(plane, IGT_PLANE_SRC_Y, IGT_FIXED(y, 0));
@@ -5762,11 +5789,11 @@ void igt_fb_set_position(struct igt_fb *fb, igt_plane_t *plane,
 void igt_fb_set_size(struct igt_fb *fb, igt_plane_t *plane,
 	uint32_t w, uint32_t h)
 {
-	igt_crtc_t *pipe = plane->crtc;
-	igt_display_t *display = pipe->display;
+	igt_crtc_t *crtc = plane->crtc;
+	igt_display_t *display = crtc->display;
 
 	LOG(display, "%s.%d: fb_set_size(%dx%d)\n",
-	    kmstest_pipe_name(pipe->pipe), plane->index, w, h);
+	    kmstest_pipe_name(crtc->pipe), plane->index, w, h);
 
 	igt_plane_set_prop_value(plane, IGT_PLANE_SRC_W, IGT_FIXED(w, 0));
 	igt_plane_set_prop_value(plane, IGT_PLANE_SRC_H, IGT_FIXED(h, 0));
@@ -5805,11 +5832,11 @@ const char *igt_plane_rotation_name(igt_rotation_t rotation)
  */
 void igt_plane_set_rotation(igt_plane_t *plane, igt_rotation_t rotation)
 {
-	igt_crtc_t *pipe = plane->crtc;
-	igt_display_t *display = pipe->display;
+	igt_crtc_t *crtc = plane->crtc;
+	igt_display_t *display = crtc->display;
 
 	LOG(display, "%s.%d: plane_set_rotation(%s°)\n",
-	    kmstest_pipe_name(pipe->pipe),
+	    kmstest_pipe_name(crtc->pipe),
 	    plane->index, igt_plane_rotation_name(rotation));
 
 	igt_plane_set_prop_value(plane, IGT_PLANE_ROTATION, rotation);
@@ -5817,14 +5844,15 @@ void igt_plane_set_rotation(igt_plane_t *plane, igt_rotation_t rotation)
 
 /**
  * igt_crtc_request_out_fence:
- * @pipe: pipe which out fence will be requested for
+ * @crtc: CRTC which out fence will be requested for
  *
  * Marks this pipe for requesting an out fence at the next atomic commit
  * will contain the fd number of the out fence created by KMS.
  */
-void igt_crtc_request_out_fence(igt_crtc_t *pipe)
+void igt_crtc_request_out_fence(igt_crtc_t *crtc)
 {
-	igt_crtc_set_prop_value(pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)&pipe->out_fence_fd);
+	igt_crtc_set_prop_value(crtc, IGT_CRTC_OUT_FENCE_PTR,
+				(ptrdiff_t)&crtc->out_fence_fd);
 }
 
 /**

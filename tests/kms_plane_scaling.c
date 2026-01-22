@@ -1016,7 +1016,7 @@ static void
 test_invalid_num_scalers(data_t *d, enum pipe pipe, igt_output_t *output)
 {
 	igt_display_t *display = &d->display;
-	igt_crtc_t *pipe_obj = igt_crtc_for_pipe(display, pipe);
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	int width, height;
 	igt_plane_t *plane[3];
 	drmModeModeInfo *mode;
@@ -1024,16 +1024,19 @@ test_invalid_num_scalers(data_t *d, enum pipe pipe, igt_output_t *output)
 
 	cleanup_crtc(d);
 
-	igt_output_set_crtc(output, pipe_obj);
+	igt_output_set_crtc(output, crtc);
 
 	width = height = 20;
 	mode = igt_output_get_mode(output);
 
-	plane[0] = igt_crtc_get_plane_type_index(pipe_obj, DRM_PLANE_TYPE_OVERLAY, 0);
+	plane[0] = igt_crtc_get_plane_type_index(crtc, DRM_PLANE_TYPE_OVERLAY,
+						 0);
 	igt_require(plane[0]);
-	plane[1] = igt_crtc_get_plane_type_index(pipe_obj, DRM_PLANE_TYPE_OVERLAY, 1);
+	plane[1] = igt_crtc_get_plane_type_index(crtc, DRM_PLANE_TYPE_OVERLAY,
+						 1);
 	igt_require(plane[1]);
-	plane[2] = igt_crtc_get_plane_type_index(pipe_obj, DRM_PLANE_TYPE_OVERLAY, 2);
+	plane[2] = igt_crtc_get_plane_type_index(crtc, DRM_PLANE_TYPE_OVERLAY,
+						 2);
 	igt_require(plane[2]);
 
 	igt_create_fb(display->drm_fd,

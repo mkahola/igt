@@ -177,15 +177,15 @@ static void test_t(data_t *data, igt_plane_t *primary,
 
 static int test_setup(data_t *data, enum pipe p)
 {
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	int i = 0;
 
 	igt_display_reset(&data->display);
 
-	pipe = igt_crtc_for_pipe(&data->display, p);
-	igt_require(pipe->n_planes >= 0);
+	crtc = igt_crtc_for_pipe(&data->display, p);
+	igt_require(crtc->n_planes >= 0);
 
-	data->primary = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+	data->primary = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 	igt_assert(data->primary);
 
 	/*

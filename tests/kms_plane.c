@@ -566,12 +566,12 @@ static const color_t colors_reduced[] = {
 static void set_legacy_lut(data_t *data, enum pipe pipe,
 			   uint16_t mask)
 {
-	igt_crtc_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
+	igt_crtc_t *crtc = igt_crtc_for_pipe(&data->display, pipe);
 	drmModeCrtc *drm_crtc;
 	uint16_t *lut;
 	int i, lut_size;
 
-	drm_crtc = drmModeGetCrtc(data->drm_fd, pipe_obj->crtc_id);
+	drm_crtc = drmModeGetCrtc(data->drm_fd, crtc->crtc_id);
 	lut_size = drm_crtc->gamma_size;
 	drmModeFreeCrtc(drm_crtc);
 
@@ -584,7 +584,7 @@ static void set_legacy_lut(data_t *data, enum pipe pipe,
 	for (i = 0; i < lut_size; i++)
 		lut[i] = (i * 0xffff / (lut_size - 1)) & mask;
 
-	igt_assert_eq(drmModeCrtcSetGamma(data->drm_fd, pipe_obj->crtc_id,
+	igt_assert_eq(drmModeCrtcSetGamma(data->drm_fd, crtc->crtc_id,
 					  lut_size, lut, lut, lut), 0);
 
 	free(lut);
@@ -593,12 +593,12 @@ static void set_legacy_lut(data_t *data, enum pipe pipe,
 static bool set_c8_legacy_lut(data_t *data, enum pipe pipe,
 			      uint16_t mask)
 {
-	igt_crtc_t *pipe_obj = igt_crtc_for_pipe(&data->display, pipe);
+	igt_crtc_t *crtc = igt_crtc_for_pipe(&data->display, pipe);
 	drmModeCrtc *drm_crtc;
 	uint16_t *r, *g, *b;
 	int i, lut_size;
 
-	drm_crtc = drmModeGetCrtc(data->drm_fd, pipe_obj->crtc_id);
+	drm_crtc = drmModeGetCrtc(data->drm_fd, crtc->crtc_id);
 	lut_size = drm_crtc->gamma_size;
 	drmModeFreeCrtc(drm_crtc);
 
@@ -616,7 +616,7 @@ static bool set_c8_legacy_lut(data_t *data, enum pipe pipe,
 		b[i] = (((i & 0x03) >> 0) * 0xffff / 0x3) & mask;
 	}
 
-	igt_assert_eq(drmModeCrtcSetGamma(data->drm_fd, pipe_obj->crtc_id,
+	igt_assert_eq(drmModeCrtcSetGamma(data->drm_fd, crtc->crtc_id,
 					  lut_size, r, g, b), 0);
 
 	free(r);

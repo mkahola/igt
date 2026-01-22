@@ -30,7 +30,7 @@ typedef struct
         igt_plane_t *primary;
         igt_output_t *output;
         igt_fb_t fb;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
         enum pipe pipe_id;
 	int connector_type;
 	int w, h;
@@ -100,10 +100,10 @@ static void test_init(data_t *data, igt_output_t *output)
 
 	igt_require(data->pipe_id != PIPE_NONE);
 
-	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(&data->display, data->pipe_id);
 
 	igt_output_set_crtc(output,
-			    data->pipe);
+			    data->crtc);
 
 	data->primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 }

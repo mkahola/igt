@@ -68,7 +68,7 @@ typedef struct data {
 	igt_plane_t *cursor;
 	igt_plane_t *overlays[6];
 	igt_output_t *output;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	igt_pipe_crc_t *pipe_crc;
 	drmModeModeInfo *mode;
 	igt_fb_t rgb_fb;
@@ -138,20 +138,24 @@ static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 
 	data->pipe_id = pipe_id;
 	data->available_overlay_planes = available_overlay_planes;
-	data->pipe = &data->display.crtcs[data->pipe_id];
+	data->crtc = &data->display.crtcs[data->pipe_id];
 	data->output = output;
 	data->mode = igt_output_get_mode(data->output);
-	data->primary = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
-	data->cursor = igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_CURSOR);
+	data->primary = igt_crtc_get_plane_type(data->crtc,
+						DRM_PLANE_TYPE_PRIMARY);
+	data->cursor = igt_crtc_get_plane_type(data->crtc,
+					       DRM_PLANE_TYPE_CURSOR);
 
 	if (flags & TEST_MAX_PLANES)
 		for (i = 0; i < available_overlay_planes - 1; i++)
-			data->overlays[i] = igt_crtc_get_plane_type_index(data->pipe,
-						DRM_PLANE_TYPE_OVERLAY, i);
+			data->overlays[i] = igt_crtc_get_plane_type_index(data->crtc,
+									  DRM_PLANE_TYPE_OVERLAY,
+									  i);
 	if (flags & TEST_NO_AVAILABLE_PLANES)
 		for (i = 0; i < available_overlay_planes; i++)
-			data->overlays[i] = igt_crtc_get_plane_type_index(data->pipe,
-						DRM_PLANE_TYPE_OVERLAY, i);
+			data->overlays[i] = igt_crtc_get_plane_type_index(data->crtc,
+									  DRM_PLANE_TYPE_OVERLAY,
+									  i);
 
 	igt_info("Using (pipe %s + %s) to run the subtest.\n",
 		 kmstest_pipe_name(data->pipe_id), igt_output_name(data->output));

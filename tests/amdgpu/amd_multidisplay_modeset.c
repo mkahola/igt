@@ -153,15 +153,15 @@ static void test_init(struct data_t *data)
 
 	for_each_pipe(display, i) {
 		igt_output_t *output;
-		igt_crtc_t *pipes;
+		igt_crtc_t *crtc;
 
 		/* For each valid pipe, get one connected display.
 		 * This will let displays connected to MST hub be
 		 * tested
 		 */
 		output = igt_get_single_output_for_pipe(display, i);
-		pipes = igt_crtc_for_pipe(display, i);
-		data->primary[i] = igt_crtc_get_plane_type(pipes,
+		crtc = igt_crtc_for_pipe(display, i);
+		data->primary[i] = igt_crtc_get_plane_type(crtc,
 							   DRM_PLANE_TYPE_PRIMARY);
 		data->output[i] = output;
 
@@ -174,11 +174,11 @@ static void test_init(struct data_t *data)
 			ret = dpcd_read_byte(data->fd, output->config.connector,
 				DPCD_TEST_SINK_MISC, &dpcd_246h);
 			if (ret && ((dpcd_246h & 0x20) != 0x0))
-				data->pipe_crc_dprx[i] = igt_crtc_crc_new(pipes,
+				data->pipe_crc_dprx[i] = igt_crtc_crc_new(crtc,
 									  AMDGPU_PIPE_CRC_SOURCE_DPRX);
 		}
 
-		data->pipe_crc_otg[i] = igt_crtc_crc_new(pipes,
+		data->pipe_crc_otg[i] = igt_crtc_crc_new(crtc,
 							 IGT_PIPE_CRC_SOURCE_AUTO);
 		/* disable eDP PSR */
 		if (data->output[i]->config.connector->connector_type ==

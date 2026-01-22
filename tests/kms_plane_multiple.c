@@ -204,7 +204,7 @@ prepare_planes(data_t *data, enum pipe pipe_id, color_t *color, igt_plane_t **pl
 	       uint64_t modifier, int max_planes, igt_output_t *output, igt_fb_t *fb)
 {
 	drmModeModeInfo *mode;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	igt_plane_t *primary;
 	int *x;
 	int *y;
@@ -215,18 +215,22 @@ prepare_planes(data_t *data, enum pipe pipe_id, color_t *color, igt_plane_t **pl
 	igt_output_set_crtc(output,
 			    igt_crtc_for_pipe(output->display, pipe_id));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
-	pipe = primary->crtc;
+	crtc = primary->crtc;
 
-	x = malloc(pipe->n_planes * sizeof(*x));
-	igt_assert_f(x, "Failed to allocate %ld bytes for variable x\n", (long int) (pipe->n_planes * sizeof(*x)));
-	y = malloc(pipe->n_planes * sizeof(*y));
-	igt_assert_f(y, "Failed to allocate %ld bytes for variable y\n", (long int) (pipe->n_planes * sizeof(*y)));
-	size = malloc(pipe->n_planes * sizeof(*size));
-	igt_assert_f(size, "Failed to allocate %ld bytes for variable size\n", (long int) (pipe->n_planes * sizeof(*size)));
-	suffle = malloc(pipe->n_planes * sizeof(*suffle));
-	igt_assert_f(suffle, "Failed to allocate %ld bytes for variable size\n", (long int) (pipe->n_planes * sizeof(*suffle)));
+	x = malloc(crtc->n_planes * sizeof(*x));
+	igt_assert_f(x, "Failed to allocate %ld bytes for variable x\n",
+		     (long int) (crtc->n_planes * sizeof(*x)));
+	y = malloc(crtc->n_planes * sizeof(*y));
+	igt_assert_f(y, "Failed to allocate %ld bytes for variable y\n",
+		     (long int) (crtc->n_planes * sizeof(*y)));
+	size = malloc(crtc->n_planes * sizeof(*size));
+	igt_assert_f(size, "Failed to allocate %ld bytes for variable size\n",
+		     (long int) (crtc->n_planes * sizeof(*size)));
+	suffle = malloc(crtc->n_planes * sizeof(*suffle));
+	igt_assert_f(suffle, "Failed to allocate %ld bytes for variable size\n",
+		     (long int) (crtc->n_planes * sizeof(*suffle)));
 
-	for (i = 0; i < pipe->n_planes; i++)
+	for (i = 0; i < crtc->n_planes; i++)
 		suffle[i] = i;
 
 	/*
@@ -237,8 +241,8 @@ prepare_planes(data_t *data, enum pipe pipe_id, color_t *color, igt_plane_t **pl
 		int n, m;
 		int a, b;
 
-		n = rand() % (pipe->n_planes-1);
-		m = rand() % (pipe->n_planes-1);
+		n = rand() % (crtc->n_planes-1);
+		m = rand() % (crtc->n_planes-1);
 
 		/*
 		 * keep primary plane at its place for test's sake.

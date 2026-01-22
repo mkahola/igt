@@ -74,14 +74,14 @@ typedef struct {
 /* Prepare test data. */
 static void prepare_test(data_t *data, igt_output_t *output, enum pipe p)
 {
-	igt_crtc_t *pipe = igt_crtc_for_pipe(&data->display, p);
+	igt_crtc_t *crtc = igt_crtc_for_pipe(&data->display, p);
 
-	igt_assert(pipe);
+	igt_assert(crtc);
 
 	data->primary =
-		igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
+		igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 
-	igt_output_set_crtc(output, pipe);
+	igt_output_set_crtc(output, crtc);
 }
 
 /* Returns the current state of dithering from the crtc debugfs. */

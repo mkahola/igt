@@ -113,7 +113,7 @@ static bool all_pipes = false;
 typedef struct {
 	igt_display_t display;
 	igt_plane_t *primary;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	int drm_fd;
 	igt_fb_t fb;
 } data_t;
@@ -224,7 +224,7 @@ static bool crtc_filter(enum igt_atomic_crtc_properties prop)
 	return true;
 }
 
-static void crtc_get_current_state(igt_crtc_t *pipe, uint64_t *values)
+static void crtc_get_current_state(igt_crtc_t *crtc, uint64_t *values)
 {
 	int i;
 
@@ -234,11 +234,11 @@ static void crtc_get_current_state(igt_crtc_t *pipe, uint64_t *values)
 			continue;
 		}
 
-		values[i] = igt_crtc_get_prop(pipe, i);
+		values[i] = igt_crtc_get_prop(crtc, i);
 	}
 }
 
-static void crtc_check_current_state(igt_crtc_t *pipe,
+static void crtc_check_current_state(igt_crtc_t *crtc,
 				     const uint64_t *pipe_values,
 				     const uint64_t *primary_values,
 				     enum kms_atomic_check_relax relax)
@@ -249,7 +249,7 @@ static void crtc_check_current_state(igt_crtc_t *pipe,
 	struct drm_mode_modeinfo *mode = NULL;
 
 	if (pipe_values[IGT_CRTC_MODE_ID]) {
-		mode_prop = drmModeGetPropertyBlob(pipe->display->drm_fd,
+		mode_prop = drmModeGetPropertyBlob(crtc->display->drm_fd,
 						   pipe_values[IGT_CRTC_MODE_ID]);
 		igt_assert(mode_prop);
 
@@ -258,10 +258,10 @@ static void crtc_check_current_state(igt_crtc_t *pipe,
 		mode = mode_prop->data;
 	}
 
-	drm_crtc = drmModeGetCrtc(pipe->display->drm_fd, pipe->crtc_id);
+	drm_crtc = drmModeGetCrtc(crtc->display->drm_fd, crtc->crtc_id);
 	igt_assert(drm_crtc);
 
-	igt_assert_eq_u32(drm_crtc->crtc_id, pipe->crtc_id);
+	igt_assert_eq_u32(drm_crtc->crtc_id, crtc->crtc_id);
 	igt_assert_eq_u32(drm_crtc->x, primary_values[IGT_PLANE_SRC_X] >> 16);
 	igt_assert_eq_u32(drm_crtc->y, primary_values[IGT_PLANE_SRC_Y] >> 16);
 
@@ -281,7 +281,7 @@ static void crtc_check_current_state(igt_crtc_t *pipe,
 		igt_assert(!mode_prop);
 	}
 
-	crtc_get_current_state(pipe, current_pipe_values);
+	crtc_get_current_state(crtc, current_pipe_values);
 
 	/*
 	 * Optionally relax the check for MODE_ID: using the legacy SetCrtc
@@ -291,7 +291,7 @@ static void crtc_check_current_state(igt_crtc_t *pipe,
 	if (relax & CRTC_RELAX_MODE && mode && current_pipe_values[IGT_CRTC_MODE_ID] &&
 	    current_pipe_values[IGT_CRTC_MODE_ID] != pipe_values[IGT_CRTC_MODE_ID]) {
 		drmModePropertyBlobRes *cur_prop =
-			drmModeGetPropertyBlob(pipe->display->drm_fd,
+			drmModeGetPropertyBlob(crtc->display->drm_fd,
 					       current_pipe_values[IGT_CRTC_MODE_ID]);
 
 		igt_assert(cur_prop);
@@ -309,17 +309,17 @@ static void crtc_check_current_state(igt_crtc_t *pipe,
 	drmModeFreePropertyBlob(mode_prop);
 }
 
-static void crtc_commit(igt_crtc_t *pipe, igt_plane_t *plane,
+static void crtc_commit(igt_crtc_t *crtc, igt_plane_t *plane,
 			enum igt_commit_style s,
 			enum kms_atomic_check_relax relax)
 {
-	igt_display_commit2(pipe->display, s);
+	igt_display_commit2(crtc->display, s);
 
-	crtc_check_current_state(pipe, pipe->values, plane->values, relax);
+	crtc_check_current_state(crtc, crtc->values, plane->values, relax);
 	plane_check_current_state(plane, plane->values, relax);
 }
 
-static void crtc_commit_atomic_flags_err(igt_crtc_t *pipe, igt_plane_t *plane,
+static void crtc_commit_atomic_flags_err(igt_crtc_t *crtc, igt_plane_t *plane,
 					 unsigned flags,
 					 enum kms_atomic_check_relax relax,
 					 int err)
@@ -327,12 +327,14 @@ static void crtc_commit_atomic_flags_err(igt_crtc_t *pipe, igt_plane_t *plane,
 	uint64_t current_pipe_values[IGT_NUM_CRTC_PROPS];
 	uint64_t current_plane_values[IGT_NUM_PLANE_PROPS];
 
-	crtc_get_current_state(pipe, current_pipe_values);
+	crtc_get_current_state(crtc, current_pipe_values);
 	plane_get_current_state(plane, current_plane_values);
 
-	igt_assert_eq(-err, igt_display_try_commit_atomic(pipe->display, flags, NULL));
+	igt_assert_eq(-err,
+		      igt_display_try_commit_atomic(crtc->display, flags, NULL));
 
-	crtc_check_current_state(pipe, current_pipe_values, current_plane_values, relax);
+	crtc_check_current_state(crtc, current_pipe_values,
+				 current_plane_values, relax);
 	plane_check_current_state(plane, current_plane_values, relax);
 }
 
@@ -632,25 +634,28 @@ static void plane_primary(data_t *data)
 	 * state is what we think it should be.
 	 */
 	igt_plane_set_fb(data->primary, &fb2);
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
 	/* Restore the primary plane and check the state matches the old. */
 	igt_plane_set_fb(data->primary, &data->fb);
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
 	/*
 	 * Set the plane through the legacy CRTC/primary-plane API, and
 	 * verify through atomic.
 	 */
 	igt_plane_set_fb(data->primary, &data->fb);
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
 	/*
 	 * Restore the plane to its original settings through the legacy CRTC
 	 * API, and verify through atomic.
 	 */
 	igt_plane_set_fb(data->primary, &data->fb);
-	crtc_commit(data->pipe, data->primary, COMMIT_LEGACY, CRTC_RELAX_MODE);
+	crtc_commit(data->crtc, data->primary, COMMIT_LEGACY, CRTC_RELAX_MODE);
 
 	/*
 	 * Set the plane through the universal setplane API, and
@@ -671,7 +676,7 @@ static void test_only(data_t *data, igt_output_t *output, enum pipe pipe, uint32
 	drmModeModeInfo *mode = igt_output_get_mode(output);
 
 	plane_get_current_state(data->primary, old_plane_values);
-	crtc_get_current_state(data->pipe, old_crtc_values);
+	crtc_get_current_state(data->crtc, old_crtc_values);
 
 	igt_assert(!old_crtc_values[IGT_CRTC_MODE_ID]);
 
@@ -684,18 +689,19 @@ static void test_only(data_t *data, igt_output_t *output, enum pipe pipe, uint32
 	igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_TEST_ONLY | DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
 	/* check the state, should still be old state */
-	crtc_check_current_state(data->pipe, old_crtc_values, old_plane_values, ATOMIC_RELAX_NONE);
+	crtc_check_current_state(data->crtc, old_crtc_values,
+				 old_plane_values, ATOMIC_RELAX_NONE);
 	plane_check_current_state(data->primary, old_plane_values, ATOMIC_RELAX_NONE);
 
 	/*
 	 * Enable the plane through the legacy CRTC/primary-plane API, and
 	 * verify through atomic.
 	 */
-	crtc_commit(data->pipe, data->primary, COMMIT_LEGACY, CRTC_RELAX_MODE);
+	crtc_commit(data->crtc, data->primary, COMMIT_LEGACY, CRTC_RELAX_MODE);
 
 	/* Same for disable.. */
 	plane_get_current_state(data->primary, old_plane_values);
-	crtc_get_current_state(data->pipe, old_crtc_values);
+	crtc_get_current_state(data->crtc, old_crtc_values);
 
 	igt_plane_set_fb(data->primary, NULL);
 	igt_output_set_crtc(output, NULL);
@@ -707,11 +713,13 @@ static void test_only(data_t *data, igt_output_t *output, enum pipe pipe, uint32
 	kmstest_set_connector_dpms(output->display->drm_fd, output->config.connector, DRM_MODE_DPMS_ON);
 
 	/* check the state, should still be old state */
-	crtc_check_current_state(data->pipe, old_crtc_values, old_plane_values, ATOMIC_RELAX_NONE);
+	crtc_check_current_state(data->crtc, old_crtc_values,
+				 old_plane_values, ATOMIC_RELAX_NONE);
 	plane_check_current_state(data->primary, old_plane_values, ATOMIC_RELAX_NONE);
 
 	/* And disable the pipe and remove fb, test complete */
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 	igt_remove_fb(data->drm_fd, &fb);
 }
 
@@ -776,13 +784,15 @@ static void plane_invalid_params(data_t *data, igt_output_t *output)
 	igt_plane_set_prop_value(data->primary, IGT_PLANE_FB_ID, data->primary->drm_plane->plane_id);
 	plane_commit_atomic_err(data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
-	igt_plane_set_prop_value(data->primary, IGT_PLANE_FB_ID, data->pipe->crtc_id);
+	igt_plane_set_prop_value(data->primary, IGT_PLANE_FB_ID,
+				 data->crtc->crtc_id);
 	plane_commit_atomic_err(data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
 	igt_plane_set_prop_value(data->primary, IGT_PLANE_FB_ID, output->id);
 	plane_commit_atomic_err(data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
-	igt_plane_set_prop_value(data->primary, IGT_PLANE_FB_ID, data->pipe->values[IGT_CRTC_MODE_ID]);
+	igt_plane_set_prop_value(data->primary, IGT_PLANE_FB_ID,
+				 data->crtc->values[IGT_CRTC_MODE_ID]);
 	plane_commit_atomic_err(data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
 	/* Valid, but invalid because CRTC_ID is set. */
@@ -802,7 +812,8 @@ static void plane_invalid_params(data_t *data, igt_output_t *output)
 	igt_plane_set_prop_value(data->primary, IGT_PLANE_CRTC_ID, output->id);
 	plane_commit_atomic_err(data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
-	igt_plane_set_prop_value(data->primary, IGT_PLANE_CRTC_ID, data->pipe->values[IGT_CRTC_MODE_ID]);
+	igt_plane_set_prop_value(data->primary, IGT_PLANE_CRTC_ID,
+				 data->crtc->values[IGT_CRTC_MODE_ID]);
 	plane_commit_atomic_err(data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
 	/* Valid, but invalid because FB_ID is set. */
@@ -845,7 +856,8 @@ static void plane_invalid_params_fence(data_t *data, igt_output_t *output)
 	plane_commit_atomic_err(data->primary, ATOMIC_RELAX_NONE, EINVAL);
 
 	sw_sync_timeline_inc(timeline, 1);
-	igt_plane_set_prop_value(data->primary, IGT_PLANE_CRTC_ID, data->pipe->crtc_id);
+	igt_plane_set_prop_value(data->primary, IGT_PLANE_CRTC_ID,
+				 data->crtc->crtc_id);
 	plane_commit(data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
 
 	close(fence_fd);
@@ -854,45 +866,60 @@ static void plane_invalid_params_fence(data_t *data, igt_output_t *output)
 
 static void crtc_invalid_params(data_t *data, igt_output_t *output)
 {
-	uint64_t old_mode_id = data->pipe->values[IGT_CRTC_MODE_ID];
+	uint64_t old_mode_id = data->crtc->values[IGT_CRTC_MODE_ID];
 	drmModeModeInfo *mode = igt_output_get_mode(output);
 
 	/* Pass a series of invalid object IDs for the mode ID. */
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->primary->drm_plane->plane_id);
-	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EINVAL);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_MODE_ID,
+				data->primary->drm_plane->plane_id);
+	crtc_commit_atomic_err(data->crtc, data->primary, ATOMIC_RELAX_NONE,
+			       EINVAL);
 
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->pipe->crtc_id);
-	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EINVAL);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_MODE_ID,
+				data->crtc->crtc_id);
+	crtc_commit_atomic_err(data->crtc, data->primary, ATOMIC_RELAX_NONE,
+			       EINVAL);
 
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->fb.fb_id);
-	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EINVAL);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_MODE_ID, data->fb.fb_id);
+	crtc_commit_atomic_err(data->crtc, data->primary, ATOMIC_RELAX_NONE,
+			       EINVAL);
 
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, old_mode_id);
-	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_ATOMIC_TEST_ONLY, ATOMIC_RELAX_NONE, 0);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_MODE_ID, old_mode_id);
+	crtc_commit_atomic_flags_err(data->crtc, data->primary,
+				     DRM_MODE_ATOMIC_TEST_ONLY,
+				     ATOMIC_RELAX_NONE, 0);
 
 	/* Can we restore mode? */
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, old_mode_id);
-	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_ATOMIC_TEST_ONLY, ATOMIC_RELAX_NONE, 0);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_MODE_ID, old_mode_id);
+	crtc_commit_atomic_flags_err(data->crtc, data->primary,
+				     DRM_MODE_ATOMIC_TEST_ONLY,
+				     ATOMIC_RELAX_NONE, 0);
 
 	/*
 	 * TEST_ONLY cannot be combined with DRM_MODE_PAGE_FLIP_EVENT,
 	 * but DRM_MODE_PAGE_FLIP_EVENT will always generate EINVAL
 	 * without valid crtc, so test it here.
 	 */
-	crtc_commit_atomic_flags_err(data->pipe, data->primary,
+	crtc_commit_atomic_flags_err(data->crtc, data->primary,
 				     DRM_MODE_ATOMIC_TEST_ONLY | DRM_MODE_PAGE_FLIP_EVENT,
 				     ATOMIC_RELAX_NONE, EINVAL);
 
 	/* Create a blob which is the wrong size to be a valid mode. */
-	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_MODE_ID, mode, sizeof(*mode) - 1);
-	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EINVAL);
+	igt_crtc_replace_prop_blob(data->crtc, IGT_CRTC_MODE_ID, mode,
+				   sizeof(*mode) - 1);
+	crtc_commit_atomic_err(data->crtc, data->primary, ATOMIC_RELAX_NONE,
+			       EINVAL);
 
-	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_MODE_ID, mode, sizeof(*mode) + 1);
-	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EINVAL);
+	igt_crtc_replace_prop_blob(data->crtc, IGT_CRTC_MODE_ID, mode,
+				   sizeof(*mode) + 1);
+	crtc_commit_atomic_err(data->crtc, data->primary, ATOMIC_RELAX_NONE,
+			       EINVAL);
 
 	/* Restore the CRTC and check the state matches the old. */
-	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_MODE_ID, mode, sizeof(*mode));
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	igt_crtc_replace_prop_blob(data->crtc, IGT_CRTC_MODE_ID, mode,
+				   sizeof(*mode));
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 }
 
 static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
@@ -900,7 +927,7 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 	int timeline, fence_fd;
 	void *map;
 	const ptrdiff_t page_size = sysconf(_SC_PAGE_SIZE);
-	uint64_t old_mode_id = data->pipe->values[IGT_CRTC_MODE_ID];
+	uint64_t old_mode_id = data->crtc->values[IGT_CRTC_MODE_ID];
 
 	igt_require_sw_sync();
 
@@ -910,86 +937,101 @@ static void crtc_invalid_params_fence(data_t *data, igt_output_t *output)
 	map = mmap(NULL, page_size, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 	igt_assert(map != MAP_FAILED);
 
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)map);
-	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EFAULT);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_OUT_FENCE_PTR,
+				(ptrdiff_t)map);
+	crtc_commit_atomic_err(data->crtc, data->primary, ATOMIC_RELAX_NONE,
+			       EFAULT);
 	munmap(map, page_size);
 
 	/* invalid out_fence_ptr */
 	map = mmap(NULL, page_size, PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 	igt_assert(map != MAP_FAILED);
 
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)map);
-	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EFAULT);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_OUT_FENCE_PTR,
+				(ptrdiff_t)map);
+	crtc_commit_atomic_err(data->crtc, data->primary, ATOMIC_RELAX_NONE,
+			       EFAULT);
 	munmap(map, page_size);
 
 	/* invalid out_fence_ptr */
 	map = mmap(NULL, page_size, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 	igt_assert(map != MAP_FAILED);
 
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, (ptrdiff_t)map);
-	crtc_commit_atomic_err(data->pipe, data->primary, ATOMIC_RELAX_NONE, EFAULT);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_OUT_FENCE_PTR,
+				(ptrdiff_t)map);
+	crtc_commit_atomic_err(data->crtc, data->primary, ATOMIC_RELAX_NONE,
+			       EFAULT);
 	munmap(map, page_size);
 
 	/* valid in fence but not allowed prop on crtc */
 	fence_fd = sw_sync_timeline_create_fence(timeline, 1);
 	igt_plane_set_fence_fd(data->primary, fence_fd);
 
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_ACTIVE, 0);
-	igt_crtc_clear_prop_changed(data->pipe, IGT_CRTC_OUT_FENCE_PTR);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_ACTIVE, 0);
+	igt_crtc_clear_prop_changed(data->crtc, IGT_CRTC_OUT_FENCE_PTR);
 
-	crtc_commit_atomic_flags_err(data->pipe, data->primary, 0, ATOMIC_RELAX_NONE, EINVAL);
+	crtc_commit_atomic_flags_err(data->crtc, data->primary, 0,
+				     ATOMIC_RELAX_NONE, EINVAL);
 
 	/* valid out fence ptr and flip event but not allowed prop on crtc */
-	igt_crtc_request_out_fence(data->pipe);
-	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_PAGE_FLIP_EVENT,
+	igt_crtc_request_out_fence(data->crtc);
+	crtc_commit_atomic_flags_err(data->crtc, data->primary,
+				     DRM_MODE_PAGE_FLIP_EVENT,
 				     ATOMIC_RELAX_NONE, EINVAL);
 
 	/* valid flip event but not allowed prop on crtc */
-	igt_crtc_request_out_fence(data->pipe);
-	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_PAGE_FLIP_EVENT,
+	igt_crtc_request_out_fence(data->crtc);
+	crtc_commit_atomic_flags_err(data->crtc, data->primary,
+				     DRM_MODE_PAGE_FLIP_EVENT,
 				     ATOMIC_RELAX_NONE, EINVAL);
 
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_ACTIVE, 1);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_ACTIVE, 1);
 
 	/* Configuration should be valid again */
-	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_ATOMIC_TEST_ONLY,
+	crtc_commit_atomic_flags_err(data->crtc, data->primary,
+				     DRM_MODE_ATOMIC_TEST_ONLY,
 				     ATOMIC_RELAX_NONE, 0);
 
 	/* Set invalid prop */
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, data->fb.fb_id);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_MODE_ID, data->fb.fb_id);
 
 	/* valid out fence but invalid prop on crtc */
-	igt_crtc_request_out_fence(data->pipe);
-	crtc_commit_atomic_flags_err(data->pipe, data->primary, 0,
+	igt_crtc_request_out_fence(data->crtc);
+	crtc_commit_atomic_flags_err(data->crtc, data->primary, 0,
 				     ATOMIC_RELAX_NONE, EINVAL);
 
 	/* valid out fence ptr and flip event but invalid prop on crtc */
-	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_PAGE_FLIP_EVENT,
+	crtc_commit_atomic_flags_err(data->crtc, data->primary,
+				     DRM_MODE_PAGE_FLIP_EVENT,
 				     ATOMIC_RELAX_NONE, EINVAL);
 
 	/* valid page flip event but invalid prop on crtc */
-	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_PAGE_FLIP_EVENT,
+	crtc_commit_atomic_flags_err(data->crtc, data->primary,
+				     DRM_MODE_PAGE_FLIP_EVENT,
 				     ATOMIC_RELAX_NONE, EINVAL);
 
 	/* successful TEST_ONLY with fences set */
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_MODE_ID, old_mode_id);
-	crtc_commit_atomic_flags_err(data->pipe, data->primary, DRM_MODE_ATOMIC_TEST_ONLY,
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_MODE_ID, old_mode_id);
+	crtc_commit_atomic_flags_err(data->crtc, data->primary,
+				     DRM_MODE_ATOMIC_TEST_ONLY,
 				     ATOMIC_RELAX_NONE, 0);
-	igt_assert(data->pipe->out_fence_fd == -1);
+	igt_assert(data->crtc->out_fence_fd == -1);
 	close(fence_fd);
 	close(timeline);
 
 	/* reset fences */
 	igt_plane_set_fence_fd(data->primary, -1);
-	igt_crtc_set_prop_value(data->pipe, IGT_CRTC_OUT_FENCE_PTR, 0);
-	igt_crtc_clear_prop_changed(data->pipe, IGT_CRTC_OUT_FENCE_PTR);
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	igt_crtc_set_prop_value(data->crtc, IGT_CRTC_OUT_FENCE_PTR, 0);
+	igt_crtc_clear_prop_changed(data->crtc, IGT_CRTC_OUT_FENCE_PTR);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
 	/* out fence ptr but not page flip event */
-	igt_crtc_request_out_fence(data->pipe);
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	igt_crtc_request_out_fence(data->crtc);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
-	igt_assert(data->pipe->out_fence_fd != -1);
+	igt_assert(data->crtc->out_fence_fd != -1);
 }
 
 /*
@@ -1051,32 +1093,32 @@ static void atomic_invalid_params(data_t *data, igt_output_t *output)
 
 	/* Invalid object type (not a thing we can set properties on). */
 	ioc.count_objs = 1;
-	obj_raw[0] = data->pipe->values[IGT_CRTC_MODE_ID];
+	obj_raw[0] = data->crtc->values[IGT_CRTC_MODE_ID];
 	do_ioctl_err(data->drm_fd, DRM_IOCTL_MODE_ATOMIC, &ioc, ENOENT);
 	obj_raw[0] = data->fb.fb_id;
 	do_ioctl_err(data->drm_fd, DRM_IOCTL_MODE_ATOMIC, &ioc, ENOENT);
 
 	/* Filled object but with no properties; no-op. */
 	for (i = 0; i < ARRAY_SIZE(obj_raw); i++)
-		obj_raw[i] = data->pipe->crtc_id;
+		obj_raw[i] = data->crtc->crtc_id;
 	do_ioctl(data->drm_fd, DRM_IOCTL_MODE_ATOMIC, &ioc);
 
 	/* Pass in all sorts of things other than the property ID. */
 	num_props_raw[0] = 1;
 	do_ioctl_err(data->drm_fd, DRM_IOCTL_MODE_ATOMIC, &ioc, ENOENT);
-	props_raw[0] = data->pipe->crtc_id;
+	props_raw[0] = data->crtc->crtc_id;
 	do_ioctl_err(data->drm_fd, DRM_IOCTL_MODE_ATOMIC, &ioc, ENOENT);
 	props_raw[0] = data->primary->drm_plane->plane_id;
 	do_ioctl_err(data->drm_fd, DRM_IOCTL_MODE_ATOMIC, &ioc, ENOENT);
 	props_raw[0] = output->id;
 	do_ioctl_err(data->drm_fd, DRM_IOCTL_MODE_ATOMIC, &ioc, ENOENT);
-	props_raw[0] = data->pipe->values[IGT_CRTC_MODE_ID];
+	props_raw[0] = data->crtc->values[IGT_CRTC_MODE_ID];
 	do_ioctl_err(data->drm_fd, DRM_IOCTL_MODE_ATOMIC, &ioc, ENOENT);
 
 	/* Valid property, valid value. */
 	for (i = 0; i < ARRAY_SIZE(props_raw); i++) {
-		props_raw[i] = data->pipe->props[IGT_CRTC_MODE_ID];
-		values_raw[i] = data->pipe->values[IGT_CRTC_MODE_ID];
+		props_raw[i] = data->crtc->props[IGT_CRTC_MODE_ID];
+		values_raw[i] = data->crtc->values[IGT_CRTC_MODE_ID];
 	}
 	do_ioctl(data->drm_fd, DRM_IOCTL_MODE_ATOMIC, &ioc);
 
@@ -1150,7 +1192,8 @@ static void atomic_plane_damage(data_t *data)
 	 * state.
 	 */
 	igt_plane_set_fb(data->primary, &fb_1);
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
 	/*
 	 * Change the color of top left clip from center and issue plane update
@@ -1170,7 +1213,8 @@ static void atomic_plane_damage(data_t *data)
 	igt_plane_set_fb(data->primary, &fb_1);
 	igt_plane_replace_prop_blob(data->primary, IGT_PLANE_FB_DAMAGE_CLIPS, damage,
 				    sizeof(*damage));
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
 	/*
 	 * Change the color of top left and bottom right clip from center and
@@ -1197,7 +1241,8 @@ static void atomic_plane_damage(data_t *data)
 	igt_plane_set_fb(data->primary, &fb_2);
 	igt_plane_replace_prop_blob(data->primary, IGT_PLANE_FB_DAMAGE_CLIPS, damage,
 				    sizeof(*damage));
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
 	/*
 	 * Issue plane update with damage with a clip outside of plane src.
@@ -1230,7 +1275,8 @@ static void atomic_plane_damage(data_t *data)
 	igt_fb_set_size(&fb_1, data->primary, data->fb.width, data->fb.height);
 	igt_plane_replace_prop_blob(data->primary, IGT_PLANE_FB_DAMAGE_CLIPS, damage,
 				    sizeof(*damage));
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
 	/*
 	 * Issue a plane update with damage with a clip that overlap with plane
@@ -1254,7 +1300,8 @@ static void atomic_plane_damage(data_t *data)
 	igt_fb_set_size(&fb_1, data->primary, data->fb.width, data->fb.height);
 	igt_plane_replace_prop_blob(data->primary, IGT_PLANE_FB_DAMAGE_CLIPS, damage,
 				    sizeof(*damage));
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
 	/*
 	 * Issue a plane update with damage with two clips one inside plane src
@@ -1285,7 +1332,8 @@ static void atomic_plane_damage(data_t *data)
 	igt_fb_set_size(&fb_1, data->primary, data->fb.width, data->fb.height);
 	igt_plane_replace_prop_blob(data->primary, IGT_PLANE_FB_DAMAGE_CLIPS, damage,
 				    sizeof(*damage) * 2);
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
 	/*
 	 * Issue a plane update with overlapping damage clips. White rect in
@@ -1318,7 +1366,8 @@ static void atomic_plane_damage(data_t *data)
 	igt_fb_set_size(&fb_1, data->primary, data->fb.width, data->fb.height);
 	igt_plane_replace_prop_blob(data->primary, IGT_PLANE_FB_DAMAGE_CLIPS, damage,
 				    sizeof(*damage) * 2);
-	crtc_commit(data->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 
 	/* Restore the primary plane */
 	igt_plane_set_fb(data->primary, &data->fb);
@@ -1337,7 +1386,7 @@ static void atomic_setup(data_t *data, enum pipe pipe, igt_output_t *output)
 
 	data->primary = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
 						DRM_PLANE_TYPE_PRIMARY);
-	data->pipe = igt_crtc_for_pipe(&data->display, pipe);
+	data->crtc = igt_crtc_for_pipe(&data->display, pipe);
 	mode = igt_output_get_mode(output);
 
 	igt_create_pattern_fb(data->drm_fd,

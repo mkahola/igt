@@ -41,7 +41,7 @@ typedef struct {
 	igt_plane_t *primary;
 	igt_output_t *output;
 	igt_fb_t fb;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	igt_pipe_crc_t *pipe_crc;
 	igt_crc_t crc_dprx;
 	enum pipe pipe_id;
@@ -98,13 +98,13 @@ static void test_init(data_t *data, igt_output_t *output)
 
 	igt_require(data->pipe_id != PIPE_NONE);
 
-	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(&data->display, data->pipe_id);
 
-	data->pipe_crc = igt_crtc_crc_new(data->pipe,
+	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  AMDGPU_PIPE_CRC_SOURCE_DPRX);
 
 	igt_output_set_crtc(output,
-			    data->pipe);
+			    data->crtc);
 
 	data->primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 }
@@ -181,7 +181,7 @@ static void test_ilr_policy(data_t *data, igt_output_t *output)
 		/* Secondly check trained BW is sufficient.
 		 * If BW is insufficient, crc retrieving will timeout
 		 */
-		igt_wait_for_vblank_count(data->pipe, 10);
+		igt_wait_for_vblank_count(data->crtc, 10);
 
 		igt_pipe_crc_collect_crc(data->pipe_crc, &data->crc_dprx);
 		crc_str = igt_crc_to_string(&data->crc_dprx);

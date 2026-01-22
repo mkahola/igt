@@ -42,7 +42,7 @@ typedef struct data {
 	igt_display_t display;
 	igt_plane_t *primary;
 	igt_output_t *output;
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	igt_pipe_crc_t *pipe_crc;
 	drmModeModeInfo *mode;
 	enum pipe pipe_id;
@@ -159,7 +159,7 @@ static void set_degamma_lut(data_t *data, lut_t const *lut)
 	size_t size = lut ? sizeof(lut->data[0]) * lut->size : 0;
 	const void *ptr = lut ? lut->data : NULL;
 
-	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_DEGAMMA_LUT, ptr,
+	igt_crtc_replace_prop_blob(data->crtc, IGT_CRTC_DEGAMMA_LUT, ptr,
 				       size);
 }
 
@@ -169,7 +169,7 @@ static void set_regamma_lut(data_t *data, lut_t const *lut)
 	size_t size = lut ? sizeof(lut->data[0]) * lut->size : 0;
 	const void *ptr = lut ? lut->data : NULL;
 
-	igt_crtc_replace_prop_blob(data->pipe, IGT_CRTC_GAMMA_LUT, ptr,
+	igt_crtc_replace_prop_blob(data->crtc, IGT_CRTC_GAMMA_LUT, ptr,
 				       size);
 }
 
@@ -180,7 +180,7 @@ static void test_init(data_t *data)
 
 	/* It doesn't matter which pipe we choose on amdpgu. */
 	data->pipe_id = PIPE_A;
-	data->pipe = igt_crtc_for_pipe(&data->display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(&data->display, data->pipe_id);
 
 	igt_display_reset(display);
 
@@ -191,13 +191,13 @@ static void test_init(data_t *data)
 	igt_assert(data->mode);
 
 	data->primary =
-		igt_crtc_get_plane_type(data->pipe, DRM_PLANE_TYPE_PRIMARY);
+		igt_crtc_get_plane_type(data->crtc, DRM_PLANE_TYPE_PRIMARY);
 
-	data->pipe_crc = igt_crtc_crc_new(data->pipe,
+	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_output_set_crtc(data->output,
-			    data->pipe);
+			    data->crtc);
 
 	data->w = data->mode->hdisplay;
 	data->h = data->mode->vdisplay;
@@ -228,10 +228,10 @@ static void test_crtc_linear_degamma(data_t *data)
 
 	test_init(data);
 
-	igt_require(igt_crtc_has_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT));
+	igt_require(igt_crtc_has_prop(data->crtc, IGT_CRTC_DEGAMMA_LUT));
 
 	data->degamma_lut_size =
-		igt_crtc_get_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT_SIZE);
+		igt_crtc_get_prop(data->crtc, IGT_CRTC_DEGAMMA_LUT_SIZE);
 
 	lut_init(&lut_linear, data->degamma_lut_size);
 	lut_gen_linear(&lut_linear, 0xffff);
@@ -275,10 +275,10 @@ static void test_crtc_linear_regamma(data_t *data)
 
 	test_init(data);
 
-	igt_require(igt_crtc_has_prop(data->pipe, IGT_CRTC_GAMMA_LUT));
+	igt_require(igt_crtc_has_prop(data->crtc, IGT_CRTC_GAMMA_LUT));
 
 	data->regamma_lut_size =
-		igt_crtc_get_prop(data->pipe, IGT_CRTC_GAMMA_LUT_SIZE);
+		igt_crtc_get_prop(data->crtc, IGT_CRTC_GAMMA_LUT_SIZE);
 
 	lut_init(&lut_linear, data->regamma_lut_size);
 	lut_gen_linear(&lut_linear, 0xffff);
@@ -338,14 +338,14 @@ static void test_crtc_lut_accuracy(data_t *data)
 
 	test_init(data);
 
-	igt_require(igt_crtc_has_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT));
-	igt_require(igt_crtc_has_prop(data->pipe, IGT_CRTC_GAMMA_LUT));
+	igt_require(igt_crtc_has_prop(data->crtc, IGT_CRTC_DEGAMMA_LUT));
+	igt_require(igt_crtc_has_prop(data->crtc, IGT_CRTC_GAMMA_LUT));
 
 	data->degamma_lut_size =
-		igt_crtc_get_prop(data->pipe, IGT_CRTC_DEGAMMA_LUT_SIZE);
+		igt_crtc_get_prop(data->crtc, IGT_CRTC_DEGAMMA_LUT_SIZE);
 
 	data->regamma_lut_size =
-		igt_crtc_get_prop(data->pipe, IGT_CRTC_GAMMA_LUT_SIZE);
+		igt_crtc_get_prop(data->crtc, IGT_CRTC_GAMMA_LUT_SIZE);
 
 	lut_init(&lut_degamma, data->degamma_lut_size);
 	lut_gen_degamma_srgb(&lut_degamma, 0xffff);

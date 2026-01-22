@@ -596,7 +596,7 @@ drmModeModeInfo *igt_output_get_highres_mode(igt_output_t *output);
 drmModeModeInfo *igt_output_get_lowres_mode(igt_output_t *output);
 void igt_output_override_mode(igt_output_t *output, const drmModeModeInfo *mode);
 int igt_output_preferred_vrefresh(igt_output_t *output);
-void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *pipe_obj);
+void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *crtc);
 igt_plane_t *igt_output_get_plane(igt_output_t *output, int plane_idx);
 igt_plane_t *igt_output_get_plane_type(igt_output_t *output, int plane_type);
 int igt_output_count_plane_type(igt_output_t *output, int plane_type);
@@ -609,18 +609,18 @@ drmModeModeInfo *igt_std_1024_mode_get(int vrefresh);
 void igt_output_set_writeback_fb(igt_output_t *output, struct igt_fb *fb);
 void igt_modeset_disable_all_outputs(igt_display_t *display);
 
-igt_plane_t *igt_crtc_get_plane_type(igt_crtc_t *pipe, int plane_type);
-int igt_crtc_count_plane_type(igt_crtc_t *pipe, int plane_type);
-igt_plane_t *igt_crtc_get_plane_type_index(igt_crtc_t *pipe, int plane_type,
+igt_plane_t *igt_crtc_get_plane_type(igt_crtc_t *crtc, int plane_type);
+int igt_crtc_count_plane_type(igt_crtc_t *crtc, int plane_type);
+igt_plane_t *igt_crtc_get_plane_type_index(igt_crtc_t *crtc, int plane_type,
 					   int index);
 bool output_is_internal_panel(igt_output_t *output);
 igt_output_t *igt_get_single_output_for_pipe(igt_display_t *display, enum pipe pipe);
 
-void igt_crtc_request_out_fence(igt_crtc_t *pipe);
+void igt_crtc_request_out_fence(igt_crtc_t *crtc);
 
 void igt_plane_set_fb(igt_plane_t *plane, struct igt_fb *fb);
 void igt_plane_set_fence_fd(igt_plane_t *plane, int fence_fd);
-void igt_plane_set_crtc(igt_plane_t *plane, igt_crtc_t *pipe);
+void igt_plane_set_crtc(igt_plane_t *plane, igt_crtc_t *crtc);
 void igt_plane_set_position(igt_plane_t *plane, int x, int y);
 void igt_plane_set_size(igt_plane_t *plane, int w, int h);
 void igt_plane_set_rotation(igt_plane_t *plane, igt_rotation_t rotation);
@@ -1044,87 +1044,88 @@ extern void igt_output_replace_prop_blob(igt_output_t *output,
 					 const void *ptr, size_t length);
 /**
  * igt_crtc_has_prop:
- * @pipe: Pipe to check.
+ * @crtc: CRTC to check.
  * @prop: Property to check.
  *
- * Check whether pipe supports a given property.
+ * Check whether CRTC supports a given property.
  *
  * Returns: True if the property is supported, otherwise false.
  */
 static inline bool
-igt_crtc_has_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop)
+igt_crtc_has_prop(igt_crtc_t *crtc, enum igt_atomic_crtc_properties prop)
 {
-	return pipe->props[prop];
+	return crtc->props[prop];
 }
 
-uint64_t igt_crtc_get_prop(igt_crtc_t *pipe, enum igt_atomic_crtc_properties prop);
+uint64_t igt_crtc_get_prop(igt_crtc_t *crtc,
+			   enum igt_atomic_crtc_properties prop);
 
 /**
  * igt_crtc_is_prop_changed:
- * @pipe_obj: Pipe object to check.
+ * @crtc: CRTC to check.
  * @prop: Property to check.
  *
- * Check whether a given @prop changed for the @pipe_obj.
+ * Check whether a given @prop changed for the @crtc.
  */
-static inline bool igt_crtc_is_prop_changed(igt_crtc_t *pipe_obj,
+static inline bool igt_crtc_is_prop_changed(igt_crtc_t *crtc,
 						enum igt_atomic_crtc_properties prop)
 {
-	return pipe_obj->changed & (1 << prop);
+	return crtc->changed & (1 << prop);
 }
 
 /**
  * igt_crtc_set_prop_changed:
- * @pipe_obj: Pipe object to check.
+ * @crtc: CRTC to check.
  * @prop: Property to check.
  *
- * Sets the given @prop for the @pipe_obj.
+ * Sets the given @prop for the @crtc.
  */
-static inline void igt_crtc_set_prop_changed(igt_crtc_t *pipe_obj,
+static inline void igt_crtc_set_prop_changed(igt_crtc_t *crtc,
 						 enum igt_atomic_crtc_properties prop)
 {
-	pipe_obj->changed |= 1 << prop;
+	crtc->changed |= 1 << prop;
 }
 
 /**
  * igt_crtc_clear_prop_changed:
- * @pipe_obj: Pipe object to check.
+ * @crtc: CRTC to check.
  * @prop: Property to check.
  *
- * Clears the given @prop for the @pipe_obj.
+ * Clears the given @prop for the @crtc.
  */
-static inline void igt_crtc_clear_prop_changed(igt_crtc_t *pipe_obj,
+static inline void igt_crtc_clear_prop_changed(igt_crtc_t *crtc,
 						   enum igt_atomic_crtc_properties prop)
 {
-	pipe_obj->changed &= ~(1 << prop);
+	crtc->changed &= ~(1 << prop);
 }
 
 /**
  * igt_crtc_set_prop_value:
- * @pipe_obj: Pipe object to check.
+ * @crtc: CRTC to check.
  * @prop: Property to check.
  * @value: Value to set.
  *
- * Sets the given @prop with the @value for the @pipe_obj.
+ * Sets the given @prop with the @value for the @crtc.
  */
-static inline void igt_crtc_set_prop_value(igt_crtc_t *pipe_obj,
+static inline void igt_crtc_set_prop_value(igt_crtc_t *crtc,
 					       enum igt_atomic_crtc_properties prop,
 					       uint64_t value)
 {
-	pipe_obj->values[prop] = value;
-	igt_crtc_set_prop_changed(pipe_obj, prop);
+	crtc->values[prop] = value;
+	igt_crtc_set_prop_changed(crtc, prop);
 }
 
-extern bool igt_crtc_try_prop_enum(igt_crtc_t *pipe,
+extern bool igt_crtc_try_prop_enum(igt_crtc_t *crtc,
 				       enum igt_atomic_crtc_properties prop,
 				       const char *val);
 
-extern void igt_crtc_set_prop_enum(igt_crtc_t *pipe,
+extern void igt_crtc_set_prop_enum(igt_crtc_t *crtc,
 				       enum igt_atomic_crtc_properties prop,
 				       const char *val);
-extern void igt_crtc_replace_prop_blob(igt_crtc_t *pipe,
+extern void igt_crtc_replace_prop_blob(igt_crtc_t *crtc,
 					   enum igt_atomic_crtc_properties prop,
 					   const void *ptr, size_t length);
-void igt_crtc_refresh(igt_crtc_t *pipe_obj, bool force);
+void igt_crtc_refresh(igt_crtc_t *crtc, bool force);
 
 void igt_enable_connectors(int drm_fd);
 void igt_reset_connectors(void);
