@@ -88,7 +88,7 @@ running.
 The test suite can be run using the `run-tests.sh` script available in the
 `scripts/` directory. To use it make sure that `igt_runner` is built, e.g.:
 
-    meson -Drunner=enabled build && ninja -C build
+    meson setup -Drunner=enabled build && ninja -C build
 
 `run-tests.sh` has options for filtering and excluding tests from test
 runs:
