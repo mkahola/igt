@@ -1196,7 +1196,7 @@ int igt_main()
 
 	igt_subtest_group() {
 		igt_display_t display = {
-			.drm_fd = -1, .n_pipes = IGT_MAX_PIPES
+			.drm_fd = -1, .n_crtcs = IGT_MAX_PIPES
 		};
 
 		igt_fixture() {

@@ -526,7 +526,7 @@ typedef struct {
 struct igt_display {
 	int drm_fd;
 	int log_shift;
-	int n_pipes;
+	int n_crtcs;
 	int n_planes;
 	int n_colorops;
 	int n_outputs;

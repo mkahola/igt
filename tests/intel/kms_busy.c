@@ -412,7 +412,7 @@ const char *help_str =
 
 int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 {
-	igt_display_t display = { .drm_fd = -1, .n_pipes = IGT_MAX_PIPES };
+	igt_display_t display = { .drm_fd = -1, .n_crtcs = IGT_MAX_PIPES };
 
 	enum pipe pipe, active_pipes[IGT_MAX_PIPES];
 	igt_output_t *output;
