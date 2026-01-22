@@ -45,7 +45,7 @@ static void igt_display_all_on(igt_display_t *display)
 			igt_plane_t *primary;
 			drmModeModeInfo *mode;
 
-			if (output->pending_pipe != PIPE_NONE)
+			if (igt_output_get_driving_pipe(output) != NULL)
 				continue;
 
 			igt_output_set_crtc(output,

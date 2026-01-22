@@ -99,7 +99,7 @@ int igt_main() {
 				/* this is what most of the 2x tests are doing */
 				for_each_pipe(&display, pipe) {
 					for_each_valid_output_on_pipe(&display, pipe, output) {
-						if (output->pending_pipe == PIPE_NONE) {
+						if (igt_output_get_driving_pipe(output) == NULL) {
 							igt_output_set_crtc(output,
 									    igt_crtc_for_pipe(output->display, pipe));
 							output_count++;

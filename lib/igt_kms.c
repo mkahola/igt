@@ -3529,7 +3529,7 @@ report_dup:
 	}
 }
 
-static igt_crtc_t *igt_output_get_driving_pipe(igt_output_t *output)
+igt_crtc_t *igt_output_get_driving_pipe(igt_output_t *output)
 {
 	igt_display_t *display = output->display;
 	enum pipe pipe;
