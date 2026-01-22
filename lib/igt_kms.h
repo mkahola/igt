@@ -576,6 +576,8 @@ void igt_display_require_output(igt_display_t *display);
 void igt_display_require_output_on_pipe(igt_display_t *display, enum pipe pipe);
 int igt_display_n_crtcs(igt_display_t *display);
 
+const char *igt_crtc_name(igt_crtc_t *crtc);
+
 static inline igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pipe)
 {
 	if (pipe == PIPE_NONE)

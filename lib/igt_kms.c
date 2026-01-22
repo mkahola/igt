@@ -3804,14 +3804,14 @@ igt_atomic_prepare_plane_commit(igt_plane_t *plane, igt_crtc_t *crtc,
 
 	LOG(display,
 	    "populating plane data: %s.%d, fb %u\n",
-	    kmstest_pipe_name(crtc->pipe),
+	    igt_crtc_name(crtc),
 	    plane->index,
 	    igt_plane_get_fb_id(plane));
 
 	for (i = 0; i < IGT_NUM_PLANE_PROPS; i++) {
 		if (igt_atomic_ignore_plane_prop(crtc, i)) {
 			igt_debug("plane %s.%d: Ignoring property \"%s\" to 0x%"PRIx64"/%"PRIi64"\n",
-				   kmstest_pipe_name(crtc->pipe),
+				   igt_crtc_name(crtc),
 				   plane->index, igt_plane_prop_names[i],
 				   plane->values[i], plane->values[i]);
 			continue;
@@ -3824,7 +3824,7 @@ igt_atomic_prepare_plane_commit(igt_plane_t *plane, igt_crtc_t *crtc,
 		igt_assert(plane->props[i]);
 
 		igt_debug("plane %s.%d: Setting property \"%s\" to 0x%"PRIx64"/%"PRIi64"\n",
-			kmstest_pipe_name(crtc->pipe), plane->index,
+			igt_crtc_name(crtc), plane->index,
 			igt_plane_prop_names[i],
 			plane->values[i], plane->values[i]);
 
@@ -3847,7 +3847,7 @@ igt_atomic_prepare_colorop_commit(igt_colorop_t *colorop, igt_crtc_t *crtc,
 	while (colorop) {
 		LOG(display,
 		    "populating colorop data: %s.%d\n",
-		    kmstest_pipe_name(crtc->pipe),
+		    igt_crtc_name(crtc),
 		    colorop->id);
 
 		for (i = 0; i < IGT_NUM_COLOROP_PROPS; i++) {
@@ -3858,7 +3858,7 @@ igt_atomic_prepare_colorop_commit(igt_colorop_t *colorop, igt_crtc_t *crtc,
 			igt_assert(colorop->props[i]);
 
 			igt_debug("colorop %s.%d: Setting property \"%s\" to 0x%"PRIx64"/%"PRIi64"\n",
-				kmstest_pipe_name(crtc->pipe), colorop->id,
+				igt_crtc_name(crtc), colorop->id,
 				igt_colorop_prop_names[i],
 				colorop->values[i], colorop->values[i]);
 
@@ -3925,7 +3925,7 @@ static int igt_drm_plane_commit(igt_plane_t *plane,
 	if (setplane && fb_id == 0) {
 		LOG(display,
 		    "SetPlane pipe %s, plane %d, disabling\n",
-		    kmstest_pipe_name(crtc->pipe),
+		    igt_crtc_name(crtc),
 		    plane->index);
 
 		ret = drmModeSetPlane(display->drm_fd,
@@ -3954,7 +3954,7 @@ static int igt_drm_plane_commit(igt_plane_t *plane,
 		LOG(display,
 		    "SetPlane %s.%d, fb %u, src = (%d, %d) "
 			"%ux%u dst = (%u, %u) %ux%u\n",
-		    kmstest_pipe_name(crtc->pipe),
+		    igt_crtc_name(crtc),
 		    plane->index,
 		    fb_id,
 		    src_x >> 16, src_y >> 16, src_w >> 16, src_h >> 16,
@@ -3980,7 +3980,7 @@ static int igt_drm_plane_commit(igt_plane_t *plane,
 			continue;
 
 		LOG(display, "SetProp plane %s.%d \"%s\" to 0x%"PRIx64"/%"PRIi64"\n",
-			kmstest_pipe_name(crtc->pipe), plane->index,
+			igt_crtc_name(crtc), plane->index,
 			igt_plane_prop_names[i],
 			plane->values[i], plane->values[i]);
 
@@ -4016,14 +4016,14 @@ static int igt_cursor_commit_legacy(igt_plane_t *cursor,
 		if (cursor->gem_handle)
 			LOG(display,
 			    "SetCursor pipe %s, fb %u %dx%d\n",
-			    kmstest_pipe_name(crtc->pipe),
+			    igt_crtc_name(crtc),
 			    cursor->gem_handle,
 			    (unsigned)cursor->values[IGT_PLANE_CRTC_W],
 			    (unsigned)cursor->values[IGT_PLANE_CRTC_H]);
 		else
 			LOG(display,
 			    "SetCursor pipe %s, disabling\n",
-			    kmstest_pipe_name(crtc->pipe));
+			    igt_crtc_name(crtc));
 
 		ret = drmModeSetCursor(display->drm_fd, crtc_id,
 				       cursor->gem_handle,
@@ -4039,7 +4039,7 @@ static int igt_cursor_commit_legacy(igt_plane_t *cursor,
 
 		LOG(display,
 		    "MoveCursor pipe %s, (%d, %d)\n",
-		    kmstest_pipe_name(crtc->pipe),
+		    igt_crtc_name(crtc),
 		    x, y);
 
 		ret = drmModeMoveCursor(display->drm_fd, crtc_id, x, y);
@@ -4090,7 +4090,7 @@ static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
 		    "%s: SetCrtc pipe %s, fb %u, src (%d, %d), "
 		    "mode %dx%d\n",
 		    igt_output_name(output),
-		    kmstest_pipe_name(crtc->pipe),
+		    igt_crtc_name(crtc),
 		    fb_id,
 		    src_x, src_y,
 		    mode->hdisplay, mode->vdisplay);
@@ -4105,7 +4105,7 @@ static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
 	} else {
 		LOG(display,
 		    "SetCrtc pipe %s, disabling\n",
-		    kmstest_pipe_name(crtc->pipe));
+		    igt_crtc_name(crtc));
 
 		ret = drmModeSetCrtc(display->drm_fd,
 				     crtc_id,
@@ -4130,7 +4130,7 @@ static int igt_plane_fixup_rotation(igt_plane_t *plane,
 		return 0;
 
 	LOG(crtc->display, "Fixing up initial rotation pipe %s, plane %d\n",
-	    kmstest_pipe_name(crtc->pipe), plane->index);
+	    igt_crtc_name(crtc), plane->index);
 
 	/* First try the easy case, can we change rotation without problems? */
 	ret = igt_plane_set_property(plane, plane->props[IGT_PLANE_ROTATION],
@@ -4785,7 +4785,7 @@ static void igt_atomic_prepare_crtc_commit(igt_crtc_t *crtc,
 			continue;
 
 		igt_debug("Pipe %s: Setting property \"%s\" to 0x%"PRIx64"/%"PRIi64"\n",
-			kmstest_pipe_name(crtc->pipe), igt_crtc_prop_names[i],
+			igt_crtc_name(crtc), igt_crtc_prop_names[i],
 			crtc->values[i], crtc->values[i]);
 
 		igt_assert_lt(0,
@@ -5336,7 +5336,7 @@ igt_pipe_crc_t *igt_crtc_crc_new_nonblock(igt_crtc_t *crtc, const char *source)
 					 source);
 }
 
-static const char *igt_crtc_name(igt_crtc_t *crtc)
+const char *igt_crtc_name(igt_crtc_t *crtc)
 {
 	if (crtc == NULL)
 		return "None";
@@ -5626,7 +5626,7 @@ void igt_plane_set_fb(igt_plane_t *plane, struct igt_fb *fb)
 	igt_display_t *display = crtc->display;
 
 	LOG(display, "%s.%d: plane_set_fb(%d)\n",
-	    kmstest_pipe_name(crtc->pipe),
+	    igt_crtc_name(crtc),
 	    plane->index, fb ? fb->fb_id : 0);
 
 	igt_plane_set_prop_value(plane, IGT_PLANE_CRTC_ID,
@@ -5724,7 +5724,7 @@ void igt_plane_set_position(igt_plane_t *plane, int x, int y)
 	igt_display_t *display = crtc->display;
 
 	LOG(display, "%s.%d: plane_set_position(%d,%d)\n",
-	    kmstest_pipe_name(crtc->pipe), plane->index, x, y);
+	    igt_crtc_name(crtc), plane->index, x, y);
 
 	igt_plane_set_prop_value(plane, IGT_PLANE_CRTC_X, x);
 	igt_plane_set_prop_value(plane, IGT_PLANE_CRTC_Y, y);
@@ -5746,7 +5746,7 @@ void igt_plane_set_size(igt_plane_t *plane, int w, int h)
 	igt_display_t *display = crtc->display;
 
 	LOG(display, "%s.%d: plane_set_size (%dx%d)\n",
-	    kmstest_pipe_name(crtc->pipe), plane->index, w, h);
+	    igt_crtc_name(crtc), plane->index, w, h);
 
 	igt_plane_set_prop_value(plane, IGT_PLANE_CRTC_W, w);
 	igt_plane_set_prop_value(plane, IGT_PLANE_CRTC_H, h);
@@ -5769,7 +5769,7 @@ void igt_fb_set_position(struct igt_fb *fb, igt_plane_t *plane,
 	igt_display_t *display = crtc->display;
 
 	LOG(display, "%s.%d: fb_set_position(%d,%d)\n",
-	    kmstest_pipe_name(crtc->pipe), plane->index, x, y);
+	    igt_crtc_name(crtc), plane->index, x, y);
 
 	igt_plane_set_prop_value(plane, IGT_PLANE_SRC_X, IGT_FIXED(x, 0));
 	igt_plane_set_prop_value(plane, IGT_PLANE_SRC_Y, IGT_FIXED(y, 0));
@@ -5793,7 +5793,7 @@ void igt_fb_set_size(struct igt_fb *fb, igt_plane_t *plane,
 	igt_display_t *display = crtc->display;
 
 	LOG(display, "%s.%d: fb_set_size(%dx%d)\n",
-	    kmstest_pipe_name(crtc->pipe), plane->index, w, h);
+	    igt_crtc_name(crtc), plane->index, w, h);
 
 	igt_plane_set_prop_value(plane, IGT_PLANE_SRC_W, IGT_FIXED(w, 0));
 	igt_plane_set_prop_value(plane, IGT_PLANE_SRC_H, IGT_FIXED(h, 0));
@@ -5836,7 +5836,7 @@ void igt_plane_set_rotation(igt_plane_t *plane, igt_rotation_t rotation)
 	igt_display_t *display = crtc->display;
 
 	LOG(display, "%s.%d: plane_set_rotation(%s°)\n",
-	    kmstest_pipe_name(crtc->pipe),
+	    igt_crtc_name(crtc),
 	    plane->index, igt_plane_rotation_name(rotation));
 
 	igt_plane_set_prop_value(plane, IGT_PLANE_ROTATION, rotation);
@@ -7257,7 +7257,7 @@ bool igt_check_bigjoiner_support(igt_display_t *display)
 
 			if (!igt_crtc_for_pipe(display, pipes[i].idx + 1)->valid) {
 				igt_info("Consecutive pipe-%s: Fused-off, couldn't be used as a Bigjoiner Secondary.\n",
-					 kmstest_pipe_name(igt_crtc_for_pipe(display, pipes[i].idx + 1)->pipe));
+					 igt_crtc_name(igt_crtc_for_pipe(display, pipes[i].idx + 1)));
 				return false;
 			}
 
@@ -7279,7 +7279,7 @@ bool igt_check_bigjoiner_support(igt_display_t *display)
 
 			if (!igt_crtc_for_pipe(display, pipes[i - 1].idx + 1)->valid) {
 				igt_info("Consecutive pipe-%s: Fused-off, couldn't be used as a Bigjoiner Secondary.\n",
-					 kmstest_pipe_name(igt_crtc_for_pipe(display, pipes[i - 1].idx + 1)->pipe));
+					 igt_crtc_name(igt_crtc_for_pipe(display, pipes[i - 1].idx + 1)));
 				return false;
 			}
 
