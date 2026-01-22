@@ -169,7 +169,7 @@ prepare_planes(data_t *data, enum pipe pipe, int max_planes,
 	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
-	p = primary->pipe;
+	p = primary->crtc;
 
 	x = malloc(p->n_planes * sizeof(*x));
 	igt_assert_f(x, "Failed to allocate %ld bytes for variable x\n", (long int) (p->n_planes * sizeof(*x)));

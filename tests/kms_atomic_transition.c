@@ -808,7 +808,7 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 		igt_plane_t *plane = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
 							     DRM_PLANE_TYPE_PRIMARY);
 
-		enum pipe old_pipe = plane->ref->pipe->pipe;
+		enum pipe old_pipe = plane->ref->crtc->pipe;
 
 		/*
 		 * If a plane is being shared by multiple pipes, we must disable the pipe that

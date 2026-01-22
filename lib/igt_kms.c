@@ -2649,7 +2649,7 @@ void igt_output_refresh(igt_output_t *output)
 static int
 igt_plane_set_property(igt_plane_t *plane, uint32_t prop_id, uint64_t value)
 {
-	igt_crtc_t *pipe = plane->pipe;
+	igt_crtc_t *pipe = plane->crtc;
 	igt_display_t *display = pipe->display;
 
 	return drmModeObjectSetProperty(display->drm_fd, plane->drm_plane->plane_id,
@@ -2676,7 +2676,7 @@ static int get_drm_plane_type(int drm_fd, uint32_t plane_id)
 
 static void igt_plane_reset(igt_plane_t *plane)
 {
-	igt_display_t *display = plane->pipe->display;
+	igt_display_t *display = plane->crtc->display;
 
 	/* Reset src coordinates. */
 	igt_plane_set_prop_value(plane, IGT_PLANE_SRC_X, 0);
@@ -3097,7 +3097,7 @@ static void igt_crtc_plane_init(igt_display_t *display,
 
 	plane->index = index;
 	plane->type = type;
-	plane->pipe = pipe;
+	plane->crtc = pipe;
 	plane->drm_plane = drm_plane;
 	plane->values[IGT_PLANE_IN_FENCE_FD] = ~0ULL;
 	plane->ref = global_plane;
@@ -4049,7 +4049,7 @@ static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
 					   igt_crtc_t *pipe,
 					   bool fail_on_error)
 {
-	struct igt_display *display = primary->pipe->display;
+	struct igt_display *display = primary->crtc->display;
 	igt_output_t *output = igt_crtc_get_output(pipe);
 	drmModeModeInfo *mode;
 	uint32_t fb_id, crtc_id;
@@ -4064,7 +4064,7 @@ static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
 
 	if (!igt_plane_is_prop_changed(primary, IGT_PLANE_FB_ID) &&
 	    !(primary->changed & IGT_PLANE_COORD_CHANGED_MASK) &&
-	    !igt_crtc_is_prop_changed(primary->pipe, IGT_CRTC_MODE_ID))
+	    !igt_crtc_is_prop_changed(primary->crtc, IGT_CRTC_MODE_ID))
 		return 0;
 
 	crtc_id = pipe->crtc_id;
@@ -4228,7 +4228,7 @@ static int igt_crtc_commit(igt_crtc_t *pipe,
 		igt_plane_t *plane = &pipe->planes[i];
 
 		/* skip planes that are handled by another pipe */
-		if (plane->ref->pipe != pipe)
+		if (plane->ref->crtc != pipe)
 			continue;
 
 		ret = igt_plane_commit(plane, pipe, s, fail_on_error);
@@ -4310,7 +4310,8 @@ uint64_t igt_plane_get_prop(igt_plane_t *plane, enum igt_atomic_plane_properties
 {
 	igt_assert(igt_plane_has_prop(plane, prop));
 
-	return igt_mode_object_get_prop(plane->pipe->display, DRM_MODE_OBJECT_PLANE,
+	return igt_mode_object_get_prop(plane->crtc->display,
+					DRM_MODE_OBJECT_PLANE,
 					plane->drm_plane->plane_id, plane->props[prop]);
 }
 
@@ -4364,7 +4365,7 @@ bool igt_plane_try_prop_enum(igt_plane_t *plane,
 			     enum igt_atomic_plane_properties prop,
 			     const char *val)
 {
-	igt_display_t *display = plane->pipe->display;
+	igt_display_t *display = plane->crtc->display;
 	uint64_t uval;
 
 	igt_assert(plane->props[prop]);
@@ -4410,7 +4411,7 @@ bool igt_plane_check_prop_is_mutable(igt_plane_t *plane,
 	uint64_t value;
 	bool has_prop;
 
-	has_prop = kmstest_get_property(plane->pipe->display->drm_fd,
+	has_prop = kmstest_get_property(plane->crtc->display->drm_fd,
 					plane->drm_plane->plane_id,
 					DRM_MODE_OBJECT_PLANE,
 				        igt_plane_prop_names[igt_prop], NULL,
@@ -4475,7 +4476,7 @@ void igt_plane_set_color_pipeline(igt_plane_t *plane, igt_colorop_t *colorop)
 void
 igt_plane_replace_prop_blob(igt_plane_t *plane, enum igt_atomic_plane_properties prop, const void *ptr, size_t length)
 {
-	igt_display_t *display = plane->pipe->display;
+	igt_display_t *display = plane->crtc->display;
 	uint64_t *blob = &plane->values[prop];
 	uint32_t blob_id = 0;
 
@@ -4507,7 +4508,7 @@ igt_plane_replace_prop_blob(igt_plane_t *plane, enum igt_atomic_plane_properties
 void
 igt_colorop_replace_prop_blob(igt_colorop_t *colorop, enum igt_atomic_colorop_properties prop, const void *ptr, size_t length)
 {
-	igt_display_t *display = colorop->plane->pipe->display;
+	igt_display_t *display = colorop->plane->crtc->display;
 	uint64_t *blob = &colorop->values[prop];
 	uint32_t blob_id = 0;
 
@@ -4536,7 +4537,7 @@ bool igt_colorop_try_prop_enum(igt_colorop_t *colorop,
 			       enum igt_atomic_colorop_properties prop,
 			       const char *val)
 {
-	igt_display_t *display = colorop->plane->pipe->display;
+	igt_display_t *display = colorop->plane->crtc->display;
 	uint64_t uval;
 
 	igt_assert(colorop->props[prop]);
@@ -4835,7 +4836,7 @@ static int igt_atomic_commit(igt_display_t *display, uint32_t flags, void *user_
 
 		for_each_plane_on_pipe(display, pipe, plane) {
 			/* skip planes that are handled by another pipe */
-			if (plane->ref->pipe != pipe_obj)
+			if (plane->ref->crtc != pipe_obj)
 				continue;
 
 			if (plane->changed)
@@ -5593,7 +5594,7 @@ igt_plane_t *igt_output_get_plane_type_index(igt_output_t *output,
  */
 void igt_plane_set_fb(igt_plane_t *plane, struct igt_fb *fb)
 {
-	igt_crtc_t *pipe = plane->pipe;
+	igt_crtc_t *pipe = plane->crtc;
 	igt_display_t *display = pipe->display;
 
 	LOG(display, "%s.%d: plane_set_fb(%d)\n", kmstest_pipe_name(pipe->pipe),
@@ -5675,7 +5676,7 @@ void igt_plane_set_crtc(igt_plane_t *plane, igt_crtc_t *pipe)
 	 * we're moving away from the single pipe per plane model.
 	 */
 	plane->ref->ref = plane;
-	plane->ref->pipe = pipe;
+	plane->ref->crtc = pipe;
 }
 
 /**
@@ -5689,7 +5690,7 @@ void igt_plane_set_crtc(igt_plane_t *plane, igt_crtc_t *pipe)
  */
 void igt_plane_set_position(igt_plane_t *plane, int x, int y)
 {
-	igt_crtc_t *pipe = plane->pipe;
+	igt_crtc_t *pipe = plane->crtc;
 	igt_display_t *display = pipe->display;
 
 	LOG(display, "%s.%d: plane_set_position(%d,%d)\n",
@@ -5711,7 +5712,7 @@ void igt_plane_set_position(igt_plane_t *plane, int x, int y)
  */
 void igt_plane_set_size(igt_plane_t *plane, int w, int h)
 {
-	igt_crtc_t *pipe = plane->pipe;
+	igt_crtc_t *pipe = plane->crtc;
 	igt_display_t *display = pipe->display;
 
 	LOG(display, "%s.%d: plane_set_size (%dx%d)\n",
@@ -5734,7 +5735,7 @@ void igt_plane_set_size(igt_plane_t *plane, int w, int h)
 void igt_fb_set_position(struct igt_fb *fb, igt_plane_t *plane,
 	uint32_t x, uint32_t y)
 {
-	igt_crtc_t *pipe = plane->pipe;
+	igt_crtc_t *pipe = plane->crtc;
 	igt_display_t *display = pipe->display;
 
 	LOG(display, "%s.%d: fb_set_position(%d,%d)\n",
@@ -5758,7 +5759,7 @@ void igt_fb_set_position(struct igt_fb *fb, igt_plane_t *plane,
 void igt_fb_set_size(struct igt_fb *fb, igt_plane_t *plane,
 	uint32_t w, uint32_t h)
 {
-	igt_crtc_t *pipe = plane->pipe;
+	igt_crtc_t *pipe = plane->crtc;
 	igt_display_t *display = pipe->display;
 
 	LOG(display, "%s.%d: fb_set_size(%dx%d)\n",
@@ -5801,7 +5802,7 @@ const char *igt_plane_rotation_name(igt_rotation_t rotation)
  */
 void igt_plane_set_rotation(igt_plane_t *plane, igt_rotation_t rotation)
 {
-	igt_crtc_t *pipe = plane->pipe;
+	igt_crtc_t *pipe = plane->crtc;
 	igt_display_t *display = pipe->display;
 
 	LOG(display, "%s.%d: plane_set_rotation(%s°)\n",

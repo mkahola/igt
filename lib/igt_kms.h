@@ -425,7 +425,7 @@ typedef struct igt_colorop {
 
 typedef struct igt_plane {
 	/*< private >*/
-	igt_crtc_t *pipe;
+	igt_crtc_t *crtc;
 	struct igt_plane *ref;
 	int index;
 	/* capabilities */

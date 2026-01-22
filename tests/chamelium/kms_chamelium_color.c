@@ -80,11 +80,11 @@ static bool test_pipe_degamma(data_t *data,
 	};
 	bool ret;
 
-	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_DEGAMMA_LUT));
+	igt_require(igt_crtc_has_prop(primary->crtc, IGT_CRTC_DEGAMMA_LUT));
 
 	degamma_full = generate_table_max(data->degamma_lut_size);
 
-	igt_output_set_crtc(output, primary->pipe);
+	igt_output_set_crtc(output, primary->crtc);
 
 	/* Create a framebuffer at the size of the output. */
 	fb_id = igt_create_fb(data->drm_fd,
@@ -112,8 +112,8 @@ static bool test_pipe_degamma(data_t *data,
 	igt_assert(fbref_id);
 
 	igt_plane_set_fb(primary, &fb_modeset);
-	disable_ctm(primary->pipe);
-	disable_gamma(primary->pipe);
+	disable_ctm(primary->crtc);
+	disable_gamma(primary->crtc);
 	igt_display_commit(&data->display);
 
 	/* Draw solid colors with linear degamma transformation. */
@@ -124,7 +124,7 @@ static bool test_pipe_degamma(data_t *data,
 	 */
 	paint_gradient_rectangles(data, mode, red_green_blue, &fb);
 	igt_plane_set_fb(primary, &fb);
-	set_degamma(data, primary->pipe, degamma_full);
+	set_degamma(data, primary->crtc, degamma_full);
 	igt_display_commit(&data->display);
 	chamelium_capture(data->chamelium, port, 0, 0, 0, 0, 1);
 	frame_fullcolors =
@@ -138,7 +138,7 @@ static bool test_pipe_degamma(data_t *data,
 					    frame_fullcolors, &fbref,
 					    CHAMELIUM_CHECK_ANALOG);
 
-	disable_degamma(primary->pipe);
+	disable_degamma(primary->crtc);
 	igt_plane_set_fb(primary, NULL);
 	igt_output_set_crtc(output, NULL);
 	igt_display_commit(&data->display);
@@ -169,11 +169,11 @@ static bool test_pipe_gamma(data_t *data,
 	};
 	bool ret;
 
-	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_GAMMA_LUT));
+	igt_require(igt_crtc_has_prop(primary->crtc, IGT_CRTC_GAMMA_LUT));
 
 	gamma_full = generate_table_max(data->gamma_lut_size);
 
-	igt_output_set_crtc(output, primary->pipe);
+	igt_output_set_crtc(output, primary->crtc);
 
 	/* Create a framebuffer at the size of the output. */
 	fb_id = igt_create_fb(data->drm_fd,
@@ -201,9 +201,9 @@ static bool test_pipe_gamma(data_t *data,
 	igt_assert(fbref_id);
 
 	igt_plane_set_fb(primary, &fbref);
-	disable_ctm(primary->pipe);
-	disable_degamma(primary->pipe);
-	set_gamma(data, primary->pipe, gamma_full);
+	disable_ctm(primary->crtc);
+	disable_degamma(primary->crtc);
+	set_gamma(data, primary->crtc, gamma_full);
 	igt_display_commit(&data->display);
 
 	/* Draw solid colors with no gamma transformation. */
@@ -227,7 +227,7 @@ static bool test_pipe_gamma(data_t *data,
 					    frame_fullcolors, &fbref,
 					    CHAMELIUM_CHECK_ANALOG);
 
-	disable_gamma(primary->pipe);
+	disable_gamma(primary->crtc);
 	igt_plane_set_fb(primary, NULL);
 	igt_output_set_crtc(output, NULL);
 	igt_display_commit(&data->display);
@@ -255,12 +255,12 @@ static bool test_pipe_ctm(data_t *data,
 	int fb_id, fb_modeset_id, fbref_id;
 	bool ret = true;
 
-	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_CTM));
+	igt_require(igt_crtc_has_prop(primary->crtc, IGT_CRTC_CTM));
 
 	degamma_linear = generate_table(data->degamma_lut_size, 1.0);
 	gamma_linear = generate_table(data->gamma_lut_size, 1.0);
 
-	igt_output_set_crtc(output, primary->pipe);
+	igt_output_set_crtc(output, primary->crtc);
 
 	/* Create a framebuffer at the size of the output. */
 	fb_id = igt_create_fb(data->drm_fd,
@@ -290,15 +290,15 @@ static bool test_pipe_ctm(data_t *data,
 	igt_plane_set_fb(primary, &fb_modeset);
 
 	if (memcmp(before, after, sizeof(color_t))) {
-		set_degamma(data, primary->pipe, degamma_linear);
-		set_gamma(data, primary->pipe, gamma_linear);
+		set_degamma(data, primary->crtc, degamma_linear);
+		set_gamma(data, primary->crtc, gamma_linear);
 	} else {
 		/* Disable Degamma and Gamma for ctm max test */
-		disable_degamma(primary->pipe);
-		disable_gamma(primary->pipe);
+		disable_degamma(primary->crtc);
+		disable_gamma(primary->crtc);
 	}
 
-	disable_ctm(primary->pipe);
+	disable_ctm(primary->crtc);
 	igt_display_commit(&data->display);
 
 	paint_rectangles(data, mode, after, &fbref);
@@ -306,7 +306,7 @@ static bool test_pipe_ctm(data_t *data,
 	/* With CTM transformation. */
 	paint_rectangles(data, mode, before, &fb);
 	igt_plane_set_fb(primary, &fb);
-	set_ctm(primary->pipe, ctm_matrix);
+	set_ctm(primary->crtc, ctm_matrix);
 	igt_display_commit(&data->display);
 	chamelium_capture(data->chamelium, port, 0, 0, 0, 0, 1);
 	frame_hardware =
@@ -322,8 +322,8 @@ static bool test_pipe_ctm(data_t *data,
 					     CHAMELIUM_CHECK_ANALOG);
 
 	igt_plane_set_fb(primary, NULL);
-	disable_degamma(primary->pipe);
-	disable_gamma(primary->pipe);
+	disable_degamma(primary->crtc);
+	disable_gamma(primary->crtc);
 	igt_output_set_crtc(output, NULL);
 	igt_display_commit(&data->display);
 	free_lut(degamma_linear);
@@ -358,12 +358,12 @@ static bool test_pipe_limited_range_ctm(data_t *data,
 	int fb_id0, fb_id1;
 	bool ret = false;
 
-	igt_require(igt_crtc_has_prop(primary->pipe, IGT_CRTC_CTM));
+	igt_require(igt_crtc_has_prop(primary->crtc, IGT_CRTC_CTM));
 
 	degamma_linear = generate_table(data->degamma_lut_size, 1.0);
 	gamma_linear = generate_table(data->gamma_lut_size, 1.0);
 
-	igt_output_set_crtc(output, primary->pipe);
+	igt_output_set_crtc(output, primary->crtc);
 
 	/* Create a framebuffer at the size of the output. */
 	fb_id0 = igt_create_fb(data->drm_fd,
@@ -382,9 +382,9 @@ static bool test_pipe_limited_range_ctm(data_t *data,
 			       &fb1);
 	igt_assert(fb_id1);
 
-	set_degamma(data, primary->pipe, degamma_linear);
-	set_gamma(data, primary->pipe, gamma_linear);
-	set_ctm(primary->pipe, ctm);
+	set_degamma(data, primary->crtc, degamma_linear);
+	set_gamma(data, primary->crtc, gamma_linear);
+	set_ctm(primary->crtc, ctm);
 
 	/* Set the output into full range. */
 	igt_output_set_prop_value(output,

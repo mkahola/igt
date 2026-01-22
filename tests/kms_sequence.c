@@ -119,7 +119,7 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, &data->primary_fb);
 
-	data->crtc_id = primary->pipe->crtc_id;
+	data->crtc_id = primary->crtc->crtc_id;
 
 	igt_display_commit(display);
 

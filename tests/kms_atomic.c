@@ -170,7 +170,8 @@ static void plane_check_current_state(igt_plane_t *plane, const uint64_t *values
 	uint64_t current_values[IGT_NUM_PLANE_PROPS];
 	int i;
 
-	legacy = drmModeGetPlane(plane->pipe->display->drm_fd, plane->drm_plane->plane_id);
+	legacy = drmModeGetPlane(plane->crtc->display->drm_fd,
+				 plane->drm_plane->plane_id);
 	igt_assert(legacy);
 
 	igt_assert_eq_u32(legacy->crtc_id, values[IGT_PLANE_CRTC_ID]);
@@ -197,7 +198,7 @@ static void plane_check_current_state(igt_plane_t *plane, const uint64_t *values
 static void plane_commit(igt_plane_t *plane, enum igt_commit_style s,
 			 enum kms_atomic_check_relax relax)
 {
-	igt_display_commit2(plane->pipe->display, s);
+	igt_display_commit2(plane->crtc->display, s);
 	plane_check_current_state(plane, plane->values, relax);
 }
 
@@ -209,7 +210,8 @@ static void plane_commit_atomic_err(igt_plane_t *plane,
 
 	plane_get_current_state(plane, current_values);
 
-	igt_assert_eq(-err, igt_display_try_commit2(plane->pipe->display, COMMIT_ATOMIC));
+	igt_assert_eq(-err,
+		      igt_display_try_commit2(plane->crtc->display, COMMIT_ATOMIC));
 
 	plane_check_current_state(plane, current_values, relax);
 }
@@ -1345,7 +1347,8 @@ static void atomic_setup(data_t *data, enum pipe pipe, igt_output_t *output)
 
 	igt_plane_set_fb(data->primary, &data->fb);
 
-	crtc_commit(data->primary->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->primary->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 }
 
 static void atomic_clear(data_t *data, enum pipe pipe, igt_output_t *output)
@@ -1358,7 +1361,8 @@ static void atomic_clear(data_t *data, enum pipe pipe, igt_output_t *output)
 	}
 
 	igt_output_set_crtc(output, NULL);
-	crtc_commit(data->primary->pipe, data->primary, COMMIT_ATOMIC, ATOMIC_RELAX_NONE);
+	crtc_commit(data->primary->crtc, data->primary, COMMIT_ATOMIC,
+		    ATOMIC_RELAX_NONE);
 	igt_remove_fb(data->drm_fd, &data->fb);
 }
 

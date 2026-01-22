@@ -62,7 +62,7 @@ static void test_setup(data_t *data, enum pipe p)
 	data->mode = igt_output_get_mode(data->output);
 	igt_require(data->mode);
 
-	data->pipe_crc = igt_crtc_crc_new(data->primary->pipe,
+	data->pipe_crc = igt_crtc_crc_new(data->primary->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
@@ -109,9 +109,9 @@ static bool test_plane_colorops(data_t *data,
 	igt_plane_set_fb(plane, &fb);
 
 	/* Disable Pipe color props. */
-	disable_ctm(plane->pipe);
-	disable_degamma(plane->pipe);
-	disable_gamma(plane->pipe);
+	disable_ctm(plane->crtc);
+	disable_degamma(plane->crtc);
+	disable_gamma(plane->crtc);
 	igt_display_commit2(display, COMMIT_ATOMIC);
 
 	/* Reference (software-equivalent) CRC */
@@ -120,7 +120,7 @@ static bool test_plane_colorops(data_t *data,
 
 	igt_plane_set_fb(plane, &fb);
 	igt_display_commit2(display, COMMIT_ATOMIC);
-	igt_wait_for_vblank(plane->pipe);
+	igt_wait_for_vblank(plane->crtc);
 	igt_pipe_crc_collect_crc(data->pipe_crc, &crc_ref);
 
 	/* Hardware pipeline CRC */
@@ -136,7 +136,7 @@ static bool test_plane_colorops(data_t *data,
 
 	igt_plane_set_fb(plane, &fb);
 	igt_display_commit2(display, COMMIT_ATOMIC);
-	igt_wait_for_vblank(plane->pipe);
+	igt_wait_for_vblank(plane->crtc);
 	igt_pipe_crc_collect_crc(data->pipe_crc, &crc_pipe);
 
 	ret = igt_check_crc_equal(&crc_ref, &crc_pipe);
