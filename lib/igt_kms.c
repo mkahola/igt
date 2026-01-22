@@ -5334,28 +5334,31 @@ static const char *igt_crtc_name(igt_crtc_t *crtc)
 void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *pipe_obj)
 {
 	igt_display_t *display = output->display;
-	igt_crtc_t *old_pipe = NULL;
+	igt_crtc_t *old_crtc = NULL;
 
 	igt_assert(output->name);
 
 	if (output->pending_pipe != PIPE_NONE)
-		old_pipe = igt_output_get_driving_crtc(output);
+		old_crtc = igt_output_get_driving_crtc(output);
 
 	LOG(display, "%s: set_crtc(%s)\n", igt_output_name(output),
 	    igt_crtc_name(pipe_obj));
 	output->pending_pipe = pipe_obj ? pipe_obj->pipe : PIPE_NONE;
 
-	if (old_pipe) {
+	if (old_crtc) {
 		igt_output_t *old_output;
 
-		old_output = igt_crtc_get_output(old_pipe);
+		old_output = igt_crtc_get_output(old_crtc);
 		if (!old_output) {
 			if (display->is_atomic)
-				igt_crtc_replace_prop_blob(old_pipe, IGT_CRTC_MODE_ID, NULL, 0);
+				igt_crtc_replace_prop_blob(old_crtc,
+							   IGT_CRTC_MODE_ID,
+							   NULL, 0);
 			else
-				igt_crtc_set_prop_changed(old_pipe, IGT_CRTC_MODE_ID);
+				igt_crtc_set_prop_changed(old_crtc,
+							  IGT_CRTC_MODE_ID);
 
-			igt_crtc_set_prop_value(old_pipe, IGT_CRTC_ACTIVE, 0);
+			igt_crtc_set_prop_value(old_crtc, IGT_CRTC_ACTIVE, 0);
 		}
 	}
 
