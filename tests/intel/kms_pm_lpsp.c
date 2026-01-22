@@ -139,7 +139,7 @@ static void test_cleanup(data_t *data)
 {
 	igt_plane_t *primary;
 
-	if (!data->output || igt_output_get_driving_pipe(data->output) == NULL)
+	if (!data->output || igt_output_get_driving_crtc(data->output) == NULL)
 		return;
 
 	primary = igt_output_get_plane_type(data->output,

@@ -3529,7 +3529,7 @@ report_dup:
 	}
 }
 
-igt_crtc_t *igt_output_get_driving_pipe(igt_output_t *output)
+igt_crtc_t *igt_output_get_driving_crtc(igt_output_t *output)
 {
 	igt_display_t *display = output->display;
 	enum pipe pipe;
@@ -5267,7 +5267,7 @@ drmModeModeInfo *igt_output_get_lowres_mode(igt_output_t *output)
  */
 void igt_output_override_mode(igt_output_t *output, const drmModeModeInfo *mode)
 {
-	igt_crtc_t *pipe = igt_output_get_driving_pipe(output);
+	igt_crtc_t *pipe = igt_output_get_driving_crtc(output);
 
 	if (mode)
 		output->override_mode = *mode;
@@ -5337,7 +5337,7 @@ void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *pipe_obj)
 	igt_assert(output->name);
 
 	if (output->pending_pipe != PIPE_NONE)
-		old_pipe = igt_output_get_driving_pipe(output);
+		old_pipe = igt_output_get_driving_crtc(output);
 
 	LOG(display, "%s: set_crtc(%s)\n", igt_output_name(output),
 	    igt_crtc_name(pipe_obj));
@@ -5518,7 +5518,7 @@ igt_plane_t *igt_output_get_plane(igt_output_t *output, int plane_idx)
 {
 	igt_crtc_t *pipe;
 
-	pipe = igt_output_get_driving_pipe(output);
+	pipe = igt_output_get_driving_crtc(output);
 	igt_assert(pipe);
 
 	return igt_crtc_get_plane(pipe, plane_idx);
@@ -5538,7 +5538,7 @@ igt_plane_t *igt_output_get_plane_type(igt_output_t *output, int plane_type)
 {
 	igt_crtc_t *pipe;
 
-	pipe = igt_output_get_driving_pipe(output);
+	pipe = igt_output_get_driving_crtc(output);
 	igt_assert(pipe);
 
 	return igt_crtc_get_plane_type(pipe, plane_type);
@@ -5555,7 +5555,7 @@ igt_plane_t *igt_output_get_plane_type(igt_output_t *output, int plane_type)
  */
 int igt_output_count_plane_type(igt_output_t *output, int plane_type)
 {
-	igt_crtc_t *pipe = igt_output_get_driving_pipe(output);
+	igt_crtc_t *pipe = igt_output_get_driving_crtc(output);
 	igt_assert(pipe);
 
 	return igt_crtc_count_plane_type(pipe, plane_type);
@@ -5574,7 +5574,7 @@ int igt_output_count_plane_type(igt_output_t *output, int plane_type)
 igt_plane_t *igt_output_get_plane_type_index(igt_output_t *output,
 					     int plane_type, int index)
 {
-	igt_crtc_t *pipe = igt_output_get_driving_pipe(output);
+	igt_crtc_t *pipe = igt_output_get_driving_crtc(output);
 	igt_assert(pipe);
 
 	return igt_crtc_get_plane_type_index(pipe, plane_type, index);

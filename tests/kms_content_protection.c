@@ -397,7 +397,7 @@ static bool igt_crtc_is_free(igt_crtc_t *crtc)
 	int i;
 
 	for (i = 0; i < display->n_outputs; i++)
-		if (igt_output_get_driving_pipe(&display->outputs[i]) == crtc)
+		if (igt_output_get_driving_crtc(&display->outputs[i]) == crtc)
 			return false;
 
 	return true;

@@ -851,7 +851,7 @@ find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 
 	for_each_pipe(display, pipe) {
 		for_each_valid_output_on_pipe(display, pipe, *output) {
-			if (igt_output_get_driving_pipe(*output) != NULL)
+			if (igt_output_get_driving_crtc(*output) != NULL)
 				continue;
 
 			igt_output_set_crtc(*output,

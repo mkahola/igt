@@ -840,7 +840,7 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 		event_mask |= 1 << pipe;
 
 		for_each_valid_output_on_pipe(&data->display, pipe, output) {
-			if (igt_output_get_driving_pipe(output) != NULL)
+			if (igt_output_get_driving_crtc(output) != NULL)
 				continue;
 
 			igt_output_set_crtc(output,
@@ -933,7 +933,7 @@ retry:
 							      IGT_PIPE_CRC_SOURCE_AUTO);
 
 		for_each_valid_output_on_pipe(&data->display, i, output) {
-			if (igt_output_get_driving_pipe(output) != NULL)
+			if (igt_output_get_driving_crtc(output) != NULL)
 				continue;
 
 			igt_output_set_crtc(output,

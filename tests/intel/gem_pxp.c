@@ -1244,7 +1244,7 @@ static void test_display_protected_crc(int i915, igt_display_t *display)
 
 	for_each_connected_output(display, output) {
 		mode = igt_output_get_mode(output);
-		pipe = igt_output_get_driving_pipe(output);
+		pipe = igt_output_get_driving_crtc(output);
 		pipe_crc = igt_crtc_crc_new(pipe,
 					    IGT_PIPE_CRC_SOURCE_AUTO);
 		plane = igt_crtc_get_plane_type(pipe, DRM_PLANE_TYPE_PRIMARY);
