@@ -67,7 +67,7 @@ typedef struct data {
         igt_plane_t *primary[IGT_MAX_PIPES];
         igt_output_t *output[IGT_MAX_PIPES];
 	igt_output_t *connected_output[IGT_MAX_PIPES];
-        igt_crtc_t *pipe[IGT_MAX_PIPES];
+        igt_crtc_t *crtc[IGT_MAX_PIPES];
         igt_pipe_crc_t *pipe_crc[IGT_MAX_PIPES];
         drmModeModeInfo mode[IGT_MAX_PIPES];
         enum pipe pipe_id[IGT_MAX_PIPES];
@@ -125,17 +125,17 @@ static void test_init(data_t *data, bool physical)
 
 	for_each_pipe(display, i) {
 		data->pipe_id[i] = i;
-		data->pipe[i] = igt_crtc_for_pipe(&data->display,
+		data->crtc[i] = igt_crtc_for_pipe(&data->display,
 						  data->pipe_id[i]);
-		data->primary[i] = igt_crtc_get_plane_type(
-			data->pipe[i], DRM_PLANE_TYPE_PRIMARY);
+		data->primary[i] = igt_crtc_get_plane_type(data->crtc[i],
+							   DRM_PLANE_TYPE_PRIMARY);
 		data->pipe_crc[i] =
-			igt_crtc_crc_new(data->pipe[i],
+			igt_crtc_crc_new(data->crtc[i],
 					 IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
 	for (i = 0; i < display->n_outputs && i < max_pipes; i++) {
-		if (!data->pipe[i] && !physical)
+		if (!data->crtc[i] && !physical)
 			continue;
 
 		output = &display->outputs[i];

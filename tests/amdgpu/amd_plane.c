@@ -44,7 +44,7 @@ typedef struct data {
 	igt_plane_t *overlay[MAX_PIPES];
 	igt_plane_t *overlay2[MAX_PIPES];
         igt_output_t *output[MAX_PIPES];
-        igt_crtc_t *pipe[MAX_PIPES];
+        igt_crtc_t *crtc[MAX_PIPES];
         igt_pipe_crc_t *pipe_crc[MAX_PIPES];
         drmModeModeInfo mode[MAX_PIPES];
         enum pipe pipe_id[MAX_PIPES];
@@ -156,17 +156,19 @@ static void test_init(data_t *data)
 
 	for_each_pipe(display, i) {
 		data->pipe_id[i] = PIPE_A + i;
-		data->pipe[i] = igt_crtc_for_pipe(display, data->pipe_id[i]);
-		data->primary[i] = igt_crtc_get_plane_type(
-			data->pipe[i], DRM_PLANE_TYPE_PRIMARY);
-		data->overlay[i] = igt_crtc_get_plane_type_index(
-			data->pipe[i], DRM_PLANE_TYPE_OVERLAY, 0);
-		data->overlay2[i] = igt_crtc_get_plane_type_index(
-			data->pipe[i], DRM_PLANE_TYPE_OVERLAY, 1);
-		data->cursor[i] = igt_crtc_get_plane_type(
-			data->pipe[i], DRM_PLANE_TYPE_CURSOR);
+		data->crtc[i] = igt_crtc_for_pipe(display, data->pipe_id[i]);
+		data->primary[i] = igt_crtc_get_plane_type(data->crtc[i],
+							   DRM_PLANE_TYPE_PRIMARY);
+		data->overlay[i] = igt_crtc_get_plane_type_index(data->crtc[i],
+								 DRM_PLANE_TYPE_OVERLAY,
+								 0);
+		data->overlay2[i] = igt_crtc_get_plane_type_index(data->crtc[i],
+								  DRM_PLANE_TYPE_OVERLAY,
+								  1);
+		data->cursor[i] = igt_crtc_get_plane_type(data->crtc[i],
+							  DRM_PLANE_TYPE_CURSOR);
 		data->pipe_crc[i] =
-			igt_crtc_crc_new(data->pipe[i],
+			igt_crtc_crc_new(data->crtc[i],
 					 IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
@@ -265,7 +267,7 @@ static void set_regamma_lut(data_t *data, lut_t const *lut, int n)
 {
 	size_t size = lut ? sizeof(lut->data) * lut->size : 0;
 	const void *ptr = lut ? lut->data : NULL;
-	igt_crtc_replace_prop_blob(data->pipe[n], IGT_CRTC_GAMMA_LUT, ptr,
+	igt_crtc_replace_prop_blob(data->crtc[n], IGT_CRTC_GAMMA_LUT, ptr,
 				       size);
 }
 
@@ -627,7 +629,8 @@ static void test_display_mpo(data_t *data, enum test test, uint32_t format, int 
 	igt_skip_on_f(valid_outputs < display_count,
 			"Valid outputs (%d) should be equal or greater than %d\n", valid_outputs, display_count);
 
-	regamma_lut_size = igt_crtc_get_prop(data->pipe[0], IGT_CRTC_GAMMA_LUT_SIZE);
+	regamma_lut_size = igt_crtc_get_prop(data->crtc[0],
+					     IGT_CRTC_GAMMA_LUT_SIZE);
 	igt_assert_lt(0, regamma_lut_size);
 	lut_init(&lut, regamma_lut_size);
 	lut_gen(&lut);
