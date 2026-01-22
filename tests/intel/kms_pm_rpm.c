@@ -1639,6 +1639,7 @@ static void set_prefered_mode(void)
 			mode_found = true;
 			break;
 		}
+		igt_output_set_crtc(output, NULL);
 	}
 
 	igt_require_f(mode_found, "Not found any 8K@60Hz or 4k@144hz mode on any connected output\n");
