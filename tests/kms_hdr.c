@@ -155,14 +155,14 @@ static uint16_t calc_hdr_float(double val)
 	return (uint16_t)(val * 50000.0);
 }
 
-/* Fills some test values for ST2048 HDR output metadata.
+/* Fills some test values for ST2084 HDR output metadata.
  *
  * Note: there isn't really a standard for what the metadata is supposed
  * to do on the display side of things. The display is free to ignore it
  * and clip the output, use it to help tonemap to the content range,
  * or do anything they want, really.
  */
-static void fill_hdr_output_metadata_st2048(struct hdr_output_metadata *meta)
+static void fill_hdr_output_metadata_st2084(struct hdr_output_metadata *meta)
 {
 	memset(meta, 0, sizeof(*meta));
 
@@ -486,7 +486,7 @@ static void test_static_toggle(data_t *data, enum pipe pipe,
 
 	draw_hdr_pattern(&afb);
 
-	fill_hdr_output_metadata_st2048(&hdr);
+	fill_hdr_output_metadata_st2084(&hdr);
 
 	/* Start with no metadata. */
 	igt_plane_set_fb(data->primary, &afb);
@@ -616,7 +616,7 @@ static void test_static_swap(data_t *data, enum pipe pipe, igt_output_t *output,
 	}
 
 	/* Enter HDR, a modeset is allowed here. */
-	fill_hdr_output_metadata_st2048(&hdr);
+	fill_hdr_output_metadata_st2084(&hdr);
 	set_hdr_output_metadata(data, &hdr);
 	igt_output_set_prop_value(data->output, IGT_CONNECTOR_MAX_BPC, 10);
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
@@ -676,7 +676,7 @@ static void test_invalid_metadata_sizes(data_t *data, igt_output_t *output)
 	struct hdr_output_metadata hdr;
 	size_t metadata_size = sizeof(hdr);
 
-	fill_hdr_output_metadata_st2048(&hdr);
+	fill_hdr_output_metadata_st2084(&hdr);
 
 	igt_assert_eq(set_invalid_hdr_output_metadata(data, &hdr, 1), -EINVAL);
 	igt_assert_eq(set_invalid_hdr_output_metadata(data, &hdr, metadata_size + 1), -EINVAL);
@@ -748,7 +748,7 @@ static void test_hdr(data_t *data, uint32_t flags)
 			prepare_test(data, output, pipe);
 
 			/* Signal HDR requirement via metadata */
-			fill_hdr_output_metadata_st2048(&hdr);
+			fill_hdr_output_metadata_st2084(&hdr);
 			set_hdr_output_metadata(data, &hdr);
 			if (igt_display_try_commit2(display, display->is_atomic ?
 						    COMMIT_ATOMIC : COMMIT_LEGACY)) {
