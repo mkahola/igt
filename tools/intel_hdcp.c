@@ -94,6 +94,29 @@ static void set_hdcp_prop(data_t *data, int property, int type, int connector_id
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
 
+static const char *get_hdcp_status(data_t *data, uint32_t connector_id)
+{
+	igt_output_t *output;
+	bool is_valid;
+	uint64_t prop_value;
+
+	output = get_hdcp_output(data, connector_id, &is_valid);
+	if (!output || !is_valid)
+		return "N/A";
+
+	prop_value = igt_output_get_prop(output, IGT_CONNECTOR_CONTENT_PROTECTION);
+	switch (prop_value) {
+	case CP_UNDESIRED:
+		return "Disabled";
+	case CP_DESIRED:
+		return "Desired";
+	case CP_ENABLED:
+		return "Enabled";
+	default:
+		return "Unknown";
+	}
+}
+
 static const char *get_hdcp_version(int fd, char *connector_name)
 {
 	char buf[MAX_HDCP_BUF_LEN];
