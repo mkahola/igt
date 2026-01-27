@@ -56,6 +56,44 @@ static igt_output_t *get_hdcp_output(data_t *data, uint32_t connector_id, bool *
 	return output;
 }
 
+static void set_hdcp_prop(data_t *data, int property, int type, int connector_id)
+{
+	igt_output_t *output;
+	bool is_valid;
+
+	output = get_hdcp_output(data, connector_id, &is_valid);
+	if (!output || !is_valid) {
+		fprintf(stderr, "Invalid output or connector\n");
+		return;
+	}
+
+	switch (property) {
+	case CP_UNDESIRED:
+		igt_output_set_prop_value(output, IGT_CONNECTOR_CONTENT_PROTECTION, CP_UNDESIRED);
+		break;
+	case CP_DESIRED:
+		igt_output_set_prop_value(output, IGT_CONNECTOR_CONTENT_PROTECTION, CP_DESIRED);
+		switch (type) {
+		case HDCP_TYPE_1_4:
+		case HDCP_TYPE_2_2_TYPE_0:
+			igt_output_set_prop_value(output, IGT_CONNECTOR_HDCP_CONTENT_TYPE, 0);
+			break;
+		case HDCP_TYPE_2_2_TYPE_1:
+			igt_output_set_prop_value(output, IGT_CONNECTOR_HDCP_CONTENT_TYPE, 1);
+			break;
+		default:
+			fprintf(stderr, "Invalid HDCP type\n");
+			return;
+		}
+		break;
+	default:
+		fprintf(stderr, "Invalid property value\n");
+		return;
+	}
+
+	igt_display_commit2(&data->display, COMMIT_ATOMIC);
+}
+
 static const char *get_hdcp_version(int fd, char *connector_name)
 {
 	char buf[MAX_HDCP_BUF_LEN];
