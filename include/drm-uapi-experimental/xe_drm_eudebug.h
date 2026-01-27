@@ -19,9 +19,9 @@ extern "C" {
  */
 
 /* XXX: BEGIN section moved from xe_drm.h as temporary solution */
-#define DRM_XE_EUDEBUG_CONNECT		0x0e
-#define DRM_XE_DEBUG_METADATA_CREATE	0x0f
-#define DRM_XE_DEBUG_METADATA_DESTROY	0x10
+#define DRM_XE_EUDEBUG_CONNECT		0x0f
+#define DRM_XE_DEBUG_METADATA_CREATE	0x10
+#define DRM_XE_DEBUG_METADATA_DESTROY	0x11
 
 /* ... */
 
@@ -54,7 +54,7 @@ struct drm_xe_vm_bind_op_ext_attach_debug {
 
 /* ... */
 
-#define   DRM_XE_EXEC_QUEUE_SET_PROPERTY_EUDEBUG		3
+#define   DRM_XE_EXEC_QUEUE_SET_PROPERTY_EUDEBUG		6
 #define     DRM_XE_EXEC_QUEUE_EUDEBUG_FLAG_ENABLE		(1 << 0)
 
 /* ... */
