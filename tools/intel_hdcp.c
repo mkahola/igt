@@ -10,11 +10,25 @@
 
 #define MAX_HDCP_BUF_LEN	5000
 
+#define CP_UNDESIRED	0
+#define CP_DESIRED	1
+#define CP_ENABLED	2
+
+enum hdcp_type {
+	HDCP_TYPE_NONE,
+	HDCP_TYPE_1_4,
+	HDCP_TYPE_2_2_TYPE_0,
+	HDCP_TYPE_2_2_TYPE_1
+};
+
 typedef struct data {
 	int fd;
 	igt_display_t display;
-	struct igt_fb red, green;
+	struct igt_fb fb;
 	int height, width;
+	igt_output_t *output;
+	enum pipe pipe;
+	enum hdcp_type hdcp_type;
 } data_t;
 
 static const char *get_hdcp_version(int fd, char *connector_name)
@@ -90,6 +104,8 @@ static void print_usage(void)
 
 static void test_init(data_t *data)
 {
+	drmModeModeInfo *mode;
+
 	data->fd = __drm_open_driver(DRIVER_ANY);
 	if (data->fd < 0) {
 		fprintf(stderr, "Failed to open DRM driver\n");
@@ -97,6 +113,32 @@ static void test_init(data_t *data)
 	}
 	igt_display_require(&data->display, data->fd);
 	igt_display_require_output(&data->display);
+	igt_display_reset(&data->display);
+
+	for_each_pipe_with_valid_output(&data->display, data->pipe, data->output) {
+		if (!igt_output_has_prop(data->output, IGT_CONNECTOR_CONTENT_PROTECTION))
+			continue;
+
+		mode = igt_output_get_mode(data->output);
+		data->width = mode->hdisplay;
+		data->height = mode->vdisplay;
+
+		igt_create_color_fb(data->fd, data->width, data->height, DRM_FORMAT_XRGB8888,
+				    DRM_FORMAT_MOD_LINEAR, 0.0, 0.0, 0.0, &data->fb);
+
+		igt_output_set_crtc(data->output, igt_crtc_for_pipe(&data->display, data->pipe));
+		igt_display_commit2(&data->display, COMMIT_ATOMIC);
+
+		break;
+	}
+	igt_display_commit2(&data->display, COMMIT_ATOMIC);
+}
+
+static void cleanup(data_t *data)
+{
+	igt_remove_fb(data->fd, &data->fb);
+	igt_display_fini(&data->display);
+	close(data->fd);
 }
 
 int main(int argc, char **argv)
@@ -123,4 +165,5 @@ int main(int argc, char **argv)
 			break;
 		}
 	}
+	cleanup(&data);
 }
