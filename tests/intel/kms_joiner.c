@@ -581,7 +581,7 @@ static void test_basic_max_non_joiner(data_t *data)
 
 int igt_main()
 {
-	bool ultra_joiner_supported, is_dgfx;
+	bool is_dgfx;
 	int i, j, display_ver;
 	igt_output_t *output;
 	drmModeModeInfo mode;
@@ -755,7 +755,7 @@ int igt_main()
 
 	igt_describe("Verify modeset switch between ultra joiner and big joiner");
 	igt_subtest_with_dynamic("switch-modeset-ultra-joiner-big-joiner") {
-		igt_require_f(ultra_joiner_supported,
+		igt_require_f(data.ultra_joiner_supported,
 			      "Ultra joiner not supported on this platform\n");
 		igt_require_f(data.ultra_joiner_output_count > 0 ||
 			      data.non_ultra_joiner_output_count > 0,
