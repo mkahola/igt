@@ -94,6 +94,31 @@ static void set_hdcp_prop(data_t *data, int property, int type, int connector_id
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
 
+static const char *get_hdcp_content_type(data_t *data, uint32_t connector_id)
+{
+	igt_output_t *output;
+	bool is_valid;
+	uint64_t status, content_type;
+
+	output = get_hdcp_output(data, connector_id, &is_valid);
+	if (!output || !is_valid)
+		return "N/A";
+
+	status = igt_output_get_prop(output, IGT_CONNECTOR_CONTENT_PROTECTION);
+	if (status != CP_ENABLED)
+		return "N/A";
+
+	content_type = igt_output_get_prop(output, IGT_CONNECTOR_HDCP_CONTENT_TYPE);
+	switch (content_type) {
+	case 0:
+		return "Type 0";
+	case 1:
+		return "Type 1";
+	default:
+		return "Unknown";
+	}
+}
+
 static const char *get_hdcp_status(data_t *data, uint32_t connector_id)
 {
 	igt_output_t *output;
