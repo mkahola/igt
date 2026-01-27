@@ -31,6 +31,31 @@ typedef struct data {
 	enum hdcp_type hdcp_type;
 } data_t;
 
+static igt_output_t *get_hdcp_output(data_t *data, uint32_t connector_id, bool *is_valid)
+{
+	drmModeConnector *connector = drmModeGetConnectorCurrent(data->fd, connector_id);
+	igt_output_t *output;
+
+	*is_valid = false;
+	if (!connector)
+		return NULL;
+
+	output = igt_output_from_connector(&data->display, connector);
+	if (!output) {
+		drmModeFreeConnector(connector);
+		return NULL;
+	}
+
+	if (connector->connection != DRM_MODE_CONNECTED || connector->encoder_id == 0) {
+		drmModeFreeConnector(connector);
+		return NULL;
+	}
+
+	drmModeFreeConnector(connector);
+	*is_valid = true;
+	return output;
+}
+
 static const char *get_hdcp_version(int fd, char *connector_name)
 {
 	char buf[MAX_HDCP_BUF_LEN];
