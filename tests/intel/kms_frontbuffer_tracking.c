@@ -1538,7 +1538,7 @@ static void __debugfs_read_crtc(const char *param, char *buf, int len)
 	enum pipe pipe;
 
 	pipe = prim_mode_params.pipe;
-	dir = igt_debugfs_pipe_dir(drm.fd, pipe, O_DIRECTORY);
+	dir = igt_debugfs_crtc_dir(drm.fd, pipe, O_DIRECTORY);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, param, buf, len);
 	close(dir);

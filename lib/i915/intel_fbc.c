@@ -28,7 +28,7 @@ bool intel_fbc_supported_on_chipset(int device, enum pipe pipe)
 	char buf[FBC_STATUS_BUF_LEN];
 	int dir;
 
-	dir = igt_debugfs_pipe_dir(device, pipe, O_DIRECTORY);
+	dir = igt_debugfs_crtc_dir(device, pipe, O_DIRECTORY);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, "i915_fbc_status", buf, sizeof(buf));
 	close(dir);
@@ -45,7 +45,7 @@ static bool _intel_fbc_is_enabled(int device, enum pipe pipe, int log_level, cha
 	bool print = true;
 	int dir;
 
-	dir = igt_debugfs_pipe_dir(device, pipe, O_DIRECTORY);
+	dir = igt_debugfs_crtc_dir(device, pipe, O_DIRECTORY);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, "i915_fbc_status", buf, sizeof(buf));
 	close(dir);

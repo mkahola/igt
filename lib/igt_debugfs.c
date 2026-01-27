@@ -285,23 +285,23 @@ int igt_debugfs_connector_dir(int device, char *conn_name, int mode)
 }
 
 /**
- * igt_debugfs_pipe_dir:
+ * igt_debugfs_crtc_dir:
  * @device: fd of the device
- * @pipe: index of pipe
+ * @crtc_index: CRTC index
  * @mode: mode bits as used by open()
  *
- * This opens the debugfs directory corresponding to the pipe index on the
+ * This opens the debugfs directory corresponding to the CRTC index on the
  * device for use with igt_sysfs_get() and related functions. This is just
  * syntax sugar for igt_debugfs_open().
  *
  * Returns:
  * The directory fd, or -1 on failure.
  */
-int igt_debugfs_pipe_dir(int device, int pipe, int mode)
+int igt_debugfs_crtc_dir(int device, int crtc_index, int mode)
 {
 	char buf[128];
 
-	snprintf(buf, sizeof(buf), "crtc-%d", pipe);
+	snprintf(buf, sizeof(buf), "crtc-%d", crtc_index);
 	return igt_debugfs_open(device, buf, mode);
 }
 
