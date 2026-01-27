@@ -22,6 +22,7 @@
 
 #include "igt.h"
 #include "igt_amd.h"
+#include "igt_kmod.h"
 #include <fcntl.h>
 #include "lib/amdgpu/amd_mem_leak.h"
 
@@ -128,6 +129,25 @@ static void test_hotplug(data_t *data)
 	test_fini(data);
 }
 
+static void test_driver_unload(data_t *data)
+{
+	bool unload_leak = false;
+
+	if (!clear_memleak(true))
+		igt_skip("kmemleak is not enabled for this kernel\n");
+
+	drm_close_driver(data->fd);
+
+	/* Scan memory leak for unloading amdgpu */
+	igt_assert_eq(igt_amdgpu_driver_unload(), 0);
+	unload_leak = !is_no_memleak();
+	igt_assert_eq(igt_amdgpu_driver_load(NULL), 0);
+
+	data->fd = drm_open_driver_master(DRIVER_AMDGPU);
+
+	igt_assert_f(!unload_leak, "memory leak detected during driver unload\n");
+}
+
 int igt_main()
 {
 	data_t data;
@@ -151,6 +171,8 @@ int igt_main()
 	igt_subtest("connector-suspend-resume") test_suspend_resume(&data);
 	igt_describe("Test memroy leaks after connector hotplug");
 	igt_subtest("connector-hotplug") test_hotplug(&data);
+	igt_describe("Test memory leaks with driver unload");
+	igt_subtest("driver-unload") test_driver_unload(&data);
 
 	igt_fixture()
 	{
