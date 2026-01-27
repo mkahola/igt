@@ -1328,16 +1328,14 @@ int __intel_get_pipe_from_crtc_index(int fd, int crtc_index)
 }
 
 /**
- * kmstest_get_pipe_from_crtc_id:
+ * kmstest_get_crtc_index_from_id:
  * @fd: DRM fd
  * @crtc_id: DRM CRTC id
  *
- * Returns: The crtc index for the given DRM CRTC ID @crtc_id. The crtc index
- * is the equivalent of the pipe id.  This value maps directly to an enum pipe
- * value used in other helper functions.  Returns 0 if the index could not be
- * determined.
+ * Returns: The crtc index for the given DRM CRTC ID @crtc_id. Returns 0 if the
+ * index could not be determined.
  */
-int kmstest_get_pipe_from_crtc_id(int fd, int crtc_id)
+int kmstest_get_crtc_index_from_id(int fd, int crtc_id)
 {
 	drmModeRes *res;
 	drmModeCrtc *drm_crtc;
@@ -1359,7 +1357,7 @@ int kmstest_get_pipe_from_crtc_id(int fd, int crtc_id)
 
 	drmModeFreeResources(res);
 
-	return is_intel_device(fd) ? __intel_get_pipe_from_crtc_index(fd, i) : i;
+	return i;
 }
 
 /**

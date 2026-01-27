@@ -555,9 +555,9 @@ static void test_async_flip(data_t *data)
 
 static void wait_for_vblank(data_t *data, unsigned long *vbl_time, unsigned int *seq)
 {
-	int pipe = kmstest_get_pipe_from_crtc_id(data->drm_fd, data->crtc_id);
+	int crtc_index = kmstest_get_crtc_index_from_id(data->drm_fd, data->crtc_id);
 	drmVBlank wait_vbl = {
-		.request.type = DRM_VBLANK_RELATIVE | kmstest_get_vbl_flag(pipe),
+		.request.type = DRM_VBLANK_RELATIVE | kmstest_get_vbl_flag(crtc_index),
 		.request.sequence = 1,
 	};
 
@@ -728,10 +728,10 @@ static void test_invalid(data_t *data)
 
 static void queue_vblank(data_t *data)
 {
-	int pipe = kmstest_get_pipe_from_crtc_id(data->drm_fd, data->crtc_id);
+	int crtc_index = kmstest_get_crtc_index_from_id(data->drm_fd, data->crtc_id);
 	drmVBlank wait_vbl = {
 		.request.type = DRM_VBLANK_RELATIVE | DRM_VBLANK_EVENT |
-			kmstest_get_vbl_flag(pipe),
+			kmstest_get_vbl_flag(crtc_index),
 		.request.sequence = 1,
 		.request.signal = (long)data,
 	};
@@ -850,7 +850,7 @@ static void test_crc(data_t *data)
 			     &data->output->config.connector->connector_id, 1, mode);
 	igt_assert_eq(ret, 0);
 
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, kmstest_get_pipe_from_crtc_id(data->drm_fd, data->crtc_id)),
+	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, kmstest_get_crtc_index_from_id(data->drm_fd, data->crtc_id)),
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_pipe_crc_start(data->pipe_crc);

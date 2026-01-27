@@ -146,10 +146,10 @@ static bool fbc_check_cursor_blinking(struct drm_info *drm)
 	igt_pipe_crc_t *pipe_crc;
 	igt_crc_t crc[2];
 	bool ret;
-	int i, pipe;
+	int i, crtc_index;
 
-	pipe = kmstest_get_pipe_from_crtc_id(drm->fd, drm->crtc_id);
-	pipe_crc = igt_pipe_crc_new(drm->fd, pipe, IGT_PIPE_CRC_SOURCE_AUTO);
+	crtc_index = kmstest_get_crtc_index_from_id(drm->fd, drm->crtc_id);
+	pipe_crc = igt_pipe_crc_new(drm->fd, crtc_index, IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_pipe_crc_start(pipe_crc);
 	igt_pipe_crc_drain(pipe_crc);
