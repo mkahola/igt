@@ -350,8 +350,10 @@ static void setup_crtcs(const struct test_config *tconf,
 
 		crtc->crtc_idx = cconf[i].crtc_idx;
 		crtc->crtc_id = resources->crtcs[crtc->crtc_idx];
-		crtc->pipe_id = kmstest_get_pipe_from_crtc_id(drm_fd,
-							      crtc->crtc_id);
+
+		/* FIXME: avoid __intel_get_pipe_from_crtc_index() */
+		crtc->pipe_id = is_intel_device(drm_fd) ?
+			__intel_get_pipe_from_crtc_index(drm_fd, crtc->crtc_idx) : crtc->crtc_idx;
 
 		crtc->connector_count = 1;
 		for (j = i + 1; j < connector_count; j++)

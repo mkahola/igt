@@ -1303,7 +1303,7 @@ void kmstest_dump_mode(drmModeModeInfo *mode)
  * The hardware pipe may be different from the CRTC index. Figure out the CRTC
  * index to pipe mapping from the debugfs.
  */
-static int __intel_get_pipe_from_crtc_index(int fd, int crtc_index)
+int __intel_get_pipe_from_crtc_index(int fd, int crtc_index)
 {
 	char buf[2];
 	int debugfs_fd, pipe, res = 0;
