@@ -35,6 +35,7 @@ typedef struct data {
 	pthread_mutex_t lock;
 	pthread_t video_tid;
 	int selected_connector;
+	bool video_running;
 } data_t;
 
 static igt_output_t *get_hdcp_output(data_t *data, uint32_t connector_id, bool *is_valid)
@@ -420,6 +421,101 @@ static void *keypress_thread(void *arg)
 	}
 
 	return NULL;
+}
+
+static void *video_player_thread(void *arg)
+{
+	double font_size, x, y;
+	struct igt_fb fb;
+	cairo_t *cr;
+	igt_plane_t *primary;
+	const char *hdcp_str;
+	double bg_r = 0.0, bg_g = 0.0, bg_b = 0.0;
+	cairo_text_extents_t ext;
+	enum hdcp_type cur_type;
+	data_t *data = (data_t *)arg;
+
+	cur_type = data->hdcp_type;
+	igt_create_color_fb(data->fd, data->width, data->height, DRM_FORMAT_XRGB8888,
+			    DRM_FORMAT_MOD_LINEAR, 0.0, 0.0, 0.0, &fb);
+
+	while (data->video_running) {
+		pthread_mutex_lock(&data->lock);
+
+		cur_type = data->hdcp_type;
+
+		switch (cur_type) {
+		case HDCP_TYPE_1_4:
+			bg_r = 0.0; bg_g = 0.7; bg_b = 0.0;
+			hdcp_str = "HDCP1.4";
+			break;
+		case HDCP_TYPE_2_2_TYPE_0:
+			bg_r = 0.0; bg_g = 0.45; bg_b = 0.45;
+			hdcp_str = "HDCP2.2 TYPE 0";
+			break;
+		case HDCP_TYPE_2_2_TYPE_1:
+			bg_r = 0.45; bg_g = 0.15; bg_b = 0.6;
+			hdcp_str = "HDCP2.2 TYPE 1";
+			break;
+		default:
+			bg_r = 0.0; bg_g = 0.0; bg_b = 0.0;
+			hdcp_str = "NO HDCP";
+			break;
+		}
+
+		cr = igt_get_cairo_ctx(data->fd, &fb);
+
+		cairo_set_source_rgb(cr, bg_r, bg_g, bg_b);
+		cairo_paint(cr);
+
+		cairo_select_font_face(cr, "Helvetica", CAIRO_FONT_SLANT_NORMAL,
+				       CAIRO_FONT_WEIGHT_BOLD);
+		font_size = data->height / 12.0;
+		cairo_set_font_size(cr, font_size);
+
+		cairo_text_extents(cr, hdcp_str, &ext);
+		x = (data->width - ext.width) / 2.0 - ext.x_bearing;
+		y = (data->height - ext.height) / 2.0 - ext.y_bearing;
+
+		cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+		cairo_move_to(cr, x, y + ext.height);
+		cairo_show_text(cr, hdcp_str);
+		cairo_destroy(cr);
+
+		primary = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
+		igt_plane_set_fb(primary, &fb);
+		igt_display_commit2(&data->display, COMMIT_ATOMIC);
+
+		pthread_mutex_unlock(&data->lock);
+
+		usleep(100 * 1000);
+	}
+
+	igt_remove_fb(data->fd, &fb);
+
+	return NULL;
+}
+
+static void start_video_player(data_t *data)
+{
+	if (data->video_running)
+		return;
+
+	data->video_running = true;
+	if (pthread_create(&data->video_tid, NULL, video_player_thread, data) != 0) {
+		fprintf(stderr, "Failed to create video player thread\n");
+		data->video_running = false;
+	}
+}
+
+static void stop_video_player(data_t *data)
+{
+	if (!data->video_running)
+		return;
+
+	data->video_running = false;
+	pthread_join(data->video_tid, NULL);
+	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
 
 static void test_init(data_t *data)
