@@ -5,6 +5,7 @@
 
 #include <fcntl.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include "igt.h"
 
@@ -29,6 +30,11 @@ typedef struct data {
 	igt_output_t *output;
 	enum pipe pipe;
 	enum hdcp_type hdcp_type;
+	int user_cmd;
+	bool running;
+	pthread_mutex_t lock;
+	pthread_t video_tid;
+	int selected_connector;
 } data_t;
 
 static igt_output_t *get_hdcp_output(data_t *data, uint32_t connector_id, bool *is_valid)
@@ -55,6 +61,16 @@ static igt_output_t *get_hdcp_output(data_t *data, uint32_t connector_id, bool *
 	*is_valid = true;
 	return output;
 }
+
+static const char * const menu_lines[] = {
+	"=== HDCP Tool ===",
+	"1. Get HDCP Information",
+	"2. Enable HDCP1.4",
+	"3. Enable HDCP2.2 Type 0",
+	"4. Enable HDCP2.2 Type 1",
+	"5. Disable HDCP",
+	"q. Quit"
+};
 
 static void set_hdcp_prop(data_t *data, int property, int type, int connector_id)
 {
@@ -218,6 +234,192 @@ static void print_usage(void)
 	fprintf(stderr, "Options:\n");
 	fprintf(stderr, "-i,	--info		Get HDCP Information\n");
 	fprintf(stderr, "-h,	--help		Display this help message\n");
+}
+
+static void print_menu(void)
+{
+	printf("\n");
+	for (size_t i = 0; i < ARRAY_SIZE(menu_lines); i++)
+		printf("%s\n", menu_lines[i]);
+	printf("\n");
+}
+
+static bool validate_input(const char *input, char *choice)
+{
+	const char *p = input;
+	const char *rest;
+
+	/* Trim leading whitespace */
+	while (*p && isspace((unsigned char)*p))
+		p++;
+
+	/* Empty input */
+	if (*p == '\0')
+		return false;
+
+	*choice = *p;
+	rest = p + 1;
+
+	/* Ensure rest is only whitespace/newline */
+	while (*rest) {
+		if (!isspace((unsigned char)*rest) && *rest != '\0') {
+			fprintf(stderr, "Invalid input format\n");
+			return false;
+		}
+		rest++;
+	}
+
+	return true;
+}
+
+static int get_valid_hdcp_connectors(data_t *data, int *valid_connectors)
+{
+	drmModeRes *res;
+	int valid_count = 0;
+
+	res = drmModeGetResources(data->fd);
+	if (!res)
+		return 0;
+
+	for (int i = 0; i < res->count_connectors; i++) {
+		drmModeConnector *connector;
+		char *output_name;
+		const char *hdcp_support;
+
+		connector = drmModeGetConnectorCurrent(data->fd, res->connectors[i]);
+		if (!connector)
+			continue;
+
+		if (connector->connection == DRM_MODE_CONNECTED &&
+		    connector->encoder_id != 0) {
+			asprintf(&output_name, "%s-%d",
+				 kmstest_connector_type_str(connector->connector_type),
+				 connector->connector_type_id);
+			hdcp_support = get_hdcp_version(data->fd, output_name);
+			free(output_name);
+
+			if (hdcp_support && strcmp(hdcp_support, "No HDCP support") != 0)
+				valid_connectors[valid_count++] = connector->connector_id;
+		}
+		drmModeFreeConnector(connector);
+	}
+	drmModeFreeResources(res);
+
+	return valid_count;
+}
+
+static bool select_connector(data_t *data, int *valid_connectors, int valid_count)
+{
+	char input[256];
+	int cid;
+	const char *q;
+
+	printf("\nValid HDCP-capable connector IDs: ");
+	for (int i = 0; i < valid_count; i++) {
+		printf("%d", valid_connectors[i]);
+		if (i < valid_count - 1)
+			printf(", ");
+	}
+	printf("\n");
+
+	while (data->running) {
+		printf("Enter connector id (blank to cancel): ");
+		fflush(stdout);
+
+		if (!fgets(input, sizeof(input), stdin)) {
+			fprintf(stderr, "No input; aborting action\n");
+			return false;
+		}
+
+		/* Check for blank line (cancel) */
+		q = input;
+		while (*q && isspace((unsigned char)*q))
+			q++;
+
+		if (*q == '\0' || *q == '\n') {
+			fprintf(stderr, "Cancelled connector selection\n");
+			return false;
+		}
+
+		if (sscanf(input, "%d", &cid) != 1) {
+			fprintf(stderr, "Invalid number; try again\n");
+			continue;
+		}
+
+		/* Verify connector is in valid list */
+		for (int i = 0; i < valid_count; i++) {
+			if (valid_connectors[i] == cid) {
+				data->selected_connector = cid;
+				printf("Using connector: %d\n", data->selected_connector);
+				return true;
+			}
+		}
+
+		fprintf(stderr, "Connector %d is not a valid HDCP-capable connector\n", cid);
+	}
+
+	return false;
+}
+
+static bool handle_connector_selection(data_t *data, int cmd)
+{
+	int valid_connectors[32];
+	int valid_count;
+
+	/* Commands 2-5 need connector selection if not already set */
+	if (cmd < 2 || cmd > 5 || data->selected_connector != -1)
+		return true;
+
+	valid_count = get_valid_hdcp_connectors(data, valid_connectors);
+
+	if (valid_count == 0) {
+		fprintf(stderr, "No HDCP-capable connectors available\n");
+		return false;
+	}
+
+	return select_connector(data, valid_connectors, valid_count);
+}
+
+static void *keypress_thread(void *arg)
+{
+	data_t *data = (data_t *)arg;
+	char input[256], choice;
+
+	print_menu();
+
+	while (data->running) {
+		printf("Enter input 1-5 or q: ");
+		fflush(stdout);
+
+		if (!fgets(input, sizeof(input), stdin)) {
+			printf("\nExiting...\n");
+			break;
+		}
+
+		if (!validate_input(input, &choice))
+			continue;
+
+		pthread_mutex_lock(&data->lock);
+
+		if (choice == 'q' || choice == 'Q') {
+			data->running = false;
+			pthread_mutex_unlock(&data->lock);
+			continue;
+		}
+
+		if (choice >= '1' && choice <= '5') {
+			data->user_cmd = choice - '0';
+
+			if (!handle_connector_selection(data, data->user_cmd))
+				data->user_cmd = 0;
+		} else {
+			fprintf(stderr, "Invalid choice: %c\n", choice);
+		}
+
+		pthread_mutex_unlock(&data->lock);
+	}
+
+	return NULL;
 }
 
 static void test_init(data_t *data)
