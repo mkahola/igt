@@ -36,6 +36,7 @@ typedef struct data {
 	pthread_t video_tid;
 	int selected_connector;
 	bool video_running;
+	time_t video_start_time;
 } data_t;
 
 static igt_output_t *get_hdcp_output(data_t *data, uint32_t connector_id, bool *is_valid)
@@ -72,6 +73,58 @@ static const char * const menu_lines[] = {
 	"5. Disable HDCP",
 	"q. Quit"
 };
+
+static void draw_menu_text(cairo_t *cr, data_t *data)
+{
+	cairo_text_extents_t ext;
+	double x_center, total_height, y_start, y;
+	int num_lines = ARRAY_SIZE(menu_lines);
+
+	cairo_select_font_face(cr, "Helvetica", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+
+	x_center = data->width / 2.0;
+	total_height = 0;
+	for (int i = 0; i < num_lines; i++) {
+		cairo_set_font_size(cr, 52);
+		cairo_text_extents(cr, menu_lines[i], &ext);
+		total_height += ext.height;
+	}
+
+	y_start = (data->height - total_height) / 2.0;
+	y = y_start;
+	for (int i = 0; i < num_lines; i++) {
+		cairo_set_font_size(cr, 52);
+		cairo_text_extents(cr, menu_lines[i], &ext);
+		cairo_move_to(cr, x_center - ext.width / 2, y);
+		cairo_show_text(cr, menu_lines[i]);
+		y += ext.height + 10;
+	}
+}
+
+static void draw_menu(data_t *data, const char *status)
+{
+	cairo_t *cr = igt_get_cairo_ctx(data->fd, &data->fb);
+
+	/* Background color and text color based on HDCP status */
+	if (strcmp(status, "INIT") == 0) {
+		cairo_set_source_rgb(cr, 0.051, 0.278, 0.631);
+		cairo_paint(cr);
+		cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+	} else if (strcmp(status, "Enabled") == 0) {
+		cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
+		cairo_paint(cr);
+		cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+	} else {
+		cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
+		cairo_paint(cr);
+		cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+	}
+
+	draw_menu_text(cr, data);
+
+	cairo_destroy(cr);
+}
 
 static void set_hdcp_prop(data_t *data, int property, int type, int connector_id)
 {
@@ -227,14 +280,6 @@ static void get_hdcp_info(data_t *data)
 	fprintf(stderr, "---- -------- ------------ -------- -------------------- ------------\n");
 
 	drmModeFreeResources(res);
-}
-
-static void print_usage(void)
-{
-	fprintf(stderr, "Usage: intel_hdcp [OPTIONS]\n");
-	fprintf(stderr, "Options:\n");
-	fprintf(stderr, "-i,	--info		Get HDCP Information\n");
-	fprintf(stderr, "-h,	--help		Display this help message\n");
 }
 
 static void print_menu(void)
@@ -468,18 +513,32 @@ static void *video_player_thread(void *arg)
 		cairo_set_source_rgb(cr, bg_r, bg_g, bg_b);
 		cairo_paint(cr);
 
+		draw_menu_text(cr, data);
+
+		current_time = time(NULL);
+		elapsed = current_time - data->video_start_time;
+		minutes = elapsed / 60;
+		seconds = elapsed % 60;
+		snprintf(timer_str, sizeof(timer_str), "%02d:%02d", minutes, seconds);
+
 		cairo_select_font_face(cr, "Helvetica", CAIRO_FONT_SLANT_NORMAL,
 				       CAIRO_FONT_WEIGHT_BOLD);
-		font_size = data->height / 12.0;
-		cairo_set_font_size(cr, font_size);
-
-		cairo_text_extents(cr, hdcp_str, &ext);
-		x = (data->width - ext.width) / 2.0 - ext.x_bearing;
-		y = (data->height - ext.height) / 2.0 - ext.y_bearing;
-
 		cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-		cairo_move_to(cr, x, y + ext.height);
+		font_size = data->height / 12.0;
+		cairo_set_font_size(cr, font_size / 2.0);
+		cairo_text_extents(cr, timer_str, &ext);
+		cairo_move_to(cr, data->width - ext.width - 20, data->height - 20);
+		cairo_show_text(cr, timer_str);
+
+		/* Draw HDCP status above timer */
+		cairo_set_font_size(cr, font_size);
+		cairo_text_extents(cr, hdcp_str, &ext);
+		x = data->width - ext.width - 20;
+		y = data->height - ext.height - 60;
+
+		cairo_move_to(cr, x, y);
 		cairo_show_text(cr, hdcp_str);
+
 		cairo_destroy(cr);
 
 		primary = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
@@ -518,6 +577,16 @@ static void stop_video_player(data_t *data)
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
 
+static void enable_hdcp_type(data_t *data, enum hdcp_type type)
+{
+		set_hdcp_prop(data, CP_DESIRED, type, data->selected_connector);
+		pthread_mutex_lock(&data->lock);
+		data->hdcp_type = type;
+		data->video_start_time = time(NULL);
+		pthread_mutex_unlock(&data->lock);
+		start_video_player(data);
+}
+
 static void test_init(data_t *data)
 {
 	drmModeModeInfo *mode;
@@ -547,39 +616,94 @@ static void test_init(data_t *data)
 
 		break;
 	}
+
+	pthread_mutex_init(&data->lock, NULL);
+	data->user_cmd = 0;
+	data->hdcp_type = 0;
+	data->running = true;
+	data->video_running = false;
+
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
 
 static void cleanup(data_t *data)
 {
+	stop_video_player(data);
 	igt_remove_fb(data->fd, &data->fb);
 	igt_display_fini(&data->display);
 	close(data->fd);
+	pthread_mutex_destroy(&data->lock);
 }
 
 int main(int argc, char **argv)
 {
 	data_t data;
-	int option;
-	static const char optstr[] = "hi";
-	struct option long_opts[] = {
-		{"help",	no_argument,	NULL, 'h'},
-		{"info",	no_argument,	NULL, 'i'},
-		{NULL,		0,		NULL,  0 }
-	};
+	pthread_t tid;
+	const char *status = NULL;
+	igt_plane_t *primary;
 
+	data.selected_connector = -1;
 	test_init(&data);
 
-	while ((option = getopt_long(argc, argv, optstr, long_opts, NULL)) != -1) {
-		switch (option) {
-		case 'i':
+	draw_menu(&data, "INIT");
+	primary = igt_output_get_plane_type(data.output, DRM_PLANE_TYPE_PRIMARY);
+	igt_plane_set_fb(primary, &data.fb);
+	igt_display_commit2(&data.display, COMMIT_ATOMIC);
+
+	pthread_create(&tid, NULL, keypress_thread, &data);
+
+	while (data.running) {
+		int cmd;
+
+		pthread_mutex_lock(&data.lock);
+		cmd = data.user_cmd;
+		data.user_cmd = 0;
+		pthread_mutex_unlock(&data.lock);
+
+		if (cmd == 0) {
+			usleep(100 * 1000);
+			continue;
+		}
+
+		switch (cmd) {
+		case 1:
 			get_hdcp_info(&data);
 			break;
-		case 'h':
+		case 2:
+			enable_hdcp_type(&data, HDCP_TYPE_1_4);
+			break;
+		case 3:
+			enable_hdcp_type(&data, HDCP_TYPE_2_2_TYPE_0);
+			break;
+		case 4:
+			enable_hdcp_type(&data, HDCP_TYPE_2_2_TYPE_1);
+			break;
+		case 5:
+			stop_video_player(&data);
+			set_hdcp_prop(&data, CP_UNDESIRED, HDCP_TYPE_2_2_TYPE_1,
+				      data.selected_connector);
+			data.hdcp_type = HDCP_TYPE_NONE;
+			break;
 		default:
-			print_usage();
 			break;
 		}
+
+		if (cmd == 1) {
+			draw_menu(&data, "INIT");
+		} else {
+			status = get_hdcp_status(&data, data.selected_connector);
+			draw_menu(&data, status);
+		}
+
+		primary = igt_output_get_plane_type(data.output, DRM_PLANE_TYPE_PRIMARY);
+		igt_plane_set_fb(primary, &data.fb);
+		igt_display_commit2(&data.display, COMMIT_ATOMIC);
+
+		usleep(200 * 1000);
 	}
+
+	pthread_cancel(tid);
+	pthread_join(tid, NULL);
 	cleanup(&data);
+	return 0;
 }
