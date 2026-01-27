@@ -477,10 +477,17 @@ static void *video_player_thread(void *arg)
 	const char *hdcp_str;
 	double bg_r = 0.0, bg_g = 0.0, bg_b = 0.0;
 	cairo_text_extents_t ext;
-	enum hdcp_type cur_type;
-	data_t *data = (data_t *)arg;
+	enum hdcp_type cur_type, prev_type;
+	data_t *data;
+	char timer_str[32];
+	time_t current_time, elapsed;
+	int minutes, seconds;
 
+	data = (data_t *)arg;
 	cur_type = data->hdcp_type;
+	prev_type = cur_type;
+
+	data->video_start_time = time(NULL);
 	igt_create_color_fb(data->fd, data->width, data->height, DRM_FORMAT_XRGB8888,
 			    DRM_FORMAT_MOD_LINEAR, 0.0, 0.0, 0.0, &fb);
 
@@ -488,6 +495,12 @@ static void *video_player_thread(void *arg)
 		pthread_mutex_lock(&data->lock);
 
 		cur_type = data->hdcp_type;
+
+		/* Reset timer if HDCP type changed */
+		if (cur_type != prev_type) {
+			data->video_start_time = time(NULL);
+			prev_type = cur_type;
+		}
 
 		switch (cur_type) {
 		case HDCP_TYPE_1_4:
@@ -539,6 +552,18 @@ static void *video_player_thread(void *arg)
 		cairo_move_to(cr, x, y);
 		cairo_show_text(cr, hdcp_str);
 
+		/* Add timer in bottom-right corner */
+		current_time = time(NULL);
+		elapsed = current_time - data->video_start_time;
+		minutes = elapsed / 60;
+		seconds = elapsed % 60;
+		snprintf(timer_str, sizeof(timer_str), "%02d:%02d", minutes, seconds);
+
+		cairo_set_font_size(cr, font_size / 2.0);
+		cairo_text_extents(cr, timer_str, &ext);
+		cairo_move_to(cr, data->width - ext.width - 20, data->height - 20);
+		cairo_show_text(cr, timer_str);
+
 		cairo_destroy(cr);
 
 		primary = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
@@ -561,6 +586,7 @@ static void start_video_player(data_t *data)
 		return;
 
 	data->video_running = true;
+	data->video_start_time = time(NULL);
 	if (pthread_create(&data->video_tid, NULL, video_player_thread, data) != 0) {
 		fprintf(stderr, "Failed to create video player thread\n");
 		data->video_running = false;
