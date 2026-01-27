@@ -90,7 +90,6 @@ enum pipe {
         IGT_MAX_PIPES
 };
 const char *kmstest_pipe_name(enum pipe pipe);
-int kmstest_pipe_to_index(char pipe);
 const char *kmstest_plane_type_name(int plane_type);
 
 enum port {

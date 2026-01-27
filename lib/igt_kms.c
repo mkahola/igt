@@ -1066,22 +1066,6 @@ const char *kmstest_pipe_name(enum pipe pipe)
 }
 
 /**
- * kmstest_pipe_to_index:
- * @pipe: display pipe in string format
- *
- * Returns: Index to corresponding pipe
- */
-int kmstest_pipe_to_index(char pipe)
-{
-	int r = pipe - 'A';
-
-	if (r < 0 || r >= IGT_MAX_PIPES)
-		return -EINVAL;
-
-	return r;
-}
-
-/**
  * kmstest_plane_type_name:
  * @plane_type: display plane type
  *
@@ -1322,7 +1306,7 @@ void kmstest_dump_mode(drmModeModeInfo *mode)
 static int __intel_get_pipe_from_crtc_index(int fd, int crtc_index)
 {
 	char buf[2];
-	int debugfs_fd, res = 0;
+	int debugfs_fd, pipe, res = 0;
 	char pipe_char;
 
 	debugfs_fd = igt_debugfs_pipe_dir(fd, crtc_index, O_RDONLY);
@@ -1336,7 +1320,11 @@ static int __intel_get_pipe_from_crtc_index(int fd, int crtc_index)
 
 	igt_assert_eq(sscanf(buf, "%c", &pipe_char), 1);
 
-	return kmstest_pipe_to_index(pipe_char);
+	pipe = pipe_char - 'A';
+
+	igt_assert_f(pipe >= 0 && pipe < IGT_MAX_PIPES, "i915_pipe %c out of range\n", pipe_char);
+
+	return pipe;
 }
 
 /**
