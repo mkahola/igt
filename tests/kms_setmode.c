@@ -664,7 +664,7 @@ retry:
 					     crtc->connector_count, &crtc->mode);
 
 		if (is_intel_device(drm_fd))
-			intel_drrs_disable(drm_fd, crtc->pipe_id);
+			intel_drrs_disable(drm_fd, crtc->crtc_idx);
 
 		free(ids);
 
