@@ -71,24 +71,24 @@ static void get_hdcp_info(data_t *data)
 	fprintf(stderr, "Connectors:\n");
 	fprintf(stderr, "id\tencoder\tstatus\t\ttype\tHDCP\n");
 	for (int i = 0; i < res->count_connectors; i++) {
-		drmModeConnector *c;
+		drmModeConnector *connector;
 
-		c = drmModeGetConnectorCurrent(data->fd, res->connectors[i]);
+		connector = drmModeGetConnectorCurrent(data->fd, res->connectors[i]);
 
-		if (!c)
+		if (!connector)
 			continue;
 
 		asprintf(&output_name, "%s-%d",
-			 kmstest_connector_type_str(c->connector_type),
-			 c->connector_type_id);
+			 kmstest_connector_type_str(connector->connector_type),
+			 connector->connector_type_id);
 
 		fprintf(stderr, "%d\t%d\t%s\t%s\t%s\n",
-			c->connector_id, c->encoder_id,
-			kmstest_connector_status_str(c->connection),
-			kmstest_connector_type_str(c->connector_type),
+			connector->connector_id, connector->encoder_id,
+			kmstest_connector_status_str(connector->connection),
+			kmstest_connector_type_str(connector->connector_type),
 			get_hdcp_version(data->fd, output_name));
 
-		drmModeFreeConnector(c);
+		drmModeFreeConnector(connector);
 	}
 
 	drmModeFreeResources(res);
