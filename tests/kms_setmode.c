@@ -343,17 +343,13 @@ static void setup_crtcs(const struct test_config *tconf,
 	config_valid = true;
 
 	while (i < connector_count) {
-		drmModeCrtc *drm_crtc;
 		unsigned long encoder_mask;
 		int j;
 
 		igt_assert_lt(crtc_count, MAX_CRTCS);
 
 		crtc->crtc_idx = cconf[i].crtc_idx;
-		drm_crtc = drmModeGetCrtc(drm_fd,
-					  resources->crtcs[crtc->crtc_idx]);
-		crtc->crtc_id = drm_crtc->crtc_id;
-		drmModeFreeCrtc(drm_crtc);
+		crtc->crtc_id = resources->crtcs[crtc->crtc_idx];
 		crtc->pipe_id = kmstest_get_pipe_from_crtc_id(drm_fd,
 							      crtc->crtc_id);
 
