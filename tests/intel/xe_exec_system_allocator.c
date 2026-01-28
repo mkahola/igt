@@ -1417,7 +1417,7 @@ test_exec(int fd, struct drm_xe_engine_class_instance *eci,
 	};
 	uint32_t exec_queues[MAX_N_EXEC_QUEUES];
 	struct test_exec_data *data, *next_data = NULL, *original_data = NULL;
-	uint32_t bo_flags;
+	uint32_t bo_flags = 0;
 	uint32_t bo = 0, bind_sync = 0;
 	void **pending_free;
 	u64 *exec_ufence = NULL, *bind_ufence = NULL;
