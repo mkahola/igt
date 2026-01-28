@@ -790,18 +790,23 @@ run_ctm_tests_for_pipe(data_t *data, enum pipe p,
 		       int iter)
 {
 	bool success = false;
+	bool depth_10bit = false;
 	double delta;
 	int i;
 
 	test_setup(data, p);
 
+	/* MediaTek can only support bit-ture in 10-bit depth pre color */
+	if (is_mtk_device(data->drm_fd))
+		depth_10bit = true;
+
 	/*
-	 * We assume an 8bits depth per color for degamma/gamma LUTs
+	 * We assume an 8bits or 10bits depth per color for degamma/gamma LUTs
 	 * for CRC checks with framebuffer references.
 	 */
-	data->color_depth = 8;
+	data->color_depth = depth_10bit ? 10 : 8;
 	delta = 1.0 / (1 << data->color_depth);
-	data->drm_format = DRM_FORMAT_XRGB8888;
+	data->drm_format = depth_10bit ? DRM_FORMAT_XRGB2101010 : DRM_FORMAT_XRGB8888;
 	data->mode = igt_output_get_mode(data->output);
 
 	igt_require(pipe_output_combo_valid(data, p));
