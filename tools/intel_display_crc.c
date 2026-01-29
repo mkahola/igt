@@ -83,13 +83,13 @@ static void print_crcs(display_crc_t *ctx)
 	igt_pipe_crc_free(pipe_crc);
 }
 
-static display_crc_t ctx;
-
 int main(int argc, char **argv)
 {
+	display_crc_t ctx = {
+		.fd = -1,
+		.n_crcs = 1,
+	};
 	int opt;
-
-	ctx.n_crcs = 1;
 
 	while ((opt = getopt(argc, argv, "p:n:")) != -1) {
 		switch (opt) {
