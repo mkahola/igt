@@ -123,20 +123,19 @@ static void set_output_on_pipe_b(data_t *data)
 {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
-	for_each_pipe_with_valid_output(display, pipe, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
 		drmModeConnectorPtr c = output->config.connector;
 
 		/* DC5 with PIPE_B transaction */
-		if (pipe != PIPE_B)
+		if (crtc->pipe != PIPE_B)
 			continue;
 
 		if (c->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 
-		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+		igt_output_set_crtc(output, crtc);
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
@@ -151,18 +150,18 @@ static void setup_output(data_t *data)
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
 	bool is_low_power;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
-	for_each_pipe_with_valid_output(display, pipe, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
 		drmModeConnectorPtr c = output->config.connector;
 
 		if (disp_ver >= 13) {
 			if (disp_ver == 20 || IS_BATTLEMAGE(data->devid) || IS_DG2(data->devid))
-				is_low_power = (pipe == PIPE_A);
+				is_low_power = (crtc->pipe == PIPE_A);
 			else
-				is_low_power = (pipe == PIPE_A || pipe == PIPE_B);
+				is_low_power = (crtc->pipe == PIPE_A || crtc->pipe == PIPE_B);
 		} else {
-			is_low_power = (pipe == PIPE_A);
+			is_low_power = (crtc->pipe == PIPE_A);
 		}
 
 		igt_skip_on_f(!is_low_power, "Low power pipe was not selected for the DC5 transaction.\n");
@@ -170,8 +169,7 @@ static void setup_output(data_t *data)
 		if (c->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 
-		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+		igt_output_set_crtc(output, crtc);
 		data->output = output;
 		data->mode = igt_output_get_mode(output);
 
@@ -644,7 +642,7 @@ static void test_deep_pkgc_state(data_t *data)
 	time_t start = time(NULL);
 	time_t duration = (4 * SEC);
 	time_t delay;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	bool pkgc_flag = false;
 	bool flip = true, edp_found = false;
 
@@ -652,7 +650,7 @@ static void test_deep_pkgc_state(data_t *data)
 	igt_plane_t *primary;
 	igt_output_t *output = NULL;
 
-	for_each_pipe_with_valid_output(display, pipe, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
 		if (output->config.connector->connector_type == DRM_MODE_CONNECTOR_eDP) {
 
 			edp_found = true;
@@ -663,14 +661,12 @@ static void test_deep_pkgc_state(data_t *data)
 				 * TODO: Add check for vmin = vmax = flipline if VRR enabled
 				 * when KMD allows for such capability.
 				 */
-				igt_crtc_set_prop_value(igt_crtc_for_pipe(display, pipe),
-							    IGT_CRTC_VRR_ENABLED,
-							    false);
+				igt_crtc_set_prop_value(crtc, IGT_CRTC_VRR_ENABLED, false);
 				igt_assert(igt_display_try_commit_atomic(display,
 									 DRM_MODE_ATOMIC_ALLOW_MODESET,
 									 NULL) == 0);
 			}
-		break;
+			break;
 		}
 	}
 
@@ -681,7 +677,7 @@ static void test_deep_pkgc_state(data_t *data)
 
 	igt_display_reset(display);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, crtc);
 	for_each_connector_mode(output) {
 		data->mode = &output->config.connector->modes[j__];
 		delay = (MSEC / (data->mode->vrefresh));
@@ -700,7 +696,7 @@ static void test_deep_pkgc_state(data_t *data)
 	igt_plane_set_fb(primary, &data->fb_rgb);
 	igt_display_commit(&data->display);
 	/* Wait for the vblank to sync the frame time */
-	igt_wait_for_vblank_count(igt_crtc_for_pipe(&data->display, pipe), 1);
+	igt_wait_for_vblank_count(crtc, 1);
 	pre_val = read_pkgc_counter(data->debugfs_root_fd);
 	/* Add a half-frame delay to ensure the flip occurs when the frame is active. */
 	usleep(delay * 0.5);
