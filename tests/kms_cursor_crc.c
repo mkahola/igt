@@ -959,7 +959,7 @@ static void test_size_hints(data_t *data)
 
 static void run_size_tests(data_t *data, int w, int h)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	struct {
 		const char *name;
 		void (*testfunc)(data_t *);
@@ -1006,11 +1006,12 @@ static void run_size_tests(data_t *data, int w, int h)
 				}
 			}
 
-			for_each_pipe_with_single_output(&data->display, pipe, data->output) {
-				if (execution_constraint(pipe))
+			for_each_crtc_with_single_output(&data->display, crtc,
+							 data->output) {
+				if (execution_constraint(crtc->pipe))
 					continue;
 
-				data->pipe = pipe;
+				data->pipe = crtc->pipe;
 
 				if (!valid_pipe_output_combo(data))
 					continue;
@@ -1021,7 +1022,8 @@ static void run_size_tests(data_t *data, int w, int h)
 				}
 
 				igt_dynamic_f("pipe-%s-%s",
-					      kmstest_pipe_name(pipe), igt_output_name(data->output))
+					      igt_crtc_name(crtc),
+					      igt_output_name(data->output))
 					run_test(data, size_tests[i].testfunc, w, h);
 			}
 		}
@@ -1033,7 +1035,7 @@ static void run_size_tests(data_t *data, int w, int h)
 
 static void run_tests_on_pipe(data_t *data)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	int cursor_size;
 
 	igt_fixture() {
@@ -1045,17 +1047,18 @@ static void run_tests_on_pipe(data_t *data)
 		     "flight to smaller ones to see that the size is applied "
 		     "correctly.");
 	igt_subtest_with_dynamic("cursor-size-change") {
-		for_each_pipe_with_single_output(&data->display, pipe, data->output) {
-			if (execution_constraint(pipe))
+		for_each_crtc_with_single_output(&data->display, crtc,
+						 data->output) {
+			if (execution_constraint(crtc->pipe))
 				continue;
 
-			data->pipe = pipe;
+			data->pipe = crtc->pipe;
 
 			if (!valid_pipe_output_combo(data))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s",
-				      kmstest_pipe_name(pipe),
+				      igt_crtc_name(crtc),
 				      data->output->name)
 				run_test(data, test_cursor_size,
 					 data->cursor_max_w, data->cursor_max_h);
@@ -1065,17 +1068,18 @@ static void run_tests_on_pipe(data_t *data)
 	igt_describe("Validates the composition of a fully opaque cursor "
 		     "plane, i.e., alpha channel equal to 1.0.");
 	igt_subtest_with_dynamic("cursor-alpha-opaque") {
-		for_each_pipe_with_single_output(&data->display, pipe, data->output) {
-			if (execution_constraint(pipe))
+		for_each_crtc_with_single_output(&data->display, crtc,
+						 data->output) {
+			if (execution_constraint(crtc->pipe))
 				continue;
 
-			data->pipe = pipe;
+			data->pipe = crtc->pipe;
 
 			if (!valid_pipe_output_combo(data))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s",
-				      kmstest_pipe_name(pipe),
+				      igt_crtc_name(crtc),
 				      data->output->name)
 				run_test(data, test_cursor_opaque,
 					 data->cursor_max_w, data->cursor_max_h);
@@ -1085,17 +1089,18 @@ static void run_tests_on_pipe(data_t *data)
 	igt_describe("Validates the composition of a fully transparent cursor "
 		     "plane, i.e., alpha channel equal to 0.0.");
 	igt_subtest_with_dynamic("cursor-alpha-transparent") {
-		for_each_pipe_with_single_output(&data->display, pipe, data->output) {
-			if (execution_constraint(pipe))
+		for_each_crtc_with_single_output(&data->display, crtc,
+						 data->output) {
+			if (execution_constraint(crtc->pipe))
 				continue;
 
-			data->pipe = pipe;
+			data->pipe = crtc->pipe;
 
 			if (!valid_pipe_output_combo(data))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s",
-				      kmstest_pipe_name(pipe),
+				      igt_crtc_name(crtc),
 				      data->output->name)
 				run_test(data, test_cursor_transparent,
 					 data->cursor_max_w, data->cursor_max_h);
@@ -1114,17 +1119,18 @@ static void run_tests_on_pipe(data_t *data)
 
 	igt_describe("Validate cursor updates don't cause tearing with framebuffer changes");
 	igt_subtest_with_dynamic("cursor-tearing-framebuffer-change") {
-		for_each_pipe_with_single_output(&data->display, pipe, data->output) {
-			if (execution_constraint(pipe))
+		for_each_crtc_with_single_output(&data->display, crtc,
+						 data->output) {
+			if (execution_constraint(crtc->pipe))
 				continue;
 
-			data->pipe = pipe;
+			data->pipe = crtc->pipe;
 
 			if (!valid_pipe_output_combo(data))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s",
-					  kmstest_pipe_name(pipe),
+					  igt_crtc_name(crtc),
 					  data->output->name)
 				run_test(data, test_crc_cursors,
 					  data->cursor_max_w, data->cursor_max_h);
@@ -1133,17 +1139,18 @@ static void run_tests_on_pipe(data_t *data)
 
 	igt_describe("Validate cursor updates don't cause tearing with position changes");
 	igt_subtest_with_dynamic("cursor-tearing-position-change") {
-		for_each_pipe_with_single_output(&data->display, pipe, data->output) {
-			if (execution_constraint(pipe))
+		for_each_crtc_with_single_output(&data->display, crtc,
+						 data->output) {
+			if (execution_constraint(crtc->pipe))
 				continue;
 
-			data->pipe = pipe;
+			data->pipe = crtc->pipe;
 
 			if (!valid_pipe_output_combo(data))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s",
-					  kmstest_pipe_name(pipe),
+					  igt_crtc_name(crtc),
 					  data->output->name)
 				run_test(data, test_crc_pos_cursors,
 					  data->cursor_max_w, data->cursor_max_h);
@@ -1159,18 +1166,19 @@ static void run_tests_on_pipe(data_t *data)
 
 	igt_describe("Check random placement of a cursor with DPMS.");
 	igt_subtest_with_dynamic("cursor-dpms") {
-		for_each_pipe_with_single_output(&data->display, pipe, data->output) {
-			if (execution_constraint(pipe))
+		for_each_crtc_with_single_output(&data->display, crtc,
+						 data->output) {
+			if (execution_constraint(crtc->pipe))
 				continue;
 
-			data->pipe = pipe;
+			data->pipe = crtc->pipe;
 			data->flags = TEST_DPMS;
 
 			if (!valid_pipe_output_combo(data))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s",
-				      kmstest_pipe_name(pipe),
+				      igt_crtc_name(crtc),
 				      data->output->name)
 				run_test(data, test_crc_random,
 					 data->cursor_max_w, data->cursor_max_h);
@@ -1180,18 +1188,19 @@ static void run_tests_on_pipe(data_t *data)
 
 	igt_describe("Check random placement of a cursor with suspend.");
 	igt_subtest_with_dynamic("cursor-suspend") {
-		for_each_pipe_with_single_output(&data->display, pipe, data->output) {
-			if (execution_constraint(pipe))
+		for_each_crtc_with_single_output(&data->display, crtc,
+						 data->output) {
+			if (execution_constraint(crtc->pipe))
 				continue;
 
-			data->pipe = pipe;
+			data->pipe = crtc->pipe;
 			data->flags = TEST_SUSPEND;
 
 			if (!valid_pipe_output_combo(data))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s",
-				      kmstest_pipe_name(pipe),
+				      igt_crtc_name(crtc),
 				      data->output->name)
 				run_test(data, test_crc_random,
 					 data->cursor_max_w, data->cursor_max_h);
@@ -1204,17 +1213,18 @@ static void run_tests_on_pipe(data_t *data)
 
 	igt_describe("Check that sizes declared in SIZE_HINTS are accepted.");
 	igt_subtest_with_dynamic("cursor-size-hints") {
-		for_each_pipe_with_single_output(&data->display, pipe, data->output) {
-			if (execution_constraint(pipe))
+		for_each_crtc_with_single_output(&data->display, crtc,
+						 data->output) {
+			if (execution_constraint(crtc->pipe))
 				continue;
 
-			data->pipe = pipe;
+			data->pipe = crtc->pipe;
 
 			if (!valid_pipe_output_combo(data))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s",
-				      kmstest_pipe_name(pipe),
+				      igt_crtc_name(crtc),
 				      data->output->name)
 				run_test(data, test_size_hints,
 					 data->cursor_max_w, data->cursor_max_h);

@@ -1455,7 +1455,7 @@ static const char *help_str =
 
 int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 {
-	enum pipe pipe = PIPE_NONE;
+	igt_crtc_t *crtc;
 	igt_output_t *output = NULL;
 	data_t data = { 0 };
 
@@ -1470,20 +1470,21 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test for KMS atomic modesetting on overlay plane and ensure coherency between "
 		     "the legacy and atomic interfaces.");
 	igt_subtest_with_dynamic("plane-overlay-legacy") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
 			igt_plane_t *overlay =
-				igt_crtc_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
+				igt_crtc_get_plane_type(crtc,
 							DRM_PLANE_TYPE_OVERLAY);
 			uint32_t format = plane_get_igt_format(overlay);
 
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
 			if (!overlay || !format)
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
-				atomic_setup(&data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
+				atomic_setup(&data, crtc->pipe, output);
 				plane_overlay(&data, output, overlay, format);
-				atomic_clear(&data, pipe, output);
+				atomic_clear(&data, crtc->pipe, output);
 			}
 			if (!all_pipes)
 				break;
@@ -1493,13 +1494,14 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test for KMS atomic modesetting on primary plane and ensure coherency between "
 		     "the legacy and atomic interfaces.");
 	igt_subtest_with_dynamic("plane-primary-legacy") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
-				atomic_setup(&data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
+				atomic_setup(&data, crtc->pipe, output);
 				plane_primary(&data);
-				atomic_clear(&data, pipe, output);
+				atomic_clear(&data, crtc->pipe, output);
 			}
 			if (!all_pipes)
 				break;
@@ -1509,15 +1511,15 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Verify that the overlay plane can cover the primary one (and "\
 		     "vice versa) by changing their zpos property.");
 	igt_subtest_with_dynamic("plane-primary-overlay-mutable-zpos") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
 			igt_plane_t *overlay =
-				igt_crtc_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
+				igt_crtc_get_plane_type(crtc,
 							DRM_PLANE_TYPE_OVERLAY);
 
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
 
-			atomic_setup(&data, pipe, output);
+			atomic_setup(&data, crtc->pipe, output);
 			if (!overlay)
 				continue;
 			if (!has_mutable_zpos(data.primary) || !has_mutable_zpos(overlay))
@@ -1525,10 +1527,11 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 			if (!igt_plane_has_format_mod(data.primary, DRM_FORMAT_ARGB8888, 0x0) ||
 			    !igt_plane_has_format_mod(overlay, DRM_FORMAT_ARGB1555, 0x0))
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
 				plane_primary_overlay_mutable_zpos(&data, output, overlay,
 								   DRM_FORMAT_ARGB8888, DRM_FORMAT_ARGB1555);
-				atomic_clear(&data, pipe, output);
+				atomic_clear(&data, crtc->pipe, output);
 			}
 			if (!all_pipes)
 				break;
@@ -1538,17 +1541,19 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Verify the reported zpos property of planes by making sure "\
 		     "only higher zpos planes cover the lower zpos ones.");
 	igt_subtest_with_dynamic("plane-immutable-zpos") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
-			int n_planes = igt_crtc_for_pipe(&data.display, pipe)->n_planes;
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
+			int n_planes = crtc->n_planes;
 
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
 			if (n_planes < 2)
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
-				atomic_setup(&data, pipe, output);
-				plane_immutable_zpos(&data, output, pipe, n_planes);
-				atomic_clear(&data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
+				atomic_setup(&data, crtc->pipe, output);
+				plane_immutable_zpos(&data, output,
+						     crtc->pipe, n_planes);
+				atomic_clear(&data, crtc->pipe, output);
 			}
 			if (!all_pipes)
 				break;
@@ -1558,20 +1563,21 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test to ensure that DRM_MODE_ATOMIC_TEST_ONLY really only touches "
 		     "the free-standing state objects and nothing else.");
 	igt_subtest_with_dynamic("test-only") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
 			uint32_t format;
 
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
 
-			atomic_setup(&data, pipe, output);
+			atomic_setup(&data, crtc->pipe, output);
 			format = plane_get_igt_format(data.primary);
 
 			if (!format)
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
-				atomic_clear(&data, pipe, output);
-				test_only(&data, output, pipe, format);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
+				atomic_clear(&data, crtc->pipe, output);
+				test_only(&data, output, crtc->pipe, format);
 			}
 			if (!all_pipes)
 				break;
@@ -1581,19 +1587,20 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test for KMS atomic modesetting on cursor plane and ensure coherency between "
 		     "legacy and atomic interfaces.");
 	igt_subtest_with_dynamic("plane-cursor-legacy") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
 			igt_plane_t *cursor =
-				igt_crtc_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
+				igt_crtc_get_plane_type(crtc,
 							DRM_PLANE_TYPE_CURSOR);
 
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
 			if (!cursor)
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
-				atomic_setup(&data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
+				atomic_setup(&data, crtc->pipe, output);
 				plane_cursor(&data, output, cursor);
-				atomic_clear(&data, pipe, output);
+				atomic_clear(&data, crtc->pipe, output);
 			}
 			if (!all_pipes)
 				break;
@@ -1602,13 +1609,14 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 	igt_describe("Test error handling when invalid plane parameters are passed");
 	igt_subtest_with_dynamic("plane-invalid-params") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
-				atomic_setup(&data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
+				atomic_setup(&data, crtc->pipe, output);
 				plane_invalid_params(&data, output);
-				atomic_clear(&data, pipe, output);
+				atomic_clear(&data, crtc->pipe, output);
 			}
 			if (!all_pipes)
 				break;
@@ -1617,13 +1625,14 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 	igt_describe("Test error handling when invalid plane fence parameters are passed");
 	igt_subtest_with_dynamic("plane-invalid-params-fence") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
-				atomic_setup(&data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
+				atomic_setup(&data, crtc->pipe, output);
 				plane_invalid_params_fence(&data, output);
-				atomic_clear(&data, pipe, output);
+				atomic_clear(&data, crtc->pipe, output);
 			}
 			if (!all_pipes)
 				break;
@@ -1632,13 +1641,14 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 	igt_describe("Test error handling when invalid crtc parameters are passed");
 	igt_subtest_with_dynamic("crtc-invalid-params") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
-				atomic_setup(&data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
+				atomic_setup(&data, crtc->pipe, output);
 				crtc_invalid_params(&data, output);
-				atomic_clear(&data, pipe, output);
+				atomic_clear(&data, crtc->pipe, output);
 			}
 			if (!all_pipes)
 				break;
@@ -1647,13 +1657,14 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 	igt_describe("Test error handling when invalid crtc fence parameters are passed");
 	igt_subtest_with_dynamic("crtc-invalid-params-fence") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
-				atomic_setup(&data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
+				atomic_setup(&data, crtc->pipe, output);
 				crtc_invalid_params_fence(&data, output);
-				atomic_clear(&data, pipe, output);
+				atomic_clear(&data, crtc->pipe, output);
 			}
 			if (!all_pipes)
 				break;
@@ -1664,13 +1675,14 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		     "various invalid conditions which the libdrm wrapper won't "
 		     "allow us to create.");
 	igt_subtest_with_dynamic("atomic-invalid-params") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
-				atomic_setup(&data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
+				atomic_setup(&data, crtc->pipe, output);
 				atomic_invalid_params(&data, output);
-				atomic_clear(&data, pipe, output);
+				atomic_clear(&data, crtc->pipe, output);
 			}
 			if (!all_pipes)
 				break;
@@ -1679,17 +1691,18 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 	igt_describe("Simple test cases to use FB_DAMAGE_CLIPS plane property");
 	igt_subtest_with_dynamic("atomic-plane-damage") {
-		for_each_pipe_with_single_output(&data.display, pipe, output) {
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+		for_each_crtc_with_single_output(&data.display, crtc, output) {
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
 
-			atomic_setup(&data, pipe, output);
+			atomic_setup(&data, crtc->pipe, output);
 
 			if (!igt_plane_has_prop(data.primary, IGT_PLANE_FB_DAMAGE_CLIPS))
 				continue;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output)) {
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
 				atomic_plane_damage(&data);
-				atomic_clear(&data, pipe, output);
+				atomic_clear(&data, crtc->pipe, output);
 			}
 			if (!all_pipes)
 				break;
