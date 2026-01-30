@@ -344,6 +344,7 @@ static const char *help_str =
 
 int igt_main_args("", long_opts, help_str, opt_handler, &data)
 {
+	igt_crtc_t *crtc;
 	struct {
 		const char *name;
 		unsigned flags;
@@ -394,21 +395,24 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 					data.curw, data.curh, tests[i].name);
 			igt_subtest_with_dynamic_f("%dx%d-%s", data.curw,
 						   data.curh, tests[i].name) {
-				for_each_pipe_with_single_output(&data.display, data.pipe, data.output) {
-					if (!extended && data.pipe != active_pipes[0] &&
-					    data.pipe != active_pipes[last_pipe])
+				for_each_crtc_with_single_output(&data.display,
+								 crtc,
+								 data.output) {
+					data.pipe = crtc->pipe;
+					if (!extended && crtc->pipe != active_pipes[0] &&
+					    crtc->pipe != active_pipes[last_pipe])
 						continue;
 
 					igt_display_reset(&data.display);
 					igt_output_set_crtc(data.output,
-							    igt_crtc_for_pipe(data.output->display, data.pipe));
+							    crtc);
 					if (!intel_pipe_output_combo_valid(&data.display))
 						continue;
 
 					igt_output_set_crtc(data.output, NULL);
 
 					igt_dynamic_f("pipe-%s-%s",
-						      kmstest_pipe_name(data.pipe),
+						      igt_crtc_name(crtc),
 						      data.output->name)
 						test_crtc(&data, tests[i].flags);
 				}
