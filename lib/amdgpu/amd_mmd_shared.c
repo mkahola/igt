@@ -2,7 +2,6 @@
 /* Copyright 2023 Advanced Micro Devices, Inc.
  * Copyright 2014 Advanced Micro Devices, Inc.
  */
-
 #include "amd_mmd_shared.h"
 
 bool
@@ -161,9 +160,29 @@ submit(amdgpu_device_handle device_handle, struct mmd_context *context,
 	struct amdgpu_cs_fence fence_status = {0};
 	uint32_t expired;
 	int r;
+	
+	unsigned int padded_ndw = ndw;
+
+	/*
+	* VCN JPEG (VCN 4.0.5+) requires IB size aligned to 16 DW.
+	* We pad using a 2-DW NOP packet, so the initial ndw must be even.
+	*/
+	if (ip == AMDGPU_HW_IP_VCN_JPEG) {
+        /* IB capacity in DW (IB_SIZE is in bytes, divide by 4) */
+		unsigned int ib_dw_capacity = IB_SIZE / 4;
+		igt_assert_eq(padded_ndw & 1, 0);
+
+        while (padded_ndw & 0xF) {
+			igt_assert(padded_ndw + 2 <= ib_dw_capacity);
+
+            /* 2-DW NOP packet */
+            context->ib_cpu[padded_ndw++] = 0x60000000;
+            context->ib_cpu[padded_ndw++] = 0x00000000;
+        }
+	}
 
 	ib_info.ib_mc_address = context->ib_mc_address;
-	ib_info.size = ndw;
+	ib_info.size = padded_ndw;
 
 	ibs_request.ip_type = ip;
 
