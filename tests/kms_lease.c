@@ -1240,6 +1240,7 @@ static void lease_uevent(data_t *data)
 
 int igt_main()
 {
+	igt_crtc_t *crtc;
 	data_t data;
 	igt_output_t *output;
 	igt_display_t *display = &data.master.display;
@@ -1288,21 +1289,23 @@ int igt_main()
 
 			igt_describe(f->desc);
 			igt_subtest_with_dynamic_f("%s", f->name) {
-				for_each_pipe_with_valid_output(display, data.pipe, output) {
+				for_each_crtc_with_valid_output(display, crtc,
+								output) {
+					data.pipe = crtc->pipe;
 					igt_display_reset(display);
 
 					igt_output_set_crtc(output,
-							    igt_crtc_for_pipe(output->display, data.pipe));
+							    crtc);
 					if (!intel_pipe_output_combo_valid(display))
 						continue;
 
-					igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(data.pipe),
+					igt_dynamic_f("pipe-%s-%s",
+						      igt_crtc_name(crtc),
 						      igt_output_name(output)) {
-						data.crtc_id = igt_crtc_for_pipe(display,
-										 data.pipe)->crtc_id;
+						data.crtc_id = crtc->crtc_id;
 						data.connector_id = output->id;
 						data.plane_id =
-							igt_crtc_get_plane_type(igt_crtc_for_pipe(&data.master.display, data.pipe),
+							igt_crtc_get_plane_type(crtc,
 										DRM_PLANE_TYPE_PRIMARY)->drm_plane->plane_id;
 						f->func(&data);
 					}

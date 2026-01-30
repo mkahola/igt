@@ -1175,6 +1175,7 @@ static void run_plane_update_continuous(data_t data, int i, int coexist_features
 
 int igt_main()
 {
+	igt_crtc_t *crtc;
 	bool output_supports_pr_psr2_sel_fetch = false;
 	bool pr_psr2_sel_fetch_supported = false;
 	data_t data = {};
@@ -1219,11 +1220,13 @@ int igt_main()
 		igt_info("Big framebuffer size %dx%d\n",
 			 data.big_fb_width, data.big_fb_height);
 
-		for_each_pipe_with_valid_output(&data.display, data.pipe, data.output) {
+		for_each_crtc_with_valid_output(&data.display, crtc,
+						data.output) {
+			data.pipe = crtc->pipe;
 			coexist_features[n_pipes] = 0;
 			output_supports_pr_psr2_sel_fetch = check_pr_psr2_sel_fetch_support(&data);
 			if (output_supports_pr_psr2_sel_fetch) {
-				pipes[n_pipes] = data.pipe;
+				pipes[n_pipes] = crtc->pipe;
 				outputs[n_pipes] = data.output;
 
 				if (is_dsc_supported_by_sink(data.drm_fd, data.output))

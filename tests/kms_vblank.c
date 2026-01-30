@@ -625,6 +625,7 @@ const char *help_str =
 
 int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 {
+	igt_crtc_t *crtc;
 	int fd;
 	data_t data;
 
@@ -642,11 +643,14 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 	igt_describe("Negative test for vblank request.");
 	igt_subtest_with_dynamic("invalid") {
-		for_each_pipe_with_valid_output(&data.display, data.pipe, data.output) {
-			if (!pipe_output_combo_valid(&data.display, data.pipe, data.output))
+		for_each_crtc_with_valid_output(&data.display, crtc,
+						data.output) {
+			data.pipe = crtc->pipe;
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, data.output))
 				continue;
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(data.pipe), data.output->name)
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      data.output->name)
 				invalid_subtest(&data, fd);
 			/* one pipe/output combination is enough */
 				break;
@@ -655,17 +659,21 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 	igt_describe("Check the vblank and flip events works with given crtc id.");
 	igt_subtest_with_dynamic("crtc-id") {
-		for_each_pipe_with_valid_output(&data.display, data.pipe, data.output) {
-			if (!pipe_output_combo_valid(&data.display, data.pipe, data.output))
+		for_each_crtc_with_valid_output(&data.display, crtc,
+						data.output) {
+			data.pipe = crtc->pipe;
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, data.output))
 				continue;
 
-			if (!all_pipes && data.pipe != active_pipes[0] &&
-					  data.pipe != active_pipes[last_pipe]) {
-				igt_info("Skipping pipe %s\n", kmstest_pipe_name(data.pipe));
+			if (!all_pipes && crtc->pipe != active_pipes[0] &&
+					  crtc->pipe != active_pipes[last_pipe]) {
+				igt_info("Skipping pipe %s\n",
+					 igt_crtc_name(crtc));
 				continue;
 			}
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(data.pipe), data.output->name)
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      data.output->name)
 				crtc_id_subtest(&data, fd);
 		}
 	}
