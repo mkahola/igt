@@ -38,10 +38,14 @@ const size_t STEP = SZ_1M;
 
 static uint64_t get_provisioned_vram(unsigned int pf_fd, unsigned int vf_id)
 {
+	unsigned int tile, main_gt;
 	uint64_t size = 0;
 
-	/* TODO: adjust for multitile platforms */
-	size = xe_sriov_pf_get_provisioned_quota(pf_fd, XE_SRIOV_SHARED_RES_LMEM, vf_id, 0);
+	xe_for_each_tile(pf_fd, tile) {
+		main_gt = xe_tile_get_main_gt_id(pf_fd, tile);
+		size += xe_sriov_pf_get_provisioned_quota(pf_fd, XE_SRIOV_SHARED_RES_LMEM, vf_id,
+							  main_gt);
+	}
 
 	return size;
 }
