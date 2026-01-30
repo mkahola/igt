@@ -269,7 +269,7 @@ int igt_main_args("n", NULL, NULL, opt_handler, NULL)
 {
 	int i;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
@@ -289,18 +289,18 @@ int igt_main_args("n", NULL, NULL, opt_handler, NULL)
 	igt_describe("Tests that caching mode has become UC/WT and flushed using mmap write");
 
 	igt_subtest_with_dynamic("main") {
-		for_each_pipe_with_valid_output(&data.display, pipe, output) {
+		for_each_crtc_with_valid_output(&data.display, crtc, output) {
 			igt_display_reset(&data.display);
 
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 			if (!intel_pipe_output_combo_valid(&data.display))
 				continue;
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe),
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
 				data.output = output;
-				data.pipe = pipe;
+				data.pipe = crtc->pipe;
 
 				igt_info("Using %d rounds for each pipe in the test\n", ROUNDS);
 				prepare_crtc(&data);

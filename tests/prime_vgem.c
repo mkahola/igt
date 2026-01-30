@@ -1053,12 +1053,12 @@ static void test_flip(int i915, int vgem, unsigned hang)
 	igt_display_t display;
 	igt_output_t *output;
 	struct vgem_bo bo[2];
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	igt_display_require(&display, i915);
 	igt_display_require_output(&display);
 
-	for_each_pipe_with_valid_output(&display, pipe, output) {
+	for_each_crtc_with_valid_output(&display, crtc, output) {
 		mode = igt_output_get_mode(output);
 		break;
 	}

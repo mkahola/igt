@@ -83,11 +83,11 @@ static void setup_output(data_t *data)
 {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	igt_display_require(&data->display, data->drm_fd);
 
-	for_each_pipe_with_valid_output(display, pipe, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
 		drmModeConnectorPtr c = output->config.connector;
 
 		if (c->connector_type != DRM_MODE_CONNECTOR_eDP)
@@ -95,7 +95,7 @@ static void setup_output(data_t *data)
 
 		igt_display_reset(display);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(display)) {
 			igt_output_set_crtc(output, NULL);
 			continue;

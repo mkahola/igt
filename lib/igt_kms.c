@@ -3274,10 +3274,10 @@ int igt_display_n_crtcs(igt_display_t *display)
  */
 void igt_display_require_output(igt_display_t *display)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 
-	for_each_pipe_with_valid_output(display, pipe, output)
+	for_each_crtc_with_valid_output(display, crtc, output)
 		return;
 
 	igt_skip("No valid crtc/connector combinations found.\n");

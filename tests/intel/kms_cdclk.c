@@ -324,21 +324,21 @@ static void run_cdclk_test(data_t *data, uint32_t flags)
 {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
-	for_each_pipe_with_valid_output(display, pipe, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(display)) {
 			igt_output_set_crtc(output, NULL);
 			continue;
 		}
 
-		igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), output->name) {
+		igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc), output->name) {
 			if (flags & TEST_PLANESCALING)
-				test_plane_scaling(data, pipe, output);
+				test_plane_scaling(data, crtc->pipe, output);
 			if (flags & TEST_MODETRANSITION)
-				test_mode_transition(data, pipe, output);
+				test_mode_transition(data, crtc->pipe, output);
 		}
 	}
 }

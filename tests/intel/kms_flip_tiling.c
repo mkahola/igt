@@ -225,17 +225,17 @@ int igt_main()
 
 	igt_describe("Check pageflip between modifiers");
 	igt_subtest_with_dynamic("flip-change-tiling") {
-		enum pipe pipe;
+		igt_crtc_t *crtc;
 		bool run_in_simulation = igt_run_in_simulation();
 
-		for_each_pipe_with_valid_output(&data.display, pipe, output) {
+		for_each_crtc_with_valid_output(&data.display, crtc, output) {
 			igt_plane_t *plane;
 
 			igt_display_reset(&data.display);
 			pipe_crc_free(&data);
 
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 			if (!intel_pipe_output_combo_valid(&data.display))
 				continue;
 
@@ -260,17 +260,20 @@ int igt_main()
 						continue;
 
 					igt_dynamic_f("pipe-%s-%s-%s-to-%s",
-						      kmstest_pipe_name(pipe),
+						      igt_crtc_name(crtc),
 						      igt_output_name(output),
 						      igt_fb_modifier_name(modifier[0]),
 						      igt_fb_modifier_name(modifier[1]))
-						test_flip_tiling(&data, pipe, output, modifier);
+						test_flip_tiling(&data,
+								 crtc->pipe,
+								 output,
+								 modifier);
 
 					if (data.flipevent_in_queue)
 						handle_lost_event(&data);
 				}
 			}
-			test_cleanup(&data, pipe, output);
+			test_cleanup(&data, crtc->pipe, output);
 		}
 	}
 

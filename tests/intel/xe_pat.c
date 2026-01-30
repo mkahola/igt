@@ -910,7 +910,7 @@ static void display_vs_wb_transient(int fd)
 	struct buf_ops *bops;
 	struct igt_fb src_fb, dst_fb;
 	struct intel_buf src, dst;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	int bpp = 32;
 	int i;
 
@@ -927,16 +927,16 @@ static void display_vs_wb_transient(int fd)
 	bops = buf_ops_create(fd);
 	ibb = intel_bb_create(fd, SZ_4K);
 
-	for_each_pipe_with_valid_output(&display, pipe, output) {
+	for_each_crtc_with_valid_output(&display, crtc, output) {
 		igt_display_reset(&display);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(&display))
 			continue;
 
 		mode = igt_output_get_mode(output);
-		pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&display, pipe),
+		pipe_crc = igt_crtc_crc_new(crtc,
 					    IGT_PIPE_CRC_SOURCE_AUTO);
 		break;
 	}

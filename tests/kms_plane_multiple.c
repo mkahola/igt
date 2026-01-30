@@ -556,23 +556,24 @@ static void run_2_display_test(data_t *data, uint64_t modifier, const char *name
 
 static void run_test(data_t *data, uint64_t modifier, const char *name)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 	igt_display_t *display = &data->display;
 
 	igt_skip_on_f(!igt_display_has_format_mod(display, DRM_FORMAT_XRGB8888, modifier),
 		      "%s modifier is not supported\n", name);
 
-	for_each_pipe_with_valid_output(display, pipe, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
 		igt_display_reset(display);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
-		igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), output->name)
-			test_plane_position(data, pipe, output, modifier);
+		igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc), output->name)
+			test_plane_position(data, crtc->pipe, output,
+					    modifier);
 	}
 }
 

@@ -1120,7 +1120,7 @@ event_wait(int gem_fd, const intel_ctx_t *ctx,
 	uint16_t devid;
 	igt_output_t *output;
 	data_t data;
-	enum pipe p;
+	igt_crtc_t *crtc;
 	int fd;
 
 	devid = intel_get_drm_devid(gem_fd);
@@ -1167,13 +1167,13 @@ event_wait(int gem_fd, const intel_ctx_t *ctx,
 	eb.flags = e->flags | I915_EXEC_SECURE;
 	eb.rsvd1 = ctx->id;
 
-	for_each_pipe_with_valid_output(&data.display, p, output) {
+	for_each_crtc_with_valid_output(&data.display, crtc, output) {
 		struct igt_helper_process waiter = { };
 		const unsigned int frames = 3;
 		uint64_t val[2];
 
 		batch[6] = MI_WAIT_FOR_EVENT;
-		switch (p) {
+		switch (crtc->pipe) {
 		case PIPE_A:
 			batch[6] |= MI_WAIT_FOR_PIPE_A_VBLANK;
 			batch[5] = ~(1 << 3);
@@ -1192,7 +1192,7 @@ event_wait(int gem_fd, const intel_ctx_t *ctx,
 
 		gem_write(gem_fd, obj.handle, 0, batch, sizeof(batch));
 
-		data.pipe = p;
+		data.pipe = crtc->pipe;
 		prepare_crtc(&data, gem_fd, output);
 
 		fd = open_pmu(gem_fd,

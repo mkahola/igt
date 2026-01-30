@@ -150,16 +150,16 @@ static void
 find_outputs(data_t *data, igt_output_t **output1, igt_output_t **output2)
 {
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	*output1 = NULL;
 	*output2 = NULL;
 
-	for_each_pipe_with_valid_output(&data->display, pipe, output) {
-		if (pipe == PIPE_B && !*output1 && output != *output2)
+	for_each_crtc_with_valid_output(&data->display, crtc, output) {
+		if (crtc->pipe == PIPE_B && !*output1 && output != *output2)
 			*output1 = output;
 
-		if (pipe == PIPE_C && output != *output1 && !*output2)
+		if (crtc->pipe == PIPE_C && output != *output1 && !*output2)
 			*output2 = output;
 
 		igt_output_set_crtc(output, NULL);

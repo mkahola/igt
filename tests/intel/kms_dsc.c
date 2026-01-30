@@ -251,7 +251,7 @@ static void test_dsc(data_t *data, uint32_t test_type, int bpc,
 {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	char name[3][LEN] = {
 				{0},
 				{0},
@@ -260,12 +260,12 @@ static void test_dsc(data_t *data, uint32_t test_type, int bpc,
 
 	igt_require(check_gen11_bpc_constraint(data->drm_fd, data->input_bpc));
 
-	for_each_pipe_with_valid_output(display, pipe, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
 		data->output_format = output_format;
 		data->plane_format = plane_format;
 		data->input_bpc = bpc;
 		data->output = output;
-		data->pipe = pipe;
+		data->pipe = crtc->pipe;
 
 		if (!is_dsc_supported_by_sink(data->drm_fd, data->output) ||
 		    !check_gen11_dp_constraint(data->drm_fd, data->output, data->pipe))

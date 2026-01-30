@@ -272,7 +272,7 @@ int igt_main()
 {
 	int fd;
 	igt_output_t *output;
-	enum pipe p;
+	igt_crtc_t *crtc;
 	data_t data;
 	const struct {
 		const char *name;
@@ -309,16 +309,19 @@ int igt_main()
 			igt_describe("This is a test of drmCrtcGetSequence and "
 				     "drmCrtcQueueSequence");
 			igt_subtest_with_dynamic_f("%s-%s", f->name, m->name) {
-				for_each_pipe_with_valid_output(&data.display, p, output) {
+				for_each_crtc_with_valid_output(&data.display,
+								crtc, output) {
 					igt_display_reset(&data.display);
 
 					igt_output_set_crtc(output,
-							    igt_crtc_for_pipe(output->display, p));
+							    crtc);
 					if (!intel_pipe_output_combo_valid(&data.display))
 						continue;
 
-					igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(p), igt_output_name(output)) {
-						data.pipe = p;
+					igt_dynamic_f("pipe-%s-%s",
+						      igt_crtc_name(crtc),
+						      igt_output_name(output)) {
+						data.pipe = crtc->pipe;
 						data.output = output;
 						data.flags = m->flags;
 						run_test(&data, fd, f->func);

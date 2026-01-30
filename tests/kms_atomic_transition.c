@@ -1128,7 +1128,7 @@ static data_t data;
 int igt_main_args("", long_opts, help_str, opt_handler, &data)
 {
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	struct {
 		const char *name;
 		enum transition_type type;
@@ -1201,17 +1201,18 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 	igt_subtest_with_dynamic("plane-primary-toggle-with-vblank-wait") {
 		pipe_count = 0;
 
-		for_each_pipe_with_valid_output(&data.display, pipe, output) {
+		for_each_crtc_with_valid_output(&data.display, crtc, output) {
 			if (pipe_count == 2 * count && !data.extended)
 				break;
 
-			if (!pipe_output_combo_valid(&data.display, pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 				continue;
 
 			pipe_count++;
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output))
-				run_primary_test(&data, pipe, output);
-			test_cleanup(&data, pipe, output, false);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output))
+				run_primary_test(&data, crtc->pipe, output);
+			test_cleanup(&data, crtc->pipe, output, false);
 		}
 	}
 
@@ -1223,7 +1224,8 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		igt_subtest_with_dynamic_f("%s", transition_tests[i].name) {
 			pipe_count = 0;
 
-			for_each_pipe_with_valid_output(&data.display, pipe, output) {
+			for_each_crtc_with_valid_output(&data.display, crtc,
+							output) {
 				/*
 				 * Test modeset cases on internal panels separately with a reduced
 				 * number of combinations, to avoid long runtimes due to modesets on
@@ -1240,19 +1242,20 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 				if (pipe_count == 2 * count && !data.extended)
 					break;
 
-				if (!pipe_output_combo_valid(&data.display, pipe, output))
+				if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
 					continue;
 
 				pipe_count++;
 				igt_dynamic_f("pipe-%s-%s",
-					      kmstest_pipe_name(pipe),
+					      igt_crtc_name(crtc),
 					      igt_output_name(output))
-					run_transition_test(&data, pipe, output,
+					run_transition_test(&data, crtc->pipe,
+							    output,
 							    transition_tests[i].type,
 							    transition_tests[i].nonblocking,
 							    transition_tests[i].fencing);
 
-				test_cleanup(&data, pipe, output,
+				test_cleanup(&data, crtc->pipe, output,
 					     transition_tests[i].fencing);
 			}
 		}

@@ -201,13 +201,13 @@ static void run_test(gpu_process_t *gpu)
 {
 	igt_display_t *display = &gpu->display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
-	for_each_pipe_with_valid_output(display, pipe, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
 		int prime_fd;
 
 		gpu->output = output;
-		gpu->pipe = pipe;
+		gpu->pipe = crtc->pipe;
 
 		prepare_crtc(gpu);
 

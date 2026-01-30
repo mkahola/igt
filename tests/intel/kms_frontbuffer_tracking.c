@@ -1163,20 +1163,20 @@ static bool find_connector(bool edp_only, bool pipe_a,
 			   enum pipe *ret_pipe)
 {
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
-	for_each_pipe_with_valid_output(&drm.display, pipe, output) {
+	for_each_crtc_with_valid_output(&drm.display, crtc, output) {
 		drmModeConnectorPtr c = output->config.connector;
 
 		if (edp_only && c->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 
-		if (pipe_a && pipe != PIPE_A)
+		if (pipe_a && crtc->pipe != PIPE_A)
 			continue;
 
-		if (output == forbidden_output || pipe == forbidden_pipe) {
+		if (output == forbidden_output || crtc->pipe == forbidden_pipe) {
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 			igt_output_override_mode(output, connector_get_mode(output));
 
 			continue;
@@ -1186,11 +1186,11 @@ static bool find_connector(bool edp_only, bool pipe_a,
 			continue;
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		igt_output_override_mode(output, connector_get_mode(output));
 		if (intel_pipe_output_combo_valid(&drm.display)) {
 			*ret_output = output;
-			*ret_pipe = pipe;
+			*ret_pipe = crtc->pipe;
 			return true;
 		}
 	}

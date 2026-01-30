@@ -246,7 +246,7 @@ static void test_panel_fitting(data_t *data, enum test_type type)
 {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	struct stat sb;
 
 	if (type == TEST_ATOMIC) {
@@ -265,18 +265,20 @@ static void test_panel_fitting(data_t *data, enum test_type type)
 
 	}
 
-	for_each_pipe_with_valid_output(display, pipe, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
 		/* Check that the "scaling mode" property has been set. */
 		if (!igt_output_has_prop(output, IGT_CONNECTOR_SCALING_MODE))
 			continue;
 
 		cleanup_crtc(data);
 
-		igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), output->name) {
+		igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc), output->name) {
 			if (type == TEST_ATOMIC)
-				test_panel_fitting_fastset(display, pipe, output);
+				test_panel_fitting_fastset(display,
+							   crtc->pipe, output);
 			if (type == TEST_LEGACY)
-				test_panel_fitting_legacy(data, display, pipe, output);
+				test_panel_fitting_legacy(data, display,
+							  crtc->pipe, output);
 		}
 	}
 }

@@ -210,17 +210,17 @@ static void run_test(data_t *data)
 {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
-	enum pipe p;
+	igt_crtc_t *crtc;
 
-	for_each_pipe_with_valid_output(display, p, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
 		igt_display_reset(display);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, p));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
-		run_single_test(data, p, output);
+		run_single_test(data, crtc->pipe, output);
 
 		return; /* one time ought to be enough */
 	}
