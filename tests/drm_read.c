@@ -280,6 +280,7 @@ int igt_main()
 	igt_fixture() {
 		struct sigaction alarm_action = {};
 		igt_output_t *output;
+		igt_crtc_t *crtc;
 
 		igt_assert_neq(sigaction(SIGALRM, NULL, &alarm_action), -1);
 		alarm_action.sa_flags &= ~SA_RESTART;
@@ -292,16 +293,17 @@ int igt_main()
 		igt_display_require(&display, fd);
 		igt_display_require_output(&display);
 
-		for_each_pipe_with_valid_output(&display, pipe, output) {
+		for_each_crtc_with_valid_output(&display, crtc, output) {
 			drmModeModeInfo *mode = igt_output_get_mode(output);
 
 			igt_create_pattern_fb(fd, mode->hdisplay, mode->vdisplay,
 					      DRM_FORMAT_XRGB8888,
 					      DRM_FORMAT_MOD_LINEAR, &fb);
 
-			igt_output_set_crtc(output,
-				            igt_crtc_for_pipe(output->display, pipe));
+			igt_output_set_crtc(output, crtc);
 			igt_plane_set_fb(igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY), &fb);
+
+			pipe = crtc->pipe;
 			break;
 		}
 
