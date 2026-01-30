@@ -118,14 +118,16 @@ static bool has_prime_export(int fd)
 static igt_output_t *setup_display(int importer_fd, igt_display_t *display,
 				   enum pipe *pipe)
 {
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 	bool found = false;
 
-	for_each_pipe_with_valid_output(display, *pipe, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
+		*pipe = crtc->pipe;
 		igt_display_reset(display);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, *pipe));
+				    crtc);
 		if (intel_pipe_output_combo_valid(display)) {
 			found = true;
 			break;
