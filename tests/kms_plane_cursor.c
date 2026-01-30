@@ -290,7 +290,7 @@ int igt_main()
 {
 	static const int cursor_sizes[] = { 64, 128, 256 };
 	data_t data = { .max_curw = 64, .max_curh = 64 };
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 	igt_display_t *display;
 	int i, j;
@@ -329,26 +329,28 @@ int igt_main()
 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
 		igt_describe_f("%s", tests[i].desc);
 		igt_subtest_with_dynamic_f("%s", tests[i].name) {
-			for_each_pipe_with_single_output(&data.display, pipe, output) {
+			for_each_crtc_with_single_output(&data.display, crtc,
+							 output) {
 				if ((tests[i].flags & TEST_OVERLAY) &&
-				    !igt_crtc_get_plane_type(igt_crtc_for_pipe(&data.display, pipe),
+				    !igt_crtc_get_plane_type(crtc,
 							     DRM_PLANE_TYPE_OVERLAY))
 					continue;
 
 				igt_display_reset(display);
 
 				igt_output_set_crtc(output,
-						    igt_crtc_for_pipe(output->display, pipe));
+						    crtc);
 				if (!intel_pipe_output_combo_valid(display))
 					continue;
 
-				test_init(&data, pipe, output, tests[i].flags);
+				test_init(&data, crtc->pipe, output,
+					  tests[i].flags);
 
 				for (j = 0; j < ARRAY_SIZE(cursor_sizes); j++) {
 					int size = cursor_sizes[j];
 
 					igt_dynamic_f("pipe-%s-%s-size-%d",
-						      kmstest_pipe_name(pipe),
+						      igt_crtc_name(crtc),
 						      igt_output_name(output),
 						      size)
 						test_cursor(&data, size, tests[i].flags);

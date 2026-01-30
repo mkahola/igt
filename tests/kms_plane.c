@@ -1467,19 +1467,19 @@ static bool is_pipe_limit_reached(int count)
 
 static void run_test(data_t *data, void (*test)(data_t *, enum pipe))
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	int count = 0;
 
-	for_each_pipe_with_single_output(&data->display, pipe, data->output) {
+	for_each_crtc_with_single_output(&data->display, crtc, data->output) {
 		igt_display_reset(&data->display);
 
 		igt_output_set_crtc(data->output,
-				    igt_crtc_for_pipe(data->output->display, pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(&data->display))
 			continue;
 
 		igt_output_set_crtc(data->output, NULL);
-		test(data, pipe);
+		test(data, crtc->pipe);
 
 		if (is_pipe_limit_reached(++count))
 			break;

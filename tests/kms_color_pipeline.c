@@ -155,7 +155,7 @@ static bool test_plane_colorops(data_t *data,
 static void
 run_tests_for_plane(data_t *data)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_output_t *output = NULL;
 	static const color_t colors_rgb[] = {
 	        { 1.0, 0.0, 0.0 },
@@ -276,20 +276,22 @@ run_tests_for_plane(data_t *data)
 	for (int i = 0; i < ARRAY_SIZE(plane_colorops_tests); i++) {
 		igt_describe_f("Test plane color pipeline with colorops: %s", plane_colorops_tests[i].name);
 		igt_subtest_with_dynamic_f("plane-%s", plane_colorops_tests[i].name) {
-			for_each_pipe_with_single_output(&data->display, pipe, output) {
+			for_each_crtc_with_single_output(&data->display, crtc,
+							 output) {
 				data->output = output;
 
-				if (!pipe_output_combo_valid(data, pipe))
+				if (!pipe_output_combo_valid(data, crtc->pipe))
 					continue;
 
-				test_setup(data, pipe);
+				test_setup(data, crtc->pipe);
 
 				if (!igt_plane_has_prop(data->primary, IGT_PLANE_COLOR_PIPELINE)) {
 					test_cleanup(data);
 					continue;
 				}
 
-				igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe),
+				igt_dynamic_f("pipe-%s-%s",
+					       igt_crtc_name(crtc),
 					       igt_output_name(data->output)) {
 					data->color_depth = 8;
 					data->drm_format = DRM_FORMAT_XRGB8888;

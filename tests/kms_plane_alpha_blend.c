@@ -691,31 +691,37 @@ static bool pipe_check(data_t *data, enum pipe pipe,
 static void run_subtests(data_t *data)
 {
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	for (int i = 0; i < ARRAY_SIZE(subtests); i++) {
 		igt_describe_f("%s\n", subtests[i].desc);
 
 		igt_subtest_with_dynamic(subtests[i].name) {
-			for_each_pipe_with_single_output(&data->display, pipe, output) {
+			for_each_crtc_with_single_output(&data->display, crtc,
+							 output) {
 				if (!extended &&
-				    pipe != active_pipes[0] &&
-				    pipe != active_pipes[last_pipe])
+				    crtc->pipe != active_pipes[0] &&
+				    crtc->pipe != active_pipes[last_pipe])
 					continue;
 
 				igt_display_reset(&data->display);
 
 				igt_output_set_crtc(output,
-						    igt_crtc_for_pipe(output->display, pipe));
+						    crtc);
 				if (!intel_pipe_output_combo_valid(&data->display))
 					continue;
 
-				prepare_crtc(data, output, pipe);
-				if (!pipe_check(data, pipe, subtests[i].blend, subtests[i].must_multiply))
+				prepare_crtc(data, output, crtc->pipe);
+				if (!pipe_check(data, crtc->pipe, subtests[i].blend, subtests[i].must_multiply))
 					continue;
 
-				igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), output->name)
-					run_test_on_pipe_planes(data, pipe, output, subtests[i].blend,
+				igt_dynamic_f("pipe-%s-%s",
+					      igt_crtc_name(crtc),
+					      output->name)
+					run_test_on_pipe_planes(data,
+								crtc->pipe,
+								output,
+								subtests[i].blend,
 								subtests[i].must_multiply, subtests[i].test);
 			}
 		}

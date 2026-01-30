@@ -400,7 +400,7 @@ int igt_main()
 {
 	static const int cursor_sizes[] = { 64, 128, 256 };
 	data_t data = { .max_curw = 64, .max_curh = 64 };
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 	igt_display_t *display;
 	int i, j, available_overlay_planes;
@@ -478,13 +478,15 @@ int igt_main()
 							DRM_FORMAT_NV12,
 							DRM_FORMAT_MOD_LINEAR));
 
-			for_each_pipe_with_single_output(&data.display, pipe, output) {
+			for_each_crtc_with_single_output(&data.display, crtc,
+							 output) {
 
 				igt_display_reset(display);
 				igt_output_set_crtc(output,
-					igt_crtc_for_pipe(output->display, pipe));
+					crtc);
 
-				available_overlay_planes = get_overlay_planes_count(display, pipe);
+				available_overlay_planes = get_overlay_planes_count(display,
+										    crtc->pipe);
 
 				/* Require at least one overlay plane. */
 				if (!available_overlay_planes)
@@ -500,13 +502,15 @@ int igt_main()
 					igt_skip("%s subtest requires 3 overlay planes with a supported DCN.\n",
 						 tests[i].name);
 
-				test_init(&data, pipe, output, tests[i].flags, available_overlay_planes);
+				test_init(&data, crtc->pipe, output,
+					  tests[i].flags,
+					  available_overlay_planes);
 
 				for (j = 0; j < ARRAY_SIZE(cursor_sizes); j++) {
 					int size = cursor_sizes[j];
 
 					igt_dynamic_f("pipe-%s-%s-size-%d",
-						      kmstest_pipe_name(pipe),
+						      igt_crtc_name(crtc),
 						      igt_output_name(output),
 						      size)
 						test_cursor(&data, size, tests[i].flags, tests[i].scale_factor);

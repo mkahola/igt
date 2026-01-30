@@ -833,62 +833,69 @@ static void
 run_tests(data_t *data)
 {
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	igt_describe("Check the switching between different primary plane fbs with CRTC off");
 	igt_subtest_with_dynamic("universal-plane-functional") {
-		for_each_pipe_with_single_output(&data->display, pipe, output) {
-			if (!pipe_output_combo_valid(&data->display, pipe, output))
+		for_each_crtc_with_single_output(&data->display, crtc, output) {
+			if (!pipe_output_combo_valid(&data->display, crtc->pipe, output))
 				continue;
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output))
-				functional_test_pipe(data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output))
+				functional_test_pipe(data, crtc->pipe, output);
 		}
 	}
 
 	igt_describe("Test for scale-up or scale-down using universal plane API without covering CRTC");
 	igt_subtest_with_dynamic("universal-plane-sanity") {
-		for_each_pipe_with_single_output(&data->display, pipe, output) {
-			if (!pipe_output_combo_valid(&data->display, pipe, output))
+		for_each_crtc_with_single_output(&data->display, crtc, output) {
+			if (!pipe_output_combo_valid(&data->display, crtc->pipe, output))
 				continue;
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output))
-				sanity_test_pipe(data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output))
+				sanity_test_pipe(data, crtc->pipe, output);
 		}
 	}
 
 	igt_describe("Check pageflips while primary plane is disabled before IOCTL or between IOCTL"
 		     " and pageflip execution");
 	igt_subtest_with_dynamic("disable-primary-vs-flip") {
-		for_each_pipe_with_single_output(&data->display, pipe, output) {
-			if (!pipe_output_combo_valid(&data->display, pipe, output))
+		for_each_crtc_with_single_output(&data->display, crtc, output) {
+			if (!pipe_output_combo_valid(&data->display, crtc->pipe, output))
 				continue;
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output))
-				pageflip_test_pipe(data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output))
+				pageflip_test_pipe(data, crtc->pipe, output);
 		}
 	}
 
 	igt_describe("Check for cursor leaks after performing cursor operations");
 	igt_subtest_with_dynamic("cursor-fb-leak") {
-		for_each_pipe_with_single_output(&data->display, pipe, output) {
-			if (!pipe_output_combo_valid(&data->display, pipe, output))
+		for_each_crtc_with_single_output(&data->display, crtc, output) {
+			if (!pipe_output_combo_valid(&data->display, crtc->pipe, output))
 				continue;
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output))
-				cursor_leak_test_pipe(data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output))
+				cursor_leak_test_pipe(data, crtc->pipe,
+						      output);
 		}
 	}
 
 	igt_describe("Check if pageflip succeeds in windowed setting");
 	igt_subtest_with_dynamic("universal-plane-pageflip-windowed") {
 		igt_require(is_intel_device(data->drm_fd) && data->display_ver >= 9);
-		for_each_pipe_with_single_output(&data->display, pipe, output) {
-			if (!pipe_output_combo_valid(&data->display, pipe, output))
+		for_each_crtc_with_single_output(&data->display, crtc, output) {
+			if (!pipe_output_combo_valid(&data->display, crtc->pipe, output))
 				continue;
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output))
-				pageflip_win_test_pipe(data, pipe, output);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output))
+				pageflip_win_test_pipe(data, crtc->pipe,
+						       output);
 		}
 	}
 }

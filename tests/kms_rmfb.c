@@ -175,20 +175,20 @@ static void
 run_rmfb_test(struct rmfb_data *data, bool reopen)
 {
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_display_t *display = &data->display;
 
-	for_each_pipe_with_single_output(display, pipe, output) {
+	for_each_crtc_with_single_output(display, crtc, output) {
 		igt_display_reset(display);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
-		igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe),
+		igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 			      igt_output_name(output))
-			test_rmfb(data, output, pipe, reopen);
+			test_rmfb(data, output, crtc->pipe, reopen);
 	}
 }
 

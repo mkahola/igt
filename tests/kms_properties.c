@@ -348,39 +348,41 @@ static void colorop_properties(igt_display_t *display, bool atomic)
 static void plane_properties(igt_display_t *display, bool atomic)
 {
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
-	for_each_pipe_with_single_output(display, pipe, output) {
+	for_each_crtc_with_single_output(display, crtc, output) {
 		igt_display_reset(display);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
-		igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe),
+		igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 			      igt_output_name(output)) {
-			run_plane_property_tests(display, pipe, output, atomic);
+			run_plane_property_tests(display, crtc->pipe, output,
+						 atomic);
 		}
 	}
 }
 
 static void crtc_properties(igt_display_t *display, bool atomic)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 
-	for_each_pipe_with_single_output(display, pipe, output) {
+	for_each_crtc_with_single_output(display, crtc, output) {
 		igt_display_reset(display);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
-		igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe),
+		igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 			      igt_output_name(output)) {
-			run_crtc_property_tests(display, pipe, output, atomic);
+			run_crtc_property_tests(display, crtc->pipe, output,
+						atomic);
 		}
 	}
 }
