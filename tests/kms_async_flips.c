@@ -903,16 +903,18 @@ static void require_linear_modifier(data_t *data)
 
 static void run_test(data_t *data, void (*test)(data_t *))
 {
+	igt_crtc_t *crtc;
 	igt_display_t *display = &data->display;
 
 	if (data->atomic_path)
 		require_atomic_async_cap(data);
 
-	for_each_pipe_with_valid_output(display, data->pipe, data->output) {
+	for_each_crtc_with_valid_output(display, crtc, data->output) {
+		data->pipe = crtc->pipe;
 		igt_display_reset(display);
 
 		igt_output_set_crtc(data->output,
-				    igt_crtc_for_pipe(data->output->display, data->pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
@@ -923,7 +925,8 @@ static void run_test(data_t *data, void (*test)(data_t *))
 		else
 			data->modifier = default_modifier(data);
 
-		igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(data->pipe), data->output->name) {
+		igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+			      data->output->name) {
 			/*
 			 * FIXME: joiner+async flip is busted currently in KMD.
 			 * Remove this check once the issues are fixed in KMD.
@@ -969,11 +972,13 @@ static bool skip_async_format_mod(data_t *data,
 
 static void run_test_with_async_format_modifiers(data_t *data, void (*test)(data_t *))
 {
+	igt_crtc_t *crtc;
 	struct igt_vec tested_formats;
 
 	igt_vec_init(&tested_formats, sizeof(struct format_mod));
 
-	for_each_pipe_with_valid_output(&data->display, data->pipe, data->output) {
+	for_each_crtc_with_valid_output(&data->display, crtc, data->output) {
+		data->pipe = crtc->pipe;
 		test_init(data);
 
 		igt_assert_f(data->plane->async_format_mod_count > 0,
@@ -990,7 +995,7 @@ static void run_test_with_async_format_modifiers(data_t *data, void (*test)(data
 					   IGT_MODIFIER_FMT " on %s.%u\n",
 					   IGT_FORMAT_ARGS(f.format),
 					   IGT_MODIFIER_ARGS(f.modifier),
-					   kmstest_pipe_name(data->pipe),
+					   igt_crtc_name(crtc),
 					   data->plane->index);
 				continue;
 			}
@@ -999,7 +1004,7 @@ static void run_test_with_async_format_modifiers(data_t *data, void (*test)(data
 			data->plane_format = f.format;
 			data->async_mod_formats = true;
 
-			igt_dynamic_f("pipe-%s-%s-%s-%s", kmstest_pipe_name(data->pipe),
+			igt_dynamic_f("pipe-%s-%s-%s-%s", igt_crtc_name(crtc),
 				      data->output->name,
 				      igt_fb_modifier_name(data->modifier),
 				      igt_format_str(data->plane_format)) {
@@ -1022,10 +1027,12 @@ static void run_test_with_async_format_modifiers(data_t *data, void (*test)(data
 
 static void run_test_with_modifiers(data_t *data, void (*test)(data_t *))
 {
+	igt_crtc_t *crtc;
 	if (data->atomic_path)
 		require_atomic_async_cap(data);
 
-	for_each_pipe_with_valid_output(&data->display, data->pipe, data->output) {
+	for_each_crtc_with_valid_output(&data->display, crtc, data->output) {
+		data->pipe = crtc->pipe;
 		test_init(data);
 
 		igt_require_f(data->plane->async_format_mod_count > 0,
@@ -1042,7 +1049,7 @@ static void run_test_with_modifiers(data_t *data, void (*test)(data_t *))
 
 			data->modifier = modifier;
 
-			igt_dynamic_f("pipe-%s-%s-%s", kmstest_pipe_name(data->pipe),
+			igt_dynamic_f("pipe-%s-%s-%s", igt_crtc_name(crtc),
 				      data->output->name,
 				      igt_fb_modifier_name(modifier)) {
 				      /*

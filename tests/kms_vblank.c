@@ -476,6 +476,7 @@ static void vblank_ts_cont(data_t *data, int fd, int nchildren)
 
 static void run_subtests(data_t *data)
 {
+	igt_crtc_t *crtc;
 	const struct {
 		const char *name;
 		void (*func)(data_t *, int, int);
@@ -515,17 +516,23 @@ static void run_subtests(data_t *data)
 
 			igt_describe("Check if test run while hanging by introducing NOHANG flag.");
 			igt_subtest_with_dynamic_f("%s-%s", f->name, m->name) {
-				for_each_pipe_with_valid_output(&data->display, data->pipe, data->output) {
-					if (!pipe_output_combo_valid(&data->display, data->pipe, data->output))
+				for_each_crtc_with_valid_output(&data->display,
+								crtc,
+								data->output) {
+					data->pipe = crtc->pipe;
+					if (!pipe_output_combo_valid(&data->display, crtc->pipe, data->output))
 						continue;
 
-					if (!all_pipes && data->pipe != active_pipes[0] &&
-					    data->pipe != active_pipes[last_pipe]) {
-						igt_info("Skipping pipe %s\n", kmstest_pipe_name(data->pipe));
+					if (!all_pipes && crtc->pipe != active_pipes[0] &&
+					    crtc->pipe != active_pipes[last_pipe]) {
+						igt_info("Skipping pipe %s\n",
+							 igt_crtc_name(crtc));
 						continue;
 					}
 
-					igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(data->pipe), data->output->name) {
+					igt_dynamic_f("pipe-%s-%s",
+						      igt_crtc_name(crtc),
+						      data->output->name) {
 						data->flags = m->flags | NOHANG;
 						run_test(data, f->func);
 					}
@@ -541,17 +548,23 @@ static void run_subtests(data_t *data)
 				igt_hang_t hang;
 
 				hang = igt_allow_hang(data->display.drm_fd, 0, 0);
-				for_each_pipe_with_valid_output(&data->display, data->pipe, data->output) {
-					if (!pipe_output_combo_valid(&data->display, data->pipe, data->output))
+				for_each_crtc_with_valid_output(&data->display,
+								crtc,
+								data->output) {
+					data->pipe = crtc->pipe;
+					if (!pipe_output_combo_valid(&data->display, crtc->pipe, data->output))
 						continue;
 
-					if (!all_pipes && data->pipe != active_pipes[0] &&
-					    data->pipe != active_pipes[last_pipe]) {
-						igt_info("Skipping pipe %s\n", kmstest_pipe_name(data->pipe));
+					if (!all_pipes && crtc->pipe != active_pipes[0] &&
+					    crtc->pipe != active_pipes[last_pipe]) {
+						igt_info("Skipping pipe %s\n",
+							 igt_crtc_name(crtc));
 						continue;
 					}
 
-					igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(data->pipe), data->output->name) {
+					igt_dynamic_f("pipe-%s-%s",
+						      igt_crtc_name(crtc),
+						      data->output->name) {
 						data->flags = m->flags;
 						run_test(data, f->func);
 					}

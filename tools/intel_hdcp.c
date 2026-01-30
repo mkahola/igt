@@ -615,6 +615,7 @@ static void enable_hdcp_type(data_t *data, enum hdcp_type type)
 
 static void test_init(data_t *data)
 {
+	igt_crtc_t *crtc;
 	drmModeModeInfo *mode;
 
 	data->fd = __drm_open_driver(DRIVER_ANY);
@@ -626,7 +627,8 @@ static void test_init(data_t *data)
 	igt_display_require_output(&data->display);
 	igt_display_reset(&data->display);
 
-	for_each_pipe_with_valid_output(&data->display, data->pipe, data->output) {
+	for_each_crtc_with_valid_output(&data->display, crtc, data->output) {
+		data->pipe = crtc->pipe;
 		if (!igt_output_has_prop(data->output, IGT_CONNECTOR_CONTENT_PROTECTION))
 			continue;
 
@@ -637,7 +639,7 @@ static void test_init(data_t *data)
 		igt_create_color_fb(data->fd, data->width, data->height, DRM_FORMAT_XRGB8888,
 				    DRM_FORMAT_MOD_LINEAR, 0.0, 0.0, 0.0, &data->fb);
 
-		igt_output_set_crtc(data->output, igt_crtc_for_pipe(&data->display, data->pipe));
+		igt_output_set_crtc(data->output, crtc);
 		igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 		break;

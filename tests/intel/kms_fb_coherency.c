@@ -222,13 +222,15 @@ static void test_legacy_mmap_wc(data_t *data)
 
 static void select_valid_pipe_output_combo(data_t *data)
 {
+	igt_crtc_t *crtc;
 	igt_display_t *display = &data->display;
 
-	for_each_pipe_with_valid_output(display, data->pipe, data->output) {
+	for_each_crtc_with_valid_output(display, crtc, data->output) {
+		data->pipe = crtc->pipe;
 		igt_display_reset(display);
 
 		igt_output_set_crtc(data->output,
-				    igt_crtc_for_pipe(data->output->display, data->pipe));
+				    crtc);
 		if (intel_pipe_output_combo_valid(display))
 			return;
 	}

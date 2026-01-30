@@ -685,6 +685,7 @@ max_hw_stride_async_flip_test(data_t *data)
 
 static void test_scanout(data_t *data)
 {
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 
 	igt_require(data->format == DRM_FORMAT_C8 ||
@@ -708,11 +709,12 @@ static void test_scanout(data_t *data)
 	max_fb_size(data, &data->big_fb_width, &data->big_fb_height,
 		    data->format, data->modifier);
 
-	for_each_pipe_with_valid_output(&data->display, data->pipe, data->output) {
+	for_each_crtc_with_valid_output(&data->display, crtc, data->output) {
+		data->pipe = crtc->pipe;
 		igt_display_reset(&data->display);
 
 		igt_output_set_crtc(data->output,
-				    igt_crtc_for_pipe(data->output->display, data->pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(&data->display))
 			continue;
 
