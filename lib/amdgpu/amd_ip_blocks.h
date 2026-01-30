@@ -442,6 +442,11 @@ is_support_page_queue(enum amd_ip_block_type ip_type, const struct pci_addr *pci
 int
 find_dri_id_by_pci(const struct pci_addr *pci);
 
+long
+amdgpu_get_ip_schedule_mask(const struct pci_addr *pci, enum amd_ip_block_type ip_type, char *sysfs_path);
+
+bool is_spx_mode(const struct pci_addr *pci);
+
 int
 get_dri_index_from_device(amdgpu_device_handle device, int fd);
 /**

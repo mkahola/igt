@@ -206,13 +206,11 @@ amdgpu_wait_memory(amdgpu_device_handle device_handle, unsigned int ip_type, uin
 void amdgpu_wait_memory_helper(amdgpu_device_handle device_handle, unsigned int ip_type, struct pci_addr *pci, bool userq)
 {
 	int r;
-	FILE *fp;
 	char cmd[1024];
-	char buffer[128];
 	uint64_t sched_mask = 0, ring_id;
 	struct drm_amdgpu_info_hw_ip info;
 	uint32_t  prio;
-	char sysfs[125];
+	char sysfs[256];
 	bool support_page;
 
 	r = amdgpu_query_hw_ip_info(device_handle, ip_type, 0, &info);
@@ -234,27 +232,8 @@ void amdgpu_wait_memory_helper(amdgpu_device_handle device_handle, unsigned int 
 
 	support_page = is_support_page_queue(ip_type, pci);
 
-	if (ip_type == AMD_IP_GFX)
-		snprintf(sysfs, sizeof(sysfs) - 1, "/sys/kernel/debug/dri/%04x:%02x:%02x.%01x/amdgpu_gfx_sched_mask",
-			pci->domain, pci->bus, pci->device, pci->function);
-	else if (ip_type == AMD_IP_COMPUTE)
-		snprintf(sysfs, sizeof(sysfs) - 1, "/sys/kernel/debug/dri/%04x:%02x:%02x.%01x/amdgpu_compute_sched_mask",
-			pci->domain, pci->bus, pci->device, pci->function);
-	else if (ip_type == AMD_IP_DMA)
-		snprintf(sysfs, sizeof(sysfs) - 1, "/sys/kernel/debug/dri/%04x:%02x:%02x.%01x/amdgpu_sdma_sched_mask",
-			pci->domain, pci->bus, pci->device, pci->function);
-
-	snprintf(cmd, sizeof(cmd) - 1, "sudo cat %s", sysfs);
-	r = access(sysfs, R_OK);
-	if (!r) {
-		fp = popen(cmd, "r");
-		if (fp == NULL)
-			igt_skip("read the sysfs failed: %s\n", sysfs);
-
-		if (fgets(buffer, 128, fp) != NULL)
-			sched_mask = strtol(buffer, NULL, 16);
-
-		pclose(fp);
+	if (is_spx_mode(pci)) {
+		sched_mask = amdgpu_get_ip_schedule_mask(pci, (enum amd_ip_block_type)ip_type, sysfs);
 	} else {
 		sched_mask = 1;
 		igt_info("The scheduling ring only enables one for ip %d\n", ip_type);
@@ -483,13 +462,11 @@ amdgpu_hang_sdma_helper(amdgpu_device_handle device_handle, uint8_t hang_type)
 void bad_access_ring_helper(amdgpu_device_handle device_handle, unsigned int cmd_error, unsigned int ip_type, struct pci_addr *pci, bool user_queue)
 {
 	int r;
-	FILE *fp;
 	char cmd[1024];
-	char buffer[128];
 	uint64_t sched_mask = 0, ring_id;
 	struct drm_amdgpu_info_hw_ip info;
 	uint32_t prio;
-	char sysfs[125];
+	char sysfs[256];
 	bool support_page;
 	uint32_t available_rings = 0;
 	r = amdgpu_query_hw_ip_info(device_handle, ip_type, 0, &info);
@@ -510,27 +487,8 @@ void bad_access_ring_helper(amdgpu_device_handle device_handle, unsigned int cmd
 		return;
 	}
 	support_page = is_support_page_queue(ip_type, pci);
-	if (ip_type == AMD_IP_GFX)
-		snprintf(sysfs, sizeof(sysfs) - 1, "/sys/kernel/debug/dri/%04x:%02x:%02x.%01x/amdgpu_gfx_sched_mask",
-			pci->domain, pci->bus, pci->device, pci->function);
-	else if (ip_type == AMD_IP_COMPUTE)
-		snprintf(sysfs, sizeof(sysfs) - 1, "/sys/kernel/debug/dri/%04x:%02x:%02x.%01x/amdgpu_compute_sched_mask",
-			pci->domain, pci->bus, pci->device, pci->function);
-	else if (ip_type == AMD_IP_DMA)
-		snprintf(sysfs, sizeof(sysfs) - 1, "/sys/kernel/debug/dri/%04x:%02x:%02x.%01x/amdgpu_sdma_sched_mask",
-			pci->domain, pci->bus, pci->device, pci->function);
-
-	snprintf(cmd, sizeof(cmd) - 1, "sudo cat %s", sysfs);
-	r = access(sysfs, R_OK);
-	if (!r) {
-		fp = popen(cmd, "r");
-		if (fp == NULL)
-			igt_skip("read the sysfs failed: %s\n", sysfs);
-
-		if (fgets(buffer, 128, fp) != NULL)
-			sched_mask = strtol(buffer, NULL, 16);
-
-		pclose(fp);
+	if (is_spx_mode(pci)) {
+		sched_mask = amdgpu_get_ip_schedule_mask(pci, (enum amd_ip_block_type)ip_type, sysfs);
 	} else {
 		sched_mask = 1;
 		igt_info("The scheduling ring only enables one for ip %d\n", ip_type);

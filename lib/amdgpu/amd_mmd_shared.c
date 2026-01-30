@@ -196,54 +196,20 @@ mm_queue_test_helper(amdgpu_device_handle device_handle, struct mmd_shared_conte
 		mm_test_callback callback, int err_type, const struct pci_addr *pci)
 {
 	int r;
-	FILE *fp;
 	char cmd[1024];
-	char buffer[128];
 	long sched_mask = 0;
 	long mask = 0;
 	uint32_t ring_id;
-	char sysfs[125];
-	char dri_dir[128];
-	int dri_id = 0;
+	char sysfs[256];
 
 	if (!callback)
 		return -1;
 
-	snprintf(dri_dir, sizeof(dri_dir) - 1, "/sys/kernel/debug/dri/%04x:%02x:%02x.%01x",
-		pci->domain, pci->bus, pci->device, pci->function);
-
-	if (access(dri_dir, F_OK) == 0) {
-		// test is only supported on VCN version >= 4
-		if (context->ip_type == AMD_IP_VCN_UNIFIED)
-			snprintf(sysfs, sizeof(sysfs) - 1, "/sys/kernel/debug/dri/%04x:%02x:%02x.%01x/amdgpu_vcn_sched_mask",
-					pci->domain, pci->bus, pci->device, pci->function);
-		else if (context->ip_type == AMD_IP_VCN_JPEG)
-			snprintf(sysfs, sizeof(sysfs) - 1, "/sys/kernel/debug/dri/%04x:%02x:%02x.%01x/amdgpu_jpeg_sched_mask",
-					pci->domain, pci->bus, pci->device, pci->function);
+	if (is_spx_mode(pci)) {
+		sched_mask = amdgpu_get_ip_schedule_mask(pci, (enum amd_ip_block_type)context->ip_type, sysfs);
 	} else {
-		dri_id = find_dri_id_by_pci(pci);
-		if (dri_id < 0)
-			dri_id = 0;
-
-		if (context->ip_type == AMD_IP_VCN_UNIFIED)
-			snprintf(sysfs, sizeof(sysfs) - 1, "/sys/kernel/debug/dri/%d/amdgpu_vcn_sched_mask", dri_id);
-		else if (context->ip_type == AMD_IP_VCN_JPEG)
-			snprintf(sysfs, sizeof(sysfs) - 1, "/sys/kernel/debug/dri/%d/amdgpu_jpeg_sched_mask", dri_id);
-	}
-	snprintf(cmd, sizeof(cmd) - 1, "sudo cat %s", sysfs);
-	r = access(sysfs, R_OK);
-	if (!r) {
-		fp = popen(cmd, "r");
-		if (fp == NULL) {
-			igt_skip("read the sysfs failed: %s\n", sysfs);
-			return -1;
-		}
-
-		if (fgets(buffer, 128, fp) != NULL)
-			sched_mask = strtol(buffer, NULL, 16);
-		pclose(fp);
-	} else
 		sched_mask = 1;
+	}
 
 	mask = sched_mask;
 	for (ring_id = 0;  mask > 0; ring_id++) {
