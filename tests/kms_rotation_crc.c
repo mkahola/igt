@@ -587,7 +587,7 @@ static void test_plane_rotation(data_t *data, int plane_type, bool test_bad_form
 	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	int pipe_count = 0, connected_outputs = 0;
 	bool found = false;
 
@@ -603,14 +603,13 @@ static void test_plane_rotation(data_t *data, int plane_type, bool test_bad_form
 	for_each_connected_output(&data->display, output)
 		connected_outputs++;
 
-	for_each_pipe_with_valid_output(display, pipe, output) {
+	for_each_crtc_with_valid_output(display, crtc, output) {
 		igt_plane_t *plane;
 		int i, j, c;
 
 		igt_display_reset(display);
 
-		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+		igt_output_set_crtc(output, crtc);
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
@@ -648,13 +647,12 @@ static void test_plane_rotation(data_t *data, int plane_type, bool test_bad_form
 			break;
 		pipe_count++;
 
-		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+		igt_output_set_crtc(output, crtc);
 
 		plane = igt_output_get_plane_type(output, plane_type);
 		igt_require(plane_rotation_requirements(data, plane));
 
-		prepare_crtc(data, output, pipe, plane, true);
+		prepare_crtc(data, output, crtc->pipe, plane, true);
 
 		for (i = 0; i < num_rectangle_types; i++) {
 			/* Unsupported on intel */
@@ -686,13 +684,13 @@ static void test_plane_rotation(data_t *data, int plane_type, bool test_bad_form
 					if (!test_format(data, &tested_formats, format))
 						continue;
 
-					test_single_case(data, pipe, output, plane, i,
+					test_single_case(data, crtc->pipe, output, plane, i,
 							 format, test_bad_format);
 				}
 
 				igt_vec_fini(&tested_formats);
 			} else {
-				test_single_case(data, pipe, output, plane, i,
+				test_single_case(data, crtc->pipe, output, plane, i,
 						 data->override_fmt, test_bad_format);
 			}
 		}
@@ -1349,17 +1347,16 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 	 */
 	igt_describe("This test intends to check for fence leaks exhaustively");
 	igt_subtest_f("exhaust-fences") {
-		enum pipe pipe;
+		igt_crtc_t *crtc;
 		igt_output_t *output;
 
 		igt_require_intel(data.gfx_fd);
 		igt_display_require_output(&data.display);
 
-		for_each_pipe_with_valid_output(&data.display, pipe, output) {
-			igt_plane_t *primary = &igt_crtc_for_pipe(&data.display,
-								  pipe)->planes[0];
+		for_each_crtc_with_valid_output(&data.display, crtc, output) {
+			igt_plane_t *primary = &crtc->planes[0];
 
-			test_plane_rotation_exhaust_fences(&data, pipe, output, primary);
+			test_plane_rotation_exhaust_fences(&data, crtc->pipe, output, primary);
 			break;
 		}
 	}
