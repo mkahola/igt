@@ -955,7 +955,7 @@ run_deep_color_tests_for_pipe(data_t *data, enum pipe p)
 static void
 run_invalid_tests_for_pipe(data_t *data)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	struct {
 		const char *name;
 		void (*test_t) (data_t *data, enum pipe pipe);
@@ -975,10 +975,10 @@ run_invalid_tests_for_pipe(data_t *data)
 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
 		igt_describe_f("%s", tests[i].desc);
 		igt_subtest_with_dynamic_f("%s", tests[i].name) {
-			for_each_pipe(&data->display, pipe) {
-				igt_dynamic_f("pipe-%s", kmstest_pipe_name(pipe)) {
-					prep_pipe(data, pipe);
-					tests[i].test_t(data, pipe);
+			for_each_crtc(&data->display, crtc) {
+				igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
+					prep_pipe(data, crtc->pipe);
+					tests[i].test_t(data, crtc->pipe);
 				}
 			}
 		}
@@ -988,7 +988,7 @@ run_invalid_tests_for_pipe(data_t *data)
 static void
 run_tests_for_pipe(data_t *data)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	static const struct {
 		const char *name;
 		bool (*test_t)(data_t*, igt_plane_t*);
@@ -1118,10 +1118,10 @@ run_tests_for_pipe(data_t *data)
 	for (i = 0; i < ARRAY_SIZE(gamma_degamma_tests); i++) {
 		igt_describe_f("%s", gamma_degamma_tests[i].desc);
 		igt_subtest_with_dynamic_f("%s", gamma_degamma_tests[i].name) {
-			for_each_pipe_with_valid_output(&data->display, pipe, data->output) {
-				igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe),
+			for_each_crtc_with_valid_output(&data->display, crtc, data->output) {
+				igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 					      igt_output_name(data->output))
-					run_gamma_degamma_tests_for_pipe(data, pipe,
+					run_gamma_degamma_tests_for_pipe(data, crtc->pipe,
 									 gamma_degamma_tests[i].test_t);
 			}
 		}
@@ -1130,10 +1130,10 @@ run_tests_for_pipe(data_t *data)
 	for (i = 0; i < ARRAY_SIZE(ctm_tests); i++) {
 		igt_describe_f("%s", ctm_tests[i].desc);
 		igt_subtest_with_dynamic_f("%s", ctm_tests[i].name) {
-			for_each_pipe_with_valid_output(&data->display, pipe, data->output) {
-				igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe),
+			for_each_crtc_with_valid_output(&data->display, crtc, data->output) {
+				igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 					      igt_output_name(data->output))
-					run_ctm_tests_for_pipe(data, pipe,
+					run_ctm_tests_for_pipe(data, crtc->pipe,
 							       ctm_tests[i].fb_colors,
 							       ctm_tests[i].ctm,
 							       ctm_tests[i].iter);
@@ -1148,8 +1148,8 @@ run_tests_for_pipe(data_t *data)
 
 	igt_describe("Verify that deep color works correctly");
 	igt_subtest_with_dynamic("deep-color") {
-		for_each_pipe(&data->display, pipe) {
-			run_deep_color_tests_for_pipe(data, pipe);
+		for_each_crtc(&data->display, crtc) {
+			run_deep_color_tests_for_pipe(data, crtc->pipe);
 
 			if (igt_run_in_simulation())
 				break;
