@@ -26,6 +26,27 @@
 
 IGT_TEST_DESCRIPTION("Tests for intel hwmon");
 
+static void check_if_temp_valid(int hwm, char *sysfs_name)
+{
+	int32_t cur_temp = 0, limit = 0;
+	char str[32] = {0};
+	uint8_t ch = 0;
+
+	/* Get the channel number and sysfs entry suffix. */
+	igt_assert(sscanf(sysfs_name, "temp%hhu_%s", &ch, str) == 2);
+
+	/* If entry is tempX_input, check if it exceeds tempX_crit. */
+	if (!strncmp("input", str, 5)) {
+		sprintf(str, "temp%hhu_crit", ch);
+		if (!faccessat(hwm, str, R_OK, 0)) {
+			igt_assert_lt(0, igt_sysfs_scanf(hwm, sysfs_name, "%d", &cur_temp));
+			igt_assert_lt(0, igt_sysfs_scanf(hwm, str, "%d", &limit));
+			igt_debug("current temp = %d limit = %d\n", cur_temp, limit);
+			igt_assert_f(cur_temp <= limit, "current temperature exceeds limit!\n");
+		}
+	}
+}
+
 static void hwmon_read(int hwm)
 {
 	struct dirent *de;
@@ -42,6 +63,9 @@ static void hwmon_read(int hwm)
 
 		igt_assert(igt_sysfs_scanf(hwm, de->d_name, "%127s", val) == 1);
 		igt_debug("'%s': %s\n", de->d_name, val);
+
+		if (!strncmp(de->d_name, "temp", 4))
+			check_if_temp_valid(hwm, de->d_name);
 
 	}
 	closedir(dir);
