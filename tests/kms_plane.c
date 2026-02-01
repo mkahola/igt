@@ -1365,6 +1365,7 @@ static void test_planar_settings(data_t *data)
 	int devid;
 	int display_ver = -1;
 	int rval;
+	bool is_vkms = false;
 
 	/*
 	 * If here is added non-intel tests below require will need to be
@@ -1377,6 +1378,8 @@ static void test_planar_settings(data_t *data)
 		igt_require(intel_display_ver(devid) >= 9);
 		display_ver = intel_display_ver(devid);
 		igt_require(display_ver >= 9);
+	} else if (is_vkms_device(data->drm_fd)) {
+		is_vkms = true;
 	}
 
 	crtc = igt_first_crtc_with_single_output(display, &output);
@@ -1387,13 +1390,12 @@ static void test_planar_settings(data_t *data)
 	igt_display_commit_atomic(&data->display,
 				  DRM_MODE_ATOMIC_ALLOW_MODESET,
 				  NULL);
-
 	/* test against intel_plane_check_src_coordinates() in i915 */
 	if (igt_plane_has_format_mod(primary, DRM_FORMAT_NV12,
 				     DRM_FORMAT_MOD_LINEAR)) {
 		int expected_rval = -EINVAL;
 
-		if (display_ver >= 20)
+		if (display_ver >= 20 || is_vkms)
 			expected_rval = 0;
 
 		igt_create_fb(data->drm_fd, 257, 256,
@@ -1414,7 +1416,7 @@ static void test_planar_settings(data_t *data)
 				     DRM_FORMAT_MOD_LINEAR)) {
 		int expected_rval = -EINVAL;
 
-		if (display_ver >= 20 && display_ver < 35)
+		if ((display_ver >= 20 && display_ver < 35) || is_vkms)
 			expected_rval = 0;
 
 		igt_create_fb(data->drm_fd, 256, 257,
@@ -1435,7 +1437,7 @@ static void test_planar_settings(data_t *data)
 				     DRM_FORMAT_MOD_LINEAR)) {
 		int expected_rval = -EINVAL;
 
-		if (display_ver >= 35)
+		if (display_ver >= 35 || is_vkms)
 			expected_rval = 0;
 
 		igt_create_fb(data->drm_fd, 810, 590,
@@ -1456,7 +1458,7 @@ static void test_planar_settings(data_t *data)
 					    DRM_FORMAT_MOD_LINEAR)) {
 		int expected_rval = -EINVAL;
 
-		if (display_ver >= 20 && display_ver < 35)
+		if ((display_ver >= 20 && display_ver < 35) || is_vkms)
 			expected_rval = 0;
 
 		igt_create_color_fb(data->drm_fd, 256, 260,
