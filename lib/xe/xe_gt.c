@@ -220,7 +220,12 @@ bool xe_gt_is_in_c6(int fd, int gt)
 	igt_assert(igt_sysfs_scanf(gt_fd, "gtidle/idle_status", "%s", gt_c_state) == 1);
 	close(gt_fd);
 
-	return strcmp(gt_c_state, "gt-c6") == 0;
+	if (!strcmp(gt_c_state, "gt-c6"))
+		return true;
+
+	igt_debug("GT%d C-state is %s\n", gt, gt_c_state);
+
+	return false;
 }
 
 /**
