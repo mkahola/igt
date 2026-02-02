@@ -193,6 +193,22 @@ amdgpu_cs_jpeg_decode(amdgpu_device_handle device_handle,
 		send_cmd_target(context, dec_buf.addr + (size / 4), &idx);
 	}
 
+	/*
+	 * VCN JPEG (VCN 4.0.5+) requires IB size aligned to 16 DW.
+	 * We pad using a 2-DW NOP packet, so the initial ndw must be even.
+	 */
+	/* IB capacity in DW (IB_SIZE is in bytes, divide by 4) */
+	unsigned int ib_dw_capacity = IB_SIZE / 4;
+	igt_assert_eq(idx & 1, 0);
+
+	while (idx & 0xF) {
+		igt_assert(idx + 2 <= ib_dw_capacity);
+
+		/* 2-DW NOP packet for VCN JPEG */
+		context->ib_cpu[idx++] = 0x60000000;
+		context->ib_cpu[idx++] = 0x00000000;
+	}
+
 	amdgpu_bo_cpu_unmap(dec_buf.handle);
 	r = submit(device_handle, context, idx, AMDGPU_HW_IP_VCN_JPEG);
 	igt_assert_eq(r, 0);
