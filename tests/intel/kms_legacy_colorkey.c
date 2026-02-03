@@ -44,7 +44,7 @@ IGT_TEST_DESCRIPTION("Check that the legacy set colorkey ioctl only works on spr
 
 static int drm_fd;
 static igt_display_t display;
-static int p;
+static igt_crtc_t *crtc;
 static igt_plane_t *plane;
 static uint32_t max_id;
 
@@ -66,8 +66,8 @@ int igt_main()
 		kmstest_set_vt_graphics_mode();
 
 		igt_display_require(&display, drm_fd);
-		for_each_pipe(&display, p) {
-			for_each_plane_on_pipe(&display, p, plane) {
+		for_each_crtc(&display, crtc) {
+			for_each_plane_on_pipe(&display, crtc->pipe, plane) {
 				max_id = max(max_id, plane->drm_plane->plane_id);
 			}
 		}
@@ -77,9 +77,10 @@ int igt_main()
 	igt_describe("Test to check the legacy set colorkey ioctl "
 		     "only works for sprite planes.\n");
 	igt_subtest_with_dynamic("basic") {
-		for_each_pipe(&display, p) {
-			igt_dynamic_f("pipe-%s", kmstest_pipe_name(p)) {
-				for_each_plane_on_pipe(&display, p, plane) {
+		for_each_crtc(&display, crtc) {
+			igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
+				for_each_plane_on_pipe(&display, crtc->pipe,
+						       plane) {
 					bool is_valid = (plane->type == DRM_PLANE_TYPE_PRIMARY ||
 							 plane->type == DRM_PLANE_TYPE_CURSOR);
 
