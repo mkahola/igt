@@ -152,15 +152,14 @@ static void test_init(struct data_t *data)
 		data->pipe_crc_dprx[i] = NULL;
 
 	for_each_pipe(display, i) {
+		igt_crtc_t *crtc = igt_crtc_for_pipe(display, i);
 		igt_output_t *output;
-		igt_crtc_t *crtc;
 
 		/* For each valid pipe, get one connected display.
 		 * This will let displays connected to MST hub be
 		 * tested
 		 */
 		output = igt_get_single_output_for_pipe(display, i);
-		crtc = igt_crtc_for_pipe(display, i);
 		data->primary[i] = igt_crtc_get_plane_type(crtc,
 							   DRM_PLANE_TYPE_PRIMARY);
 		data->output[i] = output;
