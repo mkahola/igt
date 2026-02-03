@@ -40,6 +40,39 @@
 	for_each_port(p, port) if (chamelium_port_get_type(port) == \
 				   DRM_MODE_CONNECTOR_##type__)
 
+/**
+ * connector_test() - Run a subtest for all ports of a given connector type
+ *
+ * Defines a subtest that iterates over all available Chamelium ports and
+ * executes the provided test function for each port matching the requested
+ * connector type. If no matching port is found, the subtest is skipped
+ * cleanly.
+ *
+ * This helper avoids repeated connector-iteration logic and provides a
+ * consistent pattern for running connector-specific tests.
+ */
+
+#define connector_test(name__, connector_type__, data__, test_fn__, ...)		\
+	do {										\
+		igt_subtest(name__) {							\
+			int p__;							\
+			struct chamelium_port *port__;					\
+			bool found__ = false;						\
+			for_each_port(p__, port__) {					\
+				if (chamelium_port_get_type(port__) !=			\
+					DRM_MODE_CONNECTOR_##connector_type__)		\
+					continue;					\
+				igt_info("%s: testing port %s\n", name__,		\
+					 chamelium_port_get_name(port__));		\
+				found__ = true;						\
+				test_fn__(data__, port__, ##__VA_ARGS__);		\
+			}								\
+			if (!found__)							\
+				igt_skip(#connector_type__				\
+					" connector not available");			\
+			}								\
+	} while (0)									\
+
 /*
  * The chamelium data structure is used to store all the information known about
  * chamelium to run the tests.
