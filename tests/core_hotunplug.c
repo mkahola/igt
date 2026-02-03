@@ -245,6 +245,17 @@ static void device_unplug(struct hotunplug *priv, const char *prefix,
 {
 	igt_require(priv->fd.sysfs_dev == -1);
 
+	priv->fd.sysfs_dev = openat(priv->fd.sysfs_bus, priv->dev_bus_addr,
+				    O_DIRECTORY);
+	igt_assert_fd(priv->fd.sysfs_dev);
+
+	if (!igt_sysfs_has_attr(priv->fd.sysfs_dev, "remove")) {
+		priv->fd.sysfs_dev = close_sysfs(priv->fd.sysfs_dev);
+		igt_assert_eq(priv->fd.sysfs_dev, -1);
+		igt_skip("PCI %s has no sysfs 'remove' attribute, skipping test\n",
+			 priv->dev_bus_addr);
+	}
+
 	/*
 	 * FIXME: on some devices, the audio driver (snd_hda_intel)
 	 * binds into the i915 driver. On such hardware, kernel warnings
@@ -254,15 +265,13 @@ static void device_unplug(struct hotunplug *priv, const char *prefix,
 	 * unbind i915 driver, reloading it when binding again.
 	 */
 	if (igt_audio_driver_unload(&priv->snd_driver)) {
+		priv->fd.sysfs_dev = close_sysfs(priv->fd.sysfs_dev);
+		igt_assert_eq(priv->fd.sysfs_dev, -1);
 		igt_skip("Audio driver %s in use, skipping test\n",
 			 priv->snd_driver);
 	} else if (priv->snd_driver) {
 		igt_info("Unloaded audio driver %s\n", priv->snd_driver);
 	}
-
-	priv->fd.sysfs_dev = openat(priv->fd.sysfs_bus, priv->dev_bus_addr,
-				    O_DIRECTORY);
-	igt_assert_fd(priv->fd.sysfs_dev);
 
 	local_debug("%sunplugging the device\n", prefix);
 	priv->failure = "Device unplug failure!";
