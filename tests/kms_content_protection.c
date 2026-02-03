@@ -862,6 +862,7 @@ test_content_protection_mst(int content_type)
 	igt_display_t *display = &data.display;
 	igt_output_t *output;
 	int valid_outputs = 0, dp_mst_outputs = 0, ret, count, max_pipe = 0, i;
+	igt_crtc_t *crtc;
 	enum pipe pipe;
 	bool pipe_found;
 	igt_output_t *hdcp_mst_output[IGT_MAX_PIPES];
@@ -876,11 +877,9 @@ test_content_protection_mst(int content_type)
 			continue;
 
 		pipe_found = false;
-		for_each_pipe(display, pipe) {
-			igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
-
+		for_each_crtc(display, crtc) {
 			if (igt_crtc_is_free(crtc) &&
-			    igt_pipe_connector_valid(pipe, output)) {
+			    igt_pipe_connector_valid(crtc->pipe, output)) {
 				pipe_found = true;
 				break;
 			}

@@ -898,6 +898,7 @@ static void collect_crcs_mask(igt_pipe_crc_t **pipe_crcs, unsigned mask, igt_crc
 
 static void run_modeset_tests(data_t *data, int howmany, bool nonblocking, bool fencing)
 {
+	igt_crtc_t *crtc;
 	int i, j;
 	unsigned iter_max;
 	igt_output_t *output;
@@ -920,8 +921,7 @@ retry:
 	igt_create_color_pattern_fb(data->drm_fd, width, height,
 				    DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, .5, .5, .5, &data->fbs[1]);
 
-	for_each_pipe(&data->display, i) {
-		igt_crtc_t *crtc = igt_crtc_for_pipe(&data->display, i);
+	for_each_crtc(&data->display, crtc) {
 		igt_plane_t *plane = igt_crtc_get_plane_type(crtc,
 							     DRM_PLANE_TYPE_PRIMARY);
 		drmModeModeInfo *mode = NULL;
@@ -930,10 +930,11 @@ retry:
 		j += 1;
 
 		if (is_intel_device(data->drm_fd))
-			data->pipe_crcs[i] = igt_crtc_crc_new(crtc,
+			data->pipe_crcs[crtc->pipe] = igt_crtc_crc_new(crtc,
 							      IGT_PIPE_CRC_SOURCE_AUTO);
 
-		for_each_valid_output_on_pipe(&data->display, i, output) {
+		for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+					      output) {
 			if (igt_output_get_driving_crtc(output) != NULL)
 				continue;
 
@@ -943,7 +944,8 @@ retry:
 				mode = igt_output_get_mode(output);
 
 				igt_info("(pipe %s + %s), mode:",
-					 kmstest_pipe_name(i), igt_output_name(output));
+					 igt_crtc_name(crtc),
+					 igt_output_name(output));
 				kmstest_dump_mode(mode);
 
 				break;

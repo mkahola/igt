@@ -2785,7 +2785,7 @@ static void igt_output_reset(igt_output_t *output)
  */
 void igt_display_reset(igt_display_t *display)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	int i;
 
 	/*
@@ -2794,11 +2794,10 @@ void igt_display_reset(igt_display_t *display)
 	 */
 	display->first_commit = true;
 
-	for_each_pipe(display, pipe) {
-		igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
+	for_each_crtc(display, crtc) {
 		igt_plane_t *plane;
 
-		for_each_plane_on_pipe(display, pipe, plane)
+		for_each_plane_on_pipe(display, crtc->pipe, plane)
 			igt_plane_reset(plane);
 
 		igt_crtc_reset(crtc);
@@ -2915,6 +2914,7 @@ static void igt_handle_spurious_hpd(igt_display_t *display)
  */
 void igt_display_reset_outputs(igt_display_t *display)
 {
+	igt_crtc_t *crtc;
 	int i;
 	drmModeRes *resources;
 
@@ -2968,14 +2968,13 @@ void igt_display_reset_outputs(igt_display_t *display)
 	 * display. */
 	igt_display_reset(display);
 
-	for_each_pipe(display, i) {
-		igt_crtc_t *crtc = igt_crtc_for_pipe(display, i);
+	for_each_crtc(display, crtc) {
 		igt_output_t *output;
 
-		if (!igt_pipe_has_valid_output(display, i))
+		if (!igt_pipe_has_valid_output(display, crtc->pipe))
 			continue;
 
-		output = igt_get_single_output_for_pipe(display, i);
+		output = igt_get_single_output_for_pipe(display, crtc->pipe);
 
 		if (crtc->num_primary_planes > 1) {
 			igt_plane_t *old_primary = &crtc->planes[0];
@@ -4791,7 +4790,7 @@ static int igt_atomic_commit(igt_display_t *display, uint32_t flags, void *user_
 {
 
 	int ret = 0, i;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	drmModeAtomicReq *req;
 	igt_output_t *output;
 
@@ -4799,8 +4798,7 @@ static int igt_atomic_commit(igt_display_t *display, uint32_t flags, void *user_
 		return -1;
 	req = drmModeAtomicAlloc();
 
-	for_each_pipe(display, pipe) {
-		igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
+	for_each_crtc(display, crtc) {
 		igt_plane_t *plane;
 
 		/*
@@ -4809,7 +4807,7 @@ static int igt_atomic_commit(igt_display_t *display, uint32_t flags, void *user_
 		if (crtc->changed)
 			igt_atomic_prepare_crtc_commit(crtc, req);
 
-		for_each_plane_on_pipe(display, pipe, plane) {
+		for_each_plane_on_pipe(display, crtc->pipe, plane) {
 			/* skip planes that are handled by another pipe */
 			if (plane->ref->crtc != crtc)
 				continue;
@@ -4849,10 +4847,9 @@ static void
 display_commit_changed(igt_display_t *display, enum igt_commit_style s)
 {
 	int i;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
-	for_each_pipe(display, pipe) {
-		igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
+	for_each_crtc(display, crtc) {
 		igt_plane_t *plane;
 
 		if (s == COMMIT_ATOMIC) {
@@ -4874,7 +4871,7 @@ display_commit_changed(igt_display_t *display, enum igt_commit_style s)
 			}
 		}
 
-		for_each_plane_on_pipe(display, pipe, plane) {
+		for_each_plane_on_pipe(display, crtc->pipe, plane) {
 			if (s == COMMIT_ATOMIC) {
 				int fd;
 				plane->changed = 0;
@@ -4945,7 +4942,7 @@ static int do_display_commit(igt_display_t *display,
 			     bool fail_on_error)
 {
 	int i, ret = 0;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	LOG_INDENT(display, "commit");
 
 	/* someone managed to bypass igt_display_require, catch them */
@@ -4956,10 +4953,7 @@ static int do_display_commit(igt_display_t *display,
 	if (s == COMMIT_ATOMIC) {
 		ret = igt_atomic_commit(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 	} else {
-		for_each_pipe(display, pipe) {
-			igt_crtc_t *crtc = igt_crtc_for_pipe(display,
-								 pipe);
-
+		for_each_crtc(display, crtc) {
 			ret = igt_crtc_commit(crtc, s, fail_on_error);
 			if (ret)
 				break;

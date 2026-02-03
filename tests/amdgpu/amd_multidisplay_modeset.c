@@ -144,6 +144,7 @@ static void set_all_output_pipe_to_none(struct data_t *data)
 static void test_init(struct data_t *data)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc;
 	int i;
 	bool ret = false;
 	uint8_t dpcd_246h = 0;
@@ -151,18 +152,17 @@ static void test_init(struct data_t *data)
 	for (i = 0; i < MAX_PIPES; i++)
 		data->pipe_crc_dprx[i] = NULL;
 
-	for_each_pipe(display, i) {
-		igt_crtc_t *crtc = igt_crtc_for_pipe(display, i);
+	for_each_crtc(display, crtc) {
 		igt_output_t *output;
 
 		/* For each valid pipe, get one connected display.
 		 * This will let displays connected to MST hub be
 		 * tested
 		 */
-		output = igt_get_single_output_for_pipe(display, i);
-		data->primary[i] = igt_crtc_get_plane_type(crtc,
+		output = igt_get_single_output_for_pipe(display, crtc->pipe);
+		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
 							   DRM_PLANE_TYPE_PRIMARY);
-		data->output[i] = output;
+		data->output[crtc->pipe] = output;
 
 		/* dp rx crc only available for eDP, SST DP, MST DP */
 		if ((output->config.connector->connector_type ==
@@ -173,24 +173,24 @@ static void test_init(struct data_t *data)
 			ret = dpcd_read_byte(data->fd, output->config.connector,
 				DPCD_TEST_SINK_MISC, &dpcd_246h);
 			if (ret && ((dpcd_246h & 0x20) != 0x0))
-				data->pipe_crc_dprx[i] = igt_crtc_crc_new(crtc,
+				data->pipe_crc_dprx[crtc->pipe] = igt_crtc_crc_new(crtc,
 									  AMDGPU_PIPE_CRC_SOURCE_DPRX);
 		}
 
-		data->pipe_crc_otg[i] = igt_crtc_crc_new(crtc,
+		data->pipe_crc_otg[crtc->pipe] = igt_crtc_crc_new(crtc,
 							 IGT_PIPE_CRC_SOURCE_AUTO);
 		/* disable eDP PSR */
-		if (data->output[i]->config.connector->connector_type ==
+		if (data->output[crtc->pipe]->config.connector->connector_type ==
 				DRM_MODE_CONNECTOR_eDP) {
 			kmstest_set_connector_dpms(display->drm_fd,
-				data->output[i]->config.connector,
+				data->output[crtc->pipe]->config.connector,
 				DRM_MODE_DPMS_OFF);
 
 			igt_amd_disallow_edp_enter_psr(data->fd,
-				data->output[i]->name, true);
+				data->output[crtc->pipe]->name, true);
 
 			kmstest_set_connector_dpms(display->drm_fd,
-				data->output[i]->config.connector,
+				data->output[crtc->pipe]->config.connector,
 				DRM_MODE_DPMS_ON);
 		}
 	}
