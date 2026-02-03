@@ -851,48 +851,30 @@ IGT_TEST_DESCRIPTION("Testing Audio with a Chamelium board");
 int igt_main()
 {
 	chamelium_data_t data;
-	struct chamelium_port *port;
-	int p;
 
 	igt_fixture() {
 		chamelium_init_test(&data);
 	}
 
 	igt_describe("DisplayPort tests");
-	igt_subtest_group() {
-		igt_fixture() {
-			chamelium_require_connector_present(
-				data.ports, DRM_MODE_CONNECTOR_DisplayPort,
-				data.port_count, 1);
-		}
 
-		igt_describe(test_display_audio_desc);
-		connector_subtest("dp-audio", DisplayPort) test_display_audio(
-			&data, port, "HDMI", IGT_CUSTOM_EDID_DP_AUDIO);
+	igt_describe(test_display_audio_desc);
+	connector_test("dp-audio", DisplayPort, &data, test_display_audio,
+		       "HDMI", IGT_CUSTOM_EDID_DP_AUDIO);
 
-		igt_describe(test_display_audio_edid_desc);
-		connector_subtest("dp-audio-edid", DisplayPort)
-			test_display_audio_edid(&data, port,
-						IGT_CUSTOM_EDID_DP_AUDIO);
-	}
+	igt_describe(test_display_audio_edid_desc);
+	connector_test("dp-audio-edid", DisplayPort, &data, test_display_audio_edid,
+		       IGT_CUSTOM_EDID_DP_AUDIO);
 
 	igt_describe("HDMI tests");
-	igt_subtest_group() {
-		igt_fixture() {
-			chamelium_require_connector_present(
-				data.ports, DRM_MODE_CONNECTOR_HDMIA,
-				data.port_count, 1);
-		}
 
-		igt_describe(test_display_audio_desc);
-		connector_subtest("hdmi-audio", HDMIA) test_display_audio(
-			&data, port, "HDMI", IGT_CUSTOM_EDID_HDMI_AUDIO);
+	igt_describe(test_display_audio_desc);
+	connector_test("hdmi-audio", HDMIA, &data, test_display_audio,
+		       "HDMI", IGT_CUSTOM_EDID_HDMI_AUDIO);
 
-		igt_describe(test_display_audio_edid_desc);
-		connector_subtest("hdmi-audio-edid", HDMIA)
-			test_display_audio_edid(&data, port,
-						IGT_CUSTOM_EDID_HDMI_AUDIO);
-	}
+	igt_describe(test_display_audio_edid_desc);
+	connector_test("hdmi-audio-edid", HDMIA, &data, test_display_audio_edid,
+		       IGT_CUSTOM_EDID_HDMI_AUDIO);
 
 	igt_fixture() {
 		igt_display_fini(&data.display);
