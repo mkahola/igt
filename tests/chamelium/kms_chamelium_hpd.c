@@ -473,109 +473,110 @@ int igt_main()
 	igt_describe("DisplayPort tests");
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("dp-hpd", DisplayPort, &data, test_hotplug,
-		       HPD_TOGGLE_COUNT_DP_HDMI, TEST_MODESET_OFF);
+	connector_subtest("dp-hpd", DisplayPort, &data, test_hotplug,
+			  HPD_TOGGLE_COUNT_DP_HDMI, TEST_MODESET_OFF);
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("dp-hpd-fast", DisplayPort, &data, test_hotplug,
-		       HPD_TOGGLE_COUNT_FAST, TEST_MODESET_OFF);
+	connector_subtest("dp-hpd-fast", DisplayPort, &data, test_hotplug,
+			  HPD_TOGGLE_COUNT_FAST, TEST_MODESET_OFF);
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("dp-hpd-enable-disable-mode", DisplayPort, &data, test_hotplug,
-		       HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON_OFF);
+	connector_subtest("dp-hpd-enable-disable-mode", DisplayPort, &data, test_hotplug,
+			  HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON_OFF);
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("dp-hpd-with-enabled-mode", DisplayPort, &data, test_hotplug,
-		       HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON);
+	connector_subtest("dp-hpd-with-enabled-mode", DisplayPort, &data, test_hotplug,
+			  HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON);
 
 	igt_describe(test_hotplug_for_each_pipe_desc);
-	connector_test("dp-hpd-for-each-pipe", DisplayPort, &data,
-		       test_hotplug_for_each_pipe);
+	connector_subtest("dp-hpd-for-each-pipe", DisplayPort, &data,
+			  test_hotplug_for_each_pipe);
 
 	igt_describe(test_suspend_resume_hpd_desc);
-	connector_test("dp-hpd-after-suspend", DisplayPort, &data, test_suspend_resume_hpd,
-		       SUSPEND_STATE_MEM, SUSPEND_TEST_NONE);
+	connector_subtest("dp-hpd-after-suspend", DisplayPort, &data, test_suspend_resume_hpd,
+			  SUSPEND_STATE_MEM, SUSPEND_TEST_NONE);
 
 	igt_describe(test_suspend_resume_hpd_desc);
-	connector_test("dp-hpd-after-hibernate", DisplayPort, &data, test_suspend_resume_hpd,
-		       SUSPEND_STATE_DISK, SUSPEND_TEST_DEVICES);
+	connector_subtest("dp-hpd-after-hibernate", DisplayPort, &data, test_suspend_resume_hpd,
+			  SUSPEND_STATE_DISK, SUSPEND_TEST_DEVICES);
 
 	igt_describe(test_hpd_storm_detect_desc);
-	connector_test("dp-hpd-storm", DisplayPort, &data, test_hpd_storm_detect,
-		       HPD_STORM_PULSE_INTERVAL_DP);
+	connector_subtest("dp-hpd-storm", DisplayPort, &data, test_hpd_storm_detect,
+			  HPD_STORM_PULSE_INTERVAL_DP);
 
 	igt_describe(test_hpd_storm_disable_desc);
-	connector_test("dp-hpd-storm-disable", DisplayPort, &data, test_hpd_storm_disable,
-		       HPD_STORM_PULSE_INTERVAL_DP);
+	connector_subtest("dp-hpd-storm-disable", DisplayPort, &data, test_hpd_storm_disable,
+			  HPD_STORM_PULSE_INTERVAL_DP);
 
 	igt_describe("HDMI tests");
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("hdmi-hpd", HDMIA, &data, test_hotplug,
-		       HPD_TOGGLE_COUNT_DP_HDMI, TEST_MODESET_OFF);
+	connector_subtest("hdmi-hpd", HDMIA, &data, test_hotplug,
+			  HPD_TOGGLE_COUNT_DP_HDMI, TEST_MODESET_OFF);
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("hdmi-hpd-fast", HDMIA, &data, test_hotplug,
-		       HPD_TOGGLE_COUNT_FAST, TEST_MODESET_OFF);
+	connector_subtest("hdmi-hpd-fast", HDMIA, &data, test_hotplug,
+			  HPD_TOGGLE_COUNT_FAST, TEST_MODESET_OFF);
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("hdmi-hpd-enable-disable-mode", HDMIA, &data, test_hotplug,
-		       HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON_OFF);
+	connector_subtest("hdmi-hpd-enable-disable-mode", HDMIA, &data, test_hotplug,
+			  HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON_OFF);
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("hdmi-hpd-with-enabled-mode", HDMIA, &data, test_hotplug,
-		       HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON);
+	connector_subtest("hdmi-hpd-with-enabled-mode", HDMIA, &data, test_hotplug,
+			  HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON);
 
 	igt_describe(test_hotplug_for_each_pipe_desc);
-	connector_test("hdmi-hpd-for-each-pipe", HDMIA, &data, test_hotplug_for_each_pipe);
+	connector_subtest("hdmi-hpd-for-each-pipe", HDMIA, &data,
+			  test_hotplug_for_each_pipe);
 
 	igt_describe(test_suspend_resume_hpd_desc);
-	connector_test("hdmi-hpd-after-suspend", HDMIA, &data, test_suspend_resume_hpd,
-		       SUSPEND_STATE_MEM, SUSPEND_TEST_NONE);
+	connector_subtest("hdmi-hpd-after-suspend", HDMIA, &data, test_suspend_resume_hpd,
+			  SUSPEND_STATE_MEM, SUSPEND_TEST_NONE);
 
 	igt_describe(test_suspend_resume_hpd_desc);
-	connector_test("hdmi-hpd-after-hibernate", HDMIA, &data, test_suspend_resume_hpd,
-		       SUSPEND_STATE_DISK, SUSPEND_TEST_DEVICES);
+	connector_subtest("hdmi-hpd-after-hibernate", HDMIA, &data, test_suspend_resume_hpd,
+			  SUSPEND_STATE_DISK, SUSPEND_TEST_DEVICES);
 
 	igt_describe(test_hpd_storm_detect_desc);
-	connector_test("hdmi-hpd-storm", HDMIA, &data, test_hpd_storm_detect,
-		       HPD_STORM_PULSE_INTERVAL_HDMI);
+	connector_subtest("hdmi-hpd-storm", HDMIA, &data, test_hpd_storm_detect,
+			  HPD_STORM_PULSE_INTERVAL_HDMI);
 
 	igt_describe(test_hpd_storm_disable_desc);
-	connector_test("hdmi-hpd-storm-disable", HDMIA, &data, test_hpd_storm_disable,
-		       HPD_STORM_PULSE_INTERVAL_HDMI);
+	connector_subtest("hdmi-hpd-storm-disable", HDMIA, &data, test_hpd_storm_disable,
+			  HPD_STORM_PULSE_INTERVAL_HDMI);
 
 	igt_describe("VGA tests");
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("vga-hpd", VGA, &data, test_hotplug,
-		       HPD_TOGGLE_COUNT_VGA, TEST_MODESET_OFF);
+	connector_subtest("vga-hpd", VGA, &data, test_hotplug,
+			  HPD_TOGGLE_COUNT_VGA, TEST_MODESET_OFF);
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("vga-hpd-fast", VGA, &data, test_hotplug,
-		       HPD_TOGGLE_COUNT_FAST, TEST_MODESET_OFF);
+	connector_subtest("vga-hpd-fast", VGA, &data, test_hotplug,
+			  HPD_TOGGLE_COUNT_FAST, TEST_MODESET_OFF);
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("vga-hpd-enable-disable-mode", VGA, &data,
-		       test_hotplug, HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON_OFF);
+	connector_subtest("vga-hpd-enable-disable-mode", VGA, &data,
+			  test_hotplug, HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON_OFF);
 
 	igt_describe(test_basic_hotplug_desc);
-	connector_test("vga-hpd-with-enabled-mode", VGA, &data,
-		       test_hotplug, HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON);
+	connector_subtest("vga-hpd-with-enabled-mode", VGA, &data,
+			  test_hotplug, HPD_TOGGLE_COUNT_FAST, TEST_MODESET_ON);
 
 	igt_describe(test_suspend_resume_hpd_desc);
-	connector_test("vga-hpd-after-suspend", VGA, &data,
-		       test_suspend_resume_hpd, SUSPEND_STATE_MEM, SUSPEND_TEST_NONE);
+	connector_subtest("vga-hpd-after-suspend", VGA, &data,
+			  test_suspend_resume_hpd, SUSPEND_STATE_MEM, SUSPEND_TEST_NONE);
 
 	igt_describe(test_suspend_resume_hpd_desc);
-	connector_test("vga-hpd-after-hibernate", VGA, &data,
-		       test_suspend_resume_hpd, SUSPEND_STATE_DISK, SUSPEND_TEST_DEVICES);
+	connector_subtest("vga-hpd-after-hibernate", VGA, &data,
+			  test_suspend_resume_hpd, SUSPEND_STATE_DISK, SUSPEND_TEST_DEVICES);
 
 	igt_describe(test_hpd_without_ddc_desc);
-	connector_test("vga-hpd-without-ddc", VGA, &data, test_hpd_without_ddc);
+	connector_subtest("vga-hpd-without-ddc", VGA, &data, test_hpd_without_ddc);
 
 	igt_describe(test_hotplug_for_each_pipe_desc);
-	connector_test("vga-hpd-for-each-pipe", VGA, &data, test_hotplug_for_each_pipe);
+	connector_subtest("vga-hpd-for-each-pipe", VGA, &data, test_hotplug_for_each_pipe);
 
 	igt_describe("Tests that operate on all connectors");
 	igt_subtest_group() {

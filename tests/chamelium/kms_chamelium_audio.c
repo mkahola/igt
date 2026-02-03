@@ -859,22 +859,22 @@ int igt_main()
 	igt_describe("DisplayPort tests");
 
 	igt_describe(test_display_audio_desc);
-	connector_test("dp-audio", DisplayPort, &data, test_display_audio,
-		       "HDMI", IGT_CUSTOM_EDID_DP_AUDIO);
+	connector_subtest("dp-audio", DisplayPort, &data, test_display_audio,
+			  "HDMI", IGT_CUSTOM_EDID_DP_AUDIO);
 
 	igt_describe(test_display_audio_edid_desc);
-	connector_test("dp-audio-edid", DisplayPort, &data, test_display_audio_edid,
-		       IGT_CUSTOM_EDID_DP_AUDIO);
+	connector_subtest("dp-audio-edid", DisplayPort, &data, test_display_audio_edid,
+			  IGT_CUSTOM_EDID_DP_AUDIO);
 
 	igt_describe("HDMI tests");
 
 	igt_describe(test_display_audio_desc);
-	connector_test("hdmi-audio", HDMIA, &data, test_display_audio,
-		       "HDMI", IGT_CUSTOM_EDID_HDMI_AUDIO);
+	connector_subtest("hdmi-audio", HDMIA, &data, test_display_audio,
+			  "HDMI", IGT_CUSTOM_EDID_HDMI_AUDIO);
 
 	igt_describe(test_display_audio_edid_desc);
-	connector_test("hdmi-audio-edid", HDMIA, &data, test_display_audio_edid,
-		       IGT_CUSTOM_EDID_HDMI_AUDIO);
+	connector_subtest("hdmi-audio-edid", HDMIA, &data, test_display_audio_edid,
+			  IGT_CUSTOM_EDID_HDMI_AUDIO);
 
 	igt_fixture() {
 		igt_display_fini(&data.display);

@@ -35,13 +35,8 @@
 	for (p = 0, port = data.ports[p]; p < data.port_count; \
 	     p++, port = data.ports[p])
 
-#define connector_subtest(name__, type__)                           \
-	igt_subtest(name__)                                         \
-	for_each_port(p, port) if (chamelium_port_get_type(port) == \
-				   DRM_MODE_CONNECTOR_##type__)
-
 /**
- * connector_test() - Run a subtest for all ports of a given connector type
+ * connector_subtest() - Run a subtest for all ports of a given connector type
  *
  * Defines a subtest that iterates over all available Chamelium ports and
  * executes the provided test function for each port matching the requested
@@ -52,7 +47,7 @@
  * consistent pattern for running connector-specific tests.
  */
 
-#define connector_test(name__, connector_type__, data__, test_fn__, ...)		\
+#define connector_subtest(name__, connector_type__, data__, test_fn__, ...)		\
 	do {										\
 		igt_subtest(name__) {							\
 			int p__;							\

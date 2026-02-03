@@ -997,33 +997,33 @@ int igt_main()
 	igt_describe("DisplayPort tests");
 
 	igt_describe(test_display_all_modes_desc);
-	connector_test("dp-crc-single", DisplayPort, &data, test_display_all_modes,
-		       DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 1);
+	connector_subtest("dp-crc-single", DisplayPort, &data, test_display_all_modes,
+			  DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 1);
 
 	igt_describe(test_display_one_mode_desc);
-	connector_test("dp-crc-fast", DisplayPort, &data, test_display_one_mode,
-		       DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 1);
+	connector_subtest("dp-crc-fast", DisplayPort, &data, test_display_one_mode,
+			  DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 1);
 
 	igt_describe(test_display_all_modes_desc);
-	connector_test("dp-crc-multiple", DisplayPort, &data, test_display_all_modes,
-		       DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 3);
+	connector_subtest("dp-crc-multiple", DisplayPort, &data, test_display_all_modes,
+			  DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 3);
 
 	igt_describe(test_display_frame_dump_desc);
-	connector_test("dp-frame-dump", DisplayPort, &data, test_display_frame_dump);
+	connector_subtest("dp-frame-dump", DisplayPort, &data, test_display_frame_dump);
 
 	igt_describe("HDMI tests");
 
 	igt_describe(test_display_all_modes_desc);
-	connector_test("hdmi-crc-single", HDMIA, &data, test_display_all_modes,
-		       DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 1);
+	connector_subtest("hdmi-crc-single", HDMIA, &data, test_display_all_modes,
+			  DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 1);
 
 	igt_describe(test_display_one_mode_desc);
-	connector_test("hdmi-crc-fast", HDMIA, &data, test_display_one_mode,
-		       DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 1);
+	connector_subtest("hdmi-crc-fast", HDMIA, &data, test_display_one_mode,
+			  DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 1);
 
 	igt_describe(test_display_all_modes_desc);
-	connector_test("hdmi-crc-multiple", HDMIA, &data, test_display_all_modes,
-		       DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 3);
+	connector_subtest("hdmi-crc-multiple", HDMIA, &data, test_display_all_modes,
+			  DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_CRC, 3);
 
 	igt_describe(test_display_one_mode_desc);
 	connector_dynamic_subtest("hdmi-crc-nonplanar-formats", HDMIA)
@@ -1061,8 +1061,8 @@ int igt_main()
 		}
 
 	igt_describe(test_display_planes_random_desc);
-	connector_test("hdmi-crc-planes-random", HDMIA, &data, test_display_planes_random,
-		       CHAMELIUM_CHECK_CRC);
+	connector_subtest("hdmi-crc-planes-random", HDMIA, &data, test_display_planes_random,
+			  CHAMELIUM_CHECK_CRC);
 
 	igt_describe(test_display_one_mode_desc);
 	connector_dynamic_subtest("hdmi-cmp-planar-formats", HDMIA)
@@ -1101,20 +1101,20 @@ int igt_main()
 		}
 
 	igt_describe(test_display_planes_random_desc);
-	connector_test("hdmi-cmp-planes-random", HDMIA, &data, test_display_planes_random,
-		       CHAMELIUM_CHECK_CHECKERBOARD);
+	connector_subtest("hdmi-cmp-planes-random", HDMIA, &data,
+			  test_display_planes_random, CHAMELIUM_CHECK_CHECKERBOARD);
 
 	igt_describe(test_display_frame_dump_desc);
-	connector_test("hdmi-frame-dump", HDMIA, &data, test_display_frame_dump);
+	connector_subtest("hdmi-frame-dump", HDMIA, &data, test_display_frame_dump);
 
 	igt_describe(test_display_aspect_ratio_desc);
-	connector_test("hdmi-aspect-ratio", HDMIA, &data, test_display_aspect_ratio);
+	connector_subtest("hdmi-aspect-ratio", HDMIA, &data, test_display_aspect_ratio);
 
 	igt_describe("VGA tests");
 
 	igt_describe(test_display_all_modes_desc);
-	connector_test("vga-frame-dump", VGA, &data, test_display_all_modes,
-		       DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_ANALOG, 1);
+	connector_subtest("vga-frame-dump", VGA, &data, test_display_all_modes,
+			  DRM_FORMAT_XRGB8888, CHAMELIUM_CHECK_ANALOG, 1);
 
 	igt_fixture() {
 		igt_display_fini(&data.display);

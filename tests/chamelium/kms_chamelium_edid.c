@@ -540,69 +540,71 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("DisplayPort tests");
 
 	igt_describe(igt_custom_edid_type_read_desc);
-	connector_test("dp-edid-read", DisplayPort, &data, edid_read_base_and_alt,
-		       IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
+	connector_subtest("dp-edid-read", DisplayPort, &data, edid_read_base_and_alt,
+			  IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
 
 	igt_describe(igt_edid_stress_resolution_desc);
-	connector_test("dp-edid-stress-resolution-4k", DisplayPort, &data,
-		       edid_stress_resolution, DP_EDIDS_4K, ARRAY_SIZE(DP_EDIDS_4K), false);
+	connector_subtest("dp-edid-stress-resolution-4k", DisplayPort, &data,
+			  edid_stress_resolution, DP_EDIDS_4K,
+			  ARRAY_SIZE(DP_EDIDS_4K), false);
 
 	igt_describe(igt_edid_stress_resolution_desc);
-	connector_test("dp-edid-stress-resolution-non-4k", DisplayPort, &data,
-		       edid_stress_resolution, DP_EDIDS_NON_4K, ARRAY_SIZE(DP_EDIDS_NON_4K), false);
+	connector_subtest("dp-edid-stress-resolution-non-4k", DisplayPort, &data,
+			  edid_stress_resolution, DP_EDIDS_NON_4K,
+			  ARRAY_SIZE(DP_EDIDS_NON_4K), false);
 
 	igt_describe(igt_edid_resolution_list_desc);
-	connector_test("dp-edid-resolution-list", DisplayPort, &data, edid_resolution_list);
+	connector_subtest("dp-edid-resolution-list", DisplayPort, &data, edid_resolution_list);
 
 	igt_describe(test_suspend_resume_edid_change_desc);
-	connector_test("dp-edid-change-during-suspend", DisplayPort, &data,
-		       test_suspend_resume_edid_change, SUSPEND_STATE_MEM, SUSPEND_TEST_NONE,
-		       IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
+	connector_subtest("dp-edid-change-during-suspend", DisplayPort, &data,
+			  test_suspend_resume_edid_change, SUSPEND_STATE_MEM, SUSPEND_TEST_NONE,
+			  IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
 
 	igt_describe(test_suspend_resume_edid_change_desc);
-	connector_test("dp-edid-change-during-hibernate", DisplayPort, &data,
-		       test_suspend_resume_edid_change, SUSPEND_STATE_DISK, SUSPEND_TEST_DEVICES,
-		       IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
+	connector_subtest("dp-edid-change-during-hibernate", DisplayPort, &data,
+			  test_suspend_resume_edid_change, SUSPEND_STATE_DISK, SUSPEND_TEST_DEVICES,
+			  IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
 
 	igt_describe(test_mode_timings_desc);
-	connector_test("dp-mode-timings", DisplayPort, &data, test_mode_timings);
+	connector_subtest("dp-mode-timings", DisplayPort, &data, test_mode_timings);
 
 	igt_describe("HDMI tests");
 
 	igt_describe(igt_custom_edid_type_read_desc);
-	connector_test("hdmi-edid-read", HDMIA, &data, edid_read_base_and_alt,
-		       IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
+	connector_subtest("hdmi-edid-read", HDMIA, &data, edid_read_base_and_alt,
+			  IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
 
 	igt_describe(igt_edid_stress_resolution_desc);
-	connector_test("hdmi-edid-stress-resolution-4k", HDMIA, &data,
-		       edid_stress_resolution, HDMI_EDIDS_4K, ARRAY_SIZE(HDMI_EDIDS_4K), false);
+	connector_subtest("hdmi-edid-stress-resolution-4k", HDMIA, &data,
+			  edid_stress_resolution, HDMI_EDIDS_4K, ARRAY_SIZE(HDMI_EDIDS_4K), false);
 
 	igt_describe(igt_edid_stress_resolution_desc);
-	connector_test("hdmi-edid-stress-resolution-non-4k", HDMIA, &data,
-		       edid_stress_resolution, HDMI_EDIDS_NON_4K,
-		       ARRAY_SIZE(HDMI_EDIDS_NON_4K), true);
+	connector_subtest("hdmi-edid-stress-resolution-non-4k", HDMIA, &data,
+			  edid_stress_resolution, HDMI_EDIDS_NON_4K,
+			  ARRAY_SIZE(HDMI_EDIDS_NON_4K), true);
 
 	igt_describe(test_suspend_resume_edid_change_desc);
-	connector_test("hdmi-edid-change-during-suspend", HDMIA, &data,
-		       test_suspend_resume_edid_change, SUSPEND_STATE_MEM, SUSPEND_TEST_NONE,
-		       IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
+	connector_subtest("hdmi-edid-change-during-suspend", HDMIA, &data,
+			  test_suspend_resume_edid_change, SUSPEND_STATE_MEM, SUSPEND_TEST_NONE,
+			  IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
 
 	igt_describe(test_suspend_resume_edid_change_desc);
-	connector_test("hdmi-edid-change-during-hibernate", HDMIA, &data,
-		       test_suspend_resume_edid_change, SUSPEND_STATE_DISK, SUSPEND_TEST_DEVICES,
-		       IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
+	connector_subtest("hdmi-edid-change-during-hibernate", HDMIA, &data,
+			  test_suspend_resume_edid_change, SUSPEND_STATE_DISK, SUSPEND_TEST_DEVICES,
+			  IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
 
 	igt_describe(test_mode_timings_desc);
-	connector_test("hdmi-mode-timings", HDMIA, &data, test_mode_timings);
+	connector_subtest("hdmi-mode-timings", HDMIA, &data, test_mode_timings);
 
 	igt_describe("VGA tests");
 
 	igt_describe(igt_custom_edid_type_read_desc);
-	connector_test("vga-edid-read", VGA, &data, edid_read_base_and_alt,
-		       IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
+	connector_subtest("vga-edid-read", VGA, &data, edid_read_base_and_alt,
+			  IGT_CUSTOM_EDID_BASE, IGT_CUSTOM_EDID_ALT);
 
 	igt_fixture() {
 		igt_display_fini(&data.display);
-		drm_close_driver(data.drm_fd);
+drm_close_driver(data.drm_fd);
 	}
 }
