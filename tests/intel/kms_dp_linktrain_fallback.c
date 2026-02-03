@@ -88,23 +88,25 @@ static void setup_pipe_on_outputs(data_t *data,
 				      igt_output_t *outputs[],
 				      int *output_count)
 {
+	igt_crtc_t *crtc;
 	int i = 0;
 
 	igt_require_f(data->n_pipes >= *output_count,
 		      "Need %d pipes to assign to %d outputs\n",
 		      data->n_pipes, *output_count);
 
-	for_each_pipe(&data->display, data->pipe) {
+	for_each_crtc(&data->display, crtc) {
+		data->pipe = crtc->pipe;
 		if (i >= *output_count)
 			break;
 		/*
 		 * TODO: add support for modes requiring joined pipes
 		 */
 		igt_info("Setting pipe %s on output %s\n",
-			 kmstest_pipe_name(data->pipe),
+			 igt_crtc_name(crtc),
 			 igt_output_name(outputs[i]));
 		igt_output_set_crtc(outputs[i],
-				    igt_crtc_for_pipe(outputs[i]->display, data->pipe));
+				    crtc);
 		i++;
 	}
 }
