@@ -353,6 +353,7 @@ static void run_test(data_t *data)
 
 int igt_main()
 {
+	igt_crtc_t *crtc;
 	data_t data = {};
 
 	igt_fixture() {
@@ -373,11 +374,13 @@ int igt_main()
 	     data.feature = data.feature >> 1) {
 		igt_describe_f("Test dirtyFB ioctl with %s", feature_str(data.feature));
 		igt_subtest_with_dynamic_f("%s-dirtyfb-ioctl", feature_str(data.feature)) {
-			for_each_pipe(&data.display, data.pipe) {
+			for_each_crtc(&data.display, crtc) {
 				int valid_tests = 0;
 
+				data.pipe = crtc->pipe;
+
 				for_each_valid_output_on_pipe(&data.display,
-							      data.pipe,
+							      crtc->pipe,
 							      data.output) {
 					data.mode = igt_output_get_mode(data.output);
 
@@ -396,13 +399,13 @@ int igt_main()
 
 					igt_display_reset(&data.display);
 					igt_output_set_crtc(data.output,
-							    igt_crtc_for_pipe(data.output->display, data.pipe));
+							    crtc);
 					if (!intel_pipe_output_combo_valid(&data.display))
 						continue;
 
 					valid_tests++;
 					igt_dynamic_f("%s-%s",
-						      kmstest_pipe_name(data.pipe),
+						      igt_crtc_name(crtc),
 						      igt_output_name(data.output)) {
 						prepare(&data);
 						run_test(&data);

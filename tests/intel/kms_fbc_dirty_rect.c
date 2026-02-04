@@ -439,6 +439,7 @@ static void fbc_dirty_rectangle_test(data_t *data, void (*test_func)(data_t *))
 
 int igt_main()
 {
+	igt_crtc_t *crtc;
 	data_t data = {0};
 
 	igt_fixture() {
@@ -458,14 +459,16 @@ int igt_main()
 		bool single_pipe = false;
 		data.feature = FEATURE_FBC;
 
-		for_each_pipe(&data.display, data.pipe) {
+		for_each_crtc(&data.display, crtc) {
+			data.pipe = crtc->pipe;
 			if (single_pipe)
 				break;
-			for_each_valid_output_on_pipe(&data.display, data.pipe, data.output) {
+			for_each_valid_output_on_pipe(&data.display,
+						      crtc->pipe, data.output) {
 				data.format = DRM_FORMAT_XRGB8888;
 
 				igt_dynamic_f("pipe-%s-%s",
-					       kmstest_pipe_name(data.pipe),
+					       igt_crtc_name(crtc),
 					       igt_output_name(data.output)) {
 					fbc_dirty_rectangle_test(&data,
 						fbc_dirty_rectangle_outside_visible_region);
@@ -481,14 +484,16 @@ int igt_main()
 		bool single_pipe = false;
 		data.feature = FEATURE_FBC;
 
-		for_each_pipe(&data.display, data.pipe) {
+		for_each_crtc(&data.display, crtc) {
+			data.pipe = crtc->pipe;
 			if (single_pipe)
 				break;
-			for_each_valid_output_on_pipe(&data.display, data.pipe, data.output) {
+			for_each_valid_output_on_pipe(&data.display,
+						      crtc->pipe, data.output) {
 				data.format = DRM_FORMAT_XRGB8888;
 
 				igt_dynamic_f("pipe-%s-%s",
-					       kmstest_pipe_name(data.pipe),
+					       igt_crtc_name(crtc),
 					       igt_output_name(data.output)) {
 					fbc_dirty_rectangle_test(&data,
 							fbc_dirty_rectangle_dirtyfb);
@@ -506,17 +511,19 @@ int igt_main()
 		bool single_pipe = false;
 		data.feature = FEATURE_FBC;
 
-		for_each_pipe(&data.display, data.pipe) {
+		for_each_crtc(&data.display, crtc) {
+			data.pipe = crtc->pipe;
 			if (single_pipe)
 				break;
-			for_each_valid_output_on_pipe(&data.display, data.pipe, data.output) {
+			for_each_valid_output_on_pipe(&data.display,
+						      crtc->pipe, data.output) {
 				for (int i = 0; i < num_formats; i++) {
 					/* on simulation platforms , limit to single format */
 					if (data.is_simulation && i > 0)
 						break;
 
 					igt_dynamic_f("pipe-%s-%s-format-%s",
-						       kmstest_pipe_name(data.pipe),
+						       igt_crtc_name(crtc),
 						       igt_output_name(data.output),
 						       igt_format_str(formats[i])) {
 						data.format = formats[i];
