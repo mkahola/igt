@@ -47,10 +47,10 @@ typedef struct data {
 static void test_fini(data_t *data)
 {
 	igt_display_t *display = &data->display;
-	int i;
+	igt_crtc_t *crtc;
 
-	for_each_pipe(display, i) {
-		igt_pipe_crc_free(data->pipe_crc[i]);
+	for_each_crtc(display, crtc) {
+		igt_pipe_crc_free(data->pipe_crc[crtc->pipe]);
 	}
 
 	igt_display_reset(display);
@@ -61,16 +61,16 @@ static void test_fini(data_t *data)
 static void test_init(data_t *data)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc;
 	int i, n;
 
-	for_each_pipe(display, i) {
-		data->pipe_id[i] = PIPE_A + i;
-		data->crtc[i] = igt_crtc_for_pipe(&data->display,
-						  data->pipe_id[i]);
-		data->primary[i] = igt_crtc_get_plane_type(data->crtc[i],
-							   DRM_PLANE_TYPE_PRIMARY);
-		data->pipe_crc[i] =
-				igt_crtc_crc_new(data->crtc[i],
+	for_each_crtc(display, crtc) {
+		data->pipe_id[crtc->pipe] = crtc->pipe;
+		data->crtc[crtc->pipe] = crtc;
+		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
+								    DRM_PLANE_TYPE_PRIMARY);
+		data->pipe_crc[crtc->pipe] =
+				igt_crtc_crc_new(crtc,
 						 IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
@@ -116,26 +116,27 @@ static void test_dsc_enable(data_t *data)
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
 	igt_fb_t ref_fb;
-	int i, test_conn_cnt = 0;
+	int test_conn_cnt = 0;
+	igt_crtc_t *crtc;
 
 	test_init(data);
 	igt_enable_connectors(data->fd);
 
-	for_each_pipe(&data->display, i) {
+	for_each_crtc(&data->display, crtc) {
 		/* Setup the output */
-		output = data->output[i];
-		if (!output || !igt_output_is_connected(output) || !is_dsc_capable(&data->mode[i]))
+		output = data->output[crtc->pipe];
+		if (!output || !igt_output_is_connected(output) || !is_dsc_capable(&data->mode[crtc->pipe]))
 			continue;
 
 		igt_create_pattern_fb(data->fd,
-				      data->mode[i].hdisplay,
-				      data->mode[i].vdisplay,
+				      data->mode[crtc->pipe].hdisplay,
+				      data->mode[crtc->pipe].vdisplay,
 				      DRM_FORMAT_XRGB8888,
 				      0,
 				      &ref_fb);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, data->pipe_id[i]));
-		igt_plane_set_fb(data->primary[i], &ref_fb);
+				    igt_crtc_for_pipe(output->display, data->pipe_id[crtc->pipe]));
+		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 
 		test_conn_cnt++;
@@ -146,7 +147,7 @@ static void test_dsc_enable(data_t *data)
 		/* Force enable DSC */
 		igt_amd_write_dsc_clock_en(data->fd, output->name, DSC_FORCE_ON);
 
-		igt_plane_set_fb(data->primary[i], &ref_fb);
+		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
 		/* Check if DSC is enabled */
@@ -155,13 +156,13 @@ static void test_dsc_enable(data_t *data)
 		/* Revert DSC to automatic state */
 		igt_amd_write_dsc_clock_en(data->fd, output->name, DSC_FORCE_OFF);
 
-		igt_plane_set_fb(data->primary[i], &ref_fb);
+		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
 		dsc_after = igt_amd_read_dsc_clock_status(data->fd, output->name);
 
 		/* Revert DSC back to automatic mechanism by disabling state overwrites */
-		igt_plane_set_fb(data->primary[i], &ref_fb);
+		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 
 		igt_amd_write_dsc_clock_en(data->fd, output->name, DSC_AUTOMATIC);
 
@@ -263,26 +264,27 @@ static void test_dsc_slice_dimensions_change(data_t *data)
 	int num_slices[] = { 1, 2, 4, 8 };
 	int h_addressable, v_addressable;
 	bool ret_slice_height = false, ret_slice_width = false;
-	int i, test_conn_cnt = 0;
+	int test_conn_cnt = 0;
+	igt_crtc_t *crtc;
 
 	test_init(data);
 	igt_enable_connectors(data->fd);
 
-	for_each_pipe(&data->display, i) {
+	for_each_crtc(&data->display, crtc) {
 		/* Setup the output */
-		output = data->output[i];
-		if (!output || !igt_output_is_connected(output) || !is_dsc_capable(&data->mode[i]))
+		output = data->output[crtc->pipe];
+		if (!output || !igt_output_is_connected(output) || !is_dsc_capable(&data->mode[crtc->pipe]))
 			continue;
 
 		igt_create_pattern_fb(data->fd,
-				      data->mode[i].hdisplay,
-				      data->mode[i].vdisplay,
+				      data->mode[crtc->pipe].hdisplay,
+				      data->mode[crtc->pipe].vdisplay,
 				      DRM_FORMAT_XRGB8888,
 				      0,
 				      &ref_fb);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, data->pipe_id[i]));
-		igt_plane_set_fb(data->primary[i], &ref_fb);
+				    igt_crtc_for_pipe(output->display, data->pipe_id[crtc->pipe]));
+		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 
 		test_conn_cnt++;
@@ -298,27 +300,31 @@ static void test_dsc_slice_dimensions_change(data_t *data)
 		/* Force enable DSC */
 		igt_amd_write_dsc_clock_en(data->fd, output->name, DSC_FORCE_ON);
 
-		igt_plane_set_fb(data->primary[i], &ref_fb);
+		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
 		/* Check if DSC is enabled */
 		dsc_on = igt_amd_read_dsc_clock_status(data->fd, output->name) == 1;
 
 		if (dsc_on) {
-			ret_slice_height = update_slice_height(data, v_addressable, num_slices, output, i, ref_fb);
-			ret_slice_width = update_slice_width(data, h_addressable, num_slices, output, i, ref_fb);
+			ret_slice_height = update_slice_height(data, v_addressable, num_slices, output,
+							       crtc->pipe,
+							       ref_fb);
+			ret_slice_width = update_slice_width(data, h_addressable, num_slices, output,
+							     crtc->pipe,
+							     ref_fb);
 		}
 
 		/* Force disable DSC */
 		igt_amd_write_dsc_clock_en(data->fd, output->name, DSC_FORCE_OFF);
 
-		igt_plane_set_fb(data->primary[i], &ref_fb);
+		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
 		dsc_after = igt_amd_read_dsc_clock_status(data->fd, output->name);
 
 		/* Revert DSC back to automatic mechanism by disabling state overwrites */
-		igt_plane_set_fb(data->primary[i], &ref_fb);
+		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 
 		igt_amd_write_dsc_clock_en(data->fd, output->name, DSC_AUTOMATIC);
 
@@ -344,7 +350,8 @@ static void test_dsc_link_settings(data_t *data)
 	igt_crc_t ref_crc[MAX_PIPES], new_crc[MAX_PIPES];
 	int lane_count[4], link_rate[4], link_spread[4];
 	igt_display_t *display = &data->display;
-	int i, lc, lr;
+	igt_crtc_t *crtc;
+	int lc, lr;
 	bool dsc_on;
 	const enum dc_lane_count lane_count_vals[] = {
 		LANE_COUNT_TWO,
@@ -360,39 +367,41 @@ static void test_dsc_link_settings(data_t *data)
 	test_init(data);
 
 	/* Setup all outputs */
-	for_each_pipe(&data->display, i) {
-		output = data->output[i];
-		if (!output || !igt_output_is_connected(output) || !is_dsc_capable(&data->mode[i]))
+	for_each_crtc(&data->display, crtc) {
+		output = data->output[crtc->pipe];
+		if (!output || !igt_output_is_connected(output) || !is_dsc_capable(&data->mode[crtc->pipe]))
 			continue;
 
 		igt_create_pattern_fb(data->fd,
-				      data->mode[i].hdisplay,
-				      data->mode[i].vdisplay,
+				      data->mode[crtc->pipe].hdisplay,
+				      data->mode[crtc->pipe].vdisplay,
 				      DRM_FORMAT_XRGB8888,
 				      0,
-				      &ref_fb[i]);
+				      &ref_fb[crtc->pipe]);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, data->pipe_id[i]));
-		igt_plane_set_fb(data->primary[i], &ref_fb[i]);
+				    igt_crtc_for_pipe(output->display, data->pipe_id[crtc->pipe]));
+		igt_plane_set_fb(data->primary[crtc->pipe],
+				 &ref_fb[crtc->pipe]);
 	}
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 
 	/* Collect reference CRCs */
-	for_each_pipe(&data->display, i) {
-		output = data->output[i];
-		if (!output || !igt_output_is_connected(output) || !is_dsc_capable(&data->mode[i]))
+	for_each_crtc(&data->display, crtc) {
+		output = data->output[crtc->pipe];
+		if (!output || !igt_output_is_connected(output) || !is_dsc_capable(&data->mode[crtc->pipe]))
 			continue;
 
-		igt_pipe_crc_collect_crc(data->pipe_crc[i], &ref_crc[i]);
+		igt_pipe_crc_collect_crc(data->pipe_crc[crtc->pipe],
+					 &ref_crc[crtc->pipe]);
 	}
 
 	for (lc = 0; lc < ARRAY_SIZE(lane_count_vals); lc++) {
 		for (lr = 0; lr < ARRAY_SIZE(link_rate_vals); lr++) {
 			/* Write new link_settings */
-			for_each_pipe(&data->display, i) {
-				output = data->output[i];
+			for_each_crtc(&data->display, crtc) {
+				output = data->output[crtc->pipe];
 				if (!output || !igt_output_is_connected(output) ||
-				    !is_dsc_capable(&data->mode[i]))
+				    !is_dsc_capable(&data->mode[crtc->pipe]))
 					continue;
 
 				/* Write lower link settings */
@@ -408,10 +417,10 @@ static void test_dsc_link_settings(data_t *data)
 			/* Trigger commit after writing new link settings */
 			igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
-			for_each_pipe(&data->display, i) {
-				output = data->output[i];
+			for_each_crtc(&data->display, crtc) {
+				output = data->output[crtc->pipe];
 				if (!output || !igt_output_is_connected(output) ||
-				    !is_dsc_capable(&data->mode[i]))
+				    !is_dsc_capable(&data->mode[crtc->pipe]))
 					continue;
 
 				/* Verify lower link settings */
@@ -427,24 +436,26 @@ static void test_dsc_link_settings(data_t *data)
 				/* Log current mode and DSC status */
 				dsc_on = igt_amd_read_dsc_clock_status(data->fd, output->name) == 1;
 				igt_info("Current mode is: %dx%d @%dHz -- DSC is: %s\n",
-					 data->mode[i].hdisplay,
-					 data->mode[i].vdisplay,
-					 data->mode[i].vrefresh,
+					 data->mode[crtc->pipe].hdisplay,
+					 data->mode[crtc->pipe].vdisplay,
+					 data->mode[crtc->pipe].vrefresh,
 					 dsc_on ? "ON" : "OFF");
 
-				igt_pipe_crc_collect_crc(data->pipe_crc[i], &new_crc[i]);
-				igt_assert_crc_equal(&ref_crc[i], &new_crc[i]);
+				igt_pipe_crc_collect_crc(data->pipe_crc[crtc->pipe],
+							 &new_crc[crtc->pipe]);
+				igt_assert_crc_equal(&ref_crc[crtc->pipe],
+						     &new_crc[crtc->pipe]);
 			}
 		}
 	}
 
 	/* Cleanup all fbs */
-	for_each_pipe(&data->display, i) {
-		output = data->output[i];
-		if (!output || !igt_output_is_connected(output) || !is_dsc_capable(&data->mode[i]))
+	for_each_crtc(&data->display, crtc) {
+		output = data->output[crtc->pipe];
+		if (!output || !igt_output_is_connected(output) || !is_dsc_capable(&data->mode[crtc->pipe]))
 			continue;
 
-		igt_remove_fb(data->fd, &ref_fb[i]);
+		igt_remove_fb(data->fd, &ref_fb[crtc->pipe]);
 	}
 
 	test_fini(data);
@@ -456,87 +467,91 @@ static void test_dsc_bpc(data_t *data)
 	igt_fb_t ref_fb[MAX_PIPES];
 	igt_crc_t test_crc;
 	igt_display_t *display = &data->display;
-	int i, bpc, max_supported_bpc[MAX_PIPES];
+	int bpc, max_supported_bpc[MAX_PIPES];
 	bool dsc_on;
 	const int bpc_vals[] = { 12, 10, 8 };
+	igt_crtc_t *crtc;
 
 	test_init(data);
 
 	/* Find max supported bpc */
-	for_each_pipe(&data->display, i) {
-		output = data->output[i];
+	for_each_crtc(&data->display, crtc) {
+		output = data->output[crtc->pipe];
 		if (!output || !igt_output_is_connected(output))
 			continue;
 		igt_info("Checking bpc support of conn %s\n", output->name);
-		max_supported_bpc[i] = igt_get_output_max_bpc(data->fd, output->name);
+		max_supported_bpc[crtc->pipe] = igt_get_output_max_bpc(data->fd, output->name);
 	}
 
 	/* Setup all outputs */
 	for (bpc = 0; bpc < ARRAY_SIZE(bpc_vals); bpc++) {
 		igt_info("Testing bpc = %d\n", bpc_vals[bpc]);
 
-		for_each_pipe(&data->display, i) {
-			output = data->output[i];
+		for_each_crtc(&data->display, crtc) {
+			output = data->output[crtc->pipe];
 			if (!output || !igt_output_is_connected(output))
 				continue;
 
-			if (max_supported_bpc[i] < bpc_vals[bpc]) {
-				igt_info("Display doesn't support bpc of %d, max is %d. Skipping to next bpc value.\n", bpc_vals[bpc], max_supported_bpc[i]);
+			if (max_supported_bpc[crtc->pipe] < bpc_vals[bpc]) {
+				igt_info("Display doesn't support bpc of %d, max is %d. Skipping to next bpc value.\n", bpc_vals[bpc],
+					 max_supported_bpc[crtc->pipe]);
 				continue;
 			}
 			igt_info("Setting bpc = %d\n", bpc_vals[bpc]);
 			igt_output_set_prop_value(output, IGT_CONNECTOR_MAX_BPC, bpc_vals[bpc]);
 			igt_create_pattern_fb(data->fd,
-					      data->mode[i].hdisplay,
-					      data->mode[i].vdisplay,
+					      data->mode[crtc->pipe].hdisplay,
+					      data->mode[crtc->pipe].vdisplay,
 					      DRM_FORMAT_XRGB8888,
 					      0,
-					      &ref_fb[i]);
+					      &ref_fb[crtc->pipe]);
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, data->pipe_id[i]));
-			igt_plane_set_fb(data->primary[i], &ref_fb[i]);
+					    igt_crtc_for_pipe(output->display, data->pipe_id[crtc->pipe]));
+			igt_plane_set_fb(data->primary[crtc->pipe],
+					 &ref_fb[crtc->pipe]);
 		}
 
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 
-		for_each_pipe(&data->display, i) {
-			output = data->output[i];
+		for_each_crtc(&data->display, crtc) {
+			output = data->output[crtc->pipe];
 			if (!output || !igt_output_is_connected(output))
 				continue;
 
-			if (max_supported_bpc[i] < bpc_vals[bpc])
+			if (max_supported_bpc[crtc->pipe] < bpc_vals[bpc])
 				continue;
 
 			/* Check that crc is non-zero */
-			igt_pipe_crc_collect_crc(data->pipe_crc[i], &test_crc);
+			igt_pipe_crc_collect_crc(data->pipe_crc[crtc->pipe],
+						 &test_crc);
 			igt_assert(test_crc.crc[0] && test_crc.crc[1] && test_crc.crc[2]);
 
 			/* Check current bpc */
 			igt_info("Verifying display %s has correct bpc\n", output->name);
 			igt_assert_output_bpc_equal(data->fd,
-						    data->pipe_id[i],
+						    data->pipe_id[crtc->pipe],
 						    output->name,
 						    bpc_vals[bpc]);
 
 			/* Log current mode and DSC status */
 			dsc_on = igt_amd_read_dsc_clock_status(data->fd, output->name) == 1;
 			igt_info("Current mode is: %dx%d @%dHz -- DSC is: %s\n",
-				 data->mode[i].hdisplay,
-				 data->mode[i].vdisplay,
-				 data->mode[i].vrefresh,
+				 data->mode[crtc->pipe].hdisplay,
+				 data->mode[crtc->pipe].vdisplay,
+				 data->mode[crtc->pipe].vrefresh,
 				 dsc_on ? "ON" : "OFF");
 		}
 
 		/* Cleanup all fbs */
-		for_each_pipe(&data->display, i) {
-			output = data->output[i];
+		for_each_crtc(&data->display, crtc) {
+			output = data->output[crtc->pipe];
 			if (!output || !igt_output_is_connected(output))
 				continue;
 
-			if (max_supported_bpc[i] < bpc_vals[bpc])
+			if (max_supported_bpc[crtc->pipe] < bpc_vals[bpc])
 				continue;
 
-			igt_remove_fb(data->fd, &ref_fb[i]);
+			igt_remove_fb(data->fd, &ref_fb[crtc->pipe]);
 		}
 	}
 

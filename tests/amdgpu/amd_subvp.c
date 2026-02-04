@@ -59,18 +59,18 @@ static void force_output_mode(struct data *d, igt_output_t *output,
 static void test_init(struct data *data)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc;
 	int i, n;
 	bool subvp_capable = false;
 	bool subvp_en = false;
 
-	for_each_pipe(display, i) {
-		data->pipe_id[i] = PIPE_A + i;
-		data->crtc[i] = igt_crtc_for_pipe(&data->display,
-						  data->pipe_id[i]);
-		data->primary[i] = igt_crtc_get_plane_type(data->crtc[i],
-							   DRM_PLANE_TYPE_PRIMARY);
-		data->pipe_crc[i] = igt_crtc_crc_new(data->crtc[i],
-						     IGT_PIPE_CRC_SOURCE_AUTO);
+	for_each_crtc(display, crtc) {
+		data->pipe_id[crtc->pipe] = crtc->pipe;
+		data->crtc[crtc->pipe] = crtc;
+		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
+								    DRM_PLANE_TYPE_PRIMARY);
+		data->pipe_crc[crtc->pipe] = igt_crtc_crc_new(crtc,
+							      IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
 	for (i = 0,
@@ -106,10 +106,10 @@ static void test_init(struct data *data)
 static void test_fini(struct data *data)
 {
 	igt_display_t *display = &data->display;
-	int i;
+	igt_crtc_t *crtc;
 
-	for_each_pipe(display, i) {
-		igt_pipe_crc_free(data->pipe_crc[i]);
+	for_each_crtc(display, crtc) {
+		igt_pipe_crc_free(data->pipe_crc[crtc->pipe]);
 	}
 
 	igt_display_reset(display);
@@ -122,14 +122,14 @@ static void test_subvp(struct data *data)
 	igt_fb_t rfb;
 	bool subvp_supp, subvp_en;
 	igt_output_t *output;
-	int i;
+	igt_crtc_t *crtc;
 
 	test_init(data);
 	igt_enable_connectors(data->fd);
 
-	for_each_pipe(&data->display, i) {
+	for_each_crtc(&data->display, crtc) {
 		/* Setup the output */
-		output = data->output[i];
+		output = data->output[crtc->pipe];
 		if (!output || !igt_output_is_connected(output))
 			continue;
 
@@ -141,8 +141,8 @@ static void test_subvp(struct data *data)
 					&rfb);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, data->pipe_id[i]));
-		igt_plane_set_fb(data->primary[i], &rfb);
+				    igt_crtc_for_pipe(output->display, data->pipe_id[crtc->pipe]));
+		igt_plane_set_fb(data->primary[crtc->pipe], &rfb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 	}
 
