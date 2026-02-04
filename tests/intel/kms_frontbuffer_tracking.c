@@ -4149,8 +4149,8 @@ struct option long_options[] = {
 int igt_main_args("", long_options, help_str, opt_handler, NULL)
 {
 	struct test_mode t;
-	enum pipe pipe;
 	igt_output_t *output;
+	igt_crtc_t *crtc;
 
 	igt_fixture() {
 		setup_drm();
@@ -4225,25 +4225,25 @@ int igt_main_args("", long_options, help_str, opt_handler, NULL)
 			igt_skip_on_f((IS_BATTLEMAGE(drm.devid) && t.feature == FEATURE_FBC),
 				      "FBC isn't supported on BMG\n");
 
-			for_each_pipe(&drm.display, pipe) {
-				if (pipe == default_pipe) {
-					igt_info("pipe-%s: FBC validated in other subtest\n", kmstest_pipe_name(pipe));
+			for_each_crtc(&drm.display, crtc) {
+				if (crtc->pipe == default_pipe) {
+					igt_info("pipe-%s: FBC validated in other subtest\n", igt_crtc_name(crtc));
 					continue;
 				}
 
-				if (!intel_fbc_supported_on_chipset(drm.fd, pipe)) {
-					igt_info("Can't test FBC: not supported on pipe-%s\n", kmstest_pipe_name(pipe));
+				if (!intel_fbc_supported_on_chipset(drm.fd, crtc->pipe)) {
+					igt_info("Can't test FBC: not supported on pipe-%s\n", igt_crtc_name(crtc));
 					continue;
 				}
 
 				pipe_crc = NULL;
 				setup_crcs();
 
-				for_each_valid_output_on_pipe(&drm.display, pipe, output) {
-					init_mode_params(&prim_mode_params, output, pipe);
+				for_each_valid_output_on_pipe(&drm.display, crtc->pipe, output) {
+					init_mode_params(&prim_mode_params, output, crtc->pipe);
 					setup_fbc();
 
-					igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe),
+					igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 						      igt_output_name(output))
 						rte_subtest(&t);
 
