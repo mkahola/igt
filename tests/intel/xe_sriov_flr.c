@@ -4,6 +4,7 @@
  */
 
 #include <fcntl.h>
+#include <limits.h>
 #include <pthread.h>
 #include <sys/stat.h>
 #include "drmtest.h"
@@ -60,6 +61,8 @@ static const char STOP_REASON_FAIL[]  = "FAIL";
 static const char STOP_REASON_SKIP[]  = "SKIP";
 
 #define DRIVER_OVERRIDE_TIMEOUT_MS 200
+
+static int g_wait_flr_ms = 200;
 
 static struct g_mmio {
 	struct xe_mmio *mmio;
@@ -368,7 +371,7 @@ typedef int (*flr_exec_strategy)(int pf_fd, int num_vfs,
 static void verify_flr(int pf_fd, int num_vfs, struct subcheck *checks,
 		       int num_checks, flr_exec_strategy exec_strategy)
 {
-	const int wait_flr_ms = 200;
+	const int wait_flr_ms = g_wait_flr_ms;
 	int i, vf_id, flr_vf_id = -1;
 	bool xe_vfio_loaded;
 	bool *vf_bound = NULL;
@@ -1088,7 +1091,36 @@ static void clear_tests(int pf_fd, int num_vfs, flr_exec_strategy exec_strategy)
 	verify_flr(pf_fd, num_vfs, checks, num_checks, exec_strategy);
 }
 
-int igt_main()
+static int opt_handler(int opt, int opt_index, void *data)
+{
+	char *end = NULL;
+	long val;
+
+	switch (opt) {
+	case 'w':
+		errno = 0;
+		val = strtol(optarg, &end, 0);
+		if (errno || !end || *end != '\0' || val < 0 || val > INT_MAX)
+			return IGT_OPT_HANDLER_ERROR;
+		g_wait_flr_ms = (int)val;
+		igt_info("Using wait_flr_ms=%d\n", g_wait_flr_ms);
+		break;
+	default:
+		return IGT_OPT_HANDLER_ERROR;
+	}
+
+	return IGT_OPT_HANDLER_SUCCESS;
+}
+
+static const struct option long_options[] = {
+	{ .name = "wait-flr-ms", .has_arg = true, .val = 'w', },
+	{},
+};
+
+static const char help_str[] =
+	"  --wait-flr-ms=MS\tSleep MS milliseconds after VF reset sysfs write (default: 200)\n";
+
+int igt_main_args("w:", long_options, help_str, opt_handler, NULL)
 {
 	int pf_fd;
 	bool autoprobe;
