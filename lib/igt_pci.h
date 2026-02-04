@@ -20,6 +20,8 @@ enum pci_cap_id {
 	PCI_EXPRESS_CAP_ID = 0x10
 };
 
+#define PCI_DEVICE_TYPE_OFFSET 0x2
+#define PCI_DEVICE_TYPE_UPSTREAM_PORT	0x5
 #define PCI_SLOT_CAP_OFFSET 0x14
 #define  PCI_SLOT_PWR_CTRL_PRESENT (1 << 1)
 

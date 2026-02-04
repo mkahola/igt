@@ -32,6 +32,7 @@
 #include "igt.h"
 #include "igt_device.h"
 #include "igt_sysfs.h"
+#include "igt_pci.h"
 
 int __igt_device_set_master(int fd)
 {
@@ -307,4 +308,46 @@ void igt_device_get_pci_slot_name(int fd, char *pci_slot_name)
 	igt_assert(pci_slot_name);
 	snprintf(pci_slot_name, NAME_MAX, "%04x:%02x:%02x.%01x",
 		 pci_dev->domain, pci_dev->bus, pci_dev->dev, pci_dev->func);
+}
+
+/**
+ * igt_device_get_pci_upstream_port:
+ * @fd: fd of the GPU endpoint.
+ *
+ * Looks up for the pci device's upstream port using libpciaccess.
+ *
+ * Returns:
+ * The pci_device of upstream port of the device referenced by fd, NULL on any failures.
+ */
+struct pci_device *
+igt_device_get_pci_upstream_port(int fd)
+{
+	struct pci_device *pci_dev = NULL;
+	uint8_t device_type = 0;
+	int offset = 0;
+	int level = 0;
+
+	pci_dev = __igt_device_get_pci_device(fd, 0);
+	if (!pci_dev) {
+		igt_warn("Couldn't get pci device for fd %d\n", fd);
+		return NULL;
+	}
+
+	for (pci_dev = pci_device_get_parent_bridge(pci_dev); (pci_dev && (level < 2));
+	     pci_dev = pci_device_get_parent_bridge(pci_dev), level++) {
+		igt_debug("PCI device %04x:%02x:%02x.%01x\n",  pci_dev->domain, pci_dev->bus,
+			  pci_dev->dev, pci_dev->func);
+		offset = find_pci_cap_offset(pci_dev, PCI_EXPRESS_CAP_ID);
+		if (offset <= 0) {
+			igt_warn("PCI Express Capability not found\n");
+			return NULL;
+		}
+
+		igt_assert(!pci_device_cfg_read_u8(pci_dev, &device_type,
+						   offset + PCI_DEVICE_TYPE_OFFSET));
+		if ((device_type >> 4) == PCI_DEVICE_TYPE_UPSTREAM_PORT)
+			return pci_dev;
+	}
+
+	return NULL;
 }
