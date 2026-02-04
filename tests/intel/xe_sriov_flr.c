@@ -63,6 +63,7 @@ static const char STOP_REASON_SKIP[]  = "SKIP";
 #define DRIVER_OVERRIDE_TIMEOUT_MS 200
 
 static int g_wait_flr_ms = 200;
+static bool g_use_xe_vfio_pci = true;
 
 static struct g_mmio {
 	struct xe_mmio *mmio;
@@ -385,7 +386,9 @@ static void verify_flr(int pf_fd, int num_vfs, struct subcheck *checks,
 	if (igt_warn_on(igt_pci_system_reinit()))
 		goto disable_vfs;
 
-	xe_vfio_loaded = igt_kmod_load("xe_vfio_pci", NULL) >= 0;
+	xe_vfio_loaded = false;
+	if (g_use_xe_vfio_pci)
+		xe_vfio_loaded = igt_kmod_load("xe_vfio_pci", NULL) >= 0;
 	if (xe_vfio_loaded) {
 		vf_bound = calloc(num_vfs + 1, sizeof(*vf_bound));
 		igt_assert(vf_bound);
@@ -1097,6 +1100,10 @@ static int opt_handler(int opt, int opt_index, void *data)
 	long val;
 
 	switch (opt) {
+	case 'v':
+		g_use_xe_vfio_pci = false;
+		igt_info("xe-vfio-pci binding: disabled\n");
+		break;
 	case 'w':
 		errno = 0;
 		val = strtol(optarg, &end, 0);
@@ -1113,14 +1120,16 @@ static int opt_handler(int opt, int opt_index, void *data)
 }
 
 static const struct option long_options[] = {
+	{ .name = "no-xe-vfio-pci", .has_arg = false, .val = 'v', },
 	{ .name = "wait-flr-ms", .has_arg = true, .val = 'w', },
 	{},
 };
 
 static const char help_str[] =
+	"  --no-xe-vfio-pci\tDo not load/bind xe-vfio-pci for VFs\n"
 	"  --wait-flr-ms=MS\tSleep MS milliseconds after VF reset sysfs write (default: 200)\n";
 
-int igt_main_args("w:", long_options, help_str, opt_handler, NULL)
+int igt_main_args("vw:", long_options, help_str, opt_handler, NULL)
 {
 	int pf_fd;
 	bool autoprobe;
