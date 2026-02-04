@@ -743,21 +743,6 @@ static inline bool igt_crtc_connector_valid(igt_crtc_t *crtc, igt_output_t *outp
 	for (pipe = 0; pipe < IGT_MAX_PIPES; pipe++)
 
 /**
- * for_each_pipe:
- * @display: a pointer to an #igt_display_t structure
- * @pipe: The pipe to iterate.
- *
- * This for loop iterates over all pipes.
- *
- * Note that this cannot be used to enumerate per-pipe subtest names since it
- * depends upon runtime probing of the actual kms driver that is being tested.
- * Use #for_each_pipe_static instead.
- */
-#define for_each_pipe(display, pipe) \
-	for_each_pipe_static(pipe) \
-		for_each_if(igt_crtc_for_pipe((display), (pipe))->valid)
-
-/**
  * for_each_crtc:
  * @display: a pointer to an #igt_display_t structure
  * @crtc: The CRTC
