@@ -5,7 +5,7 @@
 
 /**
  * TEST: Basic tests for exec functionality with multi-queue feature
- * Category: Hardware building block
+ * Category: Core
  * Mega feature: General Core features
  * Sub-category: CMD submission
  * Functionality: multi-queue
