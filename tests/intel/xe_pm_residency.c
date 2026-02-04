@@ -31,10 +31,34 @@
 
 const double tolerance = 0.1;
 int fw_handle = -1;
+int fd_pci_usp = -1;
+bool rpm_disabled;
 
 enum test_type {
 	TEST_S2IDLE,
 	TEST_IDLE,
+};
+
+enum link_state_index {
+	LINK_STATE_ASPM,
+	LINK_STATE_ASPM_L1_1,
+	LINK_STATE_ASPM_L1_2,
+	LINK_STATE_PCIPM_L1_1,
+	LINK_STATE_PCIPM_L1_2,
+	MAX_LINK_STATES,
+};
+
+struct link_state_info {
+	const char *filename;
+	char state;
+	const char *parse_str;
+	bool saved;
+} link_state_sysfs[] = {
+	{ "l1_aspm", 0, "PCIE LINK L1 RESIDENCY : "},
+	{ "l1_1_aspm", 0, "NULL"},
+	{ "l1_2_aspm", 0, "PCIE LINK L1.2 RESIDENCY : "},
+	{ "l1_1_pcipm", 0, NULL},
+	{ "l1_2_pcipm", 0, NULL},
 };
 
 /**
@@ -64,6 +88,10 @@ enum test_type {
  * SUBTEST: cpg-gt-toggle
  * Description: Toggle GT coarse power gating states by acquiring/releasing
  *		forcewake.
+ *
+ * SUBTEST: aspm_link_residency
+ * Description: Check for PCIe ASPM (Active State Power Management) link states
+ * entry while device is in D0.
  */
 IGT_TEST_DESCRIPTION("Tests for gtidle properties");
 
@@ -255,6 +283,21 @@ static void idle_residency_on_exec(int fd, struct drm_xe_engine_class_instance *
 	munmap(done, 4096);
 }
 
+static void do_spin(int fd, struct drm_xe_engine_class_instance *eci)
+{
+	igt_spin_t *spin;
+	uint64_t vm, ahnd;
+
+	igt_info("Running spinner on %s:%d\n",
+		 xe_engine_class_string(eci->engine_class), eci->engine_instance);
+	vm = xe_vm_create(fd, 0, 0);
+	intel_allocator_init();
+	ahnd = intel_allocator_open(fd, 0, INTEL_ALLOCATOR_RELOC);
+	spin = igt_spin_new(fd, .ahnd = ahnd, .vm = vm, .hwe = eci);
+	igt_measured_usleep(USEC_PER_SEC);
+	igt_spin_free(fd, spin);
+}
+
 static void measure_power(struct igt_power *gpu, double *power)
 {
 	struct power_sample power_sample[2];
@@ -370,6 +413,159 @@ static void cpg_gt_toggle(int fd)
 		powergate_status(fd, gt, "down");
 }
 
+static uint64_t get_link_state_residency(int fd_xe, const char *parse_str)
+{
+	int fd_debugfs_dir = 0;
+	uint64_t residency = 0;
+	char buf[1024] = {0};
+	char *ptr = NULL;
+	int ret = 0;
+
+	fd_debugfs_dir = igt_debugfs_dir(fd_xe);
+	igt_assert(fd_debugfs_dir >= 0);
+	ret = igt_debugfs_simple_read(fd_debugfs_dir, "dgfx_pcie_link_residencies", buf,
+				      sizeof(buf));
+	igt_assert_f(ret >= 0, "Cannot read residency file dgfx_pcie_link_residencies, ret %d\n",
+		     ret);
+
+	ptr = strstr(buf, parse_str);
+	igt_assert_f(ptr, "Cannot find residency string %s\n", parse_str);
+	ret = sscanf(ptr + strlen(parse_str), "%lu", &residency);
+	igt_assert_f(ret > 0, "Couldn't read residency value, ret %d\n", ret);
+	igt_info("Link residency %" PRIu64 "\n", residency);
+	close(fd_debugfs_dir);
+
+	return residency;
+}
+
+static void restore_link_states(void)
+{
+	char path[256] = {0};
+	int ret = 0;
+	int i = 0;
+
+	if (fd_pci_usp >= 0) {
+		/* Restore saved states of L1 sysfs entries. */
+		for (i = 0 ; (i < MAX_LINK_STATES) && link_state_sysfs[i].saved ; i++) {
+			sprintf(path, "%s", link_state_sysfs[i].filename);
+			if (!igt_sysfs_has_attr(fd_pci_usp, path))
+				continue;
+			ret = igt_sysfs_printf(fd_pci_usp, path, "%c", link_state_sysfs[i].state);
+			if (ret != 1) {
+				igt_warn("Couldn't restore %s to %c\n",
+					 link_state_sysfs[i].filename, link_state_sysfs[i].state);
+			} else {
+				link_state_sysfs[i].saved = false;
+				igt_debug("Restored %s to %c\n", link_state_sysfs[i].filename,
+					  link_state_sysfs[i].state);
+			}
+		}
+	}
+}
+
+static void save_and_disable_link_states(void)
+{
+	char path[256] = {0};
+	int ret = 0;
+	int i = 0;
+
+	for (i = 0 ; i < MAX_LINK_STATES ; i++) {
+		sprintf(path, "%s", link_state_sysfs[i].filename);
+		if (!igt_sysfs_has_attr(fd_pci_usp, path))
+			continue;
+		ret = igt_sysfs_scanf(fd_pci_usp, path, "%c", &link_state_sysfs[i].state);
+		if (ret != 1) {
+			igt_warn("Couldn't read file %s\n", path);
+			goto restore;
+		}
+		link_state_sysfs[i].saved = true;
+		igt_debug("saved %s = %c\n", link_state_sysfs[i].filename,
+			  link_state_sysfs[i].state);
+		ret = igt_sysfs_printf(fd_pci_usp, path, "%c", '0');
+		if (ret != 1) {
+			igt_warn("Couldn't write file %s\n", path);
+			goto restore;
+		}
+	}
+	return;
+
+restore:
+	restore_link_states();
+	igt_assert_f((ret == 1), "%s failed, ret %d\n", __func__, ret);
+}
+
+static void aspm_residency_exit_handler(int sig)
+{
+	restore_link_states();
+	if (rpm_disabled) {
+		igt_restore_runtime_pm();
+		rpm_disabled = false;
+	}
+	if (fd_pci_usp != -1) {
+		close(fd_pci_usp);
+		fd_pci_usp = -1;
+	}
+}
+
+static void test_aspm_link_residency(int fd_xe, enum link_state_index aspm_link_state)
+{
+	uint64_t residency_pre = 0, residency_post = 0;
+	struct pci_device *pci_dev;
+	char name[PATH_MAX];
+	int ret = 0;
+
+	igt_assert(aspm_link_state <= LINK_STATE_ASPM_L1_2);
+
+	/* Get upstream port pci_dev */
+	pci_dev = igt_device_get_pci_upstream_port(fd_xe);
+	igt_assert_f(pci_dev, "Couldn't get pci device of upstream port\n");
+	igt_debug("Upstream port PCI device: %04x:%02x:%02x.%01x\n", pci_dev->domain,
+		  pci_dev->bus, pci_dev->dev, pci_dev->func);
+
+	snprintf(name, sizeof(name), "/sys/bus/pci/devices/%04x:%02x:%02x.%01x/link",
+		 pci_dev->domain, pci_dev->bus, pci_dev->dev, pci_dev->func);
+	fd_pci_usp = open(name, O_DIRECTORY);
+	igt_assert_f((fd_pci_usp >= 0), "Can't open link directory upstream port %s, ret %d\n",
+		     name, fd_pci_usp);
+
+	/* Disable runtime PM as link ASPM entry happens during device is in D0 only. */
+	igt_assert(igt_setup_runtime_pm(fd_xe));
+	igt_disable_runtime_pm();
+	rpm_disabled = true;
+
+	/* Check if ASPM sysfs is present. */
+	igt_require_f(igt_sysfs_has_attr(fd_pci_usp, link_state_sysfs[aspm_link_state].filename),
+		      "%s is not present\n", link_state_sysfs[aspm_link_state].filename);
+	ret = igt_sysfs_scanf(fd_pci_usp, link_state_sysfs[aspm_link_state].filename, "%c",
+			      &link_state_sysfs[aspm_link_state].state);
+	igt_assert_f((ret == 1), "Couldn't read residency for %s\n",
+		     link_state_sysfs[aspm_link_state].filename);
+
+	/* Save current state and disable of all available link sysfs entries. */
+	save_and_disable_link_states();
+
+	/* Enable only the ASPM link state needed for test. */
+	igt_debug("Enabling %s\n", link_state_sysfs[aspm_link_state].filename);
+	ret = igt_sysfs_printf(fd_pci_usp, link_state_sysfs[aspm_link_state].filename, "%c", '1');
+	igt_assert_f((ret == 1), "Failed to enable link state %s\n",
+		     link_state_sysfs[aspm_link_state].filename);
+
+	/* Read link state residencies before and after idle wait time. */
+	residency_pre = get_link_state_residency(fd_xe,
+						 link_state_sysfs[aspm_link_state].parse_str);
+	igt_info("Waiting for link to enter idle....\n");
+	sleep(SLEEP_DURATION);
+	residency_post = get_link_state_residency(fd_xe,
+						  link_state_sysfs[aspm_link_state].parse_str);
+
+	aspm_residency_exit_handler(0);
+	close(fd_xe);
+
+	igt_assert_f(residency_post > residency_pre,
+		     "ASPM entry failed, pre %" PRIu64 ", post %" PRIu64 "\n", residency_pre,
+		     residency_post);
+}
+
 int igt_main()
 {
 	uint32_t d3cold_allowed;
@@ -442,6 +638,25 @@ int igt_main()
 	igt_subtest("cpg-gt-toggle") {
 		igt_install_exit_handler(close_fw_handle);
 		cpg_gt_toggle(fd);
+	}
+
+	igt_describe("ASPM Link residency validation");
+	igt_subtest("aspm_link_residency") {
+		/* Run this test only for discrete platforms. */
+		igt_require(xe_has_vram(fd));
+		/*
+		 * Run spinner workload to wakeup GPU and ensure its engines execute some workload
+		 * before entering ASPM.
+		 */
+		xe_for_each_gt(fd, gt) {
+			xe_for_each_engine(fd, hwe) {
+				if (gt == hwe->gt_id && !hwe->engine_instance)
+					do_spin(fd, hwe);
+			}
+		}
+
+		igt_install_exit_handler(aspm_residency_exit_handler);
+		test_aspm_link_residency(fd, LINK_STATE_ASPM);
 	}
 
 	igt_fixture() {
