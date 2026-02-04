@@ -649,8 +649,10 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		igt_display_require_output(&data.display);
 
 		/* Get active pipes. */
-		for_each_pipe(&data.display, data.pipe)
-			active_pipes[last_pipe++] = data.pipe;
+		for_each_crtc(&data.display, crtc) {
+			data.pipe = crtc->pipe;
+			active_pipes[last_pipe++] = crtc->pipe;
+		}
 		last_pipe--;
 	}
 

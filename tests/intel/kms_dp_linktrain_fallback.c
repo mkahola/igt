@@ -602,6 +602,7 @@ static bool run_dsc_sst_fallaback_test(data_t *data)
 
 int igt_main()
 {
+	igt_crtc_t *crtc;
 	data_t data = {};
 
 	igt_fixture() {
@@ -611,8 +612,10 @@ int igt_main()
 		kmstest_set_vt_graphics_mode();
 		igt_display_require(&data.display, data.drm_fd);
 		igt_display_require_output(&data.display);
-		for_each_pipe(&data.display, data.pipe)
+		for_each_crtc(&data.display, crtc) {
+			data.pipe = crtc->pipe;
 			data.n_pipes++;
+		}
 		igt_install_exit_handler(igt_drm_debug_mask_reset_exit_handler);
 		update_debug_mask_if_ci(debug_mask_if_ci);
 
