@@ -255,8 +255,8 @@ void igt_debug_interactive_mode_check(const char *var, const char *expected);
 
 #define clamp(val, lo, hi) min(max(val, lo), hi)
 
-#define min_t(t, x, y)	__careful_cmp((typeof(t))x, (typeof(t))y, <, min_t)
-#define max_t(t, x, y)	__careful_cmp((typeof(t))x, (typeof(t))y, >, max_t)
+#define min_t(t, x, y)	__careful_cmp((typeof(t))(x), (typeof(t))(y), <, min_t)
+#define max_t(t, x, y)	__careful_cmp((typeof(t))(x), (typeof(t))(y), >, max_t)
 
 #define igt_swap(a, b) do {	\
 	typeof(a) _tmp = (a);	\
