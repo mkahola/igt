@@ -425,7 +425,7 @@ static void populate_cursor_args(igt_display_t *display, enum pipe pipe,
 static enum pipe
 find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	bool first_output = false;
 	bool found = false;
 
@@ -437,13 +437,13 @@ find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 	/* Clear display, events will be eaten by commit.. */
 	igt_display_reset(display);
 
-	for_each_pipe(display, pipe) {
-		for_each_valid_output_on_pipe(display, pipe, *output) {
+	for_each_crtc(display, crtc) {
+		for_each_valid_output_on_pipe(display, crtc->pipe, *output) {
 			if (igt_output_get_driving_crtc(*output) != NULL)
 				continue;
 
 			igt_output_set_crtc(*output,
-					    igt_crtc_for_pipe((*output)->display, pipe));
+					    crtc);
 			if (intel_pipe_output_combo_valid(display)) {
 				found = true;
 
@@ -466,7 +466,7 @@ find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 	else
 		igt_require_f(found, "No valid outputs found\n");
 
-	return pipe;
+	return crtc->pipe;
 }
 
 static void flip_nonblocking(igt_display_t *display, enum pipe pipe_id, bool atomic, struct igt_fb *fb, void *data)
