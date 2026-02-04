@@ -696,7 +696,7 @@ static void lease_get(data_t *data)
 
 static void lease_unleased_crtc(data_t *data)
 {
-	enum pipe p;
+	igt_crtc_t *crtc;
 	uint32_t bad_crtc_id;
 	drmModeCrtc *drm_crtc;
 	int ret;
@@ -709,12 +709,11 @@ static void lease_unleased_crtc(data_t *data)
 	/* Find another CRTC that we don't control */
 	bad_crtc_id = 0;
 
-	for_each_pipe(&data->master.display, p) {
+	for_each_crtc(&data->master.display, crtc) {
 		if (bad_crtc_id != 0)
 			break;
-		if (igt_crtc_for_pipe(&data->master.display, p)->crtc_id != data->crtc_id)
-			bad_crtc_id = igt_crtc_for_pipe(&data->master.display,
-							p)->crtc_id;
+		if (crtc->crtc_id != data->crtc_id)
+			bad_crtc_id = crtc->crtc_id;
 	}
 
 	/* Give up if there isn't another crtc */

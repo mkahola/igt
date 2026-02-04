@@ -428,15 +428,15 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	char name[40];
 
 	for_each_connected_output(display, output) {
-		for_each_pipe(display, pipe) {
+		for_each_crtc(display, crtc) {
 			igt_display_reset(display);
 
 			data->output = output;
-			data->pipe_id = pipe;
+			data->pipe_id = crtc->pipe;
 			data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
 			data->mode = igt_output_get_mode(data->output);
 

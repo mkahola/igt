@@ -35,13 +35,13 @@
 static void igt_display_all_on(igt_display_t *display)
 {
 	struct igt_fb fb[IGT_MAX_PIPES];
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	/* try to light all pipes */
-	for_each_pipe(display, pipe) {
+	for_each_crtc(display, crtc) {
 		igt_output_t *output;
 
-		for_each_valid_output_on_pipe(display, pipe, output) {
+		for_each_valid_output_on_pipe(display, crtc->pipe, output) {
 			igt_plane_t *primary;
 			drmModeModeInfo *mode;
 
@@ -49,18 +49,19 @@ static void igt_display_all_on(igt_display_t *display)
 				continue;
 
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 			primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 			mode = igt_output_get_mode(output);
 			igt_create_pattern_fb(display->drm_fd,
 					      mode->hdisplay, mode->vdisplay,
 					      DRM_FORMAT_XRGB8888,
-					      DRM_FORMAT_MOD_LINEAR, &fb[pipe]);
+					      DRM_FORMAT_MOD_LINEAR,
+					      &fb[crtc->pipe]);
 
 			/* Set a valid fb as some debugfs like to
 			 * inspect it on a active pipe
 			 */
-			igt_plane_set_fb(primary, &fb[pipe]);
+			igt_plane_set_fb(primary, &fb[crtc->pipe]);
 			break;
 		}
 	}
@@ -79,15 +80,15 @@ static void igt_display_all_on(igt_display_t *display)
  */
 static void igt_display_all_off(igt_display_t *display)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 	igt_plane_t *plane;
 
 	for_each_connected_output(display, output)
 		igt_output_set_crtc(output, NULL);
 
-	for_each_pipe(display, pipe)
-		for_each_plane_on_pipe(display, pipe, plane)
+	for_each_crtc(display, crtc)
+		for_each_plane_on_pipe(display, crtc->pipe, plane)
 			igt_plane_set_fb(plane, NULL);
 
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);

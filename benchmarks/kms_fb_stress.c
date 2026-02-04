@@ -142,7 +142,7 @@ static struct kms_t default_kms = {
 int igt_simple_main()
 {
 	struct data_t data = {0};
-	enum pipe pipe = PIPE_NONE;
+	igt_crtc_t *crtc;
 	struct timespec then, now;
 	double elapsed;
 
@@ -162,12 +162,12 @@ int igt_simple_main()
 	data.wb_output = find_wb_output(&data);
 	igt_require(data.wb_output);
 
-	for_each_pipe(&data.display, pipe) {
+	for_each_crtc(&data.display, crtc) {
 		igt_debug("Selecting pipe %s to %s\n",
-			  kmstest_pipe_name(pipe),
+			  igt_crtc_name(crtc),
 			  igt_output_name(data.wb_output));
 		igt_output_set_crtc(data.wb_output,
-				    igt_crtc_for_pipe(data.wb_output->display, pipe));
+				    crtc);
 		break;
 	}
 

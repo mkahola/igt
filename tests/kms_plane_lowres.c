@@ -289,15 +289,16 @@ static void test_cleanup(data_t *data)
 
 static void run_test(data_t *data, uint64_t modifier)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 
 	if(!igt_display_has_format_mod(&data->display, DRM_FORMAT_XRGB8888, modifier))
 		return;
 
-	for_each_pipe(&data->display, pipe) {
-		for_each_valid_output_on_pipe(&data->display, pipe, output) {
-			data->pipe = pipe;
+	for_each_crtc(&data->display, crtc) {
+		for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+					      output) {
+			data->pipe = crtc->pipe;
 			data->output = output;
 
 			igt_display_reset(&data->display);
@@ -310,7 +311,8 @@ static void run_test(data_t *data, uint64_t modifier)
 			data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
 							  IGT_PIPE_CRC_SOURCE_AUTO);
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), data->output->name)
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      data->output->name)
 				test_planes_on_pipe(data, modifier);
 
 			test_cleanup(data);

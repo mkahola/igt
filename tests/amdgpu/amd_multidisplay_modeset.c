@@ -202,12 +202,12 @@ static void test_init(struct data_t *data)
 static void test_fini(struct data_t *data)
 {
 	igt_display_t *display = &data->display;
-	int i = 0;
+	igt_crtc_t *crtc;
 
-	for_each_pipe(display, i) {
-		if (data->pipe_crc_dprx[i])
-			igt_pipe_crc_free(data->pipe_crc_dprx[i]);
-		igt_pipe_crc_free(data->pipe_crc_otg[i]);
+	for_each_crtc(display, crtc) {
+		if (data->pipe_crc_dprx[crtc->pipe])
+			igt_pipe_crc_free(data->pipe_crc_dprx[crtc->pipe]);
+		igt_pipe_crc_free(data->pipe_crc_otg[crtc->pipe]);
 	}
 
 	igt_display_reset(display);

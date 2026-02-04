@@ -93,15 +93,17 @@ int igt_main() {
 		igt_subtest_group() {
 			volatile int output_count = 0;
 			igt_output_t *output;
-			enum pipe pipe;
+			igt_crtc_t *crtc;
 
 			igt_fixture() {
 				/* this is what most of the 2x tests are doing */
-				for_each_pipe(&display, pipe) {
-					for_each_valid_output_on_pipe(&display, pipe, output) {
+				for_each_crtc(&display, crtc) {
+					for_each_valid_output_on_pipe(&display,
+								      crtc->pipe,
+								      output) {
 						if (igt_output_get_driving_crtc(output) == NULL) {
 							igt_output_set_crtc(output,
-									    igt_crtc_for_pipe(output->display, pipe));
+									    crtc);
 							output_count++;
 							break;
 						}

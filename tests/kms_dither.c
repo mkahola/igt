@@ -203,7 +203,7 @@ run_dither_test(data_t *data, int fb_bpc, int fb_format, int output_bpc)
 	igt_display_reset(display);
 
 	for_each_connected_output(display, output) {
-		enum pipe pipe;
+		igt_crtc_t *crtc;
 
 		if (!is_supported(output)) {
 			igt_info("Output %s: Doesn't support \"max bpc\" property.\n",
@@ -217,9 +217,9 @@ run_dither_test(data_t *data, int fb_bpc, int fb_format, int output_bpc)
 			continue;
 		}
 
-		for_each_pipe(display, pipe) {
+		for_each_crtc(display, crtc) {
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 
 			if (!intel_pipe_output_combo_valid(display)) {
 				igt_output_set_crtc(output, NULL);
@@ -227,8 +227,10 @@ run_dither_test(data_t *data, int fb_bpc, int fb_format, int output_bpc)
 			}
 
 			igt_dynamic_f("pipe-%s-%s",
-					      kmstest_pipe_name(pipe), output->name)
-				test_dithering(data, pipe, output, fb_bpc,
+					      igt_crtc_name(crtc),
+					      output->name)
+				test_dithering(data, crtc->pipe, output,
+							   fb_bpc,
 							   fb_format, output_bpc);
 
 			/* One pipe is enough */

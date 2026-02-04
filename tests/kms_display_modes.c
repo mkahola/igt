@@ -188,18 +188,18 @@ static void run_extendedmode_basic(data_t *data,
 
 static void run_extendedmode_test(data_t *data) {
 	igt_crtc_t *crtc2;
-	enum pipe pipe1;
+	igt_crtc_t *crtc;
 	bool sim_flag = igt_run_in_simulation();
 	igt_output_t *output1, *output2;
 	igt_display_t *display = &data->display;
 
 	igt_display_reset(display);
 
-	for_each_pipe(display, pipe1) {
-		for_each_valid_output_on_pipe(display, pipe1, output1) {
+	for_each_crtc(display, crtc) {
+		for_each_valid_output_on_pipe(display, crtc->pipe, output1) {
 
 			for_each_crtc(display, crtc2) {
-				if (pipe1 == crtc2->pipe)
+				if (crtc->pipe == crtc2->pipe)
 					continue;
 
 				for_each_valid_output_on_pipe_local(display,
@@ -211,7 +211,7 @@ static void run_extendedmode_test(data_t *data) {
 					igt_display_reset(display);
 
 					igt_output_set_crtc(output1,
-							    igt_crtc_for_pipe(output1->display, pipe1));
+							    crtc);
 					igt_output_set_crtc(output2,
 							    crtc2);
 
@@ -219,12 +219,13 @@ static void run_extendedmode_test(data_t *data) {
 						continue;
 
 					igt_dynamic_f("pipe-%s-%s-pipe-%s-%s",
-						      kmstest_pipe_name(pipe1),
+						      igt_crtc_name(crtc),
 						      igt_output_name(output1),
 						      igt_crtc_name(crtc2),
 						      igt_output_name(output2))
 						run_extendedmode_basic(data,
-								pipe1, output1,
+								crtc->pipe,
+								output1,
 								crtc2->pipe,
 								output2);
 				}

@@ -232,13 +232,13 @@ static void
 run_sharpness_filter_test(data_t *data)
 {
 	igt_display_t *display = &data->display;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	igt_describe("Verify basic content adaptive sharpness filter.");
 	igt_subtest_with_dynamic("filter-basic") {
-		for_each_pipe(display, pipe) {
+		for_each_crtc(display, crtc) {
 			data->filter_strength = MID_FILTER_STRENGTH;
-			test_sharpness_filter(data, pipe);
+			test_sharpness_filter(data, crtc->pipe);
 		}
 	}
 }

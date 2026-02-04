@@ -799,13 +799,13 @@ static void unset_output_pipe(igt_display_t *display)
 static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 {
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	unsigned event_mask = 0;
 
 	unset_output_pipe(&data->display);
 
-	for_each_pipe(&data->display, pipe) {
-		igt_plane_t *plane = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
+	for_each_crtc(&data->display, crtc) {
+		igt_plane_t *plane = igt_crtc_get_plane_type(crtc,
 							     DRM_PLANE_TYPE_PRIMARY);
 
 		enum pipe old_pipe = plane->ref->crtc->pipe;
@@ -814,7 +814,7 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 		 * If a plane is being shared by multiple pipes, we must disable the pipe that
 		 * currently is holding the plane
 		 */
-		if (old_pipe != pipe) {
+		if (old_pipe != crtc->pipe) {
 			igt_plane_t *old_plane = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, old_pipe),
 									 DRM_PLANE_TYPE_PRIMARY);
 
@@ -823,28 +823,29 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 		}
 	}
 
-	for_each_pipe(&data->display, pipe) {
-		igt_plane_t *plane = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
+	for_each_crtc(&data->display, crtc) {
+		igt_plane_t *plane = igt_crtc_get_plane_type(crtc,
 							     DRM_PLANE_TYPE_PRIMARY);
 		drmModeModeInfo *mode = NULL;
 
-		if (!(mask & (1 << pipe))) {
-			if (igt_crtc_is_prop_changed(igt_crtc_for_pipe(&data->display, pipe), IGT_CRTC_ACTIVE)) {
-				event_mask |= 1 << pipe;
+		if (!(mask & (1 << crtc->pipe))) {
+			if (igt_crtc_is_prop_changed(crtc, IGT_CRTC_ACTIVE)) {
+				event_mask |= 1 << crtc->pipe;
 				igt_plane_set_fb(plane, NULL);
 			}
 
 			continue;
 		}
 
-		event_mask |= 1 << pipe;
+		event_mask |= 1 << crtc->pipe;
 
-		for_each_valid_output_on_pipe(&data->display, pipe, output) {
+		for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+					      output) {
 			if (igt_output_get_driving_crtc(output) != NULL)
 				continue;
 
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 			if (intel_pipe_output_combo_valid(&data->display)) {
 				mode = igt_output_get_mode(output);
 				break;
@@ -857,7 +858,7 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 			return 0;
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		igt_plane_set_fb(plane, fb);
 		igt_fb_set_size(fb, plane, mode->hdisplay, mode->vdisplay);
 		igt_plane_set_size(plane, mode->hdisplay, mode->vdisplay);
@@ -868,14 +869,14 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 
 static void refresh_primaries(data_t  *data, int mask)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_plane_t *plane;
 
-	for_each_pipe(&data->display, pipe) {
-		if (!((1 << pipe) & mask))
+	for_each_crtc(&data->display, crtc) {
+		if (!((1 << crtc->pipe) & mask))
 			continue;
 
-		for_each_plane_on_pipe(&data->display, pipe, plane)
+		for_each_plane_on_pipe(&data->display, crtc->pipe, plane)
 			if (plane->type == DRM_PLANE_TYPE_PRIMARY)
 				igt_plane_set_position(plane, 0, 0);
 	}
@@ -903,7 +904,6 @@ static void run_modeset_tests(data_t *data, int howmany, bool nonblocking, bool 
 	unsigned iter_max;
 	igt_output_t *output;
 	uint16_t width = 0, height = 0;
-	enum pipe pipe_enum;
 
 retry:
 	unset_output_pipe(&data->display);
@@ -1047,8 +1047,8 @@ retry:
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 	if (is_intel_device(data->drm_fd)) {
-		for_each_pipe(&data->display, pipe_enum)
-			igt_pipe_crc_free(data->pipe_crcs[pipe_enum]);
+		for_each_crtc(&data->display, crtc)
+			igt_pipe_crc_free(data->pipe_crcs[crtc->pipe]);
 	}
 
 	igt_remove_fb(data->drm_fd, &data->fbs[0]);
@@ -1059,20 +1059,21 @@ static void run_modeset_transition(data_t *data, int requested_outputs, bool non
 {
 	igt_output_t *outputs[IGT_MAX_PIPES] = {};
 	int num_outputs = 0;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
-	for_each_pipe(&data->display, pipe) {
+	for_each_crtc(&data->display, crtc) {
 		igt_output_t *output;
 
-		for_each_valid_output_on_pipe(&data->display, pipe, output) {
+		for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+					      output) {
 			int i;
 
-			for (i = pipe - 1; i >= 0; i--)
+			for (i = crtc->pipe - 1; i >= 0; i--)
 				if (outputs[i] == output)
 					break;
 
 			if (i < 0) {
-				outputs[pipe] = output;
+				outputs[crtc->pipe] = output;
 				num_outputs++;
 				break;
 			}

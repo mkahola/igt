@@ -317,27 +317,29 @@ static void colorop_properties(igt_display_t *display, bool atomic)
 {
 	bool found_any = false, found;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	/* colorops are only available with atomic */
 	igt_skip_on(!display->is_atomic);
 
-	for_each_pipe(display, pipe) {
+	for_each_crtc(display, crtc) {
 		found = false;
 
-		for_each_valid_output_on_pipe(display, pipe, output) {
+		for_each_valid_output_on_pipe(display, crtc->pipe, output) {
 			igt_display_reset(display);
 
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 			if (!intel_pipe_output_combo_valid(display))
 				continue;
 
 			found_any = found = true;
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe),
-				igt_output_name(output)) {
-				run_colorop_property_tests(display, pipe, output, atomic);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output)) {
+				run_colorop_property_tests(display,
+							   crtc->pipe, output,
+							   atomic);
 			}
 		}
 	}
@@ -389,25 +391,27 @@ static void crtc_properties(igt_display_t *display, bool atomic)
 
 static void connector_properties(igt_display_t *display, bool atomic)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 
 	for_each_connected_output(display, output) {
 		igt_display_reset(display);
 
-		for_each_pipe(display, pipe) {
+		for_each_crtc(display, crtc) {
 			igt_display_reset(display);
 
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 			if (!intel_pipe_output_combo_valid(display)) {
 				igt_output_set_crtc(output, NULL);
 				continue;
 			}
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe),
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				run_connector_property_tests(display, pipe, output, atomic);
+				run_connector_property_tests(display,
+							     crtc->pipe,
+							     output, atomic);
 			}
 
 			break;
@@ -487,15 +491,15 @@ static void test_object_invalid_properties(igt_display_t *display,
 {
 	igt_output_t *output;
 	igt_plane_t *plane;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
-	for_each_pipe(display, pipe)
+	for_each_crtc(display, crtc)
 		test_invalid_properties(display->drm_fd, id, type,
-				        igt_crtc_for_pipe(display, pipe)->crtc_id,
+				        crtc->crtc_id,
 				        DRM_MODE_OBJECT_CRTC, atomic);
 
-	for_each_pipe(display, pipe)
-		for_each_plane_on_pipe(display, pipe, plane)
+	for_each_crtc(display, crtc)
+		for_each_plane_on_pipe(display, crtc->pipe, plane)
 			test_invalid_properties(display->drm_fd, id, type, plane->drm_plane->plane_id, DRM_MODE_OBJECT_PLANE, atomic);
 
 	for_each_output(display, output)
@@ -892,18 +896,18 @@ static void invalid_properties(igt_display_t *display, bool atomic)
 {
 	igt_output_t *output;
 	igt_plane_t *plane;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	if (atomic)
 		igt_skip_on(!display->is_atomic);
 
-	for_each_pipe(display, pipe)
+	for_each_crtc(display, crtc)
 		test_object_invalid_properties(display,
-				               igt_crtc_for_pipe(display, pipe)->crtc_id,
+				               crtc->crtc_id,
 				               DRM_MODE_OBJECT_CRTC, atomic);
 
-	for_each_pipe(display, pipe)
-		for_each_plane_on_pipe(display, pipe, plane)
+	for_each_crtc(display, crtc)
+		for_each_plane_on_pipe(display, crtc->pipe, plane)
 			test_object_invalid_properties(display, plane->drm_plane->plane_id, DRM_MODE_OBJECT_PLANE, atomic);
 
 	for_each_output(display, output)

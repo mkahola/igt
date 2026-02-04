@@ -81,15 +81,15 @@ static void set_all_output_pipe_to_none(data_t *data)
 
 static void test_init(data_t *data, igt_output_t *output)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	igt_require(output->config.connector->count_modes >= 1);
 
 	set_all_output_pipe_to_none(data);
 
-	for_each_pipe(&data->display, pipe) {
-		if (igt_pipe_connector_valid(pipe, output)) {
-			data->pipe_id = pipe;
+	for_each_crtc(&data->display, crtc) {
+		if (igt_pipe_connector_valid(crtc->pipe, output)) {
+			data->pipe_id = crtc->pipe;
 			break;
 		}
 	}

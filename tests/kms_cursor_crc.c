@@ -1276,7 +1276,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	int ret;
 
 	igt_fixture() {
-		enum pipe pipe;
+		igt_crtc_t *crtc;
 
 		last_pipe = 0;
 
@@ -1285,8 +1285,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		igt_display_require(&data.display, data.drm_fd);
 		igt_display_require_output(&data.display);
 		/* Get active pipes. */
-		for_each_pipe(&data.display, pipe)
-			active_pipes[last_pipe++] = pipe;
+		for_each_crtc(&data.display, crtc)
+			active_pipes[last_pipe++] = crtc->pipe;
 		last_pipe--;
 
 		ret = drmGetCap(data.drm_fd, DRM_CAP_CURSOR_WIDTH, &cursor_width);

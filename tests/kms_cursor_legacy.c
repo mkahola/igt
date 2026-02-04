@@ -267,7 +267,7 @@ static void stress(igt_display_t *display,
 	struct drm_mode_cursor arg;
 	uint64_t *results;
 	bool torture;
-	int n;
+	igt_crtc_t *crtc;
 	unsigned crtc_id[IGT_MAX_PIPES] = {0}, num_crtcs;
 
 	torture = false;
@@ -288,9 +288,8 @@ static void stress(igt_display_t *display,
 
 	if (pipe < 0) {
 		num_crtcs = igt_display_n_crtcs(display);
-		for_each_pipe(display, n) {
-			arg.crtc_id = crtc_id[n] = igt_crtc_for_pipe(display,
-								     n)->crtc_id;
+		for_each_crtc(display, crtc) {
+			arg.crtc_id = crtc_id[crtc->pipe] = crtc->crtc_id;
 			do_ioctl(display->drm_fd, DRM_IOCTL_MODE_CURSOR, &arg);
 		}
 	} else {
@@ -1869,7 +1868,7 @@ int igt_main()
 	igt_describe("Test checks how many cursor updates we can fit between vblanks "
 		     "on single/all pipes with different modes, priority and number of processes");
 	igt_subtest_group() {
-		enum pipe n;
+		igt_crtc_t *crtc;
 		struct {
 			const char *name;
 			int ncpus;
@@ -1885,11 +1884,14 @@ int igt_main()
 
 		for (i = 0; i < ARRAY_SIZE(tests); i++) {
 			igt_subtest_with_dynamic(tests[i].name) {
-				for_each_pipe(&display, n) {
+				for_each_crtc(&display, crtc) {
 					errno = 0;
 
-					igt_dynamic_f("pipe-%s", kmstest_pipe_name(n))
-						stress(&display, n, tests[i].ncpus, tests[i].flags, 5);
+					igt_dynamic_f("pipe-%s",
+						      igt_crtc_name(crtc))
+						stress(&display, crtc->pipe,
+						       tests[i].ncpus,
+						       tests[i].flags, 5);
 				}
 
 				errno = 0;

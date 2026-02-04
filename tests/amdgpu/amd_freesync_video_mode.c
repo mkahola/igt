@@ -838,21 +838,24 @@ run_test(data_t *data, uint32_t scene)
 	bool found = false;
 
 	for_each_connected_output(&data->display, output) {
-		enum pipe pipe;
+		igt_crtc_t *crtc;
 
 		if (!has_vrr(output)) {
 			igt_info("%s is not a vrr capable output. Skip it.\n", output->name);
 			continue;
 		}
 
-		for_each_pipe(&data->display, pipe)
-			if (igt_pipe_connector_valid(pipe, output)) {
+		for_each_crtc(&data->display, crtc)
+			if (igt_pipe_connector_valid(crtc->pipe, output)) {
 				igt_display_reset(&data->display);
 				igt_output_set_crtc(output,
-						    igt_crtc_for_pipe(output->display, pipe));
+						    crtc);
 
-				igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), output->name)
-				mode_transition(data, pipe, output, scene);
+				igt_dynamic_f("pipe-%s-%s",
+					      igt_crtc_name(crtc),
+					      output->name)
+				mode_transition(data, crtc->pipe, output,
+						scene);
 				found = true;
 				break;
 			}

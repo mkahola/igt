@@ -871,7 +871,7 @@ static void run_tests(data_t *data, uint32_t index, enum pipe pipe,
 
 int igt_main()
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	data_t data = {};
 	igt_output_t *output;
 	drmModeModeInfoPtr modetoset = NULL;
@@ -911,35 +911,47 @@ int igt_main()
 					      "Linear fb with REFLECT_X unsupported\n");
 
 			free_fbs(&data);
-			for_each_pipe(&data.display, pipe) {
+			for_each_crtc(&data.display, crtc) {
 				bool found = false;
-				for_each_valid_output_on_pipe(&data.display, pipe, output) {
+				for_each_valid_output_on_pipe(&data.display,
+							      crtc->pipe,
+							      output) {
 					igt_display_reset(&data.display);
 
 					modetoset = find_mode(&data, output);
 					igt_output_set_crtc(output,
-							    igt_crtc_for_pipe(output->display, pipe));
+							    crtc);
 					igt_output_override_mode(output, modetoset);
 
 					if (modetoset && intel_pipe_output_combo_valid(&data.display)) {
 						found = true;
-						igt_dynamic_f("pipe-%s-valid-mode", kmstest_pipe_name(pipe))
-							run_tests(&data, index, pipe, output, modetoset);
+						igt_dynamic_f("pipe-%s-valid-mode",
+							      igt_crtc_name(crtc))
+							run_tests(&data, index,
+								  crtc->pipe,
+								  output,
+								  modetoset);
 						break;
 					}
 				}
 				if (!found) {
-					for_each_valid_output_on_pipe(&data.display, pipe, output) {
+					for_each_valid_output_on_pipe(&data.display,
+								      crtc->pipe,
+								      output) {
 						igt_display_reset(&data.display);
 
 						igt_output_set_crtc(output,
-								    igt_crtc_for_pipe(output->display, pipe));
+								    crtc);
 						if (!intel_pipe_output_combo_valid(&data.display))
 							continue;
 
 						modetoset = NULL;
-						igt_dynamic_f("pipe-%s-default-mode", kmstest_pipe_name(pipe))
-							run_tests(&data, index, pipe, output, modetoset);
+						igt_dynamic_f("pipe-%s-default-mode",
+							      igt_crtc_name(crtc))
+							run_tests(&data, index,
+								  crtc->pipe,
+								  output,
+								  modetoset);
 					}
 				}
 				break;

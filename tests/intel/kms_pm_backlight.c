@@ -176,13 +176,13 @@ static void test_setup(igt_display_t display, igt_output_t *output)
 	igt_plane_t *primary;
 	drmModeModeInfo *mode;
 	struct igt_fb fb;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	igt_display_reset(&display);
 
-	for_each_pipe(&display, pipe) {
+	for_each_crtc(&display, crtc) {
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(&display)) {
 			igt_output_set_crtc(output, NULL);
 			continue;

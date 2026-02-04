@@ -3142,6 +3142,7 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 {
 	drmModeRes *resources;
 	drmModePlaneRes *plane_resources;
+	igt_crtc_t *crtc;
 	int i;
 	bool is_intel_dev;
 
@@ -3190,7 +3191,6 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 		     igt_display_n_crtcs(display));
 
 	for (i = 0; i < resources->count_crtcs; i++) {
-		igt_crtc_t *crtc;
 		int pipe_enum = is_intel_dev ? __intel_get_pipe_from_crtc_index(drm_fd, i) : i;
 
 		crtc = igt_crtc_for_pipe(display, pipe_enum);
@@ -3230,8 +3230,8 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 	display->colorops = calloc(MAX_NUM_COLOROPS, sizeof(igt_colorop_t));
 	display->n_colorops = 0;
 
-	for_each_pipe(display, i)
-		igt_crtc_init(display, resources, i);
+	for_each_crtc(display, crtc)
+		igt_crtc_init(display, resources, crtc->pipe);
 
 	drmModeFreeResources(resources);
 
@@ -6268,13 +6268,13 @@ bool igt_plane_has_format_mod(igt_plane_t *plane, uint32_t format,
 
 static int igt_count_display_format_mod(igt_display_t *display)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	int count = 0;
 
-	for_each_pipe(display, pipe) {
+	for_each_crtc(display, crtc) {
 		igt_plane_t *plane;
 
-		for_each_plane_on_pipe(display, pipe, plane) {
+		for_each_plane_on_pipe(display, crtc->pipe, plane) {
 			count += plane->format_mod_count;
 		}
 	}
@@ -6303,7 +6303,7 @@ igt_add_display_format_mod(igt_display_t *display, uint32_t format,
 static void igt_fill_display_format_mod(igt_display_t *display)
 {
 	int count = igt_count_display_format_mod(display);
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	if (!count)
 		return;
@@ -6313,10 +6313,10 @@ static void igt_fill_display_format_mod(igt_display_t *display)
 	display->modifiers = calloc(count, sizeof(display->modifiers[0]));
 	igt_assert(display->modifiers);
 
-	for_each_pipe(display, pipe) {
+	for_each_crtc(display, crtc) {
 		igt_plane_t *plane;
 
-		for_each_plane_on_pipe(display, pipe, plane) {
+		for_each_plane_on_pipe(display, crtc->pipe, plane) {
 			for (int i = 0; i < plane->format_mod_count; i++) {
 				igt_add_display_format_mod(display,
 							   plane->formats[i],
@@ -7138,7 +7138,7 @@ bool igt_check_force_joiner_status(int drmfd, char *connector_name)
 bool igt_check_bigjoiner_support(igt_display_t *display)
 {
 	uint8_t i, total_pipes = 0, pipes_in_use = 0;
-	enum pipe p;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 	struct {
 		enum pipe idx;
@@ -7149,7 +7149,7 @@ bool igt_check_bigjoiner_support(igt_display_t *display)
 	int max_dotclock;
 
 	/* Get total enabled pipes. */
-	for_each_pipe(display, p)
+	for_each_crtc(display, crtc)
 		total_pipes++;
 
 	/*

@@ -215,7 +215,7 @@ static void setup_mode(data_t *data)
 {
 	int count = 0, prev = 0, i = 0;
 	bool pipe_in_use = false, found = false;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	drmModeModeInfo *mode;
 	igt_output_t *output;
 	data_connector_t *conns = data->conns;
@@ -231,13 +231,13 @@ static void setup_mode(data_t *data)
 		output = igt_output_from_connector(&data->display,
 						   conns[count].connector);
 
-		for_each_pipe(&data->display, pipe) {
+		for_each_crtc(&data->display, crtc) {
 			pipe_in_use = false;
 			found = false;
 
 			if (count > 0) {
 				for (prev = count - 1; prev >= 0; prev--) {
-					if (pipe == conns[prev].pipe) {
+					if (crtc->pipe == conns[prev].pipe) {
 						pipe_in_use = true;
 						break;
 					}
@@ -246,8 +246,8 @@ static void setup_mode(data_t *data)
 					continue;
 			}
 
-			if (igt_pipe_connector_valid(pipe, output)) {
-				conns[count].pipe = pipe;
+			if (igt_pipe_connector_valid(crtc->pipe, output)) {
+				conns[count].pipe = crtc->pipe;
 				conns[count].output = output;
 
 				igt_output_set_crtc(conns[count].output,

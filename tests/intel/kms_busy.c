@@ -92,12 +92,12 @@ set_fb_on_crtc(igt_display_t *dpy, int pipe,
 
 static void do_cleanup_display(igt_display_t *dpy)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 	igt_plane_t *plane;
 
-	for_each_pipe(dpy, pipe)
-		for_each_plane_on_pipe(dpy, pipe, plane)
+	for_each_crtc(dpy, crtc)
+		for_each_plane_on_pipe(dpy, crtc->pipe, plane)
 			igt_plane_set_fb(plane, NULL);
 
 	for_each_connected_output(dpy, output)

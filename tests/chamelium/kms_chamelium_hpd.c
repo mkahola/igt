@@ -297,7 +297,7 @@ static void test_hotplug_for_each_pipe(chamelium_data_t *data,
 				       struct chamelium_port *port)
 {
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	struct udev_monitor *mon = igt_watch_uevents();
 
 	chamelium_reset_state(&data->display, data->chamelium, port,
@@ -305,7 +305,7 @@ static void test_hotplug_for_each_pipe(chamelium_data_t *data,
 
 	igt_hpd_storm_set_threshold(data->drm_fd, 0);
 
-	for_each_pipe(&data->display, pipe) {
+	for_each_crtc(&data->display, crtc) {
 		igt_modeset_disable_all_outputs(&data->display);
 		igt_flush_uevents(mon);
 		/* Check if we get a sysfs hotplug event */
@@ -317,7 +317,7 @@ static void test_hotplug_for_each_pipe(chamelium_data_t *data,
 
 		/* If pipe is valid for output then set it */
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		if (intel_pipe_output_combo_valid(&data->display))
 			igt_display_commit2(&data->display, COMMIT_ATOMIC);
 

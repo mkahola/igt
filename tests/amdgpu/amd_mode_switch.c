@@ -36,15 +36,15 @@ typedef struct data {
 static void test_init(data_t *data)
 {
 	igt_display_t *display = &data->display;
-	int i;
+	igt_crtc_t *crtc;
 
-	for_each_pipe(display, i) {
-		igt_output_t *output = &display->outputs[i];
+	for_each_crtc(display, crtc) {
+		igt_output_t *output = &display->outputs[crtc->pipe];
 
-		data->primary[i] = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, i),
-							   DRM_PLANE_TYPE_PRIMARY);
+		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
+								    DRM_PLANE_TYPE_PRIMARY);
 
-		data->output[i] = output;
+		data->output[crtc->pipe] = output;
 	}
 
 	igt_require(data->output[0]);

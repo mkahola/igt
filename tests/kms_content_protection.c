@@ -712,7 +712,7 @@ test_content_protection(enum igt_commit_style commit_style, int content_type)
 {
 	igt_display_t *display = &data.display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	if (data.cp_tests & CP_MEI_RELOAD)
 		igt_require_f(igt_kmod_is_loaded("mei_hdcp"),
@@ -724,7 +724,7 @@ test_content_protection(enum igt_commit_style commit_style, int content_type)
 	}
 
 	for_each_connected_output(display, output) {
-		for_each_pipe(display, pipe) {
+		for_each_crtc(display, crtc) {
 			if (!output_hdcp_capable(output, content_type))
 				continue;
 			if (is_output_hdcp_test_exempt(output)) {
@@ -735,16 +735,20 @@ test_content_protection(enum igt_commit_style commit_style, int content_type)
 
 			igt_display_reset(display);
 			igt_output_set_crtc(output,
-				            igt_crtc_for_pipe(output->display, pipe));
+				            crtc);
 			if (!intel_pipe_output_combo_valid(display))
 				continue;
 
-			modeset_with_fb(pipe, output, commit_style);
+			modeset_with_fb(crtc->pipe, output, commit_style);
 			if (data.is_force_hdcp14)
 				set_i915_force_hdcp14(output);
 
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), output->name)
-				test_content_protection_on_output(output, pipe, commit_style, content_type);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      output->name)
+				test_content_protection_on_output(output,
+								  crtc->pipe,
+								  commit_style,
+								  content_type);
 
 			if (data.is_force_hdcp14)
 				reset_i915_force_hdcp14(output);
@@ -867,7 +871,7 @@ test_content_protection_mst(int content_type)
 	bool pipe_found;
 	igt_output_t *hdcp_mst_output[IGT_MAX_PIPES];
 
-	for_each_pipe(display, pipe)
+	for_each_crtc(display, crtc)
 		max_pipe++;
 
 	pipe = PIPE_A;

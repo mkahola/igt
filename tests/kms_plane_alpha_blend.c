@@ -749,7 +749,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	data_t data = {};
 
 	igt_fixture() {
-		enum pipe pipe;
+		igt_crtc_t *crtc;
 
 		last_pipe = 0;
 
@@ -759,8 +759,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		igt_require(data.display.is_atomic);
 
 		/* Get active pipes. */
-		for_each_pipe(&data.display, pipe)
-			active_pipes[last_pipe++] = pipe;
+		for_each_crtc(&data.display, crtc)
+			active_pipes[last_pipe++] = crtc->pipe;
 		last_pipe--;
 
 		in_simulation = igt_run_in_simulation();

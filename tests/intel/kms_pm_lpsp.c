@@ -223,7 +223,7 @@ int igt_main()
 	igt_subtest_with_dynamic_f("kms-lpsp") {
 		igt_display_t *display = &data.display;
 		igt_output_t *output;
-		enum pipe pipe;
+		igt_crtc_t *crtc;
 
 		for_each_connected_output(display, output) {
 			drmModeConnectorPtr connector = output->config.connector;
@@ -231,12 +231,12 @@ int igt_main()
 			if (!i915_output_is_lpsp_capable(data.drm_fd, output))
 				continue;
 
-			for_each_pipe(display, pipe) {
-				if (!igt_pipe_connector_valid(pipe, output))
+			for_each_crtc(display, crtc) {
+				if (!igt_pipe_connector_valid(crtc->pipe, output))
 					continue;
 
 				/* LPSP is low power single pipe usages i.e. PIPE_A */
-				if (pipe != PIPE_A)
+				if (crtc->pipe != PIPE_A)
 					continue;
 
 				if (connector->connector_type != DRM_MODE_CONNECTOR_eDP)
@@ -244,12 +244,14 @@ int igt_main()
 						     "LPSP support on external panel from Gen13+ platform\n");
 
 				data.output = output;
-				data.pipe = pipe;
+				data.pipe = crtc->pipe;
 
 				if (!test_constraint(&data))
 					continue;
 
-				igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output))
+				igt_dynamic_f("pipe-%s-%s",
+					      igt_crtc_name(crtc),
+					      igt_output_name(output))
 					test_lpsp(&data);
 
 				test_cleanup(&data);

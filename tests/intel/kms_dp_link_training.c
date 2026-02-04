@@ -151,10 +151,10 @@ static void do_modeset(data_t *data, bool mst)
 	struct igt_plane *planes[IGT_MAX_PIPES];
 	int n_pipes = 0;
 	int out_count = 0;
-	int i;
+	igt_crtc_t *crtc;
 
-	for_each_pipe(&data->display, i) {
-		valid_pipes_mask |= BIT(i);
+	for_each_crtc(&data->display, crtc) {
+		valid_pipes_mask |= BIT(crtc->pipe);
 		n_pipes++;
 	}
 

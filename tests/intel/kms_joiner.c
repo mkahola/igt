@@ -582,7 +582,8 @@ static void test_basic_max_non_joiner(data_t *data)
 int igt_main()
 {
 	bool is_dgfx;
-	int i, j, display_ver;
+	igt_crtc_t *crtc;
+	int j, display_ver;
 	igt_output_t *output;
 	drmModeModeInfo mode;
 	data_t data;
@@ -654,9 +655,9 @@ int igt_main()
 		}
 
 		data.n_pipes = 0;
-		for_each_pipe(&data.display, i) {
+		for_each_crtc(&data.display, crtc) {
 			data.n_pipes++;
-			data.pipe_seq[j] = i;
+			data.pipe_seq[j] = crtc->pipe;
 			j++;
 		}
 	}

@@ -1090,14 +1090,14 @@ run_vrr_test(data_t *data, test_t test, uint32_t flags)
 	igt_output_t *output;
 
 	for_each_connected_output(&data->display, output) {
-		enum pipe pipe;
+		igt_crtc_t *crtc;
 
 		if (!config_constraint(data, output, flags))
 			continue;
 
-		for_each_pipe(&data->display, pipe) {
+		for_each_crtc(&data->display, crtc) {
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 
 			if (!intel_pipe_output_combo_valid(&data->display)) {
 				igt_output_set_crtc(output, NULL);
@@ -1105,10 +1105,10 @@ run_vrr_test(data_t *data, test_t test, uint32_t flags)
 			}
 
 			igt_dynamic_f("pipe-%s-%s",
-				      kmstest_pipe_name(pipe), output->name)
-				test(data, pipe, output, flags);
+				      igt_crtc_name(crtc), output->name)
+				test(data, crtc->pipe, output, flags);
 
-			test_cleanup(data, pipe, output);
+			test_cleanup(data, crtc->pipe, output);
 
 			break;
 		}

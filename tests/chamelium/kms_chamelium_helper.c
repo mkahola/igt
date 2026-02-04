@@ -204,11 +204,11 @@ void chamelium_enable_output(chamelium_data_t *data,
 enum pipe chamelium_get_pipe_for_output(igt_display_t *display,
 					igt_output_t *output)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
-	for_each_pipe(display, pipe) {
+	for_each_crtc(display, crtc) {
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 
 		if (!intel_pipe_output_combo_valid(display)) {
 			igt_output_set_crtc(output, NULL);
@@ -216,7 +216,7 @@ enum pipe chamelium_get_pipe_for_output(igt_display_t *display,
 		}
 
 		igt_output_set_crtc(output, NULL);
-		return pipe;
+		return crtc->pipe;
 	}
 
 	igt_assert_f(false, "No pipe found for output %s\n",

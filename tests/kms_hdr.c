@@ -315,7 +315,7 @@ static void test_bpc_switch(data_t *data, uint32_t flags)
 	igt_display_reset(display);
 
 	for_each_connected_output(display, output) {
-		enum pipe pipe;
+		igt_crtc_t *crtc;
 
 		if (!has_max_bpc(output)) {
 			igt_info("%s: Doesn't support IGT_CONNECTOR_MAX_BPC.\n",
@@ -328,18 +328,18 @@ static void test_bpc_switch(data_t *data, uint32_t flags)
 			continue;
 		}
 
-		for_each_pipe(display, pipe) {
+		for_each_crtc(display, crtc) {
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 			if (!intel_pipe_output_combo_valid(display)) {
 				igt_output_set_crtc(output, NULL);
 				continue;
 			}
 
-			prepare_test(data, output, pipe);
+			prepare_test(data, output, crtc->pipe);
 
 			if (is_intel_device(data->fd) &&
-			    !igt_max_bpc_constraint(display, pipe, output, 10)) {
+			    !igt_max_bpc_constraint(display, crtc->pipe, output, 10)) {
 				igt_info("%s: No suitable mode found to use 10 bpc.\n",
 					 igt_output_name(output));
 
@@ -352,8 +352,9 @@ static void test_bpc_switch(data_t *data, uint32_t flags)
 			data->h = data->mode->vdisplay;
 
 			igt_dynamic_f("pipe-%s-%s",
-				      kmstest_pipe_name(pipe), output->name)
-				test_bpc_switch_on_output(data, pipe, output, flags);
+				      igt_crtc_name(crtc), output->name)
+				test_bpc_switch_on_output(data, crtc->pipe,
+							  output, flags);
 
 			/* One pipe is enough */
 			break;
@@ -701,7 +702,7 @@ static void test_hdr(data_t *data, uint32_t flags)
 	igt_display_reset(display);
 
 	for_each_connected_output(display, output) {
-		enum pipe pipe;
+		igt_crtc_t *crtc;
 
 		/* To test HDR, 10 bpc is required, so we need to
 		 * set MAX_BPC property to 10bpc prior to setting
@@ -737,15 +738,15 @@ static void test_hdr(data_t *data, uint32_t flags)
 			continue;
 		}
 
-		for_each_pipe(display, pipe) {
+		for_each_crtc(display, crtc) {
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 			if (!intel_pipe_output_combo_valid(display)) {
 				igt_output_set_crtc(output, NULL);
 				continue;
 			}
 
-			prepare_test(data, output, pipe);
+			prepare_test(data, output, crtc->pipe);
 
 			/* Signal HDR requirement via metadata */
 			fill_hdr_output_metadata_st2084(&hdr);
@@ -759,7 +760,7 @@ static void test_hdr(data_t *data, uint32_t flags)
 			}
 
 			if (is_intel_device(data->fd) &&
-			    !igt_max_bpc_constraint(display, pipe, output, 10)) {
+			    !igt_max_bpc_constraint(display, crtc->pipe, output, 10)) {
 				igt_info("%s: No suitable mode found to use 10 bpc.\n",
 					 igt_output_name(output));
 
@@ -781,12 +782,14 @@ static void test_hdr(data_t *data, uint32_t flags)
 			data->h = data->mode->vdisplay;
 
 			igt_dynamic_f("pipe-%s-%s",
-				      kmstest_pipe_name(pipe), output->name) {
+				      igt_crtc_name(crtc), output->name) {
 				if (flags & (TEST_NONE | TEST_DPMS | TEST_SUSPEND |
 					     TEST_INVALID_HDR | TEST_BRIGHTNESS))
-					test_static_toggle(data, pipe, output, flags);
+					test_static_toggle(data, crtc->pipe,
+							   output, flags);
 				if (flags & TEST_SWAP)
-					test_static_swap(data, pipe, output, flags);
+					test_static_swap(data, crtc->pipe,
+							 output, flags);
 				if (flags & TEST_INVALID_METADATA_SIZES)
 					test_invalid_metadata_sizes(data, output);
 			}

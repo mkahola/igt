@@ -512,7 +512,7 @@ static void test_plane_position_2_display(data_t *data, enum pipe pipe1, enum pi
 static void run_2_display_test(data_t *data, uint64_t modifier, const char *name)
 {
 	igt_crtc_t *crtc2;
-	enum pipe pipe1;
+	igt_crtc_t *crtc;
 	igt_output_t *output1, *output2;
 	igt_display_t *display = &data->display;
 
@@ -521,10 +521,10 @@ static void run_2_display_test(data_t *data, uint64_t modifier, const char *name
 
 	igt_display_reset(display);
 
-	for_each_pipe(display, pipe1) {
-		for_each_valid_output_on_pipe(display, pipe1, output1) {
+	for_each_crtc(display, crtc) {
+		for_each_valid_output_on_pipe(display, crtc->pipe, output1) {
 			for_each_crtc(display, crtc2) {
-				if (pipe1 == crtc2->pipe)
+				if (crtc->pipe == crtc2->pipe)
 					continue;
 
 				for_each_valid_output_on_pipe_local(display,
@@ -536,7 +536,7 @@ static void run_2_display_test(data_t *data, uint64_t modifier, const char *name
 					igt_display_reset(display);
 
 					igt_output_set_crtc(output1,
-							    igt_crtc_for_pipe(output1->display, pipe1));
+							    crtc);
 					igt_output_set_crtc(output2,
 							    crtc2);
 
@@ -544,10 +544,12 @@ static void run_2_display_test(data_t *data, uint64_t modifier, const char *name
 						continue;
 
 					igt_dynamic_f("pipe-%s-%s-pipe-%s-%s",
-						       kmstest_pipe_name(pipe1), output1->name,
+						       igt_crtc_name(crtc),
+						       output1->name,
 						       igt_crtc_name(crtc2),
 						       output2->name)
-						test_plane_position_2_display(data, pipe1,
+						test_plane_position_2_display(data,
+									      crtc->pipe,
 									      crtc2->pipe,
 									      output1, output2,
 									      modifier);

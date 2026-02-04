@@ -126,7 +126,7 @@ static data_t data;
 static igt_output_t *kms_writeback_get_output(igt_display_t *display, __u32 fourcc_in, __u32 fourcc_out)
 {
 	int i;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	drmModeModeInfo override_mode = {
 		.clock = 25175,
@@ -151,14 +151,14 @@ static igt_output_t *kms_writeback_get_output(igt_display_t *display, __u32 four
 		if (output->config.connector->connector_type != DRM_MODE_CONNECTOR_WRITEBACK)
 			continue;
 
-		for_each_pipe(display, pipe) {
+		for_each_crtc(display, crtc) {
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 
 			if (check_writeback_config(display, output, override_mode, fourcc_in, fourcc_out)) {
 				igt_debug("Using connector %u:%s on pipe %d\n",
 					  output->config.connector->connector_id,
-					  output->name, pipe);
+					  output->name, crtc->pipe);
 				return output;
 			}
 		}
@@ -296,14 +296,15 @@ static void check_plane_colorop_ids(igt_display_t *display)
 	igt_plane_t *plane;
 	int colorop_idx;
 	igt_colorop_t *next;
-	int prop_val = 0, pipe = 0;
+	igt_crtc_t *crtc;
+	int prop_val = 0;
 
 	/* Use hash tables to track drm_planes and unique IDs */
 	GHashTable *plane_set = g_hash_table_new(g_direct_hash, g_direct_equal);
 	GHashTable *id_set = g_hash_table_new(g_direct_hash, g_direct_equal);
 
-	for_each_pipe(display, pipe) {
-		for_each_plane_on_pipe(display, pipe, plane) {
+	for_each_crtc(display, crtc) {
+		for_each_plane_on_pipe(display, crtc->pipe, plane) {
 			/* Skip when a drm_plane is already scanned */
 			if (g_hash_table_contains(plane_set, GINT_TO_POINTER(plane->drm_plane->plane_id)))
 				continue;

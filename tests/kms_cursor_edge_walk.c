@@ -358,7 +358,6 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 
 	igt_fixture() {
 		int ret;
-		enum pipe pipe;
 
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
 
@@ -380,8 +379,8 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 
 		/* Get active pipes. */
 		last_pipe = 0;
-		for_each_pipe(&data.display, pipe)
-			active_pipes[last_pipe++] = pipe;
+		for_each_crtc(&data.display, crtc)
+			active_pipes[last_pipe++] = crtc->pipe;
 		last_pipe--;
 	}
 
