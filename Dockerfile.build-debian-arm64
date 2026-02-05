@@ -23,6 +23,7 @@ RUN apt-get install -y \
 			zlib1g-dev:arm64 \
 			liblzma-dev:arm64 \
 			libcairo-dev:arm64 \
+			libpci-dev:arm64 \
 			libpixman-1-dev:arm64 \
 			libudev-dev:arm64 \
 			libgsl-dev:arm64 \

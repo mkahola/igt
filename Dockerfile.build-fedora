@@ -12,6 +12,7 @@ RUN dnf install -y \
 	'pkgconfig(pixman-1)' \
 	'pkgconfig(valgrind)' \
 	'pkgconfig(cairo)' \
+	'pkgconfig(libpci)' \
 	'pkgconfig(libudev)' \
 	'pkgconfig(glib-2.0)' \
 	'pkgconfig(gsl)' \

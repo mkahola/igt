@@ -35,7 +35,13 @@
 #include <libudev.h>
 #ifdef __linux__
 #include <linux/limits.h>
+#include <linux/pci_regs.h>
 #endif
+#ifndef PCI_HEADER_TYPE_MASK
+/* Either not linux, or <linux/pci_regs.h> too old */
+#define PCI_HEADER_TYPE_MASK 0x7f
+#endif
+#include <pci/pci.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -913,6 +919,26 @@ static struct igt_device *igt_device_from_syspath(const char *syspath)
 	return NULL;
 }
 
+static bool is_pcie_upstream_bridge(struct pci_dev *dev)
+{
+	struct pci_cap *pcie;
+	uint8_t type;
+
+	type = pci_read_byte(dev, PCI_HEADER_TYPE) & PCI_HEADER_TYPE_MASK;
+	if (type != PCI_HEADER_TYPE_BRIDGE)
+		return false;
+
+	pcie = pci_find_cap(dev, PCI_CAP_ID_EXP, PCI_CAP_NORMAL);
+	if (!pcie)
+		return false;
+
+	type = pci_read_word(dev, pcie->addr + PCI_EXP_FLAGS);
+	type &= PCI_EXP_FLAGS_TYPE;
+	type >>= ffs(PCI_EXP_FLAGS_TYPE) - 1;
+
+	return type == PCI_EXP_TYPE_UPSTREAM;
+}
+
 #define RETRIES_GET_DEVICE 5
 
 static struct igt_device *find_or_add_igt_device(struct udev *udev,
@@ -952,18 +978,52 @@ static struct igt_device *find_or_add_igt_device(struct udev *udev,
 	return idev;
 }
 
+static struct udev_device *get_pcie_upstream_bridge(struct udev *udev,
+						    struct udev_device *dev,
+						    struct pci_access *pacc)
+{
+	igt_assert(pacc);
+
+	for (dev = udev_device_get_parent(dev); dev; dev = udev_device_get_parent(dev)) {
+		struct pci_filter filter;
+		struct pci_dev *pci_dev;
+		const char *slot;
+
+		slot = udev_device_get_property_value(dev, "PCI_SLOT_NAME");
+		if (igt_debug_on(!slot))
+			continue;
+
+		pci_filter_init(pacc, &filter);
+		if (igt_debug_on(pci_filter_parse_slot(&filter, (char *)slot)))
+			continue;
+
+		pci_dev = pci_get_dev(pacc, filter.domain, filter.bus, filter.slot, filter.func);
+		if (igt_debug_on(!pci_dev))
+			continue;
+
+		if (is_pcie_upstream_bridge(pci_dev))
+			break;
+	}
+
+	return dev;
+}
+
 /*
  * For each drm igt_device add or update its parent igt_device to the array.
  * As card/render drm devices mostly have same parent (vkms is an exception)
  * link to it and update corresponding drm_card / drm_render fields.
+ *
+ * If collecting all attributes and the parent is a discrete GPU then also
+ * add or update its bridge's upstream port.
  */
 static void update_or_add_parent(struct udev *udev,
 				 struct udev_device *dev,
 				 struct igt_device *idev,
+				 struct pci_access *pacc,
 				 bool limit_attrs)
 {
-	struct udev_device *parent_dev;
-	struct igt_device *parent_idev;
+	struct igt_device *parent_idev, *bridge_idev;
+	struct udev_device *parent_dev, *bridge_dev;
 	const char *devname;
 
 	/*
@@ -983,6 +1043,19 @@ static void update_or_add_parent(struct udev *udev,
 		parent_idev->drm_render = strdup(devname);
 
 	idev->parent = parent_idev;
+
+	if (!pacc || parent_idev->dev_type != DEVTYPE_DISCRETE)
+		return;
+
+	bridge_dev = get_pcie_upstream_bridge(udev, parent_dev, pacc);
+	if (!bridge_dev)
+		return;
+
+	bridge_idev = find_or_add_igt_device(udev, bridge_dev, limit_attrs);
+	igt_assert(bridge_idev);
+
+	/* override DEVTYPE_INTEGRATED so link attributes won't be omitted */
+	bridge_idev->dev_type = DEVTYPE_ALL;
 }
 
 static struct igt_device *duplicate_device(struct igt_device *dev) {
@@ -1072,6 +1145,7 @@ static void scan_drm_devices(bool limit_attrs)
 	struct udev *udev;
 	struct udev_enumerate *enumerate;
 	struct udev_list_entry *devices, *dev_list_entry;
+	struct pci_access *pacc = NULL;
 	struct igt_device *dev;
 	int ret;
 
@@ -1095,6 +1169,12 @@ static void scan_drm_devices(bool limit_attrs)
 	if (!devices)
 		return;
 
+	/* prepare for upstream bridge port scan if called from lsgpu */
+	if (!limit_attrs) {
+		pacc = pci_alloc();
+		pci_init(pacc);
+	}
+
 	udev_list_entry_foreach(dev_list_entry, devices) {
 		const char *path;
 		struct udev_device *udev_dev;
@@ -1104,10 +1184,12 @@ static void scan_drm_devices(bool limit_attrs)
 		udev_dev = udev_device_new_from_syspath(udev, path);
 		idev = igt_device_new_from_udev(udev_dev, limit_attrs);
 		igt_list_add_tail(&idev->link, &igt_devs.all);
-		update_or_add_parent(udev, udev_dev, idev, limit_attrs);
+		update_or_add_parent(udev, udev_dev, idev, pacc, limit_attrs);
 
 		udev_device_unref(udev_dev);
 	}
+	if (pacc)
+		pci_cleanup(pacc);
 	udev_enumerate_unref(enumerate);
 	udev_unref(udev);
 
