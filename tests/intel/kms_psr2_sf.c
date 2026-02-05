@@ -224,7 +224,6 @@ typedef struct {
 	igt_plane_t *test_plane;
 	bool big_fb_test;
 	bool fbc_flag;
-	bool et_flag;
 	cairo_t *cr;
 	uint32_t screen_changes;
 	int cur_x, cur_y;
@@ -237,17 +236,30 @@ typedef struct {
 	} coexist_feature;
 } data_t;
 
+static bool is_et_check_needed(data_t *data)
+{
+	switch (data->psr_mode) {
+	case PR_MODE_SEL_FETCH:
+	case PR_MODE_SEL_FETCH_ET:
+		return true;
+	case PSR_MODE_2:
+	case PSR_MODE_2_SEL_FETCH:
+	case PSR_MODE_2_ET:
+		return psr_sink_support(data->drm_fd, data->debugfs_fd,
+					PSR_MODE_2_ET, data->output);
+	default:
+		igt_assert(false);
+	}
+}
+
 static bool set_sel_fetch_mode_for_output(data_t *data)
 {
 	bool supported = false;
-
-	data->et_flag = false;
 
 	if (psr_sink_support(data->drm_fd, data->debugfs_fd,
 						 PR_MODE_SEL_FETCH_ET, data->output)) {
 		supported = true;
 		data->psr_mode = PR_MODE_SEL_FETCH;
-		data->et_flag = true;
 	} else if (psr_sink_support(data->drm_fd, data->debugfs_fd,
 							PR_MODE_SEL_FETCH, data->output)) {
 		supported = true;
@@ -256,7 +268,6 @@ static bool set_sel_fetch_mode_for_output(data_t *data)
 							PSR_MODE_2_ET, data->output)) {
 		supported = true;
 		data->psr_mode = PSR_MODE_2;
-		data->et_flag = true;
 	} else	if (psr_sink_support(data->drm_fd, data->debugfs_fd,
 							  PSR_MODE_2, data->output)) {
 		supported = true;
@@ -977,9 +988,7 @@ static void run(data_t *data)
 							  data->pipe),
 							  "FBC still disabled\n");
 
-	/* TODO: Enable this check if other connectors support Early Transport */
-	if (data->et_flag && data->output != NULL &&
-	    data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_eDP)
+	if (is_et_check_needed(data))
 		igt_assert_f(early_transport_check(data->debugfs_fd),
 			     "Early Transport Disabled\n");
 
