@@ -10,6 +10,7 @@ igt@kms_(plane_lowres|frontbuffer_tracking|plane_multiple)@.*tiling-y.*
 igt@kms_flip_scaled_crc@.*(yf|y)tile.*
 igt@kms_addfb_basic@addfb25-y-tiled-small-legacy
 igt@kms_pipe_stress@stress-xrgb8888-(y|yf)tiled
+igt@kms_plane@pixel-format-(y|yf)-tiled.*
 ##############################################################################
 # Valid skip: Test skip due to hybrid config requirement
 ##############################################################################
@@ -63,6 +64,7 @@ igt@kms_ccs@.*-dg2-.*
 igt@kms_ccs@.*-mtl-.*
 igt@kms_flip_scaled_crc@.*dg2rcccs.*
 igt@kms_ccs@.*4-tiled-bmg-ccs
+igt@kms_plane@pixel-format.*(mtl|dg2).*
 ##############################################################################
 # Valid skip: Valid for display ver < 13
 ##############################################################################
@@ -103,6 +105,7 @@ igt@kms_rotation_crc@primary-4-tiled-reflect-x.*
 ##############################################################################
 igt@kms_(plane_lowres|plane_multiple|rotation_crc|big_fb|flip_scaled_crc)@.*(x-tile|xtile|tiling-x).*
 igt@kms_pipe_stress@stress-xrgb8888-xtiled
+igt@kms_plane@pixel-format-x-tiled.*
 ##############################################################################
 # Valid skip: DRRS not supported on LNL+
 ##############################################################################

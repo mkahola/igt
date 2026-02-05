@@ -11,6 +11,7 @@ igt@kms_flip_scaled_crc@.*(yf|y)tile.*
 igt@kms_async_flips@invalid-async-flip
 igt@kms_addfb_basic@addfb25-y-tiled-small-legacy
 igt@kms_pipe_stress@stress-xrgb8888-(y|yf)tiled
+igt@kms_plane@pixel-format-(y|yf)-tiled.*
 #########################################
 # Valid skip :- 90/270 rotation is not supported
 ##########################################
@@ -116,6 +117,7 @@ igt@kms_ccs@.*-dg2-.*
 igt@kms_ccs@.*-lnl-.*
 igt@kms_ccs@.*-mtl-.*
 igt@kms_flip_scaled_crc@.*dg2rcccs.*
+igt@kms_plane@pixel-format.*(mtl|dg2).*
 ##########################################
 # Valid skip :- Simulation specific
 ##########################################
