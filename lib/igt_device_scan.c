@@ -617,6 +617,13 @@ static bool is_link_attr(const char *name)
 	       !strcmp(name, "current_link_width");
 }
 
+static bool is_aer_attr(const char *name)
+{
+	return !strcmp(name, "aer_dev_correctable") ||
+	       !strcmp(name, "aer_dev_nonfatal") ||
+	       !strcmp(name, "aer_dev_fatal");
+}
+
 static void dump_props_and_attrs(const struct igt_device *dev, bool omit_link)
 {
 	struct igt_map_entry *entry;
@@ -630,6 +637,10 @@ static void dump_props_and_attrs(const struct igt_device *dev, bool omit_link)
 	igt_map_foreach(dev->attrs_map, entry) {
 		/* omit link bandwidth attributes if requested */
 		if (omit_link && is_link_attr(entry->key))
+			continue;
+
+		/* omit multi-line AER statistics data */
+		if (is_aer_attr(entry->key))
 			continue;
 
 		_print_key_value((char *)entry->key, (char *)entry->data);
