@@ -1084,18 +1084,36 @@ static bool check_pr_psr2_sel_fetch_support(data_t *data)
 	return status;
 }
 
-static bool
-pipe_output_combo_valid(igt_display_t *display,
-			enum pipe pipe, igt_output_t *output)
+static bool sel_fetch_pipe_combo_valid(data_t *data)
 {
-	bool ret = true;
+	if (data->devid < 14 && !IS_ALDERLAKE_P(data->devid) && data->pipe != PIPE_A)
+		return false;
 
-	igt_display_reset(display);
+	if (data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_eDP &&
+	    data->pipe != PIPE_A && data->pipe != PIPE_B)
+		return false;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
-	if (!intel_pipe_output_combo_valid(display))
+	return true;
+}
+
+static bool
+pipe_output_combo_valid(data_t *data)
+{
+	bool ret = psr_sink_support(data->drm_fd, data->debugfs_fd,
+				    data->psr_mode, data->output);
+	if (!ret)
+		return ret;
+
+	ret = sel_fetch_pipe_combo_valid(data);
+	if (!ret)
+		return ret;
+
+	igt_display_reset(&data->display);
+
+	igt_output_set_crtc(data->output, igt_crtc_for_pipe(&data->display, data->pipe));
+	if (!intel_pipe_output_combo_valid(&data->display))
 		ret = false;
-	igt_output_set_crtc(output, NULL);
+	igt_output_set_crtc(data->output, NULL);
 
 	return ret;
 }
@@ -1268,11 +1286,12 @@ int igt_main()
 						   append_psr_subtest[z],
 						   op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display,
-								     pipes[i], outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 
@@ -1294,11 +1313,12 @@ int igt_main()
 							   append_psr_subtest[z],
 							   op_str(data.op)) {
 					for (i = 0; i < n_pipes; i++) {
-						if (!pipe_output_combo_valid(&data.display,
-									     pipes[i], outputs[i]))
-							continue;
 						data.pipe = pipes[i];
 						data.output = outputs[i];
+
+						if (!pipe_output_combo_valid(&data))
+							continue;
+
 						igt_assert_f(set_sel_fetch_mode_for_output(&data),
 							     "Selective fetch is not supported\n");
 						if (!check_psr_mode_supported(&data, psr_status[z]))
@@ -1319,12 +1339,12 @@ int igt_main()
 						   append_psr_subtest[z],
 						   op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display,
-								     pipes[i],
-								     outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 					if (!check_psr_mode_supported(&data, psr_status[z]))
@@ -1341,12 +1361,12 @@ int igt_main()
 			igt_subtest_with_dynamic_f("%s%scursor-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display,
-								     pipes[i],
-								     outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 					if (!check_psr_mode_supported(&data, psr_status[z]))
@@ -1363,12 +1383,12 @@ int igt_main()
 			igt_subtest_with_dynamic_f("%s%scursor-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display,
-								     pipes[i],
-								     outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 					if (!check_psr_mode_supported(&data, psr_status[z]))
@@ -1385,12 +1405,12 @@ int igt_main()
 			igt_subtest_with_dynamic_f("%s%scursor-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display,
-								     pipes[i],
-								     outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 					if (!check_psr_mode_supported(&data, psr_status[z]))
@@ -1407,12 +1427,12 @@ int igt_main()
 			igt_subtest_with_dynamic_f("%s%scursor-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display,
-								     pipes[i],
-								     outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 					if (!check_psr_mode_supported(&data, psr_status[z]))
@@ -1430,12 +1450,12 @@ int igt_main()
 			igt_subtest_with_dynamic_f("%s%s%s-sf-dmg-area", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display,
-								     pipes[i],
-								     outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 					if (!check_psr_mode_supported(&data, psr_status[z]))
@@ -1451,12 +1471,12 @@ int igt_main()
 			igt_subtest_with_dynamic_f("%s%soverlay-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display,
-								     pipes[i],
-								     outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 					if (!check_psr_mode_supported(&data, psr_status[z]))
@@ -1473,12 +1493,12 @@ int igt_main()
 			igt_subtest_with_dynamic_f("%s%soverlay-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display,
-								     pipes[i],
-								     outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 					if (!check_psr_mode_supported(&data, psr_status[z]))
@@ -1495,11 +1515,12 @@ int igt_main()
 			igt_subtest_with_dynamic_f("%s%soverlay-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display, pipes[i],
-								     outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 					if (!check_psr_mode_supported(&data, psr_status[z]))
@@ -1517,12 +1538,12 @@ int igt_main()
 			igt_subtest_with_dynamic_f("%s%s%s-sf-dmg-area", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display,
-								     pipes[i],
-								     outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 					if (!check_psr_mode_supported(&data, psr_status[z]))
@@ -1542,12 +1563,12 @@ int igt_main()
 			igt_subtest_with_dynamic_f("%s%soverlay-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
 				for (i = 0; i < n_pipes; i++) {
-					if (!pipe_output_combo_valid(&data.display,
-								     pipes[i],
-								     outputs[i]))
-						continue;
 					data.pipe = pipes[i];
 					data.output = outputs[i];
+
+					if (!pipe_output_combo_valid(&data))
+						continue;
+
 					igt_assert_f(set_sel_fetch_mode_for_output(&data),
 						     "Selective fetch is not supported\n");
 					if (!check_psr_mode_supported(&data, psr_status[z]))
