@@ -177,5 +177,6 @@ igt@kms_color_pipeline@plane-lut3d-green-only
 ########################################
 # Valid skip :- For display ver >= 35
 ########################################
-igt@kms_frontbuffer_tracking@.*argb161616f.*
+igt@kms_frontbuffer_tracking@.*a(bgr|rgb)161616f.*
+igt@kms_flip_scaled_crc@.*linear-reflect-x
 ########################################
