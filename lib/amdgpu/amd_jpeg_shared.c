@@ -38,8 +38,9 @@ is_jpeg_tests_enable(amdgpu_device_handle device_handle,
 	jpeg_cntl = vcnipUVD_JPEG_CNTL;
 	jpeg_rb_rptr = vcnipUVD_JPEG_RB_RPTR;
 
-	if (context->family_id == AMDGPU_FAMILY_AI &&
-		(context->chip_id - context->chip_rev) > 0x3c) { /* gfx940 */
+	if ((context->vcn_ip_version_major >= 5) ||
+		((context->family_id == AMDGPU_FAMILY_AI) &&
+		((context->chip_id - context->chip_rev) > 0x3c))) { /* gfx940 */
 		jpeg_dec_soft_rst = vcnipUVD_JPEG_DEC_SOFT_RST_1;
 		lmi_jpeg_read_64bit_bar_high = vcnipUVD_LMI_JPEG_READ_64BIT_BAR_HIGH_1;
 		lmi_jpeg_read_64bit_bar_low = vcnipUVD_LMI_JPEG_READ_64BIT_BAR_LOW_1;
