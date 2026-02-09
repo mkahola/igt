@@ -390,7 +390,7 @@ static void test_cursor(data_t *data, int size, unsigned int flags, unsigned int
 	}
 
 	igt_output_set_crtc(data->output,
-		igt_crtc_for_pipe(data->output->display, data->pipe_id));
+		igt_crtc_for_pipe(&data->display, data->pipe_id));
 
 	/* Run the test for different cursor spots. */
 	test_cursor_spots(data, size, flags);

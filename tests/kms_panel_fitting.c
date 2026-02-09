@@ -74,7 +74,7 @@ static void prepare_crtc(data_t *data, igt_output_t *output, enum pipe pipe,
 	igt_display_t *display = &data->display;
 
 	igt_output_override_mode(output, mode);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	/* before allocating, free if any older fb */
 	igt_remove_fb(data->drm_fd, &data->fb1);
@@ -109,7 +109,7 @@ test_panel_fitting_legacy(data_t *d, igt_display_t *display,
 	drmModeModeInfo *mode, native_mode;
 	bool is_plane_scaling_active = true;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	mode = igt_output_get_mode(output);
 	native_mode = *mode;
@@ -202,7 +202,7 @@ test_panel_fitting_fastset(igt_display_t *display, const enum pipe pipe, igt_out
 
 	mode = *igt_output_get_mode(output);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	sprite = igt_output_get_plane_type(output, DRM_PLANE_TYPE_OVERLAY);

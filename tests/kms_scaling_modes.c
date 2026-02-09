@@ -62,7 +62,7 @@ static void test_scaling_mode_on_output(igt_display_t *display, const enum pipe 
 	struct igt_fb red, blue;
 	int ret;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	mode = *igt_output_get_mode(output);
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);

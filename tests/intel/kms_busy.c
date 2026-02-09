@@ -79,7 +79,7 @@ set_fb_on_crtc(igt_display_t *dpy, int pipe,
 	drmModeModeInfoPtr mode;
 	igt_plane_t *primary;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(dpy, pipe));
 	mode = igt_output_get_mode(output);
 
 	igt_create_pattern_fb(dpy->drm_fd, mode->hdisplay, mode->vdisplay,
@@ -164,7 +164,7 @@ static void flip_to_fb(igt_display_t *dpy, int pipe,
 		igt_crtc_refresh(igt_crtc_for_pipe(dpy, pipe), true);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    igt_crtc_for_pipe(dpy, pipe));
 		igt_display_commit2(dpy, COMMIT_ATOMIC);
 	}
 
@@ -295,7 +295,7 @@ static void test_hang(igt_display_t *dpy,
 		/* Test modeset enable with hang */
 		igt_plane_set_fb(primary, &fb[0]);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    igt_crtc_for_pipe(dpy, pipe));
 		test_atomic_commit_hang(dpy, primary, &fb[!hang_newfb]);
 	} else {
 		/*
@@ -359,7 +359,7 @@ pipe_output_combo_valid(igt_display_t *dpy,
 
 	igt_display_reset(dpy);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(dpy, pipe));
 	if (!intel_pipe_output_combo_valid(dpy))
 		ret = false;
 	igt_output_set_crtc(output, NULL);

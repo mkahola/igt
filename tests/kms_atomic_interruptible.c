@@ -130,7 +130,7 @@ static void run_plane_test(igt_display_t *display, enum pipe pipe, igt_output_t 
 	igt_display_reset(display);
 	igt_display_commit2(display, COMMIT_ATOMIC);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	plane = igt_output_get_plane_type(output, plane_type);
@@ -313,7 +313,7 @@ static bool pipe_output_combo_valid(igt_display_t *display,
 
 	igt_display_reset(display);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	if (!intel_pipe_output_combo_valid(display))
 		ret = false;
 	igt_output_set_crtc(output, NULL);

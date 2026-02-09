@@ -267,7 +267,7 @@ static void prepare_crtc(data_t *data)
 
 	/* select the pipe we want to use */
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, data->pipe));
+			    igt_crtc_for_pipe(display, data->pipe));
 
 	mode = igt_output_get_mode(data->output);
 	igt_create_pattern_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
@@ -284,7 +284,7 @@ static void prepare_crtc(data_t *data)
 	data->jump_y = (mode->vdisplay - data->curh) / 2;
 
 	/* create the pipe_crc object for this pipe */
-	data->pipe_crc = igt_crtc_crc_new_nonblock(igt_crtc_for_pipe(&data->display, data->pipe),
+	data->pipe_crc = igt_crtc_crc_new_nonblock(igt_crtc_for_pipe(display, data->pipe),
 						   IGT_PIPE_CRC_SOURCE_AUTO);
 
 	/* get reference crc w/o cursor */

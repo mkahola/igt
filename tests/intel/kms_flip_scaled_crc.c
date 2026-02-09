@@ -756,7 +756,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 	if (modetoset)
 		igt_output_override_mode(output, modetoset);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 

@@ -1042,7 +1042,7 @@ static void display_helper(igt_display_t *dpy, int *done)
 			continue;
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    igt_crtc_for_pipe(dpy, pipe));
 		mode = igt_output_get_mode(output);
 
 		if (fb.width != mode->hdisplay || fb.height != mode->vdisplay) {

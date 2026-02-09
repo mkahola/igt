@@ -43,7 +43,7 @@ static bool pipe_output_combo_valid(data_t *data, enum pipe pipe)
 	bool ret = true;
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, pipe));
+			    igt_crtc_for_pipe(&data->display, pipe));
 	if (!intel_pipe_output_combo_valid(&data->display))
 		ret = false;
 	igt_output_set_crtc(data->output, NULL);
@@ -117,7 +117,7 @@ static void test_t(data_t *data, igt_plane_t *primary,
 	bool match[4], match_ok = false;
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, data->pipe_id));
+			    igt_crtc_for_pipe(&data->display, data->pipe_id));
 
 	mode = igt_output_get_mode(data->output);
 	height = mode->hdisplay;

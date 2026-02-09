@@ -135,7 +135,7 @@ static void test_dsc_enable(data_t *data)
 				      0,
 				      &ref_fb);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, data->pipe_id[crtc->pipe]));
+				    igt_crtc_for_pipe(display, data->pipe_id[crtc->pipe]));
 		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 
@@ -283,7 +283,7 @@ static void test_dsc_slice_dimensions_change(data_t *data)
 				      0,
 				      &ref_fb);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, data->pipe_id[crtc->pipe]));
+				    igt_crtc_for_pipe(display, data->pipe_id[crtc->pipe]));
 		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 
@@ -379,7 +379,7 @@ static void test_dsc_link_settings(data_t *data)
 				      0,
 				      &ref_fb[crtc->pipe]);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, data->pipe_id[crtc->pipe]));
+				    igt_crtc_for_pipe(display, data->pipe_id[crtc->pipe]));
 		igt_plane_set_fb(data->primary[crtc->pipe],
 				 &ref_fb[crtc->pipe]);
 	}
@@ -506,7 +506,7 @@ static void test_dsc_bpc(data_t *data)
 					      0,
 					      &ref_fb[crtc->pipe]);
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, data->pipe_id[crtc->pipe]));
+					    igt_crtc_for_pipe(display, data->pipe_id[crtc->pipe]));
 			igt_plane_set_fb(data->primary[crtc->pipe],
 					 &ref_fb[crtc->pipe]);
 		}

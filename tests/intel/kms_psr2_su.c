@@ -301,7 +301,7 @@ static int check_psr2_support(data_t *data, enum pipe pipe)
 
 	igt_display_reset(display);
 	output = data->output;
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	prepare(data, output);
 	status = psr_wait_entry(data->debugfs_fd, PSR_MODE_2, output);

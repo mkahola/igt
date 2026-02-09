@@ -165,7 +165,7 @@ static void update_display(data_t *data, uint32_t test_type)
 	}
 
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(output->display, data->pipe));
+			    igt_crtc_for_pipe(display, data->pipe));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
 	igt_skip_on(!igt_plane_has_format_mod(primary, data->plane_format,

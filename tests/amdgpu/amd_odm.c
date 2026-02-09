@@ -49,7 +49,7 @@ static void test_init(struct data *data)
 
 	/* It doesn't matter which pipe we choose on amdpgu. */
 	data->pipe_id = PIPE_A;
-	data->crtc = igt_crtc_for_pipe(&data->display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
 
 	igt_display_reset(display);
 
@@ -124,7 +124,7 @@ static void run_test_odmc(struct data *data, enum odmc_mode m, const drmModeMode
 			    &buffer);
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, i));
+			    igt_crtc_for_pipe(display, i));
 
 	igt_plane_set_fb(data->primary, &buffer);
 

@@ -413,7 +413,7 @@ static void prepare(data_t *data)
 	}
 
 	igt_output_set_crtc(output,
-		            igt_crtc_for_pipe(output->display, data->pipe));
+		            igt_crtc_for_pipe(&data->display, data->pipe));
 
 	if (data->big_fb_test) {
 		fb_w = data->big_fb_width;

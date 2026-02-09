@@ -251,7 +251,7 @@ static void setup_mode(data_t *data)
 				conns[count].output = output;
 
 				igt_output_set_crtc(conns[count].output,
-						    igt_crtc_for_pipe(conns[count].output->display, conns[count].pipe));
+						    igt_crtc_for_pipe(&data->display, conns[count].pipe));
 				break;
 			}
 		}

@@ -175,7 +175,7 @@ static void prepare_crtc(gpu_process_t *gpu)
 
 	/* select the pipe we want to use */
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(output->display, gpu->pipe));
+			    igt_crtc_for_pipe(display, gpu->pipe));
 
 	mode = igt_output_get_mode(output);
 

@@ -141,7 +141,7 @@ static void run_single_test(data_t *data, enum pipe pipe, igt_output_t *output)
 	igt_info("Using (pipe %s + %s) to run the subtest.\n",
 		 kmstest_pipe_name(pipe), igt_output_name(output));
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	mode = igt_output_get_mode(output);
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);

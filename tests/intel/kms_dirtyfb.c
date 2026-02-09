@@ -230,7 +230,7 @@ static void prepare(data_t *data)
 	igt_plane_t *primary;
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, data->pipe));
+			    igt_crtc_for_pipe(&data->display, data->pipe));
 
 	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
 					  IGT_PIPE_CRC_SOURCE_AUTO);

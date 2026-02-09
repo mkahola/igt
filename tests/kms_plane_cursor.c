@@ -280,7 +280,7 @@ static void test_cursor(data_t *data, int size, unsigned int flags)
 
 	igt_plane_set_fb(data->primary, &data->pfb);
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, data->pipe_id));
+			    igt_crtc_for_pipe(&data->display, data->pipe_id));
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 	test_cursor_spots(data, size, flags);

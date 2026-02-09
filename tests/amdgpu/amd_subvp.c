@@ -141,7 +141,7 @@ static void test_subvp(struct data *data)
 					&rfb);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, data->pipe_id[crtc->pipe]));
+				    igt_crtc_for_pipe(display, data->pipe_id[crtc->pipe]));
 		igt_plane_set_fb(data->primary[crtc->pipe], &rfb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 	}

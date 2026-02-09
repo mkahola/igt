@@ -166,7 +166,7 @@ prepare_planes(data_t *data, enum pipe pipe, int max_planes,
 	int i;
 	int format, modifier;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	crtc = primary->crtc;
@@ -287,7 +287,7 @@ test_resolution_with_output(data_t *data, enum pipe pipe, int max_planes, igt_ou
 		drmModeModeInfo *mode_lo;
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    igt_crtc_for_pipe(&data->display, pipe));
 
 		mode_hi = igt_output_get_mode(output);
 		mode_lo = get_lowres_mode(data, mode_hi, output);
@@ -347,7 +347,7 @@ run_tests_for_pipe(data_t *data)
 			igt_display_reset(&data->display);
 
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    igt_crtc_for_pipe(&data->display, pipe));
 			if (!intel_pipe_output_combo_valid(&data->display))
 				continue;
 

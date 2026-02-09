@@ -144,7 +144,7 @@ static void test_plane_scaling(data_t *data, enum pipe pipe, igt_output_t *outpu
 		igt_display_reset(display);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    igt_crtc_for_pipe(display, pipe));
 		mode = *igt_output_get_highres_mode(output);
 		igt_require_f(is_4k(mode), "Mode >= 4K not found on output %s\n",
 			      igt_output_name(output));
@@ -194,7 +194,7 @@ static void test_mode_transition(data_t *data, enum pipe pipe, igt_output_t *out
 	do_cleanup_display(display);
 	igt_display_reset(display);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	mode = igt_output_get_mode(output);
 	mode_lo = *get_lowres_mode(output);
 	mode_hi = *igt_output_get_highres_mode(output);
@@ -294,7 +294,7 @@ static void test_mode_transition_on_all_outputs(data_t *data)
 		height = max(height, mode->vdisplay);
 
 		igt_output_set_crtc(valid_outputs[i],
-				    igt_crtc_for_pipe(valid_outputs[i]->display, i));
+				    igt_crtc_for_pipe(display, i));
 		igt_output_override_mode(valid_outputs[i], &mode_highres[i]);
 	}
 

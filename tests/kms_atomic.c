@@ -684,7 +684,7 @@ static void test_only(data_t *data, igt_output_t *output, enum pipe pipe, uint32
 			      mode->hdisplay, mode->vdisplay,
 			      format, I915_TILING_NONE, &fb);
 	igt_plane_set_fb(data->primary, &fb);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
 
 	igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_TEST_ONLY | DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
@@ -1382,7 +1382,7 @@ static void atomic_setup(data_t *data, enum pipe pipe, igt_output_t *output)
 {
 	drmModeModeInfo *mode;
 	igt_display_reset(&data->display);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
 
 	data->primary = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
 						DRM_PLANE_TYPE_PRIMARY);
@@ -1429,7 +1429,7 @@ pipe_output_combo_valid(igt_display_t *display,
 
 	igt_display_reset(display);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	if (!intel_pipe_output_combo_valid(display))
 		ret = false;
 	igt_output_set_crtc(output, NULL);

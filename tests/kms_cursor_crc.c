@@ -579,7 +579,7 @@ static void prepare_crtc(data_t *data, int cursor_w, int cursor_h)
 
 	/* select the pipe we want to use */
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(output->display, data->pipe));
+			    igt_crtc_for_pipe(display, data->pipe));
 
 	/* create and set the primary plane fbs */
 	mode = igt_output_get_mode(output);
@@ -605,7 +605,7 @@ static void prepare_crtc(data_t *data, int cursor_w, int cursor_h)
 	/* create the pipe_crc object for this pipe */
 	if (data->pipe_crc)
 		igt_pipe_crc_free(data->pipe_crc);
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
+	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	/* x/y position where the cursor is still fully visible */
@@ -782,7 +782,7 @@ static bool cursor_size_supported(data_t *data, int w, int h)
 
 	igt_display_reset(display);
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(output->display, data->pipe));
+			    igt_crtc_for_pipe(display, data->pipe));
 
 	mode = igt_output_get_mode(output);
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
@@ -887,7 +887,7 @@ static bool valid_pipe_output_combo(data_t *data)
 
 	igt_display_reset(display);
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, data->pipe));
+			    igt_crtc_for_pipe(display, data->pipe));
 
 	if (intel_pipe_output_combo_valid(display))
 		ret = true;

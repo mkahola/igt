@@ -900,7 +900,7 @@ run_deep_color_tests_for_pipe(data_t *data, enum pipe p)
 		igt_display_reset(&data->display);
 		igt_output_set_prop_value(output, IGT_CONNECTOR_MAX_BPC, 10);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, p));
+				    igt_crtc_for_pipe(&data->display, p));
 
 		if (is_intel_device(data->drm_fd) &&
 		    !igt_max_bpc_constraint(&data->display, p, output, 10)) {

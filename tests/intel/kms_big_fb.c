@@ -538,7 +538,7 @@ static bool test_pipe(data_t *data)
 		      data->format, data->modifier, &data->small_fb);
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, data->pipe));
+			    igt_crtc_for_pipe(&data->display, data->pipe));
 
 	primary = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, NULL);
@@ -598,7 +598,7 @@ max_hw_stride_async_flip_test(data_t *data)
 		 kmstest_pipe_name(data->pipe), igt_output_name(data->output));
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, data->pipe));
+			    igt_crtc_for_pipe(&data->display, data->pipe));
 
 	primary = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
 

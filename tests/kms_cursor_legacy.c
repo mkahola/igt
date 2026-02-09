@@ -372,7 +372,7 @@ static void set_fb_on_crtc(igt_display_t *display, enum pipe pipe,
 	drmModeModeInfoPtr mode;
 	igt_plane_t *primary;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	mode = igt_output_get_mode(output);
 
 	igt_create_pattern_fb(display->drm_fd,
@@ -1102,7 +1102,7 @@ static void nonblocking_modeset_vs_cursor(igt_display_t *display, int loops)
 		 */
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    igt_crtc_for_pipe(display, pipe));
 		igt_plane_set_fb(cursor, NULL);
 		igt_display_commit_atomic(display, flags, NULL);
 
@@ -1261,7 +1261,7 @@ static void two_screens_flip_vs_cursor(igt_display_t *display, int nloops, bool 
 				/* Commit page flip and modeset simultaneously. */
 				igt_plane_set_fb(plane, &fb_info);
 				igt_output_set_crtc(output2,
-						    igt_crtc_for_pipe(output2->display, enabled ? PIPE_NONE : pipe2));
+						    igt_crtc_for_pipe(display, enabled ? PIPE_NONE : pipe2));
 				enabled = !enabled;
 
 				wait_for_modeset(display, flags, 5, "Scheduling modeset");
@@ -1310,7 +1310,7 @@ static void two_screens_flip_vs_cursor(igt_display_t *display, int nloops, bool 
 				flip_nonblocking(display, pipe2, atomic, &fb2_info, (void*)(ptrdiff_t)vblank_start);
 			} else {
 				igt_output_set_crtc(output2,
-						    igt_crtc_for_pipe(output2->display, enabled ? PIPE_NONE : pipe2));
+						    igt_crtc_for_pipe(display, enabled ? PIPE_NONE : pipe2));
 
 				igt_set_timeout(1, "Scheduling modeset\n");
 				do {

@@ -85,7 +85,7 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 	int num_active_planes = 0;
 
 	igt_display_reset(display);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	mode = igt_output_get_mode(output);
 
@@ -147,7 +147,7 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 		drmSetClientCap(data->drm_fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
 		drmSetClientCap(data->drm_fd, DRM_CLIENT_CAP_ATOMIC, 1);
 
-		igt_crtc_refresh(igt_crtc_for_pipe(&data->display, pipe),
+		igt_crtc_refresh(igt_crtc_for_pipe(display, pipe),
 				 true);
 	} else {
 		igt_remove_fb(data->drm_fd, &fb);

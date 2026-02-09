@@ -130,7 +130,7 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 
 	/* select the pipe we want to use */
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(output->display, data->pipe));
+			    igt_crtc_for_pipe(display, data->pipe));
 
 	/* create and set the primary plane fb */
 	mode = igt_output_get_mode(output);
@@ -232,7 +232,7 @@ pipe_output_combo_valid(igt_display_t *display,
 
 	igt_display_reset(display);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	if (!intel_pipe_output_combo_valid(display))
 		ret = false;
 	igt_output_set_crtc(output, NULL);
@@ -447,7 +447,7 @@ static void vblank_ts_cont(data_t *data, int fd, int nchildren)
 
 	if (data->flags & MODESET) {
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, data->pipe));
+				    igt_crtc_for_pipe(display, data->pipe));
 		igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 	}
 

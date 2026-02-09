@@ -113,7 +113,7 @@ static void run_mode_switch_first_last(data_t *data, int num_pipes)
 					    0.f, buffer1[j]);
 		}
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, j));
+				    igt_crtc_for_pipe(&data->display, j));
 		force_output_mode(data, output, kmode);
 		igt_plane_set_fb(data->primary[j], buffer1[j]);
 		drmModeFreeConnector(conn);

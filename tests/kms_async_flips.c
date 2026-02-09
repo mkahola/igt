@@ -303,7 +303,7 @@ static void test_init(data_t *data)
 	data->refresh_rate = mode->vrefresh;
 
 	igt_output_set_crtc(data->output,
-		            igt_crtc_for_pipe(data->output->display, data->pipe));
+		            igt_crtc_for_pipe(&data->display, data->pipe));
 
 	data->plane = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
 	if (data->overlay_path)

@@ -88,18 +88,18 @@ static void run_extendedmode_basic(data_t *data,
 	igt_display_reset(display);
 
 	igt_output_set_crtc(output1,
-			    igt_crtc_for_pipe(output1->display, pipe1));
+			    igt_crtc_for_pipe(display, pipe1));
 	igt_output_set_crtc(output2,
-			    igt_crtc_for_pipe(output2->display, pipe2));
+			    igt_crtc_for_pipe(display, pipe2));
 
 	mode[0] = igt_output_get_mode(output1);
 	mode[1] = igt_output_get_mode(output2);
 
 	igt_assert_f(igt_fit_modes_in_bw(display), "Unable to fit modes in bw\n");
 
-	pipe_crc[0] = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe1),
+	pipe_crc[0] = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe1),
 				       IGT_PIPE_CRC_SOURCE_AUTO);
-	pipe_crc[1] = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe2),
+	pipe_crc[1] = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe2),
 				       IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_create_color_fb(data->drm_fd, mode[0]->hdisplay, mode[0]->vdisplay,

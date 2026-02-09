@@ -328,7 +328,7 @@ static void multiple_display_test(struct data_t *data, enum sub_test test_mode)
 					0, (buf + j));
 
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, j));
+					    igt_crtc_for_pipe(display, j));
 			igt_plane_set_fb(data->primary[j], (buf + j));
 			j++;
 		}

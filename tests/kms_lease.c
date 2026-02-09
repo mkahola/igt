@@ -161,7 +161,7 @@ static int prepare_crtc(data_t *data, bool is_master)
 		return -ENOENT;
 
 	/* select the pipe we want to use */
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	/* create and set the primary plane fb */
 	mode = igt_output_get_mode(output);

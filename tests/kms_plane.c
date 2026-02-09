@@ -238,7 +238,7 @@ test_grab_crc(data_t *data, igt_output_t *output, enum pipe pipe,
 	char *crc_str;
 	int ret;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
 
 	primary = igt_output_get_plane(output, 0);
 
@@ -315,7 +315,7 @@ test_plane_position_with_output(data_t *data,
 	igt_debug("Testing connector %s using pipe %s plane %d\n", igt_output_name(output),
 		  kmstest_pipe_name(pipe), plane);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
 
 	mode = igt_output_get_mode(output);
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
@@ -451,7 +451,7 @@ test_plane_panning_with_output(data_t *data,
 	drmModeModeInfo *mode;
 	igt_crc_t crc;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
 
 	mode = igt_output_get_mode(output);
 	primary = igt_output_get_plane(output, 0);
@@ -1277,7 +1277,7 @@ test_pixel_formats(data_t *data, enum pipe pipe)
 	igt_create_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
 		      DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, &primary_fb);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, &primary_fb);
 
@@ -1330,7 +1330,7 @@ static void test_planar_settings(data_t *data)
 	output = igt_get_single_output_for_pipe(&data->display, pipe);
 	igt_require(output);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
 	igt_display_commit_atomic(&data->display,

@@ -570,7 +570,7 @@ static void test_multi_mpo_invalid(data_t *data)
 	igt_skip_on(!data->overlay2[0]);
 
 	igt_output_set_crtc(data->output[0],
-			    igt_crtc_for_pipe(data->output[0]->display, data->pipe_id[0]));
+			    igt_crtc_for_pipe(display, data->pipe_id[0]));
 
 	igt_create_color_fb(data->fd, w, h, DRM_FORMAT_XRGB8888, 0, 1.0, 1.0, 1.0, &fb[0].test_primary);
 	igt_create_fb(data->fd, w, h, DRM_FORMAT_NV12, 0, &fb[0].test_overlay);
@@ -647,7 +647,7 @@ static void test_display_mpo(data_t *data, enum test test, uint32_t format, int 
 		}
 
 		igt_output_set_crtc(data->output[n],
-				    igt_crtc_for_pipe(data->output[n]->display, data->pipe_id[n]));
+				    igt_crtc_for_pipe(display, data->pipe_id[n]));
 
 		igt_create_fb(data->fd, w, h, DRM_FORMAT_XRGB8888, 0, &fb[n].ref_primary);
 		igt_create_color_fb(data->fd, w, h, DRM_FORMAT_XRGB8888, 0, 1.0, 1.0, 1.0, &fb[n].ref_primary);
@@ -735,7 +735,7 @@ static void test_mpo_4k(data_t *data)
 			 0.00, 0.00, 0.00, 0.00);
 
 	igt_output_set_crtc(data->output[0],
-			    igt_crtc_for_pipe(data->output[0]->display, data->pipe_id[0]));
+			    igt_crtc_for_pipe(display, data->pipe_id[0]));
 	igt_plane_set_fb(data->primary[0], &r_fb);
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
@@ -801,9 +801,9 @@ static void test_mpo_swizzle_toggle_multihead(data_t *data)
 
 	/* Initial modeset */
 	igt_output_set_crtc(data->output[0],
-			    igt_crtc_for_pipe(data->output[0]->display, data->pipe_id[0]));
+			    igt_crtc_for_pipe(display, data->pipe_id[0]));
 	igt_output_set_crtc(data->output[1],
-			    igt_crtc_for_pipe(data->output[1]->display, data->pipe_id[1]));
+			    igt_crtc_for_pipe(display, data->pipe_id[1]));
 	force_output_mode(data, data->output[0], &test_mode_1);
 	force_output_mode(data, data->output[1], &test_mode_2);
 
@@ -872,7 +872,7 @@ static void test_mpo_swizzle_toggle(data_t *data)
 
 	/* Initial modeset */
 	igt_output_set_crtc(data->output[0],
-			    igt_crtc_for_pipe(data->output[0]->display, data->pipe_id[0]));
+			    igt_crtc_for_pipe(display, data->pipe_id[0]));
 	force_output_mode(data, data->output[0], &test_mode_1);
 
 	igt_plane_set_fb(data->primary[0], &fb_1920_xb24_linear);

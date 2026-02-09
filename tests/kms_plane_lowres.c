@@ -303,7 +303,7 @@ static void run_test(data_t *data, uint64_t modifier)
 
 			igt_display_reset(&data->display);
 			igt_output_set_crtc(data->output,
-					    igt_crtc_for_pipe(data->output->display, data->pipe));
+					    igt_crtc_for_pipe(&data->display, data->pipe));
 
 			if (!intel_pipe_output_combo_valid(&data->display))
 				continue;

@@ -165,7 +165,7 @@ static void test_hotplug_basic(data_t *data, bool suspend)
 				      DRM_FORMAT_XRGB8888, 0,
 				      &ref_fb[crtc->pipe]);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, data->pipe_id[crtc->pipe]));
+				    igt_crtc_for_pipe(display, data->pipe_id[crtc->pipe]));
 		igt_plane_set_fb(data->primary[crtc->pipe],
 				 &ref_fb[crtc->pipe]);
 	}

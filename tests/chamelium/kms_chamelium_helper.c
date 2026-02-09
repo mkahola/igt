@@ -153,7 +153,7 @@ igt_output_t *chamelium_prepare_output(chamelium_data_t *data,
 	igt_output_set_crtc(output, NULL);
 
 	pipe = chamelium_get_pipe_for_output(display, output);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	return output;
 }

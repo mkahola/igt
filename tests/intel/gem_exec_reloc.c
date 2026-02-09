@@ -1518,7 +1518,7 @@ static void scanout(int i915,
 	output = igt_get_single_output_for_pipe(dpy, PIPE_A);
 	igt_require(output);
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(output->display, PIPE_A));
+			    igt_crtc_for_pipe(dpy, PIPE_A));
 
 	/*
 	 * Find where the scanout is in our GTT; on !full-ppgtt this will be

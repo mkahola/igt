@@ -143,7 +143,7 @@ get_reference_crc(data_t *data, igt_output_t *output, enum pipe pipe, igt_pipe_c
 	int ret;
 
 	igt_display_reset(&data->display);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	plane[primary->index] = primary;
@@ -213,7 +213,7 @@ prepare_planes(data_t *data, enum pipe pipe_id, color_t *color, igt_plane_t **pl
 	int* suffle;
 
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(output->display, pipe_id));
+			    igt_crtc_for_pipe(&data->display, pipe_id));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	crtc = primary->crtc;
 
