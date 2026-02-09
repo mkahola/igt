@@ -734,12 +734,10 @@ prep_pipe(data_t *data, enum pipe p)
 static void test_setup(data_t *data, enum pipe p)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
 
 	prep_pipe(data, p);
 	igt_require_pipe_crc(data->drm_fd);
-
-	crtc = igt_crtc_for_pipe(display, p);
 	igt_require(crtc->n_planes >= 0);
 
 	data->primary = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
