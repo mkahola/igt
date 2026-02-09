@@ -440,6 +440,7 @@ plane_primary_overlay_mutable_zpos(data_t *data, igt_output_t *output, igt_plane
 static void
 plane_immutable_zpos(data_t *data, igt_output_t *output, enum pipe pipe, int n_planes)
 {
+	igt_display_t *display = &data->display;
 	cairo_t *cr;
 	struct igt_fb fb_ref;
 	drmModeModeInfo *mode;
@@ -479,7 +480,7 @@ plane_immutable_zpos(data_t *data, igt_output_t *output, enum pipe pipe, int n_p
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 	/* create the pipe_crc object for this pipe */
-	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe),
+	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
 	/* get reference crc */
@@ -492,7 +493,7 @@ plane_immutable_zpos(data_t *data, igt_output_t *output, enum pipe pipe, int n_p
 		int zpos;
 		igt_plane_t *temp;
 
-		temp = &igt_crtc_for_pipe(&data->display, pipe)->planes[k];
+		temp = &igt_crtc_for_pipe(display, pipe)->planes[k];
 
 		if (!igt_plane_has_prop(temp, IGT_PLANE_ZPOS))
 			continue;
@@ -671,6 +672,7 @@ static void plane_primary(data_t *data)
  */
 static void test_only(data_t *data, igt_output_t *output, enum pipe pipe, uint32_t format)
 {
+	igt_display_t *display = &data->display;
 	struct igt_fb fb;
 	uint64_t old_plane_values[IGT_NUM_PLANE_PROPS], old_crtc_values[IGT_NUM_CRTC_PROPS];
 	drmModeModeInfo *mode = igt_output_get_mode(output);
@@ -684,7 +686,7 @@ static void test_only(data_t *data, igt_output_t *output, enum pipe pipe, uint32
 			      mode->hdisplay, mode->vdisplay,
 			      format, I915_TILING_NONE, &fb);
 	igt_plane_set_fb(data->primary, &fb);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_TEST_ONLY | DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
@@ -1380,13 +1382,14 @@ static void atomic_plane_damage(data_t *data)
 
 static void atomic_setup(data_t *data, enum pipe pipe, igt_output_t *output)
 {
+	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 	igt_display_reset(&data->display);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
-	data->primary = igt_crtc_get_plane_type(igt_crtc_for_pipe(&data->display, pipe),
+	data->primary = igt_crtc_get_plane_type(igt_crtc_for_pipe(display, pipe),
 						DRM_PLANE_TYPE_PRIMARY);
-	data->crtc = igt_crtc_for_pipe(&data->display, pipe);
+	data->crtc = igt_crtc_for_pipe(display, pipe);
 	mode = igt_output_get_mode(output);
 
 	igt_create_pattern_fb(data->drm_fd,

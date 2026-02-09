@@ -713,18 +713,19 @@ static void test_pipe_limited_range_ctm(data_t *data,
 static void
 prep_pipe(data_t *data, enum pipe p)
 {
+	igt_display_t *display = &data->display;
 	igt_require_pipe(&data->display, p);
 
-	if (igt_crtc_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_DEGAMMA_LUT_SIZE)) {
+	if (igt_crtc_has_prop(igt_crtc_for_pipe(display, p), IGT_CRTC_DEGAMMA_LUT_SIZE)) {
 		data->degamma_lut_size =
-			igt_crtc_get_prop(igt_crtc_for_pipe(&data->display, p),
+			igt_crtc_get_prop(igt_crtc_for_pipe(display, p),
 					      IGT_CRTC_DEGAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->degamma_lut_size);
 	}
 
-	if (igt_crtc_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_GAMMA_LUT_SIZE)) {
+	if (igt_crtc_has_prop(igt_crtc_for_pipe(display, p), IGT_CRTC_GAMMA_LUT_SIZE)) {
 		data->gamma_lut_size =
-			igt_crtc_get_prop(igt_crtc_for_pipe(&data->display, p),
+			igt_crtc_get_prop(igt_crtc_for_pipe(display, p),
 					      IGT_CRTC_GAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->gamma_lut_size);
 	}
@@ -732,12 +733,13 @@ prep_pipe(data_t *data, enum pipe p)
 
 static void test_setup(data_t *data, enum pipe p)
 {
+	igt_display_t *display = &data->display;
 	igt_crtc_t *crtc;
 
 	prep_pipe(data, p);
 	igt_require_pipe_crc(data->drm_fd);
 
-	crtc = igt_crtc_for_pipe(&data->display, p);
+	crtc = igt_crtc_for_pipe(display, p);
 	igt_require(crtc->n_planes >= 0);
 
 	data->primary = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
@@ -845,6 +847,7 @@ run_ctm_tests_for_pipe(data_t *data, enum pipe p,
 static void
 run_deep_color_tests_for_pipe(data_t *data, enum pipe p)
 {
+	igt_display_t *display = &data->display;
 	igt_output_t *output;
 	static const color_t blue_green_blue[] = {
 		{ 0.0, 0.0, 1.0 },
@@ -900,7 +903,7 @@ run_deep_color_tests_for_pipe(data_t *data, enum pipe p)
 		igt_display_reset(&data->display);
 		igt_output_set_prop_value(output, IGT_CONNECTOR_MAX_BPC, 10);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(&data->display, p));
+				    igt_crtc_for_pipe(display, p));
 
 		if (is_intel_device(data->drm_fd) &&
 		    !igt_max_bpc_constraint(&data->display, p, output, 10)) {

@@ -255,6 +255,7 @@ adjust_mode_overflow_vrefresh(data_t *data, drmModeModeInfoPtr mode)
 static void
 test_output(data_t *data)
 {
+	igt_display_t *display = &data->display;
 	igt_output_t *output = data->output;
 	drmModeModeInfo mode;
 	struct igt_fb fb;
@@ -277,7 +278,7 @@ test_output(data_t *data)
 
 	kmstest_unset_all_crtcs(data->drm_fd, data->res);
 
-	crtc_id = igt_crtc_for_pipe(&data->display, data->pipe)->crtc_id;
+	crtc_id = igt_crtc_for_pipe(display, data->pipe)->crtc_id;
 
 	ret = drmModeSetCrtc(data->drm_fd, crtc_id,
 			     fb.fb_id, 0, 0,

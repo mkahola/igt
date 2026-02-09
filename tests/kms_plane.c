@@ -147,10 +147,11 @@ static color_t blue  = { 0.0f, 0.0f, 1.0f };
  */
 static void test_init(data_t *data, enum pipe pipe)
 {
-	igt_require(igt_crtc_for_pipe(&data->display, pipe)->n_planes > 0);
+	igt_display_t *display = &data->display;
+	igt_require(igt_crtc_for_pipe(display, pipe)->n_planes > 0);
 	if (data->pipe_crc)
 		igt_pipe_crc_free(data->pipe_crc);
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe),
+	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 	igt_display_reset(&data->display);
 }
@@ -232,13 +233,14 @@ static void
 test_grab_crc(data_t *data, igt_output_t *output, enum pipe pipe,
 	      color_t *fb_color, unsigned int flags, igt_crc_t *crc /* out */)
 {
+	igt_display_t *display = &data->display;
 	struct igt_fb fb;
 	drmModeModeInfo *mode;
 	igt_plane_t *primary;
 	char *crc_str;
 	int ret;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	primary = igt_output_get_plane(output, 0);
 
@@ -306,6 +308,7 @@ test_plane_position_with_output(data_t *data,
 				igt_crc_t *reference_crc,
 				unsigned int flags)
 {
+	igt_display_t *display = &data->display;
 	rectangle_t rect = { .x = 100, .y = 100, .color = { 0.0, 0.0, 0.0 }};
 	igt_plane_t *primary, *sprite;
 	struct igt_fb primary_fb, sprite_fb;
@@ -315,7 +318,7 @@ test_plane_position_with_output(data_t *data,
 	igt_debug("Testing connector %s using pipe %s plane %d\n", igt_output_name(output),
 		  kmstest_pipe_name(pipe), plane);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	mode = igt_output_get_mode(output);
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
@@ -381,7 +384,8 @@ test_plane_position_with_output(data_t *data,
 static void
 test_plane_position(data_t *data, enum pipe pipe)
 {
-	int n_planes = igt_crtc_for_pipe(&data->display, pipe)->n_planes;
+	igt_display_t *display = &data->display;
+	int n_planes = igt_crtc_for_pipe(display, pipe)->n_planes;
 	igt_output_t *output = data->output;
 	igt_crc_t reference_crc;
 
@@ -446,12 +450,13 @@ test_plane_panning_with_output(data_t *data,
 			       igt_crc_t *ref_crc,
 			       unsigned int flags)
 {
+	igt_display_t *display = &data->display;
 	igt_plane_t *primary;
 	struct igt_fb primary_fb;
 	drmModeModeInfo *mode;
 	igt_crc_t crc;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	mode = igt_output_get_mode(output);
 	primary = igt_output_get_plane(output, 0);
@@ -566,7 +571,8 @@ static const color_t colors_reduced[] = {
 static void set_legacy_lut(data_t *data, enum pipe pipe,
 			   uint16_t mask)
 {
-	igt_crtc_t *crtc = igt_crtc_for_pipe(&data->display, pipe);
+	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeCrtc *drm_crtc;
 	uint16_t *lut;
 	int i, lut_size;
@@ -593,7 +599,8 @@ static void set_legacy_lut(data_t *data, enum pipe pipe,
 static bool set_c8_legacy_lut(data_t *data, enum pipe pipe,
 			      uint16_t mask)
 {
-	igt_crtc_t *crtc = igt_crtc_for_pipe(&data->display, pipe);
+	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeCrtc *drm_crtc;
 	uint16_t *r, *g, *b;
 	int i, lut_size;
@@ -1253,6 +1260,7 @@ static bool skip_plane(data_t *data, igt_plane_t *plane)
 static void
 test_pixel_formats(data_t *data, enum pipe pipe)
 {
+	igt_display_t *display = &data->display;
 	struct igt_fb primary_fb;
 	igt_plane_t *primary;
 	drmModeModeInfo *mode;
@@ -1277,7 +1285,7 @@ test_pixel_formats(data_t *data, enum pipe pipe)
 	igt_create_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
 		      DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR, &primary_fb);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, &primary_fb);
 
@@ -1305,6 +1313,7 @@ test_pixel_formats(data_t *data, enum pipe pipe)
 
 static void test_planar_settings(data_t *data)
 {
+	igt_display_t *display = &data->display;
 	enum pipe pipe = PIPE_A;
 	igt_output_t *output;
 	igt_fb_t fb, fb_ref;
@@ -1330,7 +1339,7 @@ static void test_planar_settings(data_t *data)
 	output = igt_get_single_output_for_pipe(&data->display, pipe);
 	igt_require(output);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
 	igt_display_commit_atomic(&data->display,
@@ -1425,8 +1434,9 @@ static void test_planar_settings(data_t *data)
 						     NULL);
 		if (rval == 0) {
 			set_legacy_lut(data, pipe, LUT_MASK);
-			igt_wait_for_vblank_count(igt_crtc_for_pipe(&data->display, pipe), 1);
-			data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe),
+			igt_wait_for_vblank_count(igt_crtc_for_pipe(display, pipe),
+						  1);
+			data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
 							  IGT_PIPE_CRC_SOURCE_AUTO);
 			igt_pipe_crc_collect_crc(data->pipe_crc, &crc);
 

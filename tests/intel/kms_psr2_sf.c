@@ -396,6 +396,7 @@ static void plane_move_setup_square(data_t *data, igt_fb_t *fb, uint32_t h,
 
 static void prepare(data_t *data)
 {
+	igt_display_t *display = &data->display;
 	igt_output_t *output = data->output;
 	igt_plane_t *primary, *sprite = NULL, *cursor = NULL;
 	int fb_w, fb_h, x, y, view_w, view_h;
@@ -413,7 +414,7 @@ static void prepare(data_t *data)
 	}
 
 	igt_output_set_crtc(output,
-		            igt_crtc_for_pipe(&data->display, data->pipe));
+		            igt_crtc_for_pipe(display, data->pipe));
 
 	if (data->big_fb_test) {
 		fb_w = data->big_fb_width;
@@ -1053,6 +1054,7 @@ static bool sel_fetch_pipe_combo_valid(data_t *data)
 static bool
 pipe_output_combo_valid(data_t *data)
 {
+	igt_display_t *display = &data->display;
 	bool ret = psr_sink_support(data->drm_fd, data->debugfs_fd,
 				    data->psr_mode, data->output);
 	if (!ret)
@@ -1064,7 +1066,8 @@ pipe_output_combo_valid(data_t *data)
 
 	igt_display_reset(&data->display);
 
-	igt_output_set_crtc(data->output, igt_crtc_for_pipe(&data->display, data->pipe));
+	igt_output_set_crtc(data->output,
+			    igt_crtc_for_pipe(display, data->pipe));
 	if (!intel_pipe_output_combo_valid(&data->display))
 		ret = false;
 	igt_output_set_crtc(data->output, NULL);

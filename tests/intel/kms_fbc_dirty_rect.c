@@ -404,12 +404,13 @@ static void cleanup(data_t *data)
 
 static bool prepare_test(data_t *data)
 {
+	igt_display_t *display = &data->display;
 	igt_display_reset(&data->display);
 
 	data->mode = igt_output_get_mode(data->output);
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(&data->display, data->pipe));
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
+			    igt_crtc_for_pipe(display, data->pipe));
+	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_require_f(intel_fbc_supported_on_chipset(data->drm_fd, data->pipe),

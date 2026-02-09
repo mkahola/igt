@@ -100,9 +100,10 @@ drmModeModeInfo mode_2_lanes = {
 static int
 disable_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 {
+	igt_display_t *display = &data->display;
 	igt_plane_t *primary;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	primary = igt_output_get_plane(output, 0);
 	igt_plane_set_fb(primary, NULL);
 	return igt_display_commit(&data->display);
@@ -111,12 +112,13 @@ disable_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 static int
 set_mode_on_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 {
+	igt_display_t *display = &data->display;
 	igt_plane_t *primary;
 	drmModeModeInfo *mode;
 	struct igt_fb fb;
 	int fb_id;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	mode = igt_output_get_mode(output);
 

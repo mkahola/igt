@@ -77,6 +77,7 @@ static void force_output_mode(data_t *d, igt_output_t *output,
 
 static void run_mode_switch_first_last(data_t *data, int num_pipes)
 {
+	igt_display_t *display = &data->display;
 	igt_output_t *output;
 	struct igt_fb *buffer1[MAX_PIPES] = { NULL };
 	struct igt_fb *buffer2[MAX_PIPES] = { NULL };
@@ -113,7 +114,7 @@ static void run_mode_switch_first_last(data_t *data, int num_pipes)
 					    0.f, buffer1[j]);
 		}
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(&data->display, j));
+				    igt_crtc_for_pipe(display, j));
 		force_output_mode(data, output, kmode);
 		igt_plane_set_fb(data->primary[j], buffer1[j]);
 		drmModeFreeConnector(conn);

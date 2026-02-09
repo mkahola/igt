@@ -1039,7 +1039,8 @@ static bool try_config(data_t *data, enum test_fb_flags fb_flags,
 }
 
 static int test_ccs(data_t *data)
-{	int valid_tests = 0;
+{
+	igt_display_t *display = &data->display;	int valid_tests = 0;
 	igt_crc_t crc, ref_crc;
 	enum test_fb_flags fb_flags = 0;
 
@@ -1052,7 +1053,7 @@ static int test_ccs(data_t *data)
 		 IGT_FORMAT_ARGS(data->format), IGT_MODIFIER_ARGS(data->ccs_modifier));
 
 	if (data->flags & TEST_CRC) {
-		data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
+		data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
 						  IGT_PIPE_CRC_SOURCE_AUTO);
 
 		if (try_config(data, fb_flags | FB_COMPRESSED, &ref_crc) &&

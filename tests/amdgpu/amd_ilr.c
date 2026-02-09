@@ -81,6 +81,7 @@ static void set_all_output_pipe_to_none(data_t *data)
 
 static void test_init(data_t *data, igt_output_t *output)
 {
+	igt_display_t *display = &data->display;
 	igt_crtc_t *crtc;
 
 	igt_require(output->config.connector->count_modes >= 1);
@@ -98,7 +99,7 @@ static void test_init(data_t *data, igt_output_t *output)
 
 	igt_require(data->pipe_id != PIPE_NONE);
 
-	data->crtc = igt_crtc_for_pipe(&data->display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
 
 	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  AMDGPU_PIPE_CRC_SOURCE_DPRX);

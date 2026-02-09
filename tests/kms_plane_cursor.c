@@ -93,8 +93,9 @@ typedef struct data {
 static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 		      unsigned int flags)
 {
+	igt_display_t *display = &data->display;
 	data->pipe_id = pipe_id;
-	data->crtc = igt_crtc_for_pipe(&data->display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
 	data->output = output;
 
 	data->mode = igt_output_get_mode(data->output);
@@ -144,6 +145,7 @@ static void test_fini(data_t *data)
  */
 static void test_cursor_pos(data_t *data, int x, int y, unsigned int flags)
 {
+	igt_display_t *display = &data->display;
 	igt_crc_t ref_crc, test_crc;
 	cairo_t *cr;
 	igt_fb_t *ref_fb = &data->ref_fb;
@@ -191,7 +193,7 @@ static void test_cursor_pos(data_t *data, int x, int y, unsigned int flags)
 	/* Wait for one more vblank since cursor updates are not
 	 * synchronized to the same frame on AMD hw */
 	if(is_amdgpu_device(data->drm_fd))
-		igt_wait_for_vblank_count(igt_crtc_for_pipe(&data->display, data->pipe_id),
+		igt_wait_for_vblank_count(igt_crtc_for_pipe(display, data->pipe_id),
 					  1);
 
 	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, &test_crc);
@@ -251,6 +253,7 @@ static void test_cleanup(data_t *data)
 
 static void test_cursor(data_t *data, int size, unsigned int flags)
 {
+	igt_display_t *display = &data->display;
 	int sw, sh;
 	int pad = 128;
 
@@ -280,7 +283,7 @@ static void test_cursor(data_t *data, int size, unsigned int flags)
 
 	igt_plane_set_fb(data->primary, &data->pfb);
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(&data->display, data->pipe_id));
+			    igt_crtc_for_pipe(display, data->pipe_id));
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 	test_cursor_spots(data, size, flags);

@@ -459,6 +459,7 @@ static bool run_lt_fallback_test(data_t *data)
 
 static void test_dsc_sst_fallback(data_t *data)
 {
+	igt_display_t *display = &data->display;
 	bool non_dsc_mode_found = false;
 	bool dsc_fallback_successful = false;
 	int ret;
@@ -483,7 +484,7 @@ static void test_dsc_sst_fallback(data_t *data)
 				    &data->fb);
 		igt_output_override_mode(data->output, data->mode);
 		igt_output_set_crtc(data->output,
-				    igt_crtc_for_pipe(&data->display, data->pipe));
+				    igt_crtc_for_pipe(display, data->pipe));
 		data->primary = igt_output_get_plane_type(data->output,
 						DRM_PLANE_TYPE_PRIMARY);
 		igt_plane_set_fb(data->primary, &data->fb);

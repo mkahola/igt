@@ -40,10 +40,11 @@ typedef struct {
 
 static bool pipe_output_combo_valid(data_t *data, enum pipe pipe)
 {
+	igt_display_t *display = &data->display;
 	bool ret = true;
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(&data->display, pipe));
+			    igt_crtc_for_pipe(display, pipe));
 	if (!intel_pipe_output_combo_valid(&data->display))
 		ret = false;
 	igt_output_set_crtc(data->output, NULL);
@@ -53,14 +54,16 @@ static bool pipe_output_combo_valid(data_t *data, enum pipe pipe)
 
 static void set_filter_strength_on_pipe(data_t *data)
 {
-	igt_crtc_set_prop_value(igt_crtc_for_pipe(&data->display, data->pipe_id),
+	igt_display_t *display = &data->display;
+	igt_crtc_set_prop_value(igt_crtc_for_pipe(display, data->pipe_id),
 				    IGT_CRTC_SHARPNESS_STRENGTH,
 				    data->filter_strength);
 }
 
 static void reset_filter_strength_on_pipe(data_t *data)
 {
-	igt_crtc_set_prop_value(igt_crtc_for_pipe(&data->display, data->pipe_id),
+	igt_display_t *display = &data->display;
+	igt_crtc_set_prop_value(igt_crtc_for_pipe(display, data->pipe_id),
 				    IGT_CRTC_SHARPNESS_STRENGTH, 0);
 }
 
@@ -111,13 +114,14 @@ static void cleanup(data_t *data)
 static void test_t(data_t *data, igt_plane_t *primary,
 		   struct chamelium_port *port)
 {
+	igt_display_t *display = &data->display;
 	struct chamelium_frame_dump *frame[4];
 	drmModeModeInfo *mode;
 	int height, width;
 	bool match[4], match_ok = false;
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(&data->display, data->pipe_id));
+			    igt_crtc_for_pipe(display, data->pipe_id));
 
 	mode = igt_output_get_mode(data->output);
 	height = mode->hdisplay;
@@ -177,12 +181,13 @@ static void test_t(data_t *data, igt_plane_t *primary,
 
 static int test_setup(data_t *data, enum pipe p)
 {
+	igt_display_t *display = &data->display;
 	igt_crtc_t *crtc;
 	int i = 0;
 
 	igt_display_reset(&data->display);
 
-	crtc = igt_crtc_for_pipe(&data->display, p);
+	crtc = igt_crtc_for_pipe(display, p);
 	igt_require(crtc->n_planes >= 0);
 
 	data->primary = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
@@ -216,10 +221,11 @@ static int test_setup(data_t *data, enum pipe p)
 
 static void test_sharpness_filter(data_t *data,  enum pipe p)
 {
+	igt_display_t *display = &data->display;
 	int port_idx = test_setup(data, p);
 
 	igt_require(port_idx >= 0);
-	igt_require(igt_crtc_has_prop(igt_crtc_for_pipe(&data->display, p), IGT_CRTC_SHARPNESS_STRENGTH));
+	igt_require(igt_crtc_has_prop(igt_crtc_for_pipe(display, p), IGT_CRTC_SHARPNESS_STRENGTH));
 
 	if (!pipe_output_combo_valid(data, p))
 		return;

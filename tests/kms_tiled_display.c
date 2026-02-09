@@ -213,6 +213,7 @@ static int mode_linetime_us(const drmModeModeInfo *mode)
 
 static void setup_mode(data_t *data)
 {
+	igt_display_t *display = &data->display;
 	int count = 0, prev = 0, i = 0;
 	bool pipe_in_use = false, found = false;
 	igt_crtc_t *crtc;
@@ -251,7 +252,7 @@ static void setup_mode(data_t *data)
 				conns[count].output = output;
 
 				igt_output_set_crtc(conns[count].output,
-						    igt_crtc_for_pipe(&data->display, conns[count].pipe));
+						    igt_crtc_for_pipe(display, conns[count].pipe));
 				break;
 			}
 		}
@@ -325,10 +326,11 @@ static void setup_framebuffer(data_t *data)
 
 static data_connector_t *conn_for_crtc(data_t *data, unsigned int crtc_id)
 {
+	igt_display_t *display = &data->display;
 	for (int i = 0; i < data->num_h_tiles; i++) {
 		data_connector_t *conn = &data->conns[i];
 
-		if (igt_crtc_for_pipe(&data->display, conn->pipe)->crtc_id == crtc_id)
+		if (igt_crtc_for_pipe(display, conn->pipe)->crtc_id == crtc_id)
 			return conn;
 	}
 

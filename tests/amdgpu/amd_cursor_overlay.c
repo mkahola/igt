@@ -134,6 +134,7 @@ static bool can_support_all_overlay_planes(int available_overlay_planes, int fam
 static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 		      unsigned int flags, int available_overlay_planes)
 {
+	igt_display_t *display = &data->display;
 	int i;
 
 	data->pipe_id = pipe_id;
@@ -161,7 +162,7 @@ static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 		 kmstest_pipe_name(data->pipe_id), igt_output_name(data->output));
 
 	igt_require_pipe_crc(data->drm_fd);
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe_id),
+	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe_id),
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 }
 
@@ -200,6 +201,7 @@ static void test_cleanup(data_t *data)
 
 static void test_cursor_pos(data_t *data, int x, int y, unsigned int flags)
 {
+	igt_display_t *display = &data->display;
 	igt_crc_t ref_crc, test_crc;
 	cairo_t *cr;
 	igt_fb_t *rgb_fb = &data->rgb_fb;
@@ -295,7 +297,8 @@ static void test_cursor_pos(data_t *data, int x, int y, unsigned int flags)
 	 * synchronized to the same frame on AMD hw.
 	 */
 	if(is_amdgpu_device(data->drm_fd))
-		igt_wait_for_vblank_count(igt_crtc_for_pipe(&data->display, data->pipe_id), 1);
+		igt_wait_for_vblank_count(igt_crtc_for_pipe(display, data->pipe_id),
+					  1);
 
 	/* Record the new CRC. */
 	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, &test_crc);
@@ -342,6 +345,7 @@ static void test_cursor_spots(data_t *data, int size, unsigned int flags)
 
 static void test_cursor(data_t *data, int size, unsigned int flags, unsigned int scaling_factor)
 {
+	igt_display_t *display = &data->display;
 	int sw, sh;
 
 	igt_skip_on(size > data->max_curw || size > data->max_curh);
@@ -390,7 +394,7 @@ static void test_cursor(data_t *data, int size, unsigned int flags, unsigned int
 	}
 
 	igt_output_set_crtc(data->output,
-		igt_crtc_for_pipe(&data->display, data->pipe_id));
+		igt_crtc_for_pipe(display, data->pipe_id));
 
 	/* Run the test for different cursor spots. */
 	test_cursor_spots(data, size, flags);

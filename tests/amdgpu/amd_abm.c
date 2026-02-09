@@ -252,6 +252,7 @@ static int backlight_write_brightness(int value)
 
 static void set_abm_level(data_t *data, igt_output_t *output, int level)
 {
+	igt_display_t *display = &data->display;
 	char buf[PATH_MAX];
 	int fd;
 
@@ -268,7 +269,7 @@ static void set_abm_level(data_t *data, igt_output_t *output, int level)
 	igt_assert_eq(close(fd), 0);
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(&data->display, data->pipe_id));
+			    igt_crtc_for_pipe(display, data->pipe_id));
 	igt_plane_set_fb(data->primary, &data->ref_fb);
 	igt_display_commit_atomic(&data->display, 0, 0);
 }

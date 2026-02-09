@@ -74,7 +74,8 @@ typedef struct {
 /* Prepare test data. */
 static void prepare_test(data_t *data, igt_output_t *output, enum pipe p)
 {
-	igt_crtc_t *crtc = igt_crtc_for_pipe(&data->display, p);
+	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
 
 	igt_assert(crtc);
 

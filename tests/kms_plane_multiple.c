@@ -107,7 +107,8 @@ struct {
  */
 static void test_init(data_t *data, enum pipe pipe, int n_planes)
 {
-	data->pipe_crc1 = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe),
+	igt_display_t *display = &data->display;
+	data->pipe_crc1 = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
 					   IGT_PIPE_CRC_SOURCE_AUTO);
 
 	data->plane1 = calloc(n_planes, sizeof(*data->plane1));
@@ -138,12 +139,13 @@ static void
 get_reference_crc(data_t *data, igt_output_t *output, enum pipe pipe, igt_pipe_crc_t *pipe_crc,
 	      color_t *color, igt_plane_t **plane, uint64_t modifier, igt_crc_t *ref_crc)
 {
+	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 	igt_plane_t *primary;
 	int ret;
 
 	igt_display_reset(&data->display);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	plane[primary->index] = primary;
@@ -203,6 +205,7 @@ static void
 prepare_planes(data_t *data, enum pipe pipe_id, color_t *color, igt_plane_t **plane,
 	       uint64_t modifier, int max_planes, igt_output_t *output, igt_fb_t *fb)
 {
+	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 	igt_crtc_t *crtc;
 	igt_plane_t *primary;
@@ -213,7 +216,7 @@ prepare_planes(data_t *data, enum pipe pipe_id, color_t *color, igt_plane_t **pl
 	int* suffle;
 
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(&data->display, pipe_id));
+			    igt_crtc_for_pipe(display, pipe_id));
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	crtc = primary->crtc;
 
@@ -407,8 +410,9 @@ test_plane_position_with_output(data_t *data, enum pipe pipe,
 static void
 test_plane_position(data_t *data, enum pipe pipe, igt_output_t *output, uint64_t modifier)
 {
+	igt_display_t *display = &data->display;
 	int n_planes = opt.all_planes ?
-			igt_crtc_for_pipe(&data->display, pipe)->n_planes : DEFAULT_N_PLANES;
+			igt_crtc_for_pipe(display, pipe)->n_planes : DEFAULT_N_PLANES;
 
 	if (!opt.user_seed)
 		opt.seed = time(NULL);
@@ -421,9 +425,10 @@ test_plane_position(data_t *data, enum pipe pipe, igt_output_t *output, uint64_t
 
 static void test_init_2_display(data_t *data, enum pipe pipe1, enum pipe pipe2, int n_planes)
 {
-	data->pipe_crc1 = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe1),
+	igt_display_t *display = &data->display;
+	data->pipe_crc1 = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe1),
 					   IGT_PIPE_CRC_SOURCE_AUTO);
-	data->pipe_crc2 = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe2),
+	data->pipe_crc2 = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe2),
 					   IGT_PIPE_CRC_SOURCE_AUTO);
 
 	data->plane1 = calloc(n_planes, sizeof(*data->plane1));
@@ -466,10 +471,11 @@ static void test_plane_position_2_display(data_t *data, enum pipe pipe1, enum pi
 					  igt_output_t *output1, igt_output_t *output2,
 					  uint64_t modifier)
 {
+	igt_display_t *display = &data->display;
 	color_t blue  = { 0.0f, 0.0f, 1.0f };
 	igt_crc_t crc1, crc2;
 	int n_planes = opt.all_planes ?
-		       igt_crtc_for_pipe(&data->display, 0)->n_planes : DEFAULT_N_PLANES;
+		       igt_crtc_for_pipe(display, 0)->n_planes : DEFAULT_N_PLANES;
 
 	/*
 	 * Note: We could use the dynamic way of calculating the maximum planes here

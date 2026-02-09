@@ -94,12 +94,13 @@ static void
 functional_test_init(functional_test_t *test, igt_output_t *output, enum pipe pipe)
 {
 	data_t *data = test->data;
+	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 
-	test->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe),
+	test->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	mode = igt_output_get_mode(output);
 	igt_create_color_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
@@ -347,9 +348,10 @@ static void
 sanity_test_init(sanity_test_t *test, igt_output_t *output, enum pipe pipe)
 {
 	data_t *data = test->data;
+	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	mode = igt_output_get_mode(output);
 	igt_create_color_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
@@ -396,13 +398,14 @@ sanity_test_fini(sanity_test_t *test, igt_output_t *output)
 static void
 sanity_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 {
+	igt_display_t *display = &data->display;
 	sanity_test_t test = { .data = data };
 	igt_plane_t *primary;
 	drmModeModeInfo *mode;
 	int i, ret;
 	int expect = 0;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	mode = igt_output_get_mode(output);
 
 	sanity_test_init(&test, output, pipe);
@@ -490,9 +493,10 @@ static void
 pageflip_test_init(pageflip_test_t *test, igt_output_t *output, enum pipe pipe)
 {
 	data_t *data = test->data;
+	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	mode = igt_output_get_mode(output);
 	igt_create_color_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
@@ -520,6 +524,7 @@ pageflip_test_fini(pageflip_test_t *test, igt_output_t *output)
 static void
 pageflip_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 {
+	igt_display_t *display = &data->display;
 	pageflip_test_t test = { .data = data };
 	igt_plane_t *primary;
 	struct timeval timeout = { .tv_sec = 0, .tv_usec = 500 };
@@ -528,7 +533,7 @@ pageflip_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	fd_set fds;
 	int ret = 0;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	pageflip_test_init(&test, output, pipe);
 
@@ -550,7 +555,7 @@ pageflip_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	 * Note that crtc->primary->fb = NULL causes flip to return EBUSY for
 	 * historical reasons...
 	 */
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	igt_assert(drmModePageFlip(data->drm_fd, output->config.crtc->crtc_id,
 				   test.red_fb.fb_id, 0, NULL) == -EBUSY);
 
@@ -565,7 +570,7 @@ pageflip_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	 * completes, which we don't have a good way to specifically test for,
 	 * but at least we can make sure that nothing blows up.
 	 */
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 	igt_assert(drmModePageFlip(data->drm_fd, output->config.crtc->crtc_id,
 				   test.red_fb.fb_id, DRM_MODE_PAGE_FLIP_EVENT,
@@ -725,9 +730,10 @@ static void
 gen9_test_init(gen9_test_t *test, igt_output_t *output, enum pipe pipe)
 {
 	data_t *data = test->data;
+	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	mode = igt_output_get_mode(output);
 	test->w = mode->hdisplay / 2;
@@ -773,12 +779,13 @@ gen9_test_fini(gen9_test_t *test, igt_output_t *output)
 static void
 pageflip_win_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 {
+	igt_display_t *display = &data->display;
 	gen9_test_t test = { .data = data };
 	igt_plane_t *primary;
 
 	int ret = 0;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	gen9_test_init(&test, output, pipe);
 

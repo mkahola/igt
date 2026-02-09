@@ -1166,6 +1166,7 @@ static void test_scaler_with_multi_pipe_plane(data_t *d)
 
 static void invalid_parameter_tests(data_t *d)
 {
+	igt_display_t *display = &d->display;
 	enum pipe pipe = PIPE_A;
 	igt_output_t *output;
 	igt_fb_t fb;
@@ -1190,7 +1191,7 @@ static void invalid_parameter_tests(data_t *d)
 		igt_require(output);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(&d->display, pipe));
+				    igt_crtc_for_pipe(display, pipe));
 		plane = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
 		igt_require(get_num_scalers(&d->display, pipe) >= 1);
@@ -1280,6 +1281,7 @@ static drmModeModeInfo *find_mode(data_t *data, igt_output_t *output, const stru
 static void intel_max_source_size_test(data_t *d, enum pipe pipe, igt_output_t *output,
 				       const struct invalid_paramtests *param)
 {
+	igt_display_t *display = &d->display;
 	igt_fb_t fb;
 	igt_plane_t *plane;
 	int rval;
@@ -1287,7 +1289,7 @@ static void intel_max_source_size_test(data_t *d, enum pipe pipe, igt_output_t *
 
 	cleanup_crtc(d);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&d->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	/*
 	 * Need to get the mode again, because it may have changed

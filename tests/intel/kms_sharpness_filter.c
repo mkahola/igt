@@ -173,7 +173,8 @@ typedef struct {
 
 static void set_filter_strength_on_pipe(data_t *data)
 {
-	igt_crtc_set_prop_value(igt_crtc_for_pipe(&data->display, data->pipe_id),
+	igt_display_t *display = &data->display;
+	igt_crtc_set_prop_value(igt_crtc_for_pipe(display, data->pipe_id),
 				    IGT_CRTC_SHARPNESS_STRENGTH,
 				    data->filter_strength);
 }
@@ -330,6 +331,7 @@ static int test_filter_toggle(data_t *data)
 
 static void test_sharpness_filter(data_t *data,  enum test_type type)
 {
+	igt_display_t *display = &data->display;
 	igt_output_t *output = data->output;
 	drmModeModeInfo *mode = data->mode;
 	int height = mode->hdisplay;
@@ -370,7 +372,7 @@ static void test_sharpness_filter(data_t *data,  enum test_type type)
 		ret = igt_display_try_commit2(&data->display, COMMIT_ATOMIC);
 
 	if (type == TEST_FILTER_DPMS || type == TEST_FILTER_SUSPEND) {
-		pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe_id),
+		pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe_id),
 					    IGT_PIPE_CRC_SOURCE_AUTO);
 		igt_pipe_crc_collect_crc(pipe_crc, &ref_crc);
 	}

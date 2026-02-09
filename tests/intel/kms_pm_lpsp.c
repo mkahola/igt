@@ -153,11 +153,12 @@ static void test_cleanup(data_t *data)
 
 static bool test_constraint(data_t *data)
 {
+	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 
 	igt_display_reset(&data->display);
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(&data->display, data->pipe));
+			    igt_crtc_for_pipe(display, data->pipe));
 
 	mode = igt_output_get_mode(data->output);
 

@@ -682,7 +682,8 @@ static void free_fbs(data_t *data)
 
 static void set_lut(data_t *data, enum pipe pipe)
 {
-	igt_crtc_t *crtc = igt_crtc_for_pipe(&data->display, pipe);
+	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	struct drm_color_lut *lut;
 	drmModeCrtc *drm_crtc;
 	int i, lut_size;
@@ -714,7 +715,8 @@ static void set_lut(data_t *data, enum pipe pipe)
 
 static void clear_lut(data_t *data, enum pipe pipe)
 {
-	igt_crtc_t *crtc = igt_crtc_for_pipe(&data->display, pipe);
+	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 
 	igt_crtc_set_prop_value(crtc, IGT_CRTC_GAMMA_LUT, 0);
 }
@@ -723,6 +725,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 				enum pipe pipe, igt_output_t *output,
 				drmModeModeInfoPtr modetoset, int flags)
 {
+	igt_display_t *display = &data->display;
 	igt_plane_t *primary;
 	igt_crc_t small_crc, big_crc;
 	struct drm_event_vblank ev;
@@ -756,7 +759,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 	if (modetoset)
 		igt_output_override_mode(output, modetoset);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(&data->display, pipe));
+	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
@@ -780,7 +783,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 		igt_pipe_crc_stop(data->pipe_crc);
 		igt_pipe_crc_free(data->pipe_crc);
 	}
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, pipe),
+	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_plane_set_position(primary, 0, 0);

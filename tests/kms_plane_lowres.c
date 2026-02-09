@@ -289,6 +289,7 @@ static void test_cleanup(data_t *data)
 
 static void run_test(data_t *data, uint64_t modifier)
 {
+	igt_display_t *display = &data->display;
 	igt_crtc_t *crtc;
 	igt_output_t *output;
 
@@ -303,12 +304,12 @@ static void run_test(data_t *data, uint64_t modifier)
 
 			igt_display_reset(&data->display);
 			igt_output_set_crtc(data->output,
-					    igt_crtc_for_pipe(&data->display, data->pipe));
+					    igt_crtc_for_pipe(display, data->pipe));
 
 			if (!intel_pipe_output_combo_valid(&data->display))
 				continue;
 
-			data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, data->pipe),
+			data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
 							  IGT_PIPE_CRC_SOURCE_AUTO);
 
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),

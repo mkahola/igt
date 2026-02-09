@@ -292,6 +292,7 @@ static void require_overlay_flip_support(data_t *data)
 
 static void test_init(data_t *data)
 {
+	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 
 	igt_display_reset(&data->display);
@@ -299,11 +300,11 @@ static void test_init(data_t *data)
 
 	mode = igt_output_get_mode(data->output);
 
-	data->crtc_id = igt_crtc_for_pipe(&data->display, data->pipe)->crtc_id;
+	data->crtc_id = igt_crtc_for_pipe(display, data->pipe)->crtc_id;
 	data->refresh_rate = mode->vrefresh;
 
 	igt_output_set_crtc(data->output,
-		            igt_crtc_for_pipe(&data->display, data->pipe));
+		            igt_crtc_for_pipe(display, data->pipe));
 
 	data->plane = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
 	if (data->overlay_path)
@@ -827,6 +828,7 @@ static void paint_fb(data_t *data, struct igt_fb *fb,
 
 static void test_crc(data_t *data)
 {
+	igt_display_t *display = &data->display;
 	unsigned int frame = 0;
 	unsigned int start;
 	int ret, width, height;
@@ -850,7 +852,7 @@ static void test_crc(data_t *data)
 			     &data->output->config.connector->connector_id, 1, mode);
 	igt_assert_eq(ret, 0);
 
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&data->display, kmstest_get_crtc_index_from_id(data->drm_fd, data->crtc_id)),
+	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, kmstest_get_crtc_index_from_id(data->drm_fd, data->crtc_id)),
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_pipe_crc_start(data->pipe_crc);

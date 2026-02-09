@@ -209,12 +209,13 @@ static void cursor_enable(data_t *data)
 
 static void cursor_disable(data_t *data)
 {
+	igt_display_t *display = &data->display;
 	igt_plane_set_fb(data->cursor, NULL);
 	igt_plane_set_position(data->cursor, 0, 0);
 	igt_display_commit(&data->display);
 
 	/* do this wait here so it will not need to be added everywhere */
-	igt_wait_for_vblank_count(igt_crtc_for_pipe(&data->display, data->pipe),
+	igt_wait_for_vblank_count(igt_crtc_for_pipe(display, data->pipe),
 				  data->vblank_wait_count);
 }
 
@@ -719,6 +720,7 @@ static void do_timed_cursor_fb_pos_change(data_t *data, enum cursor_change chang
 
 static void timed_cursor_changes(data_t *data, void (changefunc)(data_t *, enum cursor_change))
 {
+	igt_display_t *display = &data->display;
 	igt_crc_t crc1, crc2;
 
 	/* Legacy cursor API does not guarantee that the cursor update happens at vBlank.
@@ -733,7 +735,7 @@ static void timed_cursor_changes(data_t *data, void (changefunc)(data_t *, enum 
 	igt_display_commit(&data->display);
 
 	/* Extra vblank wait is because nonblocking cursor ioctl */
-	igt_wait_for_vblank_count(igt_crtc_for_pipe(&data->display, data->pipe),
+	igt_wait_for_vblank_count(igt_crtc_for_pipe(display, data->pipe),
 				  data->vblank_wait_count);
 
 	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, &crc1);
