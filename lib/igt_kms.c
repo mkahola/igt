@@ -3062,10 +3062,8 @@ static void igt_crtc_plane_init(igt_display_t *display,
 	igt_fill_plane_format_mod(display, plane);
 }
 
-static void igt_crtc_init(igt_display_t *display,
-			  drmModeRes *resources, int i)
+static void igt_crtc_init(igt_display_t *display, drmModeRes *resources, igt_crtc_t *crtc)
 {
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, i);
 	int crtc_mask;
 	int j;
 
@@ -3214,7 +3212,7 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 	display->n_colorops = 0;
 
 	for_each_crtc(display, crtc)
-		igt_crtc_init(display, resources, crtc->pipe);
+		igt_crtc_init(display, resources, crtc);
 
 	drmModeFreeResources(resources);
 
