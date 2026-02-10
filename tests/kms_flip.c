@@ -267,7 +267,7 @@
 #define DRM_CAP_TIMESTAMP_MONOTONIC 6
 #endif
 
-static bool all_pipes = false;
+static bool all_crtcs = false;
 
 drmModeRes *resources;
 int drm_fd;
@@ -382,10 +382,10 @@ struct test_output {
 	drmModeConnector *kconnector[4];
 	uint32_t _connector[4];
 	uint32_t _crtc[4];
-	int _pipe[4];
+	int _crtc_index[4];
 	int count; /* 1:1 mapping between crtc:connector */
 	int flags;
-	int pipe; /* primary pipe for vblank */
+	int crtc_index; /* primary CRTC index for vblank */
 	unsigned int current_fb_id;
 	unsigned int fb_width;
 	unsigned int fb_height;
@@ -528,13 +528,11 @@ static int __wait_for_vblank(unsigned int flags, int crtc_idx,
 {
 	drmVBlank wait_vbl;
 	int ret;
-	uint32_t pipe_id_flag;
 	bool event = !(flags & TEST_VBLANK_BLOCK);
 
 	memset(&wait_vbl, 0, sizeof(wait_vbl));
-	pipe_id_flag = kmstest_get_vbl_flag(crtc_idx);
 
-	wait_vbl.request.type = pipe_id_flag;
+	wait_vbl.request.type = kmstest_get_vbl_flag(crtc_idx);
 	if (flags & TEST_VBLANK_ABSOLUTE)
 		wait_vbl.request.type |= DRM_VBLANK_ABSOLUTE;
 	else
@@ -557,7 +555,7 @@ static int __wait_for_vblank(unsigned int flags, int crtc_idx,
 	return ret;
 }
 
-static int do_wait_for_vblank(struct test_output *o, int pipe_id,
+static int do_wait_for_vblank(struct test_output *o, int crtc_index,
 			      int target_seq, struct vblank_reply *reply)
 {
 	int ret;
@@ -567,7 +565,7 @@ static int do_wait_for_vblank(struct test_output *o, int pipe_id,
 	if (!(o->vblank_state.count > 0))
 		flags &= ~TEST_VBLANK_ABSOLUTE;
 
-	ret = __wait_for_vblank(flags, pipe_id, target_seq, (unsigned long)o,
+	ret = __wait_for_vblank(flags, crtc_index, target_seq, (unsigned long)o,
 				reply);
 	if (ret == 0 && !(o->flags & TEST_VBLANK_BLOCK))
 		set_flag(&o->pending_events, EVENT_VBLANK);
@@ -637,7 +635,7 @@ static void *vblank_wait_thread_func(void *data)
 
 	for (i = 0; i < 32; i++) {
 		unsigned long start = gettime_us();
-		__wait_for_vblank(TEST_VBLANK_BLOCK, o->pipe, 20, (unsigned long)o, &reply);
+		__wait_for_vblank(TEST_VBLANK_BLOCK, o->crtc_index, 20, (unsigned long)o, &reply);
 		if (gettime_us() - start > 2 * mode_frame_time(o))
 			return (void*)1;
 	}
@@ -864,7 +862,7 @@ static int set_mode(struct test_output *o, uint32_t fb, int x, int y)
 			return ret;
 
 		if (is_intel_device(drm_fd))
-			intel_drrs_disable(drm_fd, o->pipe);
+			intel_drrs_disable(drm_fd, o->crtc_index);
 	}
 
 	return 0;
@@ -921,7 +919,7 @@ static bool run_test_step(struct test_output *o, unsigned int *events)
 		exp_seq = o->flip_state.current_seq;
 		start = gettime_us();
 		do_or_die(__wait_for_vblank(TEST_VBLANK_ABSOLUTE |
-					    TEST_VBLANK_BLOCK, o->pipe, exp_seq,
+					    TEST_VBLANK_BLOCK, o->crtc_index, exp_seq,
 					    0, &reply));
 		end = gettime_us();
 		igt_debug("Vblank took %luus\n", end - start);
@@ -944,7 +942,7 @@ static bool run_test_step(struct test_output *o, unsigned int *events)
 		igt_assert_eq(do_page_flip(o, new_fb_id, false), expected_einval);
 
 	if (do_vblank && (o->flags & TEST_EINVAL) && o->vblank_state.count > 0)
-		igt_assert_eq(do_wait_for_vblank(o, o->pipe, target_seq, &vbl_reply), -EINVAL);
+		igt_assert_eq(do_wait_for_vblank(o, o->crtc_index, target_seq, &vbl_reply), -EINVAL);
 
 	if (o->flags & TEST_VBLANK_RACE) {
 		spawn_vblank_wait_thread(o);
@@ -970,7 +968,7 @@ static bool run_test_step(struct test_output *o, unsigned int *events)
 
 		/* modeset/DPMS is done, vblank wait should work normally now */
 		start = gettime_us();
-		igt_assert(__wait_for_vblank(TEST_VBLANK_BLOCK, o->pipe, 2, 0, &reply) == 0);
+		igt_assert(__wait_for_vblank(TEST_VBLANK_BLOCK, o->crtc_index, 2, 0, &reply) == 0);
 		end = gettime_us();
 
 		if (!should_skip_ts_checks()) {
@@ -1003,7 +1001,7 @@ static bool run_test_step(struct test_output *o, unsigned int *events)
 	/* try to make sure we can issue two flips during the same frame */
 	if (do_flip && (o->flags & TEST_EBUSY)) {
 		struct vblank_reply reply;
-		igt_assert(__wait_for_vblank(TEST_VBLANK_BLOCK, o->pipe, 1, 0, &reply) == 0);
+		igt_assert(__wait_for_vblank(TEST_VBLANK_BLOCK, o->crtc_index, 1, 0, &reply) == 0);
 	}
 
 	if (do_flip)
@@ -1013,7 +1011,7 @@ static bool run_test_step(struct test_output *o, unsigned int *events)
 		emit_fence_stress(o);
 
 	if (do_vblank) {
-		do_or_die(do_wait_for_vblank(o, o->pipe, target_seq,
+		do_or_die(do_wait_for_vblank(o, o->crtc_index, target_seq,
 					     &vbl_reply));
 		if (o->flags & TEST_VBLANK_BLOCK) {
 			event_handler(&o->vblank_state, vbl_reply.sequence,
@@ -1061,7 +1059,7 @@ static bool run_test_step(struct test_output *o, unsigned int *events)
 					      SUSPEND_TEST_NONE);
 
 	if (do_vblank && (o->flags & TEST_EINVAL) && o->vblank_state.count > 0)
-		igt_assert(do_wait_for_vblank(o, o->pipe, target_seq, &vbl_reply)
+		igt_assert(do_wait_for_vblank(o, o->crtc_index, target_seq, &vbl_reply)
 			   == -EINVAL);
 
 	if (do_flip && (o->flags & TEST_EINVAL))
@@ -1104,11 +1102,11 @@ static void connector_find_preferred_mode(uint32_t connector_id, int crtc_idx,
 		return;
 	}
 
-	o->pipe = config.crtc_index;
+	o->crtc_index = config.crtc_index;
 	o->kconnector[0] = config.connector;
 	o->kencoder[0] = config.encoder;
 	o->_crtc[0] = config.crtc->crtc_id;
-	o->_pipe[0] = config.crtc_index;
+	o->_crtc_index[0] = config.crtc_index;
 	o->kmode[0] = config.default_mode;
 	o->mode_valid = 1;
 
@@ -1178,20 +1176,20 @@ static void connector_find_compatible_mode(int crtc_idx0, int crtc_idx1,
 	o->mode_valid = get_compatible_modes(&mode[0], &mode[1],
 					     config[0].connector, config[1].connector);
 
-	o->pipe = config[0].crtc_index;
+	o->crtc_index = config[0].crtc_index;
 	o->fb_width = mode[0].hdisplay;
 	o->fb_height = mode[0].vdisplay;
 
 	o->kconnector[0] = config[0].connector;
 	o->kencoder[0] = config[0].encoder;
 	o->_crtc[0] = config[0].crtc->crtc_id;
-	o->_pipe[0] = config[0].crtc_index;
+	o->_crtc_index[0] = config[0].crtc_index;
 	o->kmode[0] = mode[0];
 
 	o->kconnector[1] = config[1].connector;
 	o->kencoder[1] = config[1].encoder;
 	o->_crtc[1] = config[1].crtc->crtc_id;
-	o->_pipe[1] = config[1].crtc_index;
+	o->_crtc_index[1] = config[1].crtc_index;
 	o->kmode[1] = mode[1];
 
 	drmModeFreeCrtc(config[0].crtc);
@@ -1748,7 +1746,7 @@ static void run_test_on_crtc_set(struct test_output *o, int *crtc_idxs,
 			return;
 		snprintf(test_name, sizeof(test_name),
 			 "%s-%s%d",
-			 kmstest_pipe_name(o->_pipe[0]),
+			 kmstest_pipe_name(o->_crtc_index[0]),
 			 kmstest_connector_type_str(o->kconnector[0]->connector_type),
 			 o->kconnector[0]->connector_type_id);
 		break;
@@ -1758,8 +1756,8 @@ static void run_test_on_crtc_set(struct test_output *o, int *crtc_idxs,
 			return;
 		snprintf(test_name, sizeof(test_name),
 			 "%s%s-%s%d-%s%d",
-			 kmstest_pipe_name(o->_pipe[0]),
-			 kmstest_pipe_name(o->_pipe[1]),
+			 kmstest_pipe_name(o->_crtc_index[0]),
+			 kmstest_pipe_name(o->_crtc_index[1]),
 			 kmstest_connector_type_str(o->kconnector[0]->connector_type),
 			 o->kconnector[0]->connector_type_id,
 			 kmstest_connector_type_str(o->kconnector[1]->connector_type),
@@ -1842,7 +1840,7 @@ static void run_test(int duration, int flags)
 	for (i = 0; i < resources->count_connectors; i++) {
 		for (n = 0; n < resources->count_crtcs; n++) {
 			/* Limit the execution to 2 CRTCs (first & last) for hang tests */
-			if ((flags & TEST_HANG) && !all_pipes &&
+			if ((flags & TEST_HANG) && !all_crtcs &&
 			    n != 0 && n != (resources->count_crtcs - 1))
 				continue;
 
@@ -1874,7 +1872,7 @@ static void run_test(int duration, int flags)
 			int crtc_idx;
 
 			/* Limit the execution to 2 CRTCs (first & last) for hang tests */
-			if ((flags & TEST_HANG) && !all_pipes &&
+			if ((flags & TEST_HANG) && !all_crtcs &&
 			    n != 0 && n != (resources->count_crtcs - 1))
 				continue;
 
@@ -1966,7 +1964,7 @@ static void run_pair(int duration, int flags)
 					crtc_idxs[1] = m;
 
 					/* Limit the execution to 2 CRTCs (first & last) for hang tests */
-					if ((flags & TEST_HANG) && !all_pipes &&
+					if ((flags & TEST_HANG) && !all_crtcs &&
 					    ((n != 0 && n != resources->count_crtcs) ||
 					    m != resources->count_crtcs - 1))
 						continue;
@@ -2030,7 +2028,7 @@ static int opt_handler(int opt, int opt_index, void *data)
 {
 	switch (opt) {
 		case 'e':
-			all_pipes = true;
+			all_crtcs = true;
 			break;
 		default:
 			return IGT_OPT_HANDLER_ERROR;
@@ -2040,7 +2038,7 @@ static int opt_handler(int opt, int opt_index, void *data)
 }
 
 const char *help_str =
-	"  -e \tRun on all pipes. (By default subtests will run on two pipes)\n";
+	"  -e \tRun on all CRTCs. (By default subtests will run on two CRTCs)\n";
 
 int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 {
