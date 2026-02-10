@@ -292,13 +292,12 @@ static void cleanup(data_t *data, igt_output_t *output)
 	igt_remove_fb(data->drm_fd, &data->fb[0]);
 }
 
-static int check_psr2_support(data_t *data, enum pipe pipe)
+static int check_psr2_support(data_t *data, igt_crtc_t *crtc)
 {
 	int status;
 
 	igt_output_t *output;
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 
 	igt_display_reset(display);
 	output = data->output;
@@ -317,8 +316,8 @@ int igt_main()
 	igt_crtc_t *crtc;
 	int r, i;
 	igt_output_t *outputs[IGT_MAX_PIPES * IGT_MAX_PIPES];
-	int pipes[IGT_MAX_PIPES * IGT_MAX_PIPES];
-	int n_pipes = 0;
+	igt_crtc_t *crtcs[IGT_MAX_PIPES * IGT_MAX_PIPES];
+	int n_crtcs = 0;
 
 	igt_fixture() {
 		struct itimerspec interval;
@@ -357,10 +356,10 @@ int igt_main()
 
 		for_each_crtc_with_valid_output(&data.display, crtc,
 						data.output) {
-			if (check_psr2_support(&data, crtc->pipe)) {
-				pipes[n_pipes] = crtc->pipe;
-				outputs[n_pipes] = data.output;
-				n_pipes++;
+			if (check_psr2_support(&data, crtc)) {
+				crtcs[n_crtcs] = crtc;
+				outputs[n_crtcs] = data.output;
+				n_crtcs++;
 			}
 		}
 	}
@@ -372,11 +371,10 @@ int igt_main()
 			data.format = *format++;
 			igt_describe("Test that selective update works when screen changes");
 			igt_subtest_with_dynamic_f("%s-%s", op_str(data.op), igt_format_str(data.format)) {
-				for (i = 0; i < n_pipes; i++) {
-					igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipes[i]),
-							igt_output_name(outputs[i])) {
-						igt_output_set_crtc(outputs[i],
-								    igt_crtc_for_pipe(outputs[i]->display, pipes[i]));
+				for (i = 0; i < n_crtcs; i++) {
+					igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtcs[i]),
+						      igt_output_name(outputs[i])) {
+						igt_output_set_crtc(outputs[i], crtcs[i]);
 						if (data.op == FRONTBUFFER &&
 						    intel_display_ver(intel_get_drm_devid(data.drm_fd)) >= 12) {
 							/*
