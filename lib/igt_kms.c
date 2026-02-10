@@ -2110,7 +2110,7 @@ _kmstest_connector_config_crtc_mask(int drm_fd,
 }
 
 static drmModeEncoder *
-_kmstest_connector_config_find_encoder(int drm_fd, drmModeConnector *connector, enum pipe pipe)
+_kmstest_connector_config_find_encoder(int drm_fd, drmModeConnector *connector, int crtc_index)
 {
 	int i;
 
@@ -2125,7 +2125,7 @@ _kmstest_connector_config_find_encoder(int drm_fd, drmModeConnector *connector, 
 			continue;
 		}
 
-		if (encoder->possible_crtcs & (1 << pipe))
+		if (encoder->possible_crtcs & (1 << crtc_index))
 			return encoder;
 
 		drmModeFreeEncoder(encoder);
