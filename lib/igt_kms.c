@@ -2452,19 +2452,19 @@ int kmstest_get_crtc_idx(drmModeRes *res, uint32_t crtc_id)
 /**
  * kmstest_get_vblank:
  * @fd: Opened drm file descriptor
- * @pipe: Display pipe
+ * @crtc_index: CRTC_index
  * @flags: Flags passed to drm_ioctl_wait_vblank
  *
  * Blocks or request a signal when a specified vblank event occurs
  *
  * Returns 0 on success or non-zero unsigned integer otherwise
  */
-unsigned int kmstest_get_vblank(int fd, int pipe, unsigned int flags)
+unsigned int kmstest_get_vblank(int fd, int crtc_index, unsigned int flags)
 {
 	union drm_wait_vblank vbl;
 
 	memset(&vbl, 0, sizeof(vbl));
-	vbl.request.type = DRM_VBLANK_RELATIVE | kmstest_get_vbl_flag(pipe) | flags;
+	vbl.request.type = DRM_VBLANK_RELATIVE | kmstest_get_vbl_flag(crtc_index) | flags;
 	if (drmIoctl(fd, DRM_IOCTL_WAIT_VBLANK, &vbl))
 		return 0;
 
