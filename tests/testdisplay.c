@@ -229,7 +229,7 @@ static void connector_find_preferred_mode(uint32_t connector_id,
 	c->connector = config.connector;
 	c->encoder = config.encoder;
 	c->crtc = config.crtc->crtc_id;
-	c->pipe = config.pipe;
+	c->pipe = config.crtc_index;
 
 	if (mode_num != -1) {
 		igt_assert(mode_num < config.connector->count_modes);

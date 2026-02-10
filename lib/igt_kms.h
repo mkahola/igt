@@ -208,8 +208,8 @@ struct kmstest_connector_config {
 	drmModeEncoder *encoder;
 	drmModeModeInfo default_mode;
 
-	int pipe;
-	unsigned valid_crtc_idx_mask;
+	int crtc_index;
+	unsigned int valid_crtc_index_mask;
 	char *connector_path;
 };
 
@@ -676,7 +676,7 @@ static inline bool igt_output_is_connected(igt_output_t *output)
 static inline bool igt_pipe_connector_valid(enum pipe pipe, igt_output_t *output)
 {
 	return igt_output_is_connected(output) &&
-		output->config.valid_crtc_idx_mask & (1 << (pipe));
+		output->config.valid_crtc_index_mask & (1 << (pipe));
 }
 
 /**
@@ -689,7 +689,7 @@ static inline bool igt_pipe_connector_valid(enum pipe pipe, igt_output_t *output
 static inline bool igt_crtc_connector_valid(igt_crtc_t *crtc, igt_output_t *output)
 {
 	return igt_output_is_connected(output) &&
-		output->config.valid_crtc_idx_mask & (1 << crtc->pipe);
+		output->config.valid_crtc_index_mask & (1 << crtc->pipe);
 }
 
 #define for_each_if(condition) if (!(condition)) {} else

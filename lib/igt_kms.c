@@ -2089,7 +2089,7 @@ _kmstest_connector_config_crtc_mask(int drm_fd,
 {
 	int i;
 
-	config->valid_crtc_idx_mask = 0;
+	config->valid_crtc_index_mask = 0;
 
 	/* Now get a compatible encoder */
 	for (i = 0; i < connector->count_encoders; i++) {
@@ -2104,7 +2104,7 @@ _kmstest_connector_config_crtc_mask(int drm_fd,
 			continue;
 		}
 
-		config->valid_crtc_idx_mask |= encoder->possible_crtcs;
+		config->valid_crtc_index_mask |= encoder->possible_crtcs;
 		drmModeFreeEncoder(encoder);
 	}
 }
@@ -2158,7 +2158,7 @@ static bool _kmstest_connector_config(int drm_fd, uint32_t connector_id,
 	drmModeConnector *connector;
 	drmModePropertyBlobPtr path_blob;
 
-	config->pipe = PIPE_NONE;
+	config->crtc_index = -1;
 
 	resources = drmModeGetResources(drm_fd);
 	if (!resources) {
@@ -2203,15 +2203,15 @@ static bool _kmstest_connector_config(int drm_fd, uint32_t connector_id,
 
 	config->connector = connector;
 
-	crtc_idx_mask &= config->valid_crtc_idx_mask;
+	crtc_idx_mask &= config->valid_crtc_index_mask;
 	if (!crtc_idx_mask)
 		/* Keep config->connector */
 		goto err2;
 
-	config->pipe = ffs(crtc_idx_mask) - 1;
+	config->crtc_index = ffs(crtc_idx_mask) - 1;
 
-	config->encoder = _kmstest_connector_config_find_encoder(drm_fd, connector, config->pipe);
-	config->crtc = drmModeGetCrtc(drm_fd, resources->crtcs[config->pipe]);
+	config->encoder = _kmstest_connector_config_find_encoder(drm_fd, connector, config->crtc_index);
+	config->crtc = drmModeGetCrtc(drm_fd, resources->crtcs[config->crtc_index]);
 
 	if (connector->connection != DRM_MODE_CONNECTED)
 		goto err2;
@@ -3640,7 +3640,7 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 	 */
 	for (i = 0; i <= igt_display_n_crtcs(display); i++) {
 		for_each_connected_output(display, output) {
-			uint32_t pipe_mask = output->config.valid_crtc_idx_mask & full_pipe_mask;
+			uint32_t pipe_mask = output->config.valid_crtc_index_mask & full_pipe_mask;
 			bool found = false;
 
 			if (output_is_internal_panel(output)) {
@@ -4828,9 +4828,9 @@ static int igt_atomic_commit(igt_display_t *display, uint32_t flags, void *user_
 		if (!output->config.connector || !output->changed)
 			continue;
 
-		LOG(display, "%s: preparing atomic, pipe: %s\n",
+		LOG(display, "%s: preparing atomic, CRTC: %s\n",
 		    igt_output_name(output),
-		    kmstest_pipe_name(output->config.pipe));
+		    kmstest_pipe_name(output->config.crtc_index));
 
 		igt_atomic_prepare_connector_commit(output, req);
 	}

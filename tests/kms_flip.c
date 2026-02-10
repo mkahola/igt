@@ -1104,11 +1104,11 @@ static void connector_find_preferred_mode(uint32_t connector_id, int crtc_idx,
 		return;
 	}
 
-	o->pipe = config.pipe;
+	o->pipe = config.crtc_index;
 	o->kconnector[0] = config.connector;
 	o->kencoder[0] = config.encoder;
 	o->_crtc[0] = config.crtc->crtc_id;
-	o->_pipe[0] = config.pipe;
+	o->_pipe[0] = config.crtc_index;
 	o->kmode[0] = config.default_mode;
 	o->mode_valid = 1;
 
@@ -1178,20 +1178,20 @@ static void connector_find_compatible_mode(int crtc_idx0, int crtc_idx1,
 	o->mode_valid = get_compatible_modes(&mode[0], &mode[1],
 					     config[0].connector, config[1].connector);
 
-	o->pipe = config[0].pipe;
+	o->pipe = config[0].crtc_index;
 	o->fb_width = mode[0].hdisplay;
 	o->fb_height = mode[0].vdisplay;
 
 	o->kconnector[0] = config[0].connector;
 	o->kencoder[0] = config[0].encoder;
 	o->_crtc[0] = config[0].crtc->crtc_id;
-	o->_pipe[0] = config[0].pipe;
+	o->_pipe[0] = config[0].crtc_index;
 	o->kmode[0] = mode[0];
 
 	o->kconnector[1] = config[1].connector;
 	o->kencoder[1] = config[1].encoder;
 	o->_crtc[1] = config[1].crtc->crtc_id;
-	o->_pipe[1] = config[1].pipe;
+	o->_pipe[1] = config[1].crtc_index;
 	o->kmode[1] = mode[1];
 
 	drmModeFreeCrtc(config[0].crtc);
