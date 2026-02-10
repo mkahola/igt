@@ -469,9 +469,6 @@ typedef struct igt_plane {
 
 /*
  * This struct represents a hardware pipe
- *
- * DRM_IOCTL_WAIT_VBLANK notion of pipe is confusing and we are using
- * crtc_offset instead (refer people to #igt_wait_for_vblank_count)
  */
 struct igt_crtc {
 	igt_display_t *display;
@@ -497,8 +494,8 @@ struct igt_crtc {
 
 	/* ID of KMS CRTC object */
 	uint32_t crtc_id;
-	/* offset of a pipe in drmModeRes.crtcs */
-	uint32_t crtc_offset;
+	/* CRTC index in drmModeRes.crtcs */
+	uint32_t crtc_index;
 
 	int32_t out_fence_fd;
 };

@@ -3143,7 +3143,7 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 	drmModeRes *resources;
 	drmModePlaneRes *plane_resources;
 	igt_crtc_t *crtc;
-	int i;
+	int i, crtc_index;
 	bool is_intel_dev;
 
 	memset(display, 0, sizeof(igt_display_t));
@@ -3190,16 +3190,15 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 		     "Failed to allocate memory for %d CRTCs\n",
 		     igt_display_n_crtcs(display));
 
-	for (i = 0; i < resources->count_crtcs; i++) {
-		int pipe_enum = is_intel_dev ? __intel_get_pipe_from_crtc_index(drm_fd, i) : i;
+	for (crtc_index = 0; crtc_index < resources->count_crtcs; crtc_index++) {
+		int pipe_enum = is_intel_dev ? __intel_get_pipe_from_crtc_index(drm_fd, crtc_index) : crtc_index;
 
 		crtc = igt_crtc_for_pipe(display, pipe_enum);
 		crtc->pipe = pipe_enum;
 
 		crtc->valid = true;
-		crtc->crtc_id = resources->crtcs[i];
-		/* offset of a pipe in crtcs list */
-		crtc->crtc_offset = i;
+		crtc->crtc_id = resources->crtcs[crtc_index];
+		crtc->crtc_index = crtc_index;
 	}
 
 	drmSetClientCap(drm_fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
@@ -5278,15 +5277,12 @@ int igt_output_preferred_vrefresh(igt_output_t *output)
 
 igt_pipe_crc_t *igt_crtc_crc_new(igt_crtc_t *crtc, const char *source)
 {
-	return igt_pipe_crc_new(crtc->display->drm_fd, crtc->crtc_offset,
-				source);
+	return igt_pipe_crc_new(crtc->display->drm_fd, crtc->crtc_index, source);
 }
 
 igt_pipe_crc_t *igt_crtc_crc_new_nonblock(igt_crtc_t *crtc, const char *source)
 {
-	return igt_pipe_crc_new_nonblock(crtc->display->drm_fd,
-					 crtc->crtc_offset,
-					 source);
+	return igt_pipe_crc_new_nonblock(crtc->display->drm_fd, crtc->crtc_index, source);
 }
 
 const char *igt_crtc_name(igt_crtc_t *crtc)
@@ -5855,7 +5851,7 @@ static int __igt_vblank_wait(int drm_fd, int crtc_offset, int count)
  */
 void igt_wait_for_vblank_count(igt_crtc_t *crtc, int count)
 {
-	igt_assert(__igt_vblank_wait(crtc->display->drm_fd, crtc->crtc_offset, count) == 0);
+	igt_assert(__igt_vblank_wait(crtc->display->drm_fd, crtc->crtc_index, count) == 0);
 }
 
 /**
@@ -5869,7 +5865,7 @@ void igt_wait_for_vblank_count(igt_crtc_t *crtc, int count)
  */
 void igt_wait_for_vblank(igt_crtc_t *crtc)
 {
-	igt_assert(__igt_vblank_wait(crtc->display->drm_fd, crtc->crtc_offset, 1) == 0);
+	igt_assert(__igt_vblank_wait(crtc->display->drm_fd, crtc->crtc_index, 1) == 0);
 }
 
 /**
