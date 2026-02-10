@@ -128,7 +128,7 @@ struct connector {
 	drmModeEncoder *encoder;
 	drmModeConnector *connector;
 	int crtc;
-	int pipe;
+	int crtc_index;
 };
 
 static void dump_connectors_fd(int drmfd)
@@ -229,7 +229,7 @@ static void connector_find_preferred_mode(uint32_t connector_id,
 	c->connector = config.connector;
 	c->encoder = config.encoder;
 	c->crtc = config.crtc->crtc_id;
-	c->pipe = config.crtc_index;
+	c->crtc_index = config.crtc_index;
 
 	if (mode_num != -1) {
 		igt_assert(mode_num < config.connector->count_modes);
@@ -530,7 +530,7 @@ int update_display(bool probe)
 
 			if (test_preferred_mode || force_mode ||
 			    specified_mode_num != -1)
-				crtc_idx_mask &= ~(1 << connector->pipe);
+				crtc_idx_mask &= ~(1 << connector->crtc_index);
 		}
 	}
 
