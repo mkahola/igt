@@ -2830,21 +2830,6 @@ void igt_require_pipe(igt_display_t *display, enum pipe pipe)
 			kmstest_pipe_name(pipe));
 }
 
-/* Get crtc mask for a pipe using crtc id */
-static int
-__get_crtc_mask_for_pipe(drmModeRes *resources, igt_crtc_t *crtc)
-{
-	int offset;
-
-	for (offset = 0; offset < resources->count_crtcs; offset++)
-	{
-		if(crtc->crtc_id == resources->crtcs[offset])
-			break;
-	}
-
-	return (1 << offset);
-}
-
 static bool igt_pipe_has_valid_output(igt_display_t *display, enum pipe pipe)
 {
 	igt_output_t *output;
@@ -3081,7 +3066,7 @@ static void igt_crtc_init(igt_display_t *display,
 			  drmModeRes *resources, int i)
 {
 	igt_crtc_t *crtc = igt_crtc_for_pipe(display, i);
-	int crtc_mask = 0;
+	int crtc_mask;
 	int j;
 
 	crtc->display = display;
@@ -3090,8 +3075,7 @@ static void igt_crtc_init(igt_display_t *display,
 
 	igt_fill_crtc_props(crtc, IGT_NUM_CRTC_PROPS, igt_crtc_prop_names);
 
-	/* Get valid crtc index from crtcs for a pipe */
-	crtc_mask = __get_crtc_mask_for_pipe(resources, crtc);
+	crtc_mask = 1 << crtc->crtc_index;
 
 	/* count number of valid planes */
 	for (j = 0; j < display->n_planes; j++) {
