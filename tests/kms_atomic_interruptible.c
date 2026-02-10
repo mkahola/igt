@@ -177,7 +177,7 @@ static void run_plane_test(igt_display_t *display, enum pipe pipe, igt_output_t 
 	igt_while_interruptible(true) {
 		switch (test_type) {
 			case test_legacy_modeset: {
-				struct drm_mode_crtc crtc = {
+				struct drm_mode_crtc drm_crtc = {
 					.set_connectors_ptr = (uint64_t)(uintptr_t)&output->id,
 					.count_connectors = 1,
 					.crtc_id = primary->crtc->crtc_id,
@@ -186,7 +186,7 @@ static void run_plane_test(igt_display_t *display, enum pipe pipe, igt_output_t 
 					.mode = *(struct drm_mode_modeinfo*)mode,
 				};
 
-				do_ioctl(display->drm_fd, DRM_IOCTL_MODE_SETCRTC, &crtc);
+				do_ioctl(display->drm_fd, DRM_IOCTL_MODE_SETCRTC, &drm_crtc);
 				break;
 			}
 			case test_atomic_modeset: {
