@@ -5827,13 +5827,13 @@ void igt_output_set_writeback_fb(igt_output_t *output, struct igt_fb *fb)
 					  (ptrdiff_t)&output->writeback_out_fence_fd);
 }
 
-static int __igt_vblank_wait(int drm_fd, int crtc_offset, int count)
+static int __igt_vblank_wait(int drm_fd, int crtc_index, int count)
 {
 	drmVBlank wait_vbl;
 	uint32_t pipe_id_flag;
 
 	memset(&wait_vbl, 0, sizeof(wait_vbl));
-	pipe_id_flag = kmstest_get_vbl_flag(crtc_offset);
+	pipe_id_flag = kmstest_get_vbl_flag(crtc_index);
 
 	wait_vbl.request.type = DRM_VBLANK_RELATIVE | pipe_id_flag;
 	wait_vbl.request.sequence = count;
@@ -6115,17 +6115,18 @@ void igt_cleanup_uevents(struct udev_monitor *mon)
 
 /**
  * kmstest_get_vbl_flag:
- * @crtc_offset: CRTC offset to convert into pipe flag representation.
+ * @crtc_index: CRTC index to convert into DRM_IOCTL_WAIT_VBLANK parameter
  *
- * Convert an offset of an crtc in drmModeRes.crtcs into flag representation
+ * Convert a CRTC index (of a CRTC in drmModeRes.crtcs) into flag representation
  * expected by DRM_IOCTL_WAIT_VBLANK.
- * See #igt_wait_for_vblank_count for details
+ *
+ * See #igt_wait_for_vblank_count for details.
  */
-uint32_t kmstest_get_vbl_flag(int crtc_offset)
+uint32_t kmstest_get_vbl_flag(int crtc_index)
 {
 	uint32_t flag;
 
-	flag = crtc_offset << DRM_VBLANK_HIGH_CRTC_SHIFT;
+	flag = crtc_index << DRM_VBLANK_HIGH_CRTC_SHIFT;
 
 	igt_assert_eq(flag & ~DRM_VBLANK_HIGH_CRTC_MASK, 0);
 

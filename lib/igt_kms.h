@@ -1144,7 +1144,7 @@ void igt_crtc_refresh(igt_crtc_t *crtc, bool force);
 void igt_enable_connectors(int drm_fd);
 void igt_reset_connectors(void);
 
-uint32_t kmstest_get_vbl_flag(int crtc_offset);
+uint32_t kmstest_get_vbl_flag(int crtc_index);
 
 const struct edid *igt_kms_get_base_edid(void);
 const struct edid *igt_kms_get_full_edid(void);
