@@ -95,12 +95,13 @@ functional_test_init(functional_test_t *test, igt_output_t *output, enum pipe pi
 {
 	data_t *data = test->data;
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeModeInfo *mode;
 
-	test->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
+	test->pipe_crc = igt_crtc_crc_new(crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	mode = igt_output_get_mode(output);
 	igt_create_color_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
@@ -161,11 +162,12 @@ functional_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 {
 	functional_test_t test = { .data = data };
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_plane_t *primary, *sprite;
 	int num_primary = 0, num_cursor = 0;
 	int i;
 
-	functional_test_init(&test, output, pipe);
+	functional_test_init(&test, output, crtc->pipe);
 
 	/*
 	 * Make sure we have no more than one primary or cursor plane per crtc.
@@ -173,10 +175,10 @@ functional_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	 * drm_universal_plane_init(), the type enum can get interpreted as a
 	 * boolean and show up in userspace as the wrong type.
 	 */
-	for (i = 0; i < igt_crtc_for_pipe(display, pipe)->n_planes; i++)
-		if (igt_crtc_for_pipe(display, pipe)->planes[i].type == DRM_PLANE_TYPE_PRIMARY)
+	for (i = 0; i < crtc->n_planes; i++)
+		if (crtc->planes[i].type == DRM_PLANE_TYPE_PRIMARY)
 			num_primary++;
-		else if (igt_crtc_for_pipe(display, pipe)->planes[i].type == DRM_PLANE_TYPE_CURSOR)
+		else if (crtc->planes[i].type == DRM_PLANE_TYPE_CURSOR)
 			num_cursor++;
 
 	igt_warn_on(num_primary != 1);
@@ -262,7 +264,7 @@ functional_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 
 	/* Step 12: Legacy modeset to yellow FB (CRC 8) */
 	igt_plane_set_fb(primary, &test.yellow_fb);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	igt_display_commit2(display, COMMIT_LEGACY);
 	igt_pipe_crc_collect_crc(test.pipe_crc, &test.crc_8);
 
@@ -349,9 +351,10 @@ sanity_test_init(sanity_test_t *test, igt_output_t *output, enum pipe pipe)
 {
 	data_t *data = test->data;
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeModeInfo *mode;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	mode = igt_output_get_mode(output);
 	igt_create_color_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
@@ -399,16 +402,17 @@ static void
 sanity_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	sanity_test_t test = { .data = data };
 	igt_plane_t *primary;
 	drmModeModeInfo *mode;
 	int i, ret;
 	int expect = 0;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	mode = igt_output_get_mode(output);
 
-	sanity_test_init(&test, output, pipe);
+	sanity_test_init(&test, output, crtc->pipe);
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
@@ -494,9 +498,10 @@ pageflip_test_init(pageflip_test_t *test, igt_output_t *output, enum pipe pipe)
 {
 	data_t *data = test->data;
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeModeInfo *mode;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	mode = igt_output_get_mode(output);
 	igt_create_color_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
@@ -525,6 +530,7 @@ static void
 pageflip_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	pageflip_test_t test = { .data = data };
 	igt_plane_t *primary;
 	struct timeval timeout = { .tv_sec = 0, .tv_usec = 500 };
@@ -533,9 +539,9 @@ pageflip_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	fd_set fds;
 	int ret = 0;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
-	pageflip_test_init(&test, output, pipe);
+	pageflip_test_init(&test, output, crtc->pipe);
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
@@ -555,7 +561,7 @@ pageflip_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	 * Note that crtc->primary->fb = NULL causes flip to return EBUSY for
 	 * historical reasons...
 	 */
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	igt_assert(drmModePageFlip(data->drm_fd, output->config.crtc->crtc_id,
 				   test.red_fb.fb_id, 0, NULL) == -EBUSY);
 
@@ -570,7 +576,7 @@ pageflip_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	 * completes, which we don't have a good way to specifically test for,
 	 * but at least we can make sure that nothing blows up.
 	 */
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 	igt_assert(drmModePageFlip(data->drm_fd, output->config.crtc->crtc_id,
 				   test.red_fb.fb_id, DRM_MODE_PAGE_FLIP_EVENT,
@@ -636,6 +642,7 @@ static void
 cursor_leak_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_plane_t *primary, *cursor;
 	drmModeModeInfo *mode;
 	struct igt_fb background_fb;
@@ -647,7 +654,7 @@ cursor_leak_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	igt_require(display->has_cursor_plane);
 	igt_require_intel(data->drm_fd);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	mode = igt_output_get_mode(output);
 
 	/* Count GEM framebuffers before creating our cursor FB's */
@@ -717,7 +724,7 @@ cursor_leak_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 	 * framebuffers can be removed before counting the framebuffer.
 	 */
 	if (is_intel_device(display->drm_fd))
-		igt_wait_for_vblank_count(igt_crtc_for_pipe(display, pipe),
+		igt_wait_for_vblank_count(crtc,
 					  2);
 
 	/* We should be back to the same framebuffer count as when we started */
@@ -731,9 +738,10 @@ gen9_test_init(gen9_test_t *test, igt_output_t *output, enum pipe pipe)
 {
 	data_t *data = test->data;
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeModeInfo *mode;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	mode = igt_output_get_mode(output);
 	test->w = mode->hdisplay / 2;
@@ -780,14 +788,15 @@ static void
 pageflip_win_test_pipe(data_t *data, enum pipe pipe, igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	gen9_test_t test = { .data = data };
 	igt_plane_t *primary;
 
 	int ret = 0;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
-	gen9_test_init(&test, output, pipe);
+	gen9_test_init(&test, output, crtc->pipe);
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 

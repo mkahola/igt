@@ -310,7 +310,8 @@ static void set_vrr_on_pipe(data_t *data, enum pipe pipe,
 			    bool need_modeset, bool enabled)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_set_prop_value(igt_crtc_for_pipe(display, pipe),
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
+	igt_crtc_set_prop_value(crtc,
 				    IGT_CRTC_VRR_ENABLED,
 				    enabled);
 
@@ -341,6 +342,7 @@ static void paint_bar(cairo_t *cr, unsigned int x, unsigned int y,
 static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	unsigned int num_bars = 256;
 	drmModeModeInfo mode;
 	cairo_t *cr;
@@ -408,7 +410,7 @@ static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
 	/* Clear vrr_enabled state before enabling it, because
 	 * it might be left enabled if the previous test fails.
 	 */
-	igt_crtc_set_prop_value(igt_crtc_for_pipe(display, pipe),
+	igt_crtc_set_prop_value(crtc,
 				    IGT_CRTC_VRR_ENABLED, 0);
 
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
@@ -973,7 +975,8 @@ test_cmrr(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 static void test_cleanup(data_t *data, enum pipe pipe, igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_set_prop_value(igt_crtc_for_pipe(display, pipe),
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
+	igt_crtc_set_prop_value(crtc,
 				    IGT_CRTC_VRR_ENABLED, false);
 
 	if (data->primary)

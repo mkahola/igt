@@ -143,18 +143,20 @@ static enum pipe get_next_master_pipe(data_t *data, uint32_t available_pipe_mask
 static enum pipe setup_pipe(data_t *data, igt_output_t *output, enum pipe pipe, uint32_t available_pipe_mask)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	enum pipe master_pipe;
 	uint32_t attempt_mask;
 
-	attempt_mask = BIT(pipe);
+	attempt_mask = BIT(crtc->pipe);
 	master_pipe = get_next_master_pipe(data, available_pipe_mask & attempt_mask);
 
 	if (master_pipe == PIPE_NONE)
 		return PIPE_NONE;
 
-	igt_info("Using pipe %s as master and %s slave for %s\n", kmstest_pipe_name(pipe),
-		 kmstest_pipe_name(pipe + 1), output->name);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_info("Using pipe %s as master and %s slave for %s\n",
+		 igt_crtc_name(crtc),
+		 kmstest_pipe_name(crtc->pipe + 1), output->name);
+	igt_output_set_crtc(output, crtc);
 
 	return master_pipe;
 }

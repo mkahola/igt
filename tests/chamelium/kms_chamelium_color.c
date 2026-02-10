@@ -432,18 +432,19 @@ static void
 prep_pipe(data_t *data, enum pipe p)
 {
 	igt_display_t *display = &data->display;
-	igt_require_pipe(&data->display, p);
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
+	igt_require_pipe(&data->display, crtc->pipe);
 
-	if (igt_crtc_has_prop(igt_crtc_for_pipe(display, p), IGT_CRTC_DEGAMMA_LUT_SIZE)) {
+	if (igt_crtc_has_prop(crtc, IGT_CRTC_DEGAMMA_LUT_SIZE)) {
 		data->degamma_lut_size =
-			igt_crtc_get_prop(igt_crtc_for_pipe(display, p),
+			igt_crtc_get_prop(crtc,
 					      IGT_CRTC_DEGAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->degamma_lut_size);
 	}
 
-	if (igt_crtc_has_prop(igt_crtc_for_pipe(display, p), IGT_CRTC_GAMMA_LUT_SIZE)) {
+	if (igt_crtc_has_prop(crtc, IGT_CRTC_GAMMA_LUT_SIZE)) {
 		data->gamma_lut_size =
-			igt_crtc_get_prop(igt_crtc_for_pipe(display, p),
+			igt_crtc_get_prop(crtc,
 					      IGT_CRTC_GAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->gamma_lut_size);
 	}
@@ -456,7 +457,7 @@ static int test_setup(data_t *data, enum pipe p)
 	int i = 0;
 
 	igt_display_reset(&data->display);
-	prep_pipe(data, p);
+	prep_pipe(data, crtc->pipe);
 	igt_require(crtc->n_planes >= 0);
 
 	data->primary = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
@@ -465,7 +466,8 @@ static int test_setup(data_t *data, enum pipe p)
 	 * Prefer to run this test on HDMI connector if its connected, since on DP we
 	 * sometimes face DP FSM issue
 	 */
-        for_each_valid_output_on_pipe(&data->display, p, data->output) {
+        for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+				      data->output) {
                 for (i = 0; i < data->port_count; i++) {
                         if ((data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_HDMIA ||
 			    data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_HDMIB) &&
@@ -474,7 +476,8 @@ static int test_setup(data_t *data, enum pipe p)
                 }
         }
 
-	for_each_valid_output_on_pipe(&data->display, p, data->output) {
+	for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+				      data->output) {
 		for (i = 0; i < data->port_count; i++) {
 			if (strcmp(data->output->name,
 				   chamelium_port_get_name(data->ports[i])) == 0)

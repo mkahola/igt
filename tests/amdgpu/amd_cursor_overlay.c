@@ -135,9 +135,10 @@ static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 		      unsigned int flags, int available_overlay_planes)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe_id);
 	int i;
 
-	data->pipe_id = pipe_id;
+	data->pipe_id = crtc->pipe;
 	data->available_overlay_planes = available_overlay_planes;
 	data->crtc = &data->display.crtcs[data->pipe_id];
 	data->output = output;

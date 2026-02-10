@@ -714,18 +714,19 @@ static void
 prep_pipe(data_t *data, enum pipe p)
 {
 	igt_display_t *display = &data->display;
-	igt_require_pipe(&data->display, p);
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
+	igt_require_pipe(&data->display, crtc->pipe);
 
-	if (igt_crtc_has_prop(igt_crtc_for_pipe(display, p), IGT_CRTC_DEGAMMA_LUT_SIZE)) {
+	if (igt_crtc_has_prop(crtc, IGT_CRTC_DEGAMMA_LUT_SIZE)) {
 		data->degamma_lut_size =
-			igt_crtc_get_prop(igt_crtc_for_pipe(display, p),
+			igt_crtc_get_prop(crtc,
 					      IGT_CRTC_DEGAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->degamma_lut_size);
 	}
 
-	if (igt_crtc_has_prop(igt_crtc_for_pipe(display, p), IGT_CRTC_GAMMA_LUT_SIZE)) {
+	if (igt_crtc_has_prop(crtc, IGT_CRTC_GAMMA_LUT_SIZE)) {
 		data->gamma_lut_size =
-			igt_crtc_get_prop(igt_crtc_for_pipe(display, p),
+			igt_crtc_get_prop(crtc,
 					      IGT_CRTC_GAMMA_LUT_SIZE);
 		igt_assert_lt(0, data->gamma_lut_size);
 	}
@@ -736,7 +737,7 @@ static void test_setup(data_t *data, enum pipe p)
 	igt_display_t *display = &data->display;
 	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
 
-	prep_pipe(data, p);
+	prep_pipe(data, crtc->pipe);
 	igt_require_pipe_crc(data->drm_fd);
 	igt_require(crtc->n_planes >= 0);
 
@@ -846,6 +847,7 @@ static void
 run_deep_color_tests_for_pipe(data_t *data, enum pipe p)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
 	igt_output_t *output;
 	static const color_t blue_green_blue[] = {
 		{ 0.0, 0.0, 1.0 },
@@ -867,9 +869,9 @@ run_deep_color_tests_for_pipe(data_t *data, enum pipe p)
 		igt_require_f((intel_display_ver(data->devid) >= 11),
 				"At least GEN 11 is required to validate Deep-color.\n");
 
-	test_setup(data, p);
+	test_setup(data, crtc->pipe);
 
-	for_each_valid_output_on_pipe(&data->display, p, output) {
+	for_each_valid_output_on_pipe(&data->display, crtc->pipe, output) {
 		uint64_t max_bpc = get_max_bpc(output);
 		bool ret;
 
@@ -901,10 +903,10 @@ run_deep_color_tests_for_pipe(data_t *data, enum pipe p)
 		igt_display_reset(&data->display);
 		igt_output_set_prop_value(output, IGT_CONNECTOR_MAX_BPC, 10);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(display, p));
+				    crtc);
 
 		if (is_intel_device(data->drm_fd) &&
-		    !igt_max_bpc_constraint(&data->display, p, output, 10)) {
+		    !igt_max_bpc_constraint(&data->display, crtc->pipe, output, 10)) {
 			igt_info("Output %s: Doesn't support 10-bpc.\n",
 				 igt_output_name(output));
 			continue;
@@ -918,7 +920,8 @@ run_deep_color_tests_for_pipe(data_t *data, enum pipe p)
 		igt_assert(data->mode);
 		memcpy(data->mode, igt_output_get_mode(data->output), sizeof(drmModeModeInfo));
 
-		igt_dynamic_f("pipe-%s-%s-gamma", kmstest_pipe_name(p), output->name) {
+		igt_dynamic_f("pipe-%s-%s-gamma", igt_crtc_name(crtc),
+			      output->name) {
 			igt_display_reset(&data->display);
 			igt_output_set_prop_value(output, IGT_CONNECTOR_MAX_BPC, 10);
 
@@ -928,7 +931,8 @@ run_deep_color_tests_for_pipe(data_t *data, enum pipe p)
 			igt_assert(ret);
 		}
 
-		igt_dynamic_f("pipe-%s-%s-degamma", kmstest_pipe_name(p), output->name) {
+		igt_dynamic_f("pipe-%s-%s-degamma", igt_crtc_name(crtc),
+			      output->name) {
 			igt_display_reset(&data->display);
 			igt_output_set_prop_value(output, IGT_CONNECTOR_MAX_BPC, 10);
 
@@ -938,7 +942,8 @@ run_deep_color_tests_for_pipe(data_t *data, enum pipe p)
 			igt_assert(ret);
 		}
 
-		igt_dynamic_f("pipe-%s-%s-ctm", kmstest_pipe_name(p), output->name) {
+		igt_dynamic_f("pipe-%s-%s-ctm", igt_crtc_name(crtc),
+			      output->name) {
 			igt_display_reset(&data->display);
 			igt_output_set_prop_value(output, IGT_CONNECTOR_MAX_BPC, 10);
 

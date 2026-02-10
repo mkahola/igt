@@ -720,15 +720,16 @@ test_scaler_with_modifier_pipe(data_t *d,
 			       igt_output_t *output)
 {
 	igt_display_t *display = &d->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	unsigned format = DRM_FORMAT_XRGB8888;
 	igt_plane_t *plane;
 	uint32_t ret;
 
 	cleanup_crtc(d);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
-	for_each_plane_on_pipe(display, pipe, plane) {
+	for_each_plane_on_pipe(display, crtc->pipe, plane) {
 		if (plane->type == DRM_PLANE_TYPE_CURSOR)
 			continue;
 
@@ -741,7 +742,8 @@ test_scaler_with_modifier_pipe(data_t *d,
 								   sf_plane,
 								   is_clip_clamp,
 								   is_upscale,
-								   pipe, output,
+								   crtc->pipe,
+								   output,
 								   IGT_ROTATION_0);
 			if (ret != 0)
 				return ret;
@@ -759,6 +761,7 @@ test_scaler_with_rotation_pipe(data_t *d,
 			       igt_output_t *output)
 {
 	igt_display_t *display = &d->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	unsigned format = DRM_FORMAT_XRGB8888;
 	uint64_t modifier = DRM_FORMAT_MOD_LINEAR;
 	igt_plane_t *plane;
@@ -766,9 +769,9 @@ test_scaler_with_rotation_pipe(data_t *d,
 
 	cleanup_crtc(d);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
-	for_each_plane_on_pipe(display, pipe, plane) {
+	for_each_plane_on_pipe(display, crtc->pipe, plane) {
 		if (plane->type == DRM_PLANE_TYPE_CURSOR)
 			continue;
 
@@ -781,7 +784,8 @@ test_scaler_with_rotation_pipe(data_t *d,
 								   sf_plane,
 								   is_clip_clamp,
 								   is_upscale,
-								   pipe, output,
+								   crtc->pipe,
+								   output,
 								   rot);
 			if (ret != 0)
 				return ret;
@@ -798,15 +802,16 @@ test_scaler_with_pixel_format_pipe(data_t *d, double sf_plane,
 				   igt_output_t *output)
 {
 	igt_display_t *display = &d->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	uint64_t modifier = DRM_FORMAT_MOD_LINEAR;
 	igt_plane_t *plane;
 	uint32_t ret;
 
 	cleanup_crtc(d);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
-	for_each_plane_on_pipe(display, pipe, plane) {
+	for_each_plane_on_pipe(display, crtc->pipe, plane) {
 		struct igt_vec tested_formats;
 
 		if (plane->type == DRM_PLANE_TYPE_CURSOR)
@@ -817,7 +822,7 @@ test_scaler_with_pixel_format_pipe(data_t *d, double sf_plane,
 		for (int j = 0; j < plane->drm_plane->count_formats; j++) {
 			uint32_t format = plane->drm_plane->formats[j];
 
-			if (!test_pipe_iteration(d, pipe, j))
+			if (!test_pipe_iteration(d, crtc->pipe, j))
 				continue;
 
 			if (test_format(d, &tested_formats, format) &&
@@ -828,7 +833,8 @@ test_scaler_with_pixel_format_pipe(data_t *d, double sf_plane,
 								   sf_plane,
 								   is_clip_clamp,
 								   is_upscale,
-								   pipe, output,
+								   crtc->pipe,
+								   output,
 								   IGT_ROTATION_0);
 			if (ret != 0) {
 				igt_vec_fini(&tested_formats);
@@ -945,6 +951,7 @@ test_planes_scaling_combo(data_t *d, double sf_plane1,
 			  enum scaler_combo_test_type test_type)
 {
 	igt_display_t *display = &d->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeModeInfo *mode;
 	int n_planes;
 	int w1, h1, w2, h2;
@@ -952,7 +959,7 @@ test_planes_scaling_combo(data_t *d, double sf_plane1,
 
 	cleanup_crtc(d);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	for_each_connector_mode(output) {
 		mode = &output->config.connector->modes[j__];
 		igt_output_override_mode(output, mode);
@@ -963,7 +970,7 @@ test_planes_scaling_combo(data_t *d, double sf_plane1,
 		w2 = get_width(mode, sf_plane2);
 		h2 = get_height(mode, sf_plane2);
 
-		n_planes = igt_crtc_for_pipe(display, pipe)->n_planes;
+		n_planes = crtc->n_planes;
 		igt_require(n_planes >= 2);
 
 		switch (test_type) {
@@ -990,15 +997,16 @@ test_planes_scaling_combo(data_t *d, double sf_plane1,
 		for (int k = 0; k < n_planes - 1; k += 2) {
 			igt_plane_t *p1, *p2;
 
-			p1 = &igt_crtc_for_pipe(display, pipe)->planes[k];
+			p1 = &crtc->planes[k];
 			igt_require(p1);
-			p2 = &igt_crtc_for_pipe(display, pipe)->planes[k+1];
+			p2 = &crtc->planes[k+1];
 			igt_require(p2);
 
 			if (p1->type == DRM_PLANE_TYPE_CURSOR || p2->type == DRM_PLANE_TYPE_CURSOR)
 				continue;
 			ret = __test_planes_scaling_combo(d, w1, h1, w2, h2,
-							  pipe, output, p1, p2,
+							  crtc->pipe, output,
+							  p1, p2,
 							  &d->fb[1], &d->fb[2],
 							  test_type);
 			if (ret != 0)
@@ -1282,6 +1290,7 @@ static void intel_max_source_size_test(data_t *d, enum pipe pipe, igt_output_t *
 				       const struct invalid_paramtests *param)
 {
 	igt_display_t *display = &d->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_fb_t fb;
 	igt_plane_t *plane;
 	int rval;
@@ -1289,7 +1298,7 @@ static void intel_max_source_size_test(data_t *d, enum pipe pipe, igt_output_t *
 
 	cleanup_crtc(d);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	/*
 	 * Need to get the mode again, because it may have changed

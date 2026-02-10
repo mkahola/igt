@@ -449,6 +449,7 @@ static void test_content_protection_on_output(igt_output_t *output,
 					      int content_type)
 {
 	igt_display_t *display = &data.display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	bool ret;
 
 	test_cp_enable_with_retry(output, commit_style, 3, content_type, false,
@@ -485,11 +486,11 @@ static void test_content_protection_on_output(igt_output_t *output,
 		test_cp_lic(output);
 
 	if (data.cp_tests & CP_DPMS) {
-		igt_crtc_set_prop_value(igt_crtc_for_pipe(display, pipe),
+		igt_crtc_set_prop_value(crtc,
 					    IGT_CRTC_ACTIVE, 0);
 		igt_display_commit2(display, commit_style);
 
-		igt_crtc_set_prop_value(igt_crtc_for_pipe(display, pipe),
+		igt_crtc_set_prop_value(crtc,
 					    IGT_CRTC_ACTIVE, 1);
 		igt_display_commit2(display, commit_style);
 

@@ -94,7 +94,8 @@ static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
 		      unsigned int flags)
 {
 	igt_display_t *display = &data->display;
-	data->pipe_id = pipe_id;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe_id);
+	data->pipe_id = crtc->pipe;
 	data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
 	data->output = output;
 

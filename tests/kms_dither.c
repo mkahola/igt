@@ -117,13 +117,14 @@ static void test_dithering(data_t *data, enum pipe pipe,
 			   int output_bpc)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	dither_status_t status;
 	int bpc, ret;
 	bool constraint;
 
 	igt_info("Dithering test execution on %s PIPE_%s\n",
-			output->name, kmstest_pipe_name(pipe));
-	prepare_test(data, output, pipe);
+			output->name, igt_crtc_name(crtc));
+	prepare_test(data, output, crtc->pipe);
 
 	igt_assert(igt_create_fb(data->drm_fd, 512, 512, fb_format,
 				 DRM_FORMAT_MOD_LINEAR, &data->fb));
@@ -143,7 +144,8 @@ static void test_dithering(data_t *data, enum pipe pipe,
 	if (ret)
 		goto cleanup;
 
-	constraint = igt_max_bpc_constraint(display, pipe, output, output_bpc);
+	constraint = igt_max_bpc_constraint(display, crtc->pipe, output,
+					    output_bpc);
 	if (!constraint)
 		goto cleanup;
 
@@ -154,7 +156,7 @@ static void test_dithering(data_t *data, enum pipe pipe,
 	 * If fb_bpc is greater than output_bpc, Dithering should be enabled
 	 * Else disabled
 	 */
-	status = get_dither_state(data, pipe);
+	status = get_dither_state(data, crtc->pipe);
 
 	igt_info("FB BPC:%d, Panel BPC:%d, Pipe BPC:%d, Expected Dither:%s, Actual result:%s\n",
 		  fb_bpc, output_bpc, status.bpc,

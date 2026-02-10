@@ -296,10 +296,11 @@ static void prepare_crtc(data_t *data, igt_output_t *output, enum pipe pipe,
 			 igt_plane_t *plane, bool start_crc)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 
 	cleanup_crtc(data);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	igt_require(intel_pipe_output_combo_valid(display));
 
 	igt_plane_set_rotation(plane, IGT_ROTATION_0);
@@ -312,7 +313,7 @@ static void prepare_crtc(data_t *data, igt_output_t *output, enum pipe pipe,
 	 */
 	if (!is_amdgpu_device(data->gfx_fd))
 		igt_display_commit2(display, COMMIT_ATOMIC);
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
+	data->pipe_crc = igt_crtc_crc_new(crtc,
 				          IGT_PIPE_CRC_SOURCE_AUTO);
 
 	if (!is_amdgpu_device(data->gfx_fd) && start_crc)
@@ -467,10 +468,12 @@ static void test_single_case(data_t *data, enum pipe pipe,
 			     uint32_t format, bool test_bad_format)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crc_t crc_output;
 	int ret;
 
-	igt_debug("Testing case %i on pipe %s, format %s\n", rect, kmstest_pipe_name(pipe), igt_format_str(format));
+	igt_debug("Testing case %i on pipe %s, format %s\n", rect,
+		  igt_crtc_name(crtc), igt_format_str(format));
 	prepare_fbs(data, output, plane, rect, format);
 
 	igt_plane_set_rotation(plane, data->rotation);
@@ -904,6 +907,7 @@ static bool reusecrcfromlastround(planeinfos p[2], int lastroundp1format,
 static void test_multi_plane_rotation(data_t *data, enum pipe pipe)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_output_t *output;
 	igt_crc_t retcrc_sw, retcrc_hw;
 	planeinfos p[2];
@@ -935,13 +939,13 @@ static void test_multi_plane_rotation(data_t *data, enum pipe pipe)
 
 	igt_display_require_output(display);
 
-	for_each_valid_output_on_pipe(display, pipe, output) {
+	for_each_valid_output_on_pipe(display, crtc->pipe, output) {
 		int i, j, k, l, flipsw, fliphw;
 
 		igt_display_reset(display);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(display, pipe));
+				    crtc);
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
@@ -953,7 +957,7 @@ static void test_multi_plane_rotation(data_t *data, enum pipe pipe)
 		p[0].plane = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 		p[1].plane = igt_output_get_plane_type(output, DRM_PLANE_TYPE_OVERLAY);
 
-		data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
+		data->pipe_crc = igt_crtc_crc_new(crtc,
 						  IGT_PIPE_CRC_SOURCE_AUTO);
 		igt_pipe_crc_start(data->pipe_crc);
 
@@ -1013,7 +1017,9 @@ static void test_multi_plane_rotation(data_t *data, enum pipe pipe)
 								continue;
 
 							igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-							flipsw = kmstest_get_vblank(data->gfx_fd, pipe, 0) + 1;
+							flipsw = kmstest_get_vblank(data->gfx_fd,
+										    crtc->pipe,
+										    0) + 1;
 							have_crc = false;
 						}
 
@@ -1026,7 +1032,9 @@ static void test_multi_plane_rotation(data_t *data, enum pipe pipe)
 							continue;
 
 						igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-						fliphw = kmstest_get_vblank(data->gfx_fd, pipe, 0) + 1;
+						fliphw = kmstest_get_vblank(data->gfx_fd,
+									    crtc->pipe,
+									    0) + 1;
 
 						if (!have_crc) {
 							igt_pipe_crc_get_for_frame(data->gfx_fd,
@@ -1100,6 +1108,7 @@ static void test_plane_rotation_exhaust_fences(data_t *data,
 					       igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	uint64_t modifier = I915_FORMAT_MOD_Y_TILED;
 	uint32_t format = DRM_FORMAT_XRGB8888;
 	int fd = data->gfx_fd;
@@ -1114,7 +1123,7 @@ static void test_plane_rotation_exhaust_fences(data_t *data,
 	igt_require(igt_plane_has_rotation(plane, IGT_ROTATION_0 | IGT_ROTATION_90));
 	igt_require(gem_available_fences(display->drm_fd) > 0);
 
-	prepare_crtc(data, output, pipe, plane, false);
+	prepare_crtc(data, output, crtc->pipe, plane, false);
 
 	mode = igt_output_get_mode(output);
 	w = mode->hdisplay;

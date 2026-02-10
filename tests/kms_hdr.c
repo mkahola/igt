@@ -206,8 +206,9 @@ static void set_hdr_output_metadata(data_t *data,
 static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 
-	data->pipe_id = pipe;
+	data->pipe_id = crtc->pipe;
 	data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
 	igt_assert(data->crtc);
 
@@ -238,6 +239,7 @@ static void test_bpc_switch_on_output(data_t *data, enum pipe pipe,
 				      uint32_t flags)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crc_t ref_crc, new_crc;
 	igt_fb_t afb;
 	int afb_id, ret;
@@ -253,7 +255,7 @@ static void test_bpc_switch_on_output(data_t *data, enum pipe pipe,
 	 * smaller plane size in following tests.
 	 */
 	igt_plane_set_fb(data->primary, &afb);
-	if (get_num_scalers(display, pipe) >= 1)
+	if (get_num_scalers(display, crtc->pipe) >= 1)
 		igt_plane_set_size(data->primary, data->w, data->h);
 	else
 		igt_plane_set_size(data->primary, 512, 512);
@@ -267,7 +269,7 @@ static void test_bpc_switch_on_output(data_t *data, enum pipe pipe,
 	/* Start in 8bpc. */
 	igt_output_set_prop_value(data->output, IGT_CONNECTOR_MAX_BPC, 8);
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-	igt_assert_output_bpc_equal(data->fd, pipe, output->name, 8);
+	igt_assert_output_bpc_equal(data->fd, crtc->pipe, output->name, 8);
 
 	/*
 	 * amdgpu requires a primary plane when the CRTC is enabled.
@@ -281,7 +283,7 @@ static void test_bpc_switch_on_output(data_t *data, enum pipe pipe,
 	/* Switch to 10bpc. */
 	igt_output_set_prop_value(data->output, IGT_CONNECTOR_MAX_BPC, 10);
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-	igt_assert_output_bpc_equal(data->fd, pipe, output->name, 10);
+	igt_assert_output_bpc_equal(data->fd, crtc->pipe, output->name, 10);
 
 	/* Verify that the CRC are equal after DPMS or suspend. */
 	igt_pipe_crc_collect_crc(data->pipe_crc, &ref_crc);
@@ -291,7 +293,7 @@ static void test_bpc_switch_on_output(data_t *data, enum pipe pipe,
 	/* Drop back to 8bpc. */
 	igt_output_set_prop_value(data->output, IGT_CONNECTOR_MAX_BPC, 8);
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-	igt_assert_output_bpc_equal(data->fd, pipe, output->name, 8);
+	igt_assert_output_bpc_equal(data->fd, crtc->pipe, output->name, 8);
 
 	/* CRC capture is clamped to 8bpc, so capture should match. */
 	igt_assert_crc_equal(&ref_crc, &new_crc);
@@ -475,6 +477,7 @@ static void test_static_toggle(data_t *data, enum pipe pipe,
 			       uint32_t flags)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	struct hdr_output_metadata hdr;
 	igt_crc_t ref_crc, new_crc;
 	igt_fb_t afb;
@@ -501,7 +504,7 @@ static void test_static_toggle(data_t *data, enum pipe pipe,
 	}
 
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-	igt_assert_output_bpc_equal(data->fd, pipe, output->name, 8);
+	igt_assert_output_bpc_equal(data->fd, crtc->pipe, output->name, 8);
 
 	if (flags & TEST_NEEDS_DSC) {
 		igt_force_dsc_disable(data->fd, output->name);
@@ -522,7 +525,7 @@ static void test_static_toggle(data_t *data, enum pipe pipe,
 		adjust_brightness(data, flags);
 	}
 
-	igt_assert_output_bpc_equal(data->fd, pipe, output->name, 10);
+	igt_assert_output_bpc_equal(data->fd, crtc->pipe, output->name, 10);
 
 	/* Verify that the CRC are equal after DPMS or suspend. */
 	igt_pipe_crc_collect_crc(data->pipe_crc, &ref_crc);
@@ -539,7 +542,7 @@ static void test_static_toggle(data_t *data, enum pipe pipe,
 	}
 
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-	igt_assert_output_bpc_equal(data->fd, pipe, output->name, 8);
+	igt_assert_output_bpc_equal(data->fd, crtc->pipe, output->name, 8);
 
 	igt_assert_crc_equal(&ref_crc, &new_crc);
 
@@ -586,6 +589,7 @@ static void fill_hdr_output_metadata_sdr(struct hdr_output_metadata *meta)
 static void test_static_swap(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crc_t ref_crc, new_crc;
 	igt_fb_t afb;
 	int afb_id;
@@ -609,7 +613,7 @@ static void test_static_swap(data_t *data, enum pipe pipe, igt_output_t *output,
 	}
 
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-	igt_assert_output_bpc_equal(data->fd, pipe, output->name, 8);
+	igt_assert_output_bpc_equal(data->fd, crtc->pipe, output->name, 8);
 
 	if (flags & TEST_NEEDS_DSC) {
 		igt_force_dsc_disable(data->fd, output->name);
@@ -621,7 +625,7 @@ static void test_static_swap(data_t *data, enum pipe pipe, igt_output_t *output,
 	set_hdr_output_metadata(data, &hdr);
 	igt_output_set_prop_value(data->output, IGT_CONNECTOR_MAX_BPC, 10);
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-	igt_assert_output_bpc_equal(data->fd, pipe, output->name, 10);
+	igt_assert_output_bpc_equal(data->fd, crtc->pipe, output->name, 10);
 
 	igt_pipe_crc_collect_crc(data->pipe_crc, &ref_crc);
 
@@ -658,7 +662,7 @@ static void test_static_swap(data_t *data, enum pipe pipe, igt_output_t *output,
 	set_hdr_output_metadata(data, NULL);
 	igt_output_set_prop_value(data->output, IGT_CONNECTOR_MAX_BPC, 8);
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-	igt_assert_output_bpc_equal(data->fd, pipe, output->name, 8);
+	igt_assert_output_bpc_equal(data->fd, crtc->pipe, output->name, 8);
 
 	/* Verify that the CRC didn't change while cycling metadata. */
 	igt_assert_crc_equal(&ref_crc, &new_crc);

@@ -232,16 +232,17 @@ test_plane_position_with_output(data_t *data, enum pipe pipe, int max_planes,
 				igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	int i;
 	int iterations = opt.iterations < 1 ? max_planes : opt.iterations;
 	bool loop_forever = opt.iterations == LOOP_FOREVER ? true : false;
 	int ret;
 
-	igt_crtc_refresh(igt_crtc_for_pipe(display, pipe), true);
+	igt_crtc_refresh(crtc, true);
 
 	i = 0;
 	while (i < iterations || loop_forever) {
-		prepare_planes(data, pipe, max_planes, output);
+		prepare_planes(data, crtc->pipe, max_planes, output);
 		ret = igt_display_try_commit2(&data->display, COMMIT_ATOMIC);
 
 		for (int c = 0; c < max_planes; c++)
@@ -279,6 +280,7 @@ static void
 test_resolution_with_output(data_t *data, enum pipe pipe, int max_planes, igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	int iterations = opt.iterations < 1 ? max_planes : opt.iterations;
 	bool loop_forever = opt.iterations == LOOP_FOREVER ? true : false;
 	int i;
@@ -289,7 +291,7 @@ test_resolution_with_output(data_t *data, enum pipe pipe, int max_planes, igt_ou
 		drmModeModeInfo *mode_lo;
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(display, pipe));
+				    crtc);
 
 		mode_hi = igt_output_get_mode(output);
 		mode_lo = get_lowres_mode(data, mode_hi, output);
@@ -313,28 +315,30 @@ static void
 run_test(data_t *data, enum pipe pipe, igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
-	int n_planes = igt_crtc_for_pipe(display, pipe)->n_planes;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
+	int n_planes = crtc->n_planes;
 	igt_display_reset(&data->display);
 
 	if (!opt.user_seed)
 		opt.seed = time(NULL);
 
 	igt_info("Testing resolution with connector %s using pipe %s with seed %d\n",
-		 igt_output_name(output), kmstest_pipe_name(pipe), opt.seed);
+		 igt_output_name(output), igt_crtc_name(crtc), opt.seed);
 
 	srand(opt.seed);
 
-	test_init(data, pipe, n_planes, output);
+	test_init(data, crtc->pipe, n_planes, output);
 
 	igt_fork(child, 1) {
-		test_plane_position_with_output(data, pipe, n_planes, output);
+		test_plane_position_with_output(data, crtc->pipe, n_planes,
+						output);
 	}
 
-	test_resolution_with_output(data, pipe, n_planes, output);
+	test_resolution_with_output(data, crtc->pipe, n_planes, output);
 
 	igt_waitchildren();
 
-	test_fini(data, pipe, n_planes, output);
+	test_fini(data, crtc->pipe, n_planes, output);
 }
 
 static void

@@ -726,6 +726,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 				drmModeModeInfoPtr modetoset, int flags)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_plane_t *primary;
 	igt_crc_t small_crc, big_crc;
 	struct drm_event_vblank ev;
@@ -735,7 +736,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
 	igt_debug("running on output %s pipe %s\n", output->name,
-		  kmstest_pipe_name(pipe));
+		  igt_crtc_name(crtc));
 
 	if (data->big_fb.fb_id == 0) {
 		setup_fb(data, &data->small_fb,
@@ -759,7 +760,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 	if (modetoset)
 		igt_output_override_mode(output, modetoset);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
@@ -774,16 +775,17 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 
 	igt_skip_on_f(!igt_plane_has_format_mod(primary, data->small_fb.drm_format, data->small_fb.modifier) ||
 		      !igt_plane_has_format_mod(primary, data->big_fb.drm_format,
-		      data->big_fb.modifier), "No requested format/modifier on pipe %s\n", kmstest_pipe_name(pipe));
+		      data->big_fb.modifier), "No requested format/modifier on pipe %s\n",
+		      igt_crtc_name(crtc));
 
-	set_lut(data, pipe);
+	set_lut(data, crtc->pipe);
 	igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
 	if (data->pipe_crc) {
 		igt_pipe_crc_stop(data->pipe_crc);
 		igt_pipe_crc_free(data->pipe_crc);
 	}
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
+	data->pipe_crc = igt_crtc_crc_new(crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_plane_set_position(primary, 0, 0);
@@ -831,7 +833,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 	igt_pipe_crc_free(data->pipe_crc);
 	data->pipe_crc = NULL;
 
-	clear_lut(data, pipe);
+	clear_lut(data, crtc->pipe);
 
 	modetoset = NULL;
 	igt_output_set_crtc(output, NULL);

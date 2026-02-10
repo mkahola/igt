@@ -549,7 +549,8 @@ static bool has_vrr(igt_output_t *output)
 static void set_vrr_on_pipe(data_t *data, enum pipe pipe, bool enabled)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_set_prop_value(igt_crtc_for_pipe(display, pipe),
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
+	igt_crtc_set_prop_value(crtc,
 				    IGT_CRTC_VRR_ENABLED,
 				    enabled);
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);

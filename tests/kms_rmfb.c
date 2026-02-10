@@ -78,6 +78,7 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 {
 	struct igt_fb fb, argb_fb;
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeModeInfo *mode;
 	igt_plane_t *plane;
 	drmModeCrtc *drm_crtc;
@@ -85,7 +86,7 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 	int num_active_planes = 0;
 
 	igt_display_reset(display);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	mode = igt_output_get_mode(output);
 
@@ -103,7 +104,7 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 	 * because most of the modeset operations must be fast
 	 * later on.
 	 */
-	for_each_plane_on_pipe(&data->display, pipe, plane) {
+	for_each_plane_on_pipe(&data->display, crtc->pipe, plane) {
 		if (plane->type == DRM_PLANE_TYPE_CURSOR) {
 			igt_plane_set_fb(plane, &argb_fb);
 			igt_fb_set_size(&argb_fb, plane, cursor_width, cursor_height);
@@ -147,7 +148,7 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 		drmSetClientCap(data->drm_fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
 		drmSetClientCap(data->drm_fd, DRM_CLIENT_CAP_ATOMIC, 1);
 
-		igt_crtc_refresh(igt_crtc_for_pipe(display, pipe),
+		igt_crtc_refresh(crtc,
 				 true);
 	} else {
 		igt_remove_fb(data->drm_fd, &fb);
@@ -160,7 +161,7 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reo
 
 	drmModeFreeCrtc(drm_crtc);
 
-	for_each_plane_on_pipe(&data->display, pipe, plane) {
+	for_each_plane_on_pipe(&data->display, crtc->pipe, plane) {
 		drmModePlanePtr planeres = drmModeGetPlane(data->drm_fd, plane->drm_plane->plane_id);
 
 		igt_assert_eq(planeres->fb_id, 0);

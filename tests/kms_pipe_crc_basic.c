@@ -131,6 +131,7 @@ static void test_read_crc(data_t *data, enum pipe pipe,
 			  igt_output_t *output, unsigned flags)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_plane_t *primary;
 	drmModeModeInfo *mode;
 	igt_crc_t *crcs = NULL;
@@ -138,7 +139,7 @@ static void test_read_crc(data_t *data, enum pipe pipe,
 
 	igt_display_reset(display);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	mode = igt_output_get_mode(output);
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
@@ -167,12 +168,12 @@ static void test_read_crc(data_t *data, enum pipe pipe,
 		if (flags & TEST_NONBLOCK) {
 			igt_pipe_crc_t *pipe_crc;
 
-			pipe_crc = igt_crtc_crc_new_nonblock(igt_crtc_for_pipe(display, pipe),
+			pipe_crc = igt_crtc_crc_new_nonblock(crtc,
 							     IGT_PIPE_CRC_SOURCE_AUTO);
-			igt_wait_for_vblank(igt_crtc_for_pipe(display, pipe));
+			igt_wait_for_vblank(crtc);
 			igt_pipe_crc_start(pipe_crc);
 
-			igt_wait_for_vblank_count(igt_crtc_for_pipe(display, pipe),
+			igt_wait_for_vblank_count(crtc,
 						  N_CRCS);
 			n_crcs = igt_pipe_crc_get_crcs(pipe_crc, N_CRCS+1, &crcs);
 			igt_pipe_crc_stop(pipe_crc);
@@ -183,7 +184,7 @@ static void test_read_crc(data_t *data, enum pipe pipe,
 		} else {
 			igt_pipe_crc_t *pipe_crc;
 
-			pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
+			pipe_crc = igt_crtc_crc_new(crtc,
 						    IGT_PIPE_CRC_SOURCE_AUTO);
 			igt_pipe_crc_start(pipe_crc);
 
@@ -238,6 +239,7 @@ static void test_compare_crc(data_t *data, enum pipe pipe, igt_output_t *output,
 			     uint32_t plane_format)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_plane_t *primary;
 	drmModeModeInfo *mode;
 	igt_crc_t ref_crc, crc;
@@ -245,7 +247,7 @@ static void test_compare_crc(data_t *data, enum pipe pipe, igt_output_t *output,
 	struct igt_fb fb0, fb1;
 
 	igt_display_reset(display);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	mode = igt_output_get_mode(output);
 
@@ -268,7 +270,7 @@ static void test_compare_crc(data_t *data, enum pipe pipe, igt_output_t *output,
 	igt_plane_set_fb(primary, &fb0);
 	igt_display_commit(display);
 
-	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
+	pipe_crc = igt_crtc_crc_new(crtc,
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 	igt_pipe_crc_collect_crc(pipe_crc, &ref_crc);
 
@@ -293,16 +295,17 @@ static void test_disable_crc_after_crtc(data_t *data, enum pipe pipe,
 					igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_pipe_crc_t *pipe_crc;
 	drmModeModeInfo *mode;
 	igt_crc_t crc[2];
 	igt_plane_t *primary;
 
-	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
+	pipe_crc = igt_crtc_crc_new(crtc,
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_display_reset(display);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	mode = igt_output_get_mode(output);
 	igt_create_color_fb(data->drm_fd,
