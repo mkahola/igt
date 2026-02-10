@@ -337,6 +337,7 @@ intel_xe_progs = [
 	'xe_sriov_scheduling',
         'xe_survivability',
 	'xe_sriov_vram',
+        'xe_svm_usrptr_madvise',
 	'xe_sysfs_defaults',
 	'xe_sysfs_preempt_timeout',
 	'xe_sysfs_scheduler',
