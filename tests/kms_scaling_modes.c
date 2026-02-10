@@ -54,7 +54,7 @@ typedef struct data {
 	int drm_fd;
 } data_t;
 
-static void test_scaling_mode_on_output(igt_display_t *display, const enum pipe pipe,
+static void test_scaling_mode_on_output(igt_display_t *display, enum pipe pipe,
 					igt_output_t *output, uint32_t flags)
 {
 	igt_plane_t *primary, *sprite;

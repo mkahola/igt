@@ -105,7 +105,7 @@ static void prepare_crtc(data_t *data, igt_output_t *output, enum pipe pipe,
 
 static void
 test_panel_fitting_legacy(data_t *d, igt_display_t *display,
-			  const enum pipe pipe, igt_output_t *output)
+			  enum pipe pipe, igt_output_t *output)
 {
 	drmModeModeInfo *mode, native_mode;
 	bool is_plane_scaling_active = true;
@@ -195,7 +195,7 @@ test_panel_fitting_legacy(data_t *d, igt_display_t *display,
 }
 
 static void
-test_panel_fitting_fastset(igt_display_t *display, const enum pipe pipe, igt_output_t *output)
+test_panel_fitting_fastset(igt_display_t *display, enum pipe pipe, igt_output_t *output)
 {
 	igt_plane_t *primary, *sprite;
 	drmModeModeInfo mode;
