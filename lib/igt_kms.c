@@ -3410,6 +3410,7 @@ static void igt_output_fini(igt_output_t *output)
  */
 void igt_display_fini(igt_display_t *display)
 {
+	igt_crtc_t *crtc;
 	int i;
 
 	for (i = 0; i < display->n_planes; ++i) {
@@ -3421,8 +3422,8 @@ void igt_display_fini(igt_display_t *display)
 		}
 	}
 
-	for (i = 0; i < igt_display_n_crtcs(display); i++)
-		igt_crtc_fini(igt_crtc_for_pipe(display, i));
+	for_each_crtc(display, crtc)
+		igt_crtc_fini(crtc);
 
 	for (i = 0; i < display->n_outputs; i++)
 		igt_output_fini(&display->outputs[i]);
