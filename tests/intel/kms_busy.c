@@ -73,7 +73,7 @@ IGT_TEST_DESCRIPTION("Basic check of KMS ABI with busy framebuffers.");
 static bool all_pipes = false;
 
 static void
-set_fb_on_crtc(igt_display_t *dpy, int pipe,
+set_fb_on_crtc(igt_display_t *dpy, enum pipe pipe,
 	       igt_output_t *output, struct igt_fb *fb)
 {
 	drmModeModeInfoPtr mode;
@@ -106,7 +106,7 @@ static void do_cleanup_display(igt_display_t *dpy)
 	igt_display_commit2(dpy, dpy->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 }
 
-static void flip_to_fb(igt_display_t *dpy, int pipe,
+static void flip_to_fb(igt_display_t *dpy, enum pipe pipe,
 		       igt_output_t *output,
 		       struct igt_fb *fb, int timeout,
 		       const char *name, bool modeset)
@@ -172,7 +172,7 @@ static void flip_to_fb(igt_display_t *dpy, int pipe,
 	put_ahnd(ahnd);
 }
 
-static void test_flip(igt_display_t *dpy, int pipe,
+static void test_flip(igt_display_t *dpy, enum pipe pipe,
 		      igt_output_t *output, bool modeset)
 {
 	struct igt_fb fb[2];
