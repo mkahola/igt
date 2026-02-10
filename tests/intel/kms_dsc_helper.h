@@ -28,7 +28,8 @@ void restore_force_dsc_en(void);
 void kms_dsc_exit_handler(int sig);
 bool is_dsc_supported_by_sink(int drmfd, igt_output_t *output);
 bool is_dsc_supported_by_source(int drmfd);
-bool check_gen11_dp_constraint(int drmfd, igt_output_t *output, enum pipe pipe);
+bool check_gen11_dp_constraint(int drmfd, igt_output_t *output,
+			       igt_crtc_t *crtc);
 bool check_gen11_bpc_constraint(int drmfd, int input_bpc);
 void force_dsc_output_format(int drmfd, igt_output_t *output,
 			     enum dsc_output_format output_format);

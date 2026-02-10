@@ -84,14 +84,16 @@ bool is_dsc_supported_by_sink(int drmfd, igt_output_t *output)
 	return true;
 }
 
-bool check_gen11_dp_constraint(int drmfd, igt_output_t *output, enum pipe pipe)
+bool check_gen11_dp_constraint(int drmfd, igt_output_t *output,
+			       igt_crtc_t *crtc)
 {
 	uint32_t devid = intel_get_drm_devid(drmfd);
 	drmModeConnector *connector = output->config.connector;
 
 	if ((connector->connector_type == DRM_MODE_CONNECTOR_DisplayPort) &&
-	    (pipe == PIPE_A) && IS_GEN11(devid)) {
-		igt_info("DSC not supported on pipe %s on %s in gen11 platforms\n", kmstest_pipe_name(pipe), output->name);
+	    (crtc->pipe == PIPE_A) && IS_GEN11(devid)) {
+		igt_info("DSC not supported on pipe %s on %s in gen11 platforms\n",
+			 kmstest_pipe_name(crtc->pipe), output->name);
 		return false;
 	}
 
