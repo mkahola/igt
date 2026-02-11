@@ -31,6 +31,7 @@
 #define USER_FENCE_VALUE	0xdeadbeefdeadbeefull
 #define QUARTER_SEC		(NSEC_PER_SEC / 4)
 #define FIVE_SEC		(5LL * NSEC_PER_SEC)
+#define NUM_HUGE_PAGES		128
 
 struct test_exec_data {
 	uint32_t batch[32];
@@ -54,6 +55,28 @@ struct batch_data {
 	(data__)->expected_data;				\
 })
 #define READ_VALUE(data__)	((data__)->expected_data)
+
+bool is_hugepg_enable = false;
+
+static void set_nr_hugepages(int n)
+{
+	char cmd[64];
+
+	snprintf(cmd, sizeof(cmd), "echo %d > /proc/sys/vm/nr_hugepages", n);
+	igt_assert(system(cmd) == 0);
+}
+
+static void reset_nr_hugepages(void)
+{
+	set_nr_hugepages(0);
+	is_hugepg_enable = false;
+}
+
+static void enable_hugepage(void)
+{
+	set_nr_hugepages(NUM_HUGE_PAGES);
+	is_hugepg_enable = true;
+}
 
 static void __write_dword(uint32_t *batch, uint64_t sdi_addr, uint32_t wdata,
 			int *idx)
@@ -1444,8 +1467,10 @@ test_exec(int fd, struct drm_xe_engine_class_instance *eci,
 	if (flags & EVERY_OTHER_CHECK && odd(n_execs))
 		return;
 
-	if (flags & HUGE_PAGE)
+	if (flags & HUGE_PAGE) {
+		enable_hugepage();
 		igt_require_hugepages();
+	}
 
 	if (flags & EVERY_OTHER_CHECK)
 		igt_assert(flags & MREMAP);
@@ -1984,6 +2009,9 @@ cleanup:
 	}
 	if (free_vm)
 		xe_vm_destroy(fd, vm);
+
+	if (is_hugepg_enable)
+		reset_nr_hugepages();
 }
 
 struct thread_data {
@@ -2036,8 +2064,10 @@ threads(int fd, int n_exec_queues, int n_execs, size_t bo_size,
 	if ((FILE_BACKED | FORK_READ) & flags)
 		return;
 
-	if (flags & HUGE_PAGE)
+	if (flags & HUGE_PAGE) {
+		enable_hugepage();
 		igt_require_hugepages();
+	}
 
 	xe_for_each_engine(fd, hwe)
 		++n_engines;
@@ -2115,6 +2145,9 @@ threads(int fd, int n_exec_queues, int n_execs, size_t bo_size,
 			free(alloc);
 	}
 	free(threads_data);
+
+	if (is_hugepg_enable)
+		reset_nr_hugepages();
 }
 
 static void process(struct drm_xe_engine_class_instance *hwe, int n_exec_queues,
@@ -2150,8 +2183,10 @@ processes(int fd, int n_exec_queues, int n_execs, size_t bo_size,
 	if (flags & FORK_READ)
 		return;
 
-	if (flags & HUGE_PAGE)
+	if (flags & HUGE_PAGE) {
+		enable_hugepage();
 		igt_require_hugepages();
+	}
 
 	map_fd = open(sync_file, O_RDWR | O_CREAT, 0x666);
 	posix_fallocate(map_fd, 0, sizeof(*pdata));
@@ -2171,6 +2206,9 @@ processes(int fd, int n_exec_queues, int n_execs, size_t bo_size,
 
 	close(map_fd);
 	munmap(pdata, sizeof(*pdata));
+
+	if (is_hugepg_enable)
+		reset_nr_hugepages();
 }
 
 /* compute flags */
