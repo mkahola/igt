@@ -12,6 +12,7 @@
 #include "lib/amdgpu/amd_command_submission.h"
 #include "lib/amdgpu/compute_utils/amd_dispatch_helpers.h"
 #include "lib/amdgpu/compute_utils/amd_dispatch.h"
+#include "lib/amdgpu/amd_utils.h"
 
 static void
 amdgpu_dispatch_hang_slow_gfx(amdgpu_device_handle device_handle,
@@ -95,7 +96,7 @@ int igt_main()
 	igt_fixture() {
 		uint32_t major, minor;
 		int err;
-
+		log_total_time(true, igt_test_name());
 		fd = drm_open_driver(DRIVER_AMDGPU);
 
 		err = amdgpu_device_initialize(fd, &major, &minor, &device);
@@ -218,5 +219,6 @@ int igt_main()
 	igt_fixture() {
 		amdgpu_device_deinitialize(device);
 		drm_close_driver(fd);
+		log_total_time(false,  igt_test_name());
 	}
 }

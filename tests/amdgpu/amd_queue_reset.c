@@ -26,7 +26,7 @@
 #include "lib/amdgpu/amd_deadlock_helpers.h"
 #include "lib/amdgpu/compute_utils/amd_dispatch.h"
 #include "lib/amdgpu/amdgpu_asic_addr.h"
-
+#include "lib/amdgpu/amd_utils.h"
 
 #define NUM_CHILD_PROCESSES 4
 
@@ -1166,6 +1166,7 @@ int igt_main()
 		uint32_t major, minor;
 		int err;
 
+		log_total_time(true, igt_test_name());
 		posix_spawn_file_actions_init(&action);
 
 		if (!get_command_line(cmdline, &argc, &argv, &path))
@@ -1265,5 +1266,6 @@ int igt_main()
 		posix_spawn_file_actions_destroy(&action);
 
 		free_command_line(argc, argv, path);
+		log_total_time(false, igt_test_name());
 	}
 }
