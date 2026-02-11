@@ -126,6 +126,7 @@ typedef struct {
 	uint32_t lessee_id;
 	igt_display_t display;
 	struct igt_fb primary_fb;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 	drmModeModeInfo *mode;
 } lease_t;
@@ -133,7 +134,6 @@ typedef struct {
 typedef struct {
 	lease_t lease;
 	lease_t master;
-	enum pipe pipe;
 	uint32_t crtc_id;
 	uint32_t connector_id;
 	uint32_t plane_id;
@@ -152,8 +152,8 @@ static int prepare_crtc(data_t *data, bool is_master)
 	drmModeModeInfo *mode;
 	lease_t *lease = is_master ? &data->master : &data->lease;
 	igt_display_t *display = &lease->display;
+	igt_crtc_t *crtc = igt_crtc_for_crtc_id(display, data->crtc_id);
 	igt_output_t *output = connector_id_to_output(display, data->connector_id);
-	enum pipe pipe = igt_crtc_for_pipe(display, data->pipe)->pipe;
 	igt_plane_t *primary;
 	int ret;
 
@@ -161,7 +161,7 @@ static int prepare_crtc(data_t *data, bool is_master)
 		return -ENOENT;
 
 	/* select the pipe we want to use */
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	/* create and set the primary plane fb */
 	mode = igt_output_get_mode(output);
@@ -179,8 +179,9 @@ static int prepare_crtc(data_t *data, bool is_master)
 	if (ret)
 		return ret;
 
-	igt_wait_for_vblank(igt_crtc_for_pipe(display, pipe));
+	igt_wait_for_vblank(crtc);
 
+	lease->crtc = crtc;
 	lease->output = output;
 	lease->mode = mode;
 	return 0;
@@ -308,8 +309,6 @@ static int paint_fb(int drm_fd, struct igt_fb *fb, const char *test_name,
 
 static void simple_lease(data_t *data)
 {
-	enum pipe pipe = data->pipe;
-
 	/* Create a valid lease */
 	igt_assert_eq(make_lease(data), 0);
 
@@ -321,7 +320,7 @@ static void simple_lease(data_t *data)
 	/* Paint something attractive */
 	paint_fb(data->lease.fd, &data->lease.primary_fb, "simple-lease",
 		 data->lease.mode->name, igt_output_name(data->lease.output),
-		 kmstest_pipe_name(pipe));
+		 igt_crtc_name(data->lease.crtc));
 	igt_debug_wait_for_keypress("lease");
 	cleanup_crtc(&data->lease,
 		     connector_id_to_output(&data->lease.display, data->connector_id));
@@ -341,8 +340,6 @@ static void page_flip_implicit_plane(data_t *data)
 	drmModePlaneRes *plane_resources;
 	uint32_t wrong_plane_id = 0;
 	int i;
-	igt_display_t *display;
-	enum pipe pipe = data->pipe;
 
 	/* find a plane which isn't the primary one for us */
 	plane_resources = drmModeGetPlaneResources(data->master.fd);
@@ -374,9 +371,7 @@ static void page_flip_implicit_plane(data_t *data)
 			      data->master.primary_fb.fb_id,
 			      0, NULL));
 
-	display = &data->master.display;
-
-	igt_wait_for_vblank(igt_crtc_for_pipe(display, pipe));
+	igt_wait_for_vblank(data->master.crtc);
 
 	do_or_die(drmModePageFlip(data->lease.fd, data->crtc_id,
 			      data->master.primary_fb.fb_id,
@@ -386,7 +381,7 @@ static void page_flip_implicit_plane(data_t *data)
 	object_ids[mcl.object_count++] = wrong_plane_id;
 	do_or_die(create_lease(data->master.fd, &mcl, &data->lease.fd));
 
-	igt_wait_for_vblank(igt_crtc_for_pipe(display, pipe));
+	igt_wait_for_vblank(data->master.crtc);
 
 	igt_assert_eq(drmModePageFlip(data->lease.fd, data->crtc_id,
 				      data->master.primary_fb.fb_id,
@@ -1290,7 +1285,6 @@ int igt_main()
 			igt_subtest_with_dynamic_f("%s", f->name) {
 				for_each_crtc_with_valid_output(display, crtc,
 								output) {
-					data.pipe = crtc->pipe;
 					igt_display_reset(display);
 
 					igt_output_set_crtc(output,
