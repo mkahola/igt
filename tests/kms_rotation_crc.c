@@ -292,11 +292,10 @@ static void cleanup_crtc(data_t *data)
 	igt_display_reset(display);
 }
 
-static void prepare_crtc(data_t *data, igt_output_t *output, enum pipe pipe,
+static void prepare_crtc(data_t *data, igt_output_t *output, igt_crtc_t *crtc,
 			 igt_plane_t *plane, bool start_crc)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 
 	cleanup_crtc(data);
 
@@ -462,13 +461,12 @@ static void prepare_fbs(data_t *data, igt_output_t *output,
 		igt_plane_set_position(plane, data->pos_x, data->pos_y);
 }
 
-static void test_single_case(data_t *data, enum pipe pipe,
+static void test_single_case(data_t *data, igt_crtc_t *crtc,
 			     igt_output_t *output, igt_plane_t *plane,
 			     enum rectangle_type rect,
 			     uint32_t format, bool test_bad_format)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crc_t crc_output;
 	int ret;
 
@@ -655,7 +653,9 @@ static void test_plane_rotation(data_t *data, int plane_type, bool test_bad_form
 		plane = igt_output_get_plane_type(output, plane_type);
 		igt_require(plane_rotation_requirements(data, plane));
 
-		prepare_crtc(data, output, crtc->pipe, plane, true);
+		prepare_crtc(data, output,
+			     crtc,
+			     plane, true);
 
 		for (i = 0; i < num_rectangle_types; i++) {
 			/* Unsupported on intel */
@@ -687,13 +687,17 @@ static void test_plane_rotation(data_t *data, int plane_type, bool test_bad_form
 					if (!test_format(data, &tested_formats, format))
 						continue;
 
-					test_single_case(data, crtc->pipe, output, plane, i,
+					test_single_case(data,
+							 crtc,
+							 output, plane, i,
 							 format, test_bad_format);
 				}
 
 				igt_vec_fini(&tested_formats);
 			} else {
-				test_single_case(data, crtc->pipe, output, plane, i,
+				test_single_case(data,
+						 crtc,
+						 output, plane, i,
 						 data->override_fmt, test_bad_format);
 			}
 		}
@@ -904,10 +908,9 @@ static bool reusecrcfromlastround(planeinfos p[2], int lastroundp1format,
  * It is left here if this test ever was wanted to be run on
  * different pipes.
  */
-static void test_multi_plane_rotation(data_t *data, enum pipe pipe)
+static void test_multi_plane_rotation(data_t *data, igt_crtc_t *crtc)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_output_t *output;
 	igt_crc_t retcrc_sw, retcrc_hw;
 	planeinfos p[2];
@@ -1102,13 +1105,11 @@ static void test_multi_plane_rotation(data_t *data, enum pipe pipe)
 	igt_require_f(found, "No valid pipe/output combo found.\n");
 }
 
-static void test_plane_rotation_exhaust_fences(data_t *data,
-					       enum pipe pipe,
+static void test_plane_rotation_exhaust_fences(data_t *data, igt_crtc_t *crtc,
 					       igt_output_t *output,
 					       igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	uint64_t modifier = I915_FORMAT_MOD_Y_TILED;
 	uint32_t format = DRM_FORMAT_XRGB8888;
 	int fd = data->gfx_fd;
@@ -1123,7 +1124,9 @@ static void test_plane_rotation_exhaust_fences(data_t *data,
 	igt_require(igt_plane_has_rotation(plane, IGT_ROTATION_0 | IGT_ROTATION_90));
 	igt_require(gem_available_fences(display->drm_fd) > 0);
 
-	prepare_crtc(data, output, crtc->pipe, plane, false);
+	prepare_crtc(data, output,
+		     crtc, plane,
+		     false);
 
 	mode = igt_output_get_mode(output);
 	w = mode->hdisplay;
@@ -1319,7 +1322,8 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		data.planepos[1].origo = p_top | p_right;
 		data.planepos[1].x = -.4f;
 		data.planepos[1].y = .1f;
-		test_multi_plane_rotation(&data, PIPE_A);
+		test_multi_plane_rotation(&data,
+					  igt_crtc_for_pipe(&data.display, PIPE_A));
 	}
 
 	igt_describe("Rotation test on both planes by cropping left/top corner of primary plane and"
@@ -1333,7 +1337,8 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		data.planepos[1].origo = p_top | p_right;
 		data.planepos[1].x = -.15f;
 		data.planepos[1].y = -.15f;
-		test_multi_plane_rotation(&data, PIPE_A);
+		test_multi_plane_rotation(&data,
+					  igt_crtc_for_pipe(&data.display, PIPE_A));
 	}
 
 	igt_describe("Rotation test on both planes by cropping left/bottom corner of primary plane"
@@ -1347,7 +1352,8 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		data.planepos[1].origo = p_bottom | p_right;
 		data.planepos[1].x = -.15f;
 		data.planepos[1].y = -.20f;
-		test_multi_plane_rotation(&data, PIPE_A);
+		test_multi_plane_rotation(&data,
+					  igt_crtc_for_pipe(&data.display, PIPE_A));
 	}
 
 	/*
@@ -1365,7 +1371,9 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		for_each_crtc_with_valid_output(&data.display, crtc, output) {
 			igt_plane_t *primary = &crtc->planes[0];
 
-			test_plane_rotation_exhaust_fences(&data, crtc->pipe, output, primary);
+			test_plane_rotation_exhaust_fences(&data,
+							   crtc,
+							   output, primary);
 			break;
 		}
 	}
