@@ -147,10 +147,9 @@ static igt_output_t *connector_id_to_output(igt_display_t *display, uint32_t con
 	return igt_output_from_connector(display, &connector);
 }
 
-static int prepare_crtc(data_t *data, bool is_master)
+static int prepare_crtc(data_t *data, lease_t *lease)
 {
 	drmModeModeInfo *mode;
-	lease_t *lease = is_master ? &data->master : &data->lease;
 	igt_display_t *display = &lease->display;
 	igt_crtc_t *crtc = igt_crtc_for_crtc_id(display, data->crtc_id);
 	igt_output_t *output = connector_id_to_output(display, data->connector_id);
@@ -315,7 +314,7 @@ static void simple_lease(data_t *data)
 	igt_display_require(&data->lease.display, data->lease.fd);
 
 	/* Set a mode on the leased output */
-	igt_assert_eq(0, prepare_crtc(data, false));
+	igt_assert_eq(0, prepare_crtc(data, &data->lease));
 
 	/* Paint something attractive */
 	paint_fb(data->lease.fd, &data->lease.primary_fb, "simple-lease",
@@ -364,7 +363,7 @@ static void page_flip_implicit_plane(data_t *data)
 	drmSetClientCap(data->master.fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
 
 	/* Set a mode on the leased output */
-	igt_assert_eq(0, prepare_crtc(data, true));
+	igt_assert_eq(0, prepare_crtc(data, &data->master));
 
 	/* sanity check */
 	do_or_die(drmModePageFlip(data->master.fd, data->crtc_id,
@@ -436,7 +435,7 @@ static void setcrtc_implicit_plane(data_t *data)
 	}
 
 	/* Set a mode on the leased output */
-	igt_assert_eq(0, prepare_crtc(data, true));
+	igt_assert_eq(0, prepare_crtc(data, &data->master));
 
 	/* sanity check */
 	ret = drmModeSetCrtc(data->master.fd, data->crtc_id, -1,
@@ -477,7 +476,7 @@ static void cursor_implicit_plane(data_t *data)
 	drmSetClientCap(data->master.fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
 
 	/* Set a mode on the leased output */
-	igt_assert_eq(0, prepare_crtc(data, true));
+	igt_assert_eq(0, prepare_crtc(data, &data->master));
 
 	/* sanity check */
 	do_or_die(drmModeSetCursor(data->master.fd, data->crtc_id, 0, 0, 0));
@@ -788,7 +787,7 @@ static void lease_revoke(data_t *data)
 	igt_assert_eq(revoke_lease(data->master.fd, &mrl), 0);
 
 	/* Try to use the leased objects */
-	ret = prepare_crtc(data, false);
+	ret = prepare_crtc(data, &data->lease);
 
 	/* Ensure that the expected error is returned */
 	igt_assert_eq(ret, -ENOENT);
