@@ -168,11 +168,11 @@ static void draw_squares_coverage(struct igt_fb *fb, int w, int h, uint8_t as)
 	igt_put_cairo_ctx(cr);
 }
 
-static void reset_alpha(igt_display_t *display, enum pipe pipe)
+static void reset_alpha(igt_display_t *display, igt_crtc_t *crtc)
 {
 	igt_plane_t *plane;
 
-	for_each_plane_on_pipe(display, pipe, plane) {
+	for_each_plane_on_pipe(display, crtc->pipe, plane) {
 		if (igt_plane_has_prop(plane, IGT_PLANE_ALPHA))
 			igt_plane_set_prop_value(plane, IGT_PLANE_ALPHA, 0xffff);
 
@@ -209,11 +209,9 @@ static void remove_fbs(data_t *data)
 	igt_remove_fb(data->gfx_fd, &data->gray_fb);
 }
 
-static void prepare_crtc(data_t *data, igt_output_t *output, enum pipe pipe)
+static void prepare_crtc(data_t *data, igt_output_t *output, igt_crtc_t *crtc)
 {
 	drmModeModeInfo *mode;
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	int w, h;
 	igt_plane_t *primary = igt_crtc_get_plane_type(crtc,
 						       DRM_PLANE_TYPE_PRIMARY);
@@ -289,7 +287,7 @@ static void prepare_crtc(data_t *data, igt_output_t *output, enum pipe pipe)
 	igt_plane_set_fb(primary, &data->black_fb);
 }
 
-static void basic_alpha(data_t *data, enum pipe pipe, igt_plane_t *plane)
+static void basic_alpha(data_t *data, igt_crtc_t *crtc, igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
 	igt_crc_t ref_crc, crc;
@@ -327,7 +325,7 @@ static void basic_alpha(data_t *data, enum pipe pipe, igt_plane_t *plane)
 	igt_assert_crc_equal(&ref_crc, &crc);
 }
 
-static void argb_opaque(data_t *data, enum pipe pipe, igt_plane_t *plane)
+static void argb_opaque(data_t *data, igt_crtc_t *crtc, igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
 	igt_crc_t ref_crc, crc;
@@ -344,7 +342,8 @@ static void argb_opaque(data_t *data, enum pipe pipe, igt_plane_t *plane)
 	igt_assert_crc_equal(&ref_crc, &crc);
 }
 
-static void argb_transparent(data_t *data, enum pipe pipe, igt_plane_t *plane)
+static void argb_transparent(data_t *data, igt_crtc_t *crtc,
+			     igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
 	igt_crc_t ref_crc, crc;
@@ -361,7 +360,8 @@ static void argb_transparent(data_t *data, enum pipe pipe, igt_plane_t *plane)
 	igt_assert_crc_equal(&ref_crc, &crc);
 }
 
-static void constant_alpha_min(data_t *data, enum pipe pipe, igt_plane_t *plane)
+static void constant_alpha_min(data_t *data, igt_crtc_t *crtc,
+			       igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
 	igt_crc_t ref_crc, crc;
@@ -383,10 +383,10 @@ static void constant_alpha_min(data_t *data, enum pipe pipe, igt_plane_t *plane)
 	igt_assert_crc_equal(&ref_crc, &crc);
 }
 
-static void constant_alpha_mid(data_t *data, enum pipe pipe, igt_plane_t *plane)
+static void constant_alpha_mid(data_t *data, igt_crtc_t *crtc,
+			       igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crc_t ref_crc, crc;
 
 	if (plane->type != DRM_PLANE_TYPE_PRIMARY)
@@ -410,10 +410,10 @@ static void constant_alpha_mid(data_t *data, enum pipe pipe, igt_plane_t *plane)
 	igt_assert_crc_equal(&ref_crc, &crc);
 }
 
-static void constant_alpha_max(data_t *data, enum pipe pipe, igt_plane_t *plane)
+static void constant_alpha_max(data_t *data, igt_crtc_t *crtc,
+			       igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crc_t ref_crc, crc;
 
 	if (plane->type != DRM_PLANE_TYPE_PRIMARY)
@@ -442,10 +442,9 @@ static void constant_alpha_max(data_t *data, enum pipe pipe, igt_plane_t *plane)
 	igt_plane_set_fb(plane, NULL);
 }
 
-static void alpha_7efc(data_t *data, enum pipe pipe, igt_plane_t *plane)
+static void alpha_7efc(data_t *data, igt_crtc_t *crtc, igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crc_t ref_crc = {}, crc = {};
 
 	if (plane->type != DRM_PLANE_TYPE_PRIMARY)
@@ -471,7 +470,7 @@ static void alpha_7efc(data_t *data, enum pipe pipe, igt_plane_t *plane)
 	igt_pipe_crc_stop(data->pipe_crc);
 }
 
-static void coverage_7efc(data_t *data, enum pipe pipe, igt_plane_t *plane)
+static void coverage_7efc(data_t *data, igt_crtc_t *crtc, igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
 	igt_crc_t ref_crc = {}, crc = {};
@@ -497,10 +496,10 @@ static void coverage_7efc(data_t *data, enum pipe pipe, igt_plane_t *plane)
 	igt_pipe_crc_stop(data->pipe_crc);
 }
 
-static void coverage_premult_constant(data_t *data, enum pipe pipe, igt_plane_t *plane)
+static void coverage_premult_constant(data_t *data, igt_crtc_t *crtc,
+				      igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crc_t ref_crc = {}, crc = {};
 
 	/* Set a background color on the primary fb for testing */
@@ -530,12 +529,12 @@ static void coverage_premult_constant(data_t *data, enum pipe pipe, igt_plane_t 
 	igt_pipe_crc_stop(data->pipe_crc);
 }
 
-static void run_test_on_pipe_planes(data_t *data, enum pipe pipe, igt_output_t *output,
+static void run_test_on_pipe_planes(data_t *data, igt_crtc_t *crtc,
+				    igt_output_t *output,
 				    bool blend, bool must_multiply,
-				    void(*test)(data_t *, enum pipe, igt_plane_t *))
+				    void(*test)(data_t *, igt_crtc_t *crtc, igt_plane_t *))
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_plane_t *plane;
 	int first_plane = -1;
 	int last_plane = -1;
@@ -548,7 +547,7 @@ static void run_test_on_pipe_planes(data_t *data, enum pipe pipe, igt_output_t *
 			continue;
 
 		/* reset plane alpha properties between each plane */
-		reset_alpha(display, crtc->pipe);
+		reset_alpha(display, crtc);
 
 		if (must_multiply && !has_multiplied_alpha(data, plane))
 			continue;
@@ -568,7 +567,7 @@ static void run_test_on_pipe_planes(data_t *data, enum pipe pipe, igt_output_t *
 			continue;
 
 		/* Reset plane alpha properties between each plane. */
-		reset_alpha(display, crtc->pipe);
+		reset_alpha(display, crtc);
 
 		if (must_multiply && !has_multiplied_alpha(data, plane))
 			continue;
@@ -577,7 +576,7 @@ static void run_test_on_pipe_planes(data_t *data, enum pipe pipe, igt_output_t *
 			continue;
 
 		igt_info("Testing plane %u\n", plane->index);
-		test(data, crtc->pipe, plane);
+		test(data, crtc, plane);
 		igt_plane_set_fb(plane, NULL);
 
 		if (in_simulation)
@@ -590,7 +589,7 @@ static void run_test_on_pipe_planes(data_t *data, enum pipe pipe, igt_output_t *
 
 static const struct {
 	const char *name;
-	void (*test)(data_t *, enum pipe, igt_plane_t *);
+	void (*test)(data_t *, igt_crtc_t *crtc, igt_plane_t *);
 	bool blend;
 	bool must_multiply;
 	const char *desc;
@@ -653,11 +652,10 @@ static const struct {
 	},
 };
 
-static bool pipe_check(data_t *data, enum pipe pipe,
+static bool pipe_check(data_t *data, igt_crtc_t *crtc,
 		       bool blend, bool must_multiply)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_plane_t *plane;
 	bool plane_alpha = false, plane_blend = false, multiply = false;
 
@@ -672,7 +670,7 @@ static bool pipe_check(data_t *data, enum pipe pipe,
 		plane_blend = true;
 
 		/* reset plane alpha properties between each plane */
-		reset_alpha(display, crtc->pipe);
+		reset_alpha(display, crtc);
 
 		if (must_multiply && !has_multiplied_alpha(data, plane))
 			continue;
@@ -718,15 +716,16 @@ static void run_subtests(data_t *data)
 				if (!intel_pipe_output_combo_valid(&data->display))
 					continue;
 
-				prepare_crtc(data, output, crtc->pipe);
-				if (!pipe_check(data, crtc->pipe, subtests[i].blend, subtests[i].must_multiply))
+				prepare_crtc(data, output,
+					     crtc);
+				if (!pipe_check(data, crtc, subtests[i].blend, subtests[i].must_multiply))
 					continue;
 
 				igt_dynamic_f("pipe-%s-%s",
 					      igt_crtc_name(crtc),
 					      output->name)
 					run_test_on_pipe_planes(data,
-								crtc->pipe,
+								crtc,
 								output,
 								subtests[i].blend,
 								subtests[i].must_multiply, subtests[i].test);
