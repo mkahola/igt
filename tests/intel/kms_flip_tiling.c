@@ -67,7 +67,7 @@ static void pipe_crc_free(data_t *data)
 	data->pipe_crc = NULL;
 }
 
-static void pipe_crc_new(data_t *data, int pipe)
+static void pipe_crc_new(data_t *data, enum pipe pipe)
 {
 	igt_display_t *display = &data->display;
 	if (data->pipe_crc)

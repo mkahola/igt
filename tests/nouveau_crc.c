@@ -31,7 +31,7 @@ IGT_TEST_DESCRIPTION(
 "such as context flipping.");
 
 typedef struct {
-	int pipe;
+	enum pipe pipe;
 	int drm_fd;
 	int nv_crc_dir;
 	igt_display_t display;
