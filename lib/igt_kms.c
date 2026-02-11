@@ -7952,3 +7952,15 @@ bool igt_has_lobf_debugfs(int drmfd, igt_output_t *output)
                                               buf, sizeof(buf));
         return res == 0;
 }
+
+igt_crtc_t *igt_crtc_for_crtc_id(igt_display_t *display, uint32_t crtc_id)
+{
+	igt_crtc_t *crtc;
+
+	for_each_crtc(display, crtc) {
+		if (crtc->crtc_id == crtc_id)
+			return crtc;
+	}
+
+	return NULL;
+}
