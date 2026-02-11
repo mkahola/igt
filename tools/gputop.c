@@ -30,12 +30,19 @@
 #include "igt_drm_clients.h"
 #include "igt_drm_fdinfo.h"
 #include "igt_profiling.h"
-#include "drmtest.h"
 
 enum utilization_type {
 	UTILIZATION_TYPE_ENGINE_TIME,
 	UTILIZATION_TYPE_TOTAL_CYCLES,
 };
+
+enum intel_driver_type {
+	INTEL_DRIVER_I915,
+	INTEL_DRIVER_XE,
+	INTEL_DRIVER_UNKNOWN,
+};
+
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 static const char *bars[] = { " ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█" };
 
@@ -76,17 +83,203 @@ static void print_percentage_bar(double percent, int max_len)
 	putchar('|');
 }
 
+/* Get the correct sysfs prefix based on DRM minor number */
+static const char *get_sysfs_drm_path(unsigned int drm_minor)
+{
+	return drm_minor >= 128 ? "/sys/class/drm/renderD" : "/sys/class/drm/card";
+}
+
+/* Detect if driver is bound to the device */
+static bool is_bound(unsigned int drm_minor, const char *driver_name)
+{
+	char path[256];
+	char link[256];
+	char *driver;
+	ssize_t len;
+
+	/* Read the driver symlink */
+	snprintf(path, sizeof(path), "%s%u/device/driver",
+		 get_sysfs_drm_path(drm_minor), drm_minor);
+	len = readlink(path, link, sizeof(link) - 1);
+	if (len == -1)
+		return false;
+
+	link[len] = '\0';
+
+	/* Extract driver name from path (e.g., "bus/pci/drivers/i915" -> "i915") */
+	driver = strrchr(link, '/');
+	if (!driver)
+		return false;
+
+	driver++; /* Skip the '/' */
+
+	return strcmp(driver, driver_name) == 0;
+}
+
+/* Detect if this is an Intel device (i915 or Xe) */
+static bool is_intel_device(unsigned int drm_minor)
+{
+	return is_bound(drm_minor, "i915") || is_bound(drm_minor, "xe");
+}
+
+/* Detect Intel driver variant */
+static enum intel_driver_type detect_intel_driver(unsigned int drm_minor)
+{
+	if (is_bound(drm_minor, "xe"))
+		return INTEL_DRIVER_XE;
+	else if (is_bound(drm_minor, "i915"))
+		return INTEL_DRIVER_I915;
+
+	return INTEL_DRIVER_UNKNOWN;
+}
+
+/* Count the number of GTs by checking which gt* directories exist */
+static int get_num_gts(unsigned int drm_minor, enum intel_driver_type driver_type)
+{
+	char path[256];
+	struct stat st;
+	int gt_count = 0;
+
+	/* Check for gt0, gt1, gt2, etc. up to a reasonable maximum */
+	for (int i = 0; i < 8; i++) {
+		if (driver_type == INTEL_DRIVER_XE)
+			/* For Xe, all GTs are under tile0 */
+			snprintf(path, sizeof(path), "%s%u/device/tile0/gt%d",
+				 get_sysfs_drm_path(drm_minor), drm_minor, i);
+		else /* i915 */
+			snprintf(path, sizeof(path), "%s%u/gt/gt%d",
+				 get_sysfs_drm_path(drm_minor), drm_minor, i);
+
+		if (stat(path, &st) == 0 && S_ISDIR(st.st_mode))
+			gt_count++;
+		else
+			break;  /* Assume GTs are numbered sequentially */
+	}
+
+	return gt_count;
+}
+
+/* Read a single frequency value from sysfs */
+static bool read_freq_value(const char *path, unsigned int *freq)
+{
+	FILE *fp;
+	char buf[32];
+	bool success = false;
+
+	fp = fopen(path, "r");
+	if (fp) {
+		if (fgets(buf, sizeof(buf), fp)) {
+			*freq = atoi(buf);
+			success = true;
+		}
+		fclose(fp);
+	}
+
+	return success;
+}
+
+/* Intel-specific frequency reading for i915/Xe drivers */
+static char *get_intel_frequencies(unsigned int drm_minor)
+{
+	char freq_str[512] = "";
+	char gt_info[64];
+	int num_gts;
+	int gt;
+	enum intel_driver_type driver_type;
+	bool first = true;
+
+	/* Detect Intel driver variant */
+	driver_type = detect_intel_driver(drm_minor);
+	if (driver_type == INTEL_DRIVER_UNKNOWN)
+		return NULL;
+
+	/* Get GT count from sysfs */
+	num_gts = get_num_gts(drm_minor, driver_type);
+	if (num_gts == 0)
+		return NULL;
+
+	/* Read frequencies for each GT */
+	for (gt = 0; gt < num_gts; gt++) {
+		char freq_path[256];
+		unsigned int cur_freq = 0, act_freq = 0;
+		bool has_cur = false, has_act = false;
+
+		/* Read requested frequency */
+		if (driver_type == INTEL_DRIVER_XE)
+			snprintf(freq_path, sizeof(freq_path),
+				 "%s%u/device/tile0/gt%d/freq0/cur_freq",
+				 get_sysfs_drm_path(drm_minor), drm_minor, gt);
+		else /* i915 */
+			snprintf(freq_path, sizeof(freq_path),
+				 "%s%u/gt/gt%d/rps_cur_freq_mhz",
+				 get_sysfs_drm_path(drm_minor), drm_minor, gt);
+
+		has_cur = read_freq_value(freq_path, &cur_freq);
+
+		/* Read actual frequency */
+		if (driver_type == INTEL_DRIVER_XE)
+			snprintf(freq_path, sizeof(freq_path),
+				 "%s%u/device/tile0/gt%d/freq0/act_freq",
+				 get_sysfs_drm_path(drm_minor), drm_minor, gt);
+		else /* i915 */
+			snprintf(freq_path, sizeof(freq_path),
+				 "%s%u/gt/gt%d/rps_act_freq_mhz",
+				 get_sysfs_drm_path(drm_minor), drm_minor, gt);
+
+		has_act = read_freq_value(freq_path, &act_freq);
+
+		/* Skip this GT if we couldn't read any frequency */
+		if (!has_cur && !has_act)
+			continue;
+
+		/* Append to frequency string */
+		if (!first)
+			strcat(freq_str, " ");
+		else
+			first = false;
+
+		snprintf(gt_info, sizeof(gt_info), "GT%d-%u/%u", gt, cur_freq, act_freq);
+		strcat(freq_str, gt_info);
+	}
+
+	if (strlen(freq_str) > 0)
+		return strdup(freq_str);
+
+	return NULL;
+}
+
+/* Generic wrapper for frequency reading - dispatches to vendor-specific implementations */
+static char *get_frequencies(unsigned int drm_minor)
+{
+	/* Check for Intel devices (i915/Xe) */
+	if (is_intel_device(drm_minor))
+		return get_intel_frequencies(drm_minor);
+
+	return NULL;
+}
+
 static int
 print_client_header(struct igt_drm_client *c, int lines, int con_w, int con_h,
 		    int *engine_w)
 {
 	int ret, len;
+	char *freq_info = NULL;
 
 	if (lines++ >= con_h)
 		return lines;
 
 	printf(ANSI_HEADER);
-	ret = printf("DRM minor %u", c->drm_minor);
+
+	/* Get frequency information */
+	freq_info = get_frequencies(c->drm_minor);
+
+	if (freq_info) {
+		ret = printf("DRM minor %u   Frequency(MHz) %s", c->drm_minor, freq_info);
+		free(freq_info);
+	} else {
+		ret = printf("DRM minor %u", c->drm_minor);
+	}
+
 	n_spaces(con_w - ret);
 
 	if (lines++ >= con_h)
