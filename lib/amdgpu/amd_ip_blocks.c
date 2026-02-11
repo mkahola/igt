@@ -634,6 +634,10 @@ user_queue_submit(amdgpu_device_handle device, struct amdgpu_ring_context *ring_
 	unsigned int nop_count;
 	struct timespec ts;
 	uint64_t current_ns;
+	unsigned int i, j;
+	uint64_t va, value;
+	unsigned num_fences_in_iter;
+	struct amdgpu_userq_params *userq_params;
 
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	current_ns = (uint64_t)ts.tv_sec * NSEC_PER_SEC + ts.tv_nsec;
@@ -643,7 +647,7 @@ user_queue_submit(amdgpu_device_handle device, struct amdgpu_ring_context *ring_
 		amdgpu_sdma_pkt_begin();
 		/* For SDMA, we need to align the IB to 8 DW boundary */
 		nop_count = (2 - lower_32_bits(*ring_context->wptr_cpu)) & 7;
-		for (unsigned int i = 0; i < nop_count; i++)
+		for (i = 0; i < nop_count; i++)
 			amdgpu_pkt_add_dw(SDMA_PKT_HEADER_OP(SDMA_NOP));
 		amdgpu_pkt_add_dw(SDMA_PKT_HEADER_OP(SDMA_OP_INDIRECT));
 		amdgpu_pkt_add_dw(lower_32_bits(mc_address) & 0xffffffe0); // 32-byte aligned
@@ -659,6 +663,39 @@ user_queue_submit(amdgpu_device_handle device, struct amdgpu_ring_context *ring_
 		amdgpu_sdma_pkt_end();
 	} else {
 		amdgpu_pkt_begin();
+
+		if (ring_context->userq_params) {
+			userq_params = ring_context->userq_params;
+
+			if (userq_params->job_start_write_data_va_addr) {
+				amdgpu_pkt_add_dw(PACKET3(PACKET3_WRITE_DATA, 4));
+				amdgpu_pkt_add_dw(WRITE_DATA_DST_SEL(5) | WR_CONFIRM | WRITE_DATA_CACHE_POLICY(3));
+				va = userq_params->job_start_write_data_va_addr;
+				value = userq_params->job_start_write_data_val;
+				amdgpu_pkt_add_dw(lower_32_bits(va));
+				amdgpu_pkt_add_dw(upper_32_bits(va));
+				amdgpu_pkt_add_dw(lower_32_bits(value));
+				amdgpu_pkt_add_dw(upper_32_bits(value));
+			}
+
+			if (ring_context->userq_params->num_fences) {
+				for (i = 0; i < userq_params->num_fences; i = i + ring_context->max_num_fences_fwm) {
+					num_fences_in_iter = (i + ring_context->max_num_fences_fwm > userq_params->num_fences) ?
+							     userq_params->num_fences - i : ring_context->max_num_fences_fwm;
+					amdgpu_pkt_add_dw(PACKET3(PACKET3_FENCE_WAIT_MULTI, num_fences_in_iter * 4));
+					amdgpu_pkt_add_dw(FWM_ENGINE_SEL(1) | FWM_POLL_INTERVAL(4));
+					for (j = 0; j < num_fences_in_iter; j++) {
+						va = userq_params->fence_info[i + j].va;
+						value = userq_params->fence_info[i + j].value;
+						amdgpu_pkt_add_dw(lower_32_bits(va));
+						amdgpu_pkt_add_dw(upper_32_bits(va));
+						amdgpu_pkt_add_dw(lower_32_bits(value));
+						amdgpu_pkt_add_dw(upper_32_bits(value));
+					}
+				}
+			}
+		}
+
 		/* Prepare the Indirect IB to submit the IB to user queue */
 		amdgpu_pkt_add_dw(PACKET3(PACKET3_INDIRECT_BUFFER, 2));
 		amdgpu_pkt_add_dw(lower_32_bits(mc_address));

@@ -208,6 +208,14 @@ struct amdgpu_cs_err_codes {
 	int err_code_wait_for_fence;
 };
 
+/* aux struct to hold parameters for userqueue fence */
+struct amdgpu_userq_params {
+	uint64_t num_fences;
+	struct drm_amdgpu_userq_fence_info *fence_info;
+	uint64_t job_start_write_data_va_addr;
+	uint64_t job_start_write_data_val;
+};
+
 /* aux struct to hold misc parameters for convenience to maintain */
 struct amdgpu_ring_context {
 
@@ -279,6 +287,8 @@ struct amdgpu_ring_context {
 	bool user_queue;
 	uint64_t time_out;
 	enum uq_submission_mode submit_mode;
+	uint32_t max_num_fences_fwm;
+	struct amdgpu_userq_params *userq_params;
 
 	struct drm_amdgpu_info_uq_fw_areas info;
 };

@@ -10,6 +10,7 @@
 #include "lib/amdgpu/amd_sdma.h"
 #include "lib/amdgpu/amd_PM4.h"
 #include "lib/amdgpu/amd_command_submission.h"
+#include "lib/amdgpu/amdgpu_asic_addr.h"
 #include "ioctl_wrappers.h"
 
 
@@ -185,6 +186,10 @@ static void amdgpu_create_ip_queues(amdgpu_device_handle device,
 		ring_context[ring_id].pm4_size = pm4_dw;
 		ring_context[ring_id].res_cnt = 1;
 		ring_context[ring_id].user_queue = user_queue;
+		if (ip_block->funcs->family_id == FAMILY_GFX1150)
+			ring_context[ring_id].max_num_fences_fwm = 4;
+		else
+			ring_context[ring_id].max_num_fences_fwm = 32;
 		igt_assert(ring_context[ring_id].pm4);
 
 		/* Copy the previously queried HW IP info instead of querying again */

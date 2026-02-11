@@ -224,4 +224,10 @@
 #define	PACKET3_INCREMENT_CE_COUNTER		0x84
 #define	PACKET3_WAIT_ON_CE_COUNTER		0x86
 
+#define	PACKET3_FENCE_WAIT_MULTI		0xD1
+#define		FWM_ENGINE_SEL(x)		((x & 1) << 0)
+#define		FWM_PREEMPTABLE(x)		((x & 1) << 1)
+#define		FWM_CACHE_POLICY(x)		((x & 3) << 2)
+#define		FWM_POLL_INTERVAL(x)		((x & 0xFFFF) << 16)
+
 #endif
