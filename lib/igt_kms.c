@@ -3622,16 +3622,14 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 {
 	unsigned full_pipe_mask = 0, assigned_pipes = 0;
 	igt_output_t *output;
+	igt_crtc_t *crtc;
 	int i, j;
 
 	memset(chosen_outputs, 0,
 	       sizeof(*chosen_outputs) * igt_display_n_crtcs(display));
 
-	for (i = 0; i < igt_display_n_crtcs(display); i++) {
-		igt_crtc_t *crtc = igt_crtc_for_pipe(display, i);
-		if (crtc->valid)
-			full_pipe_mask |= (1 << i);
-	}
+	for_each_crtc(display, crtc)
+		full_pipe_mask |= 1 << crtc->pipe;
 
 	/*
 	 * Try to assign all outputs to the first available CRTC for
