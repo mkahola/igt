@@ -130,10 +130,10 @@ static void free_fence_objs(data_t *data)
 		intel_buf_destroy(data->bos[i]);
 }
 
-static void run_single_test(data_t *data, enum pipe pipe, igt_output_t *output)
+static void run_single_test(data_t *data, igt_crtc_t *crtc,
+			    igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeModeInfo *mode;
 	igt_plane_t *primary;
 	struct igt_fb fb[2];
@@ -221,7 +221,8 @@ static void run_test(data_t *data)
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
-		run_single_test(data, crtc->pipe, output);
+		run_single_test(data, crtc,
+				output);
 
 		return; /* one time ought to be enough */
 	}

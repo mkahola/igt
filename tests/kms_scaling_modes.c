@@ -54,7 +54,8 @@ typedef struct data {
 	int drm_fd;
 } data_t;
 
-static void test_scaling_mode_on_output(igt_display_t *display, enum pipe pipe,
+static void test_scaling_mode_on_output(igt_display_t *display,
+					igt_crtc_t *crtc,
 					igt_output_t *output, uint32_t flags)
 {
 	igt_plane_t *primary, *sprite;
@@ -62,7 +63,7 @@ static void test_scaling_mode_on_output(igt_display_t *display, enum pipe pipe,
 	struct igt_fb red, blue;
 	int ret;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	mode = *igt_output_get_mode(output);
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
@@ -128,7 +129,8 @@ static void test_scaling_mode(data_t *data, uint32_t flags)
 
 		igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 			      igt_output_name(output))
-			test_scaling_mode_on_output(display, crtc->pipe,
+			test_scaling_mode_on_output(display,
+						    crtc,
 						    output, flags);
 	}
 }

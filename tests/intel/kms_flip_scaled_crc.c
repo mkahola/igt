@@ -680,10 +680,8 @@ static void free_fbs(data_t *data)
 	igt_remove_fb(data->drm_fd, &data->big_fb);
 }
 
-static void set_lut(data_t *data, enum pipe pipe)
+static void set_lut(data_t *data, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	struct drm_color_lut *lut;
 	drmModeCrtc *drm_crtc;
 	int i, lut_size;
@@ -713,20 +711,15 @@ static void set_lut(data_t *data, enum pipe pipe)
 	free(lut);
 }
 
-static void clear_lut(data_t *data, enum pipe pipe)
+static void clear_lut(data_t *data, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
-
 	igt_crtc_set_prop_value(crtc, IGT_CRTC_GAMMA_LUT, 0);
 }
 
 static void test_flip_to_scaled(data_t *data, uint32_t index,
-				enum pipe pipe, igt_output_t *output,
+				igt_crtc_t *crtc, igt_output_t *output,
 				drmModeModeInfoPtr modetoset, int flags)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_plane_t *primary;
 	igt_crc_t small_crc, big_crc;
 	struct drm_event_vblank ev;
@@ -778,7 +771,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 		      data->big_fb.modifier), "No requested format/modifier on pipe %s\n",
 		      igt_crtc_name(crtc));
 
-	set_lut(data, crtc->pipe);
+	set_lut(data, crtc);
 	igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
 	if (data->pipe_crc) {
@@ -833,7 +826,7 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 	igt_pipe_crc_free(data->pipe_crc);
 	data->pipe_crc = NULL;
 
-	clear_lut(data, crtc->pipe);
+	clear_lut(data, crtc);
 
 	modetoset = NULL;
 	igt_output_set_crtc(output, NULL);
@@ -860,10 +853,11 @@ static drmModeModeInfoPtr find_mode(data_t *data, igt_output_t *output)
 	return modetoset;
 }
 
-static void run_tests(data_t *data, uint32_t index, enum pipe pipe,
+static void run_tests(data_t *data, uint32_t index, igt_crtc_t *crtc,
 		      igt_output_t * output, drmModeModeInfoPtr modetoset)
 {
-	test_flip_to_scaled(data, index, pipe, output, modetoset, 0);
+	test_flip_to_scaled(data, index, crtc,
+			    output, modetoset, 0);
 
 	/*
 	 * test Nearest Neighbor filter. For scaler indexes see
@@ -871,7 +865,9 @@ static void run_tests(data_t *data, uint32_t index, enum pipe pipe,
 	 * Platform scaling filter property is supported only gen >= 11.
 	 */
 	if (data->gen >= 11)
-		test_flip_to_scaled(data, index, pipe, output, modetoset, 1);
+		test_flip_to_scaled(data, index,
+				    crtc, output,
+				    modetoset, 1);
 }
 
 int igt_main()
@@ -932,8 +928,9 @@ int igt_main()
 						found = true;
 						igt_dynamic_f("pipe-%s-valid-mode",
 							      igt_crtc_name(crtc))
-							run_tests(&data, index,
-								  crtc->pipe,
+							run_tests(&data,
+								  index,
+								  crtc,
 								  output,
 								  modetoset);
 						break;
@@ -953,8 +950,9 @@ int igt_main()
 						modetoset = NULL;
 						igt_dynamic_f("pipe-%s-default-mode",
 							      igt_crtc_name(crtc))
-							run_tests(&data, index,
-								  crtc->pipe,
+							run_tests(&data,
+								  index,
+								  crtc,
 								  output,
 								  modetoset);
 					}

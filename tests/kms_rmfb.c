@@ -74,11 +74,11 @@ struct rmfb_data {
  * so test this and make sure it works.
  */
 static void
-test_rmfb(struct rmfb_data *data, igt_output_t *output, enum pipe pipe, bool reopen)
+test_rmfb(struct rmfb_data *data, igt_output_t *output, igt_crtc_t *crtc,
+	  bool reopen)
 {
 	struct igt_fb fb, argb_fb;
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeModeInfo *mode;
 	igt_plane_t *plane;
 	drmModeCrtc *drm_crtc;
@@ -189,7 +189,9 @@ run_rmfb_test(struct rmfb_data *data, bool reopen)
 
 		igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 			      igt_output_name(output))
-			test_rmfb(data, output, crtc->pipe, reopen);
+			test_rmfb(data, output,
+				  crtc,
+				  reopen);
 	}
 }
 

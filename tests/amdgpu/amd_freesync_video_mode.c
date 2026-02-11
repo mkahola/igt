@@ -546,10 +546,8 @@ static bool has_vrr(igt_output_t *output)
 }
 
 /* Toggles variable refresh rate on the pipe. */
-static void set_vrr_on_pipe(data_t *data, enum pipe pipe, bool enabled)
+static void set_vrr_on_pipe(data_t *data, igt_crtc_t *crtc, bool enabled)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crtc_set_prop_value(crtc,
 				    IGT_CRTC_VRR_ENABLED,
 				    enabled);
@@ -772,7 +770,8 @@ static void finish_test(data_t *data, igt_output_t *output)
 }
 
 static void
-mode_transition(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t scene)
+mode_transition(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
+		uint32_t scene)
 {
 	int ret;
 	uint32_t result;
@@ -815,7 +814,7 @@ mode_transition(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t sce
 	igt_info("stage-1: fps:%d\n", mode_start->vrefresh);
 	prepare_test(data, output, mode_start);
 	interval = nsec_per_frame(mode_start->vrefresh);
-	set_vrr_on_pipe(data, pipe, true);
+	set_vrr_on_pipe(data, crtc, true);
 	result = flip_and_measure(data, output, interval, TEST_DURATION_NS, ANIM_TYPE_SMPTE);
 
 	igt_info("stage-2: simple animation as video playback fps:%d\n", mode_playback->vrefresh);
@@ -825,7 +824,7 @@ mode_transition(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t sce
 	result = flip_and_measure(data, output, interval, 2 * NSECS_PER_SEC, ANIM_TYPE_CIRCLE_WAVE);
 	result = flip_and_measure(data, output, interval, TEST_DURATION_NS, ANIM_TYPE_CIRCLE_WAVE);
 	igt_assert_f(result > 75, "Target refresh rate not meet 75%% (result=%d%%\n", result);
-	set_vrr_on_pipe(data, pipe, false);
+	set_vrr_on_pipe(data, crtc, false);
 
 	finish_test(data, output);
 }
@@ -854,7 +853,9 @@ run_test(data_t *data, uint32_t scene)
 				igt_dynamic_f("pipe-%s-%s",
 					      igt_crtc_name(crtc),
 					      output->name)
-				mode_transition(data, crtc->pipe, output,
+				mode_transition(data,
+						crtc,
+						output,
 						scene);
 				found = true;
 				break;

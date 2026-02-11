@@ -68,11 +68,11 @@ static void cleanup_crtc(data_t *data)
 	igt_remove_fb(data->drm_fd, &data->fb2);
 }
 
-static void prepare_crtc(data_t *data, igt_output_t *output, enum pipe pipe,
-			igt_plane_t *plane, drmModeModeInfo *mode, enum igt_commit_style s)
+static void prepare_crtc(data_t *data, igt_output_t *output, igt_crtc_t *crtc,
+			 igt_plane_t *plane, drmModeModeInfo *mode,
+			 enum igt_commit_style s)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 
 	igt_output_override_mode(output, mode);
 	igt_output_set_crtc(output, crtc);
@@ -104,13 +104,13 @@ static void prepare_crtc(data_t *data, igt_output_t *output, enum pipe pipe,
 }
 
 static void
-test_panel_fitting_legacy(data_t *d, igt_display_t *display,
-			  enum pipe pipe, igt_output_t *output)
+test_panel_fitting_legacy(data_t *d, igt_display_t *display, igt_crtc_t *crtc,
+			  igt_output_t *output)
 {
 	drmModeModeInfo *mode, native_mode;
 	bool is_plane_scaling_active = true;
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	mode = igt_output_get_mode(output);
 	native_mode = *mode;
@@ -129,18 +129,22 @@ test_panel_fitting_legacy(data_t *d, igt_display_t *display,
 		mode->vdisplay = 480;
 	}
 	d->plane1 = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
-	prepare_crtc(d, output, pipe, d->plane1, mode, COMMIT_LEGACY);
+	prepare_crtc(d, output, crtc, d->plane1,
+		     mode, COMMIT_LEGACY);
 
 	/* disable panel fitting */
-	prepare_crtc(d, output, pipe, d->plane1, &native_mode, COMMIT_LEGACY);
+	prepare_crtc(d, output, crtc, d->plane1,
+		     &native_mode, COMMIT_LEGACY);
 
 	/* enable panel fitting */
 	mode->hdisplay = 800;
 	mode->vdisplay = 600;
-	prepare_crtc(d, output, pipe, d->plane1, mode, COMMIT_LEGACY);
+	prepare_crtc(d, output, crtc, d->plane1,
+		     mode, COMMIT_LEGACY);
 
 	/* disable panel fitting */
-	prepare_crtc(d, output, pipe, d->plane1, &native_mode, COMMIT_LEGACY);
+	prepare_crtc(d, output, crtc, d->plane1,
+		     &native_mode, COMMIT_LEGACY);
 
 	/* set up fb2->plane2 mapping. */
 	d->plane2 = igt_output_get_plane_type(output, DRM_PLANE_TYPE_OVERLAY);
@@ -166,7 +170,7 @@ test_panel_fitting_legacy(data_t *d, igt_display_t *display,
 		 */
 		if (IS_GEN8(devid) ||
 			(IS_GEN7(devid) && !IS_IVYBRIDGE(devid)) ||
-			(IS_GEN9(devid) && pipe == PIPE_C)) {
+			(IS_GEN9(devid) && crtc->pipe == PIPE_C)) {
 			is_plane_scaling_active = false;
 		}
 	}
@@ -191,11 +195,13 @@ test_panel_fitting_legacy(data_t *d, igt_display_t *display,
 	/* enable panel fitting along with sprite scaling */
 	mode->hdisplay = 1024;
 	mode->vdisplay = 768;
-	prepare_crtc(d, output, pipe, d->plane1, mode, COMMIT_LEGACY);
+	prepare_crtc(d, output, crtc, d->plane1,
+		     mode, COMMIT_LEGACY);
 }
 
 static void
-test_panel_fitting_fastset(igt_display_t *display, enum pipe pipe, igt_output_t *output)
+test_panel_fitting_fastset(igt_display_t *display, igt_crtc_t *crtc,
+			   igt_output_t *output)
 {
 	igt_plane_t *primary, *sprite;
 	drmModeModeInfo mode;
@@ -203,7 +209,7 @@ test_panel_fitting_fastset(igt_display_t *display, enum pipe pipe, igt_output_t 
 
 	mode = *igt_output_get_mode(output);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	sprite = igt_output_get_plane_type(output, DRM_PLANE_TYPE_OVERLAY);
@@ -276,10 +282,12 @@ static void test_panel_fitting(data_t *data, enum test_type type)
 		igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc), output->name) {
 			if (type == TEST_ATOMIC)
 				test_panel_fitting_fastset(display,
-							   crtc->pipe, output);
+							   crtc,
+							   output);
 			if (type == TEST_LEGACY)
 				test_panel_fitting_legacy(data, display,
-							  crtc->pipe, output);
+							  crtc,
+							  output);
 		}
 	}
 }

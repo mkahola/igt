@@ -72,11 +72,8 @@ typedef struct {
 } dither_status_t;
 
 /* Prepare test data. */
-static void prepare_test(data_t *data, igt_output_t *output, enum pipe p)
+static void prepare_test(data_t *data, igt_output_t *output, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
-
 	igt_assert(crtc);
 
 	data->primary =
@@ -86,7 +83,7 @@ static void prepare_test(data_t *data, igt_output_t *output, enum pipe p)
 }
 
 /* Returns the current state of dithering from the crtc debugfs. */
-static dither_status_t get_dither_state(data_t *data, enum pipe pipe)
+static dither_status_t get_dither_state(data_t *data, igt_crtc_t *crtc)
 {
 	char buf[512], tmp[5];
 	char *start_loc;
@@ -106,25 +103,24 @@ static dither_status_t get_dither_state(data_t *data, enum pipe pipe)
 	igt_assert_eq(sscanf(start_loc, ", dither=%s", tmp), 1);
 	status.dither = !strcmp(tmp, "yes,");
 
-	status.bpc = igt_get_pipe_current_bpc(data->drm_fd, pipe);
+	status.bpc = igt_get_pipe_current_bpc(data->drm_fd, crtc->pipe);
 
 	return status;
 }
 
-static void test_dithering(data_t *data, enum pipe pipe,
+static void test_dithering(data_t *data, igt_crtc_t *crtc,
 			   igt_output_t *output,
 			   int fb_bpc, int fb_format,
 			   int output_bpc)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	dither_status_t status;
 	int bpc, ret;
 	bool constraint;
 
 	igt_info("Dithering test execution on %s PIPE_%s\n",
 			output->name, igt_crtc_name(crtc));
-	prepare_test(data, output, crtc->pipe);
+	prepare_test(data, output, crtc);
 
 	igt_assert(igt_create_fb(data->drm_fd, 512, 512, fb_format,
 				 DRM_FORMAT_MOD_LINEAR, &data->fb));
@@ -156,7 +152,8 @@ static void test_dithering(data_t *data, enum pipe pipe,
 	 * If fb_bpc is greater than output_bpc, Dithering should be enabled
 	 * Else disabled
 	 */
-	status = get_dither_state(data, crtc->pipe);
+	status = get_dither_state(data,
+				  crtc);
 
 	igt_info("FB BPC:%d, Panel BPC:%d, Pipe BPC:%d, Expected Dither:%s, Actual result:%s\n",
 		  fb_bpc, output_bpc, status.bpc,
@@ -232,9 +229,11 @@ run_dither_test(data_t *data, int fb_bpc, int fb_format, int output_bpc)
 			igt_dynamic_f("pipe-%s-%s",
 					      igt_crtc_name(crtc),
 					      output->name)
-				test_dithering(data, crtc->pipe, output,
-							   fb_bpc,
-							   fb_format, output_bpc);
+				test_dithering(data,
+					       crtc,
+					       output,
+					       fb_bpc,
+					       fb_format, output_bpc);
 
 			/* One pipe is enough */
 			break;

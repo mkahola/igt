@@ -96,11 +96,11 @@ static struct {
 	{ .r = 0.0, .g = 1.0, .b = 1.0 },
 };
 
-static bool simulation_constraint(enum pipe pipe)
+static bool simulation_constraint(igt_crtc_t *crtc)
 {
 	if (igt_run_in_simulation() && !extended &&
-	    pipe != active_pipes[0] &&
-	    pipe != active_pipes[last_pipe])
+	    crtc->pipe != active_pipes[0] &&
+	    crtc->pipe != active_pipes[last_pipe])
 		return true;
 
 	return false;
@@ -127,11 +127,10 @@ enum {
 	TEST_HANG = 1 << 3,
 };
 
-static void test_read_crc(data_t *data, enum pipe pipe,
+static void test_read_crc(data_t *data, igt_crtc_t *crtc,
 			  igt_output_t *output, unsigned flags)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_plane_t *primary;
 	drmModeModeInfo *mode;
 	igt_crc_t *crcs = NULL;
@@ -235,11 +234,11 @@ static void test_read_crc(data_t *data, enum pipe pipe,
  *
  *   No CRC mismatch should happen
  */
-static void test_compare_crc(data_t *data, enum pipe pipe, igt_output_t *output,
+static void test_compare_crc(data_t *data, igt_crtc_t *crtc,
+			     igt_output_t *output,
 			     uint32_t plane_format)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_plane_t *primary;
 	drmModeModeInfo *mode;
 	igt_crc_t ref_crc, crc;
@@ -291,11 +290,10 @@ static void test_compare_crc(data_t *data, enum pipe pipe, igt_output_t *output,
 	igt_remove_fb(data->drm_fd, &fb1);
 }
 
-static void test_disable_crc_after_crtc(data_t *data, enum pipe pipe,
+static void test_disable_crc_after_crtc(data_t *data, igt_crtc_t *crtc,
 					igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_pipe_crc_t *pipe_crc;
 	drmModeModeInfo *mode;
 	igt_crc_t crc[2];
@@ -338,14 +336,14 @@ static void test_disable_crc_after_crtc(data_t *data, enum pipe pipe,
 	igt_remove_fb(data->drm_fd, &data->fb);
 }
 
-static bool pipe_output_combo_valid(igt_display_t *display,
-				    enum pipe pipe, igt_output_t *output)
+static bool pipe_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
+				    igt_output_t *output)
 {
 	bool ret = true;
 
 	igt_display_reset(display);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	if (!intel_pipe_output_combo_valid(display))
 		ret = false;
 	igt_output_set_crtc(output, NULL);
@@ -424,10 +422,10 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		igt_subtest_with_dynamic(tests[i].name) {
 			for_each_crtc_with_single_output(&data.display, crtc,
 							 output) {
-				if (simulation_constraint(crtc->pipe))
+				if (simulation_constraint(crtc))
 					continue;
 
-				if(!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+				if(!pipe_output_combo_valid(&data.display, crtc, output))
 					continue;
 
 				igt_dynamic_f("pipe-%s-%s",
@@ -437,7 +435,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 						enum igt_suspend_test test = SUSPEND_TEST_NONE;
 
 						test_read_crc(&data,
-							      crtc->pipe,
+							      crtc,
 							      output, 0);
 
 						/* rtcwake cmd is not supported on MTK devices */
@@ -448,23 +446,23 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 									      test);
 
 						test_read_crc(&data,
-							      crtc->pipe,
+							      crtc,
 							      output, 0);
 					} else if (tests[i].flags & TEST_HANG) {
 						igt_hang_t hang = igt_allow_hang(data.drm_fd, 0, 0);
 
 						test_read_crc(&data,
-							      crtc->pipe,
+							      crtc,
 							      output, 0);
 						igt_force_gpu_reset(data.drm_fd);
 						test_read_crc(&data,
-							      crtc->pipe,
+							      crtc,
 							      output, 0);
 
 						igt_disallow_hang(data.drm_fd, hang);
 					} else {
 						test_read_crc(&data,
-							      crtc->pipe,
+							      crtc,
 							      output,
 							      tests[i].flags);
 					}
@@ -477,15 +475,16 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		     "does not cause issues.");
 	igt_subtest_with_dynamic("disable-crc-after-crtc") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (simulation_constraint(crtc->pipe))
+			if (simulation_constraint(crtc))
 				continue;
 
-			if(!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if(!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      output->name)
-				test_disable_crc_after_crtc(&data, crtc->pipe,
+				test_disable_crc_after_crtc(&data,
+							    crtc,
 							    output);
 		}
 	}
@@ -493,15 +492,17 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Basic sanity check for CRC mismatches with XR24 format");
 	igt_subtest_with_dynamic("compare-crc-sanitycheck-xr24") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (simulation_constraint(crtc->pipe))
+			if (simulation_constraint(crtc))
 				continue;
 
-			if(!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if(!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      output->name)
-				test_compare_crc(&data, crtc->pipe, output,
+				test_compare_crc(&data,
+						 crtc,
+						 output,
 						 DRM_FORMAT_XRGB8888);
 		}
 	}
@@ -509,15 +510,17 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Basic sanity check for CRC mismatches with NV12 format");
 	igt_subtest_with_dynamic("compare-crc-sanitycheck-nv12") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (simulation_constraint(crtc->pipe))
+			if (simulation_constraint(crtc))
 				continue;
 
-			if(!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if(!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      output->name)
-				test_compare_crc(&data, crtc->pipe, output,
+				test_compare_crc(&data,
+						 crtc,
+						 output,
 						 DRM_FORMAT_NV12);
 		}
 	}

@@ -438,10 +438,9 @@ plane_primary_overlay_mutable_zpos(data_t *data, igt_output_t *output, igt_plane
 }
 
 static void
-plane_immutable_zpos(data_t *data, igt_output_t *output, enum pipe pipe, int n_planes)
+plane_immutable_zpos(data_t *data, igt_output_t *output, igt_crtc_t *crtc,
+		     int n_planes)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	cairo_t *cr;
 	struct igt_fb fb_ref;
 	drmModeModeInfo *mode;
@@ -671,10 +670,9 @@ static void plane_primary(data_t *data)
  * Test to ensure that DRM_MODE_ATOMIC_TEST_ONLY really only touches the
  * free-standing state objects and nothing else.
  */
-static void test_only(data_t *data, igt_output_t *output, enum pipe pipe, uint32_t format)
+static void test_only(data_t *data, igt_output_t *output, igt_crtc_t *crtc,
+		      uint32_t format)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	struct igt_fb fb;
 	uint64_t old_plane_values[IGT_NUM_PLANE_PROPS], old_crtc_values[IGT_NUM_CRTC_PROPS];
 	drmModeModeInfo *mode = igt_output_get_mode(output);
@@ -1382,10 +1380,8 @@ static void atomic_plane_damage(data_t *data)
 	igt_remove_fb(data->drm_fd, &fb_2);
 }
 
-static void atomic_setup(data_t *data, enum pipe pipe, igt_output_t *output)
+static void atomic_setup(data_t *data, igt_crtc_t *crtc, igt_output_t *output)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeModeInfo *mode;
 	igt_display_reset(&data->display);
 	igt_output_set_crtc(output, crtc);
@@ -1406,11 +1402,11 @@ static void atomic_setup(data_t *data, enum pipe pipe, igt_output_t *output)
 		    ATOMIC_RELAX_NONE);
 }
 
-static void atomic_clear(data_t *data, enum pipe pipe, igt_output_t *output)
+static void atomic_clear(data_t *data, igt_crtc_t *crtc, igt_output_t *output)
 {
 	igt_plane_t *plane;
 
-	for_each_plane_on_pipe(&data->display, pipe, plane) {
+	for_each_plane_on_pipe(&data->display, crtc->pipe, plane) {
 		igt_plane_set_fb(plane, NULL);
 		igt_plane_set_position(plane, 0, 0);
 	}
@@ -1428,14 +1424,14 @@ static bool has_mutable_zpos(igt_plane_t *plane)
 }
 
 static bool
-pipe_output_combo_valid(igt_display_t *display,
-			enum pipe pipe, igt_output_t *output)
+pipe_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
+			igt_output_t *output)
 {
 	bool ret = true;
 
 	igt_display_reset(display);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	if (!intel_pipe_output_combo_valid(display))
 		ret = false;
 	igt_output_set_crtc(output, NULL);
@@ -1482,15 +1478,19 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 							DRM_PLANE_TYPE_OVERLAY);
 			uint32_t format = plane_get_igt_format(overlay);
 
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 			if (!overlay || !format)
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				atomic_setup(&data, crtc->pipe, output);
+				atomic_setup(&data,
+					     crtc,
+					     output);
 				plane_overlay(&data, output, overlay, format);
-				atomic_clear(&data, crtc->pipe, output);
+				atomic_clear(&data,
+					     crtc,
+					     output);
 			}
 			if (!all_pipes)
 				break;
@@ -1501,13 +1501,17 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		     "the legacy and atomic interfaces.");
 	igt_subtest_with_dynamic("plane-primary-legacy") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				atomic_setup(&data, crtc->pipe, output);
+				atomic_setup(&data,
+					     crtc,
+					     output);
 				plane_primary(&data);
-				atomic_clear(&data, crtc->pipe, output);
+				atomic_clear(&data,
+					     crtc,
+					     output);
 			}
 			if (!all_pipes)
 				break;
@@ -1522,10 +1526,12 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 				igt_crtc_get_plane_type(crtc,
 							DRM_PLANE_TYPE_OVERLAY);
 
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 
-			atomic_setup(&data, crtc->pipe, output);
+			atomic_setup(&data,
+				     crtc,
+				     output);
 			if (!overlay)
 				continue;
 			if (!has_mutable_zpos(data.primary) || !has_mutable_zpos(overlay))
@@ -1537,7 +1543,9 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 				      igt_output_name(output)) {
 				plane_primary_overlay_mutable_zpos(&data, output, overlay,
 								   DRM_FORMAT_ARGB8888, DRM_FORMAT_ARGB1555);
-				atomic_clear(&data, crtc->pipe, output);
+				atomic_clear(&data,
+					     crtc,
+					     output);
 			}
 			if (!all_pipes)
 				break;
@@ -1550,16 +1558,21 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
 			int n_planes = crtc->n_planes;
 
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 			if (n_planes < 2)
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				atomic_setup(&data, crtc->pipe, output);
+				atomic_setup(&data,
+					     crtc,
+					     output);
 				plane_immutable_zpos(&data, output,
-						     crtc->pipe, n_planes);
-				atomic_clear(&data, crtc->pipe, output);
+						     crtc,
+						     n_planes);
+				atomic_clear(&data,
+					     crtc,
+					     output);
 			}
 			if (!all_pipes)
 				break;
@@ -1572,18 +1585,24 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
 			uint32_t format;
 
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 
-			atomic_setup(&data, crtc->pipe, output);
+			atomic_setup(&data,
+				     crtc,
+				     output);
 			format = plane_get_igt_format(data.primary);
 
 			if (!format)
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				atomic_clear(&data, crtc->pipe, output);
-				test_only(&data, output, crtc->pipe, format);
+				atomic_clear(&data,
+					     crtc,
+					     output);
+				test_only(&data, output,
+					  crtc,
+					  format);
 			}
 			if (!all_pipes)
 				break;
@@ -1598,15 +1617,19 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 				igt_crtc_get_plane_type(crtc,
 							DRM_PLANE_TYPE_CURSOR);
 
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 			if (!cursor)
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				atomic_setup(&data, crtc->pipe, output);
+				atomic_setup(&data,
+					     crtc,
+					     output);
 				plane_cursor(&data, output, cursor);
-				atomic_clear(&data, crtc->pipe, output);
+				atomic_clear(&data,
+					     crtc,
+					     output);
 			}
 			if (!all_pipes)
 				break;
@@ -1616,13 +1639,17 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test error handling when invalid plane parameters are passed");
 	igt_subtest_with_dynamic("plane-invalid-params") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				atomic_setup(&data, crtc->pipe, output);
+				atomic_setup(&data,
+					     crtc,
+					     output);
 				plane_invalid_params(&data, output);
-				atomic_clear(&data, crtc->pipe, output);
+				atomic_clear(&data,
+					     crtc,
+					     output);
 			}
 			if (!all_pipes)
 				break;
@@ -1632,13 +1659,17 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test error handling when invalid plane fence parameters are passed");
 	igt_subtest_with_dynamic("plane-invalid-params-fence") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				atomic_setup(&data, crtc->pipe, output);
+				atomic_setup(&data,
+					     crtc,
+					     output);
 				plane_invalid_params_fence(&data, output);
-				atomic_clear(&data, crtc->pipe, output);
+				atomic_clear(&data,
+					     crtc,
+					     output);
 			}
 			if (!all_pipes)
 				break;
@@ -1648,13 +1679,17 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test error handling when invalid crtc parameters are passed");
 	igt_subtest_with_dynamic("crtc-invalid-params") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				atomic_setup(&data, crtc->pipe, output);
+				atomic_setup(&data,
+					     crtc,
+					     output);
 				crtc_invalid_params(&data, output);
-				atomic_clear(&data, crtc->pipe, output);
+				atomic_clear(&data,
+					     crtc,
+					     output);
 			}
 			if (!all_pipes)
 				break;
@@ -1664,13 +1699,17 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test error handling when invalid crtc fence parameters are passed");
 	igt_subtest_with_dynamic("crtc-invalid-params-fence") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				atomic_setup(&data, crtc->pipe, output);
+				atomic_setup(&data,
+					     crtc,
+					     output);
 				crtc_invalid_params_fence(&data, output);
-				atomic_clear(&data, crtc->pipe, output);
+				atomic_clear(&data,
+					     crtc,
+					     output);
 			}
 			if (!all_pipes)
 				break;
@@ -1682,13 +1721,17 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		     "allow us to create.");
 	igt_subtest_with_dynamic("atomic-invalid-params") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				atomic_setup(&data, crtc->pipe, output);
+				atomic_setup(&data,
+					     crtc,
+					     output);
 				atomic_invalid_params(&data, output);
-				atomic_clear(&data, crtc->pipe, output);
+				atomic_clear(&data,
+					     crtc,
+					     output);
 			}
 			if (!all_pipes)
 				break;
@@ -1698,17 +1741,21 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Simple test cases to use FB_DAMAGE_CLIPS plane property");
 	igt_subtest_with_dynamic("atomic-plane-damage") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+			if (!pipe_output_combo_valid(&data.display, crtc, output))
 				continue;
 
-			atomic_setup(&data, crtc->pipe, output);
+			atomic_setup(&data,
+				     crtc,
+				     output);
 
 			if (!igt_plane_has_prop(data.primary, IGT_PLANE_FB_DAMAGE_CLIPS))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
 				atomic_plane_damage(&data);
-				atomic_clear(&data, crtc->pipe, output);
+				atomic_clear(&data,
+					     crtc,
+					     output);
 			}
 			if (!all_pipes)
 				break;
