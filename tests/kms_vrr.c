@@ -158,7 +158,7 @@ typedef struct data {
 	uint32_t flag;
 } data_t;
 
-typedef void (*test_t)(data_t*, enum pipe, igt_output_t*, uint32_t);
+typedef void (*test_t)(data_t*, igt_crtc_t *crtc, igt_output_t*, uint32_t);
 
 /* Converts a timespec structure to nanoseconds. */
 static uint64_t timespec_to_ns(struct timespec *ts)
@@ -306,11 +306,9 @@ static bool vrr_capable(igt_output_t *output)
 }
 
 /* Toggles variable refresh rate on the pipe. */
-static void set_vrr_on_pipe(data_t *data, enum pipe pipe,
+static void set_vrr_on_pipe(data_t *data, igt_crtc_t *crtc,
 			    bool need_modeset, bool enabled)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crtc_set_prop_value(crtc,
 				    IGT_CRTC_VRR_ENABLED,
 				    enabled);
@@ -339,10 +337,8 @@ static void paint_bar(cairo_t *cr, unsigned int x, unsigned int y,
 }
 
 /* Prepare the display for testing on the given pipe. */
-static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
+static void prepare_test(data_t *data, igt_output_t *output, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	unsigned int num_bars = 256;
 	drmModeModeInfo mode;
 	cairo_t *cr;
@@ -657,24 +653,26 @@ flip_and_measure_cmrr(data_t *data, igt_output_t *output,
 
 /* Basic VRR flip functionality test - enable, measure, disable, measure */
 static void
-test_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
+test_basic(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
+	   uint32_t flags)
 {
 	uint32_t result;
 	vtest_ns_t vtest_ns;
 	range_t range;
 	uint64_t rate[] = {0};
 
-	prepare_test(data, output, pipe);
+	prepare_test(data, output, crtc);
 	range = data->range;
 	vtest_ns = data->vtest_ns;
 	rate[0] = vtest_ns.rate_ns;
 
 	igt_info("VRR Test execution on %s, PIPE_%s with VRR range: (%u-%u) Hz\n",
-		 output->name, kmstest_pipe_name(pipe), range.min, range.max);
+		 output->name, igt_crtc_name(crtc), range.min, range.max);
 	igt_info("Override Mode: ");
 	kmstest_dump_mode(&data->switch_modes[HIGH_RR_MODE]);
 
-	set_vrr_on_pipe(data, pipe, !(flags & TEST_FASTSET), true);
+	set_vrr_on_pipe(data, crtc,
+			!(flags & TEST_FASTSET), true);
 
 	/*
 	 * Do a short run with VRR, but don't check the result.
@@ -756,7 +754,9 @@ test_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 	 * modeset. And the expected behavior is the same as disabling VRR on
 	 * a VRR capable panel.
 	 */
-	set_vrr_on_pipe(data, pipe, !(flags & TEST_FASTSET), (flags & TEST_NEGATIVE) ? true : false);
+	set_vrr_on_pipe(data, crtc,
+			!(flags & TEST_FASTSET),
+			(flags & TEST_NEGATIVE) ? true : false);
 	rate[0] = vtest_ns.rate_ns;
 	result = flip_and_measure(data, output, rate, 1, data->duration_ns);
 	igt_assert_f(result < 10,
@@ -765,7 +765,8 @@ test_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 }
 
 static void
-test_seamless_rr_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
+test_seamless_rr_basic(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
+		       uint32_t flags)
 {
 	uint32_t result;
 	vtest_ns_t vtest_ns;
@@ -775,11 +776,12 @@ test_seamless_rr_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint3
 	igt_info("Use HIGH_RR Mode as default (VRR: %s): ", vrr ? "ON" : "OFF");
 	kmstest_dump_mode(&data->switch_modes[HIGH_RR_MODE]);
 
-	prepare_test(data, output, pipe);
+	prepare_test(data, output, crtc);
 	vtest_ns = data->vtest_ns;
 
 	if (vrr)
-		set_vrr_on_pipe(data, pipe, false, true);
+		set_vrr_on_pipe(data, crtc,
+				false, true);
 	else {
 		/*
 		 * Sink with DRRS and VRR can be in downclock mode.
@@ -822,7 +824,8 @@ test_seamless_rr_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint3
 }
 
 static void
-test_seamless_virtual_rr_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
+test_seamless_virtual_rr_basic(data_t *data, igt_crtc_t *crtc,
+			       igt_output_t *output, uint32_t flags)
 {
 	uint32_t result;
 	unsigned int vrefresh;
@@ -833,7 +836,7 @@ test_seamless_virtual_rr_basic(data_t *data, enum pipe pipe, igt_output_t *outpu
 	igt_info("Use HIGH_RR Mode as default\n");
 	kmstest_dump_mode(&data->switch_modes[HIGH_RR_MODE]);
 
-	prepare_test(data, output, pipe);
+	prepare_test(data, output, crtc);
 	rate[0] = igt_kms_frame_time_from_vrefresh(data->switch_modes[HIGH_RR_MODE].vrefresh);
 
 	/*
@@ -889,18 +892,20 @@ test_seamless_virtual_rr_basic(data_t *data, enum pipe pipe, igt_output_t *outpu
  */
 
 static void
-test_lobf(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
+test_lobf(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
+	  uint32_t flags)
 {
 	uint64_t rate[] = {0};
 	uint32_t step_size, vrefresh;
 	bool lobf_enabled = false;
 
 	rate[0] = igt_kms_frame_time_from_vrefresh(data->switch_modes[HIGH_RR_MODE].vrefresh);
-	prepare_test(data, output, pipe);
+	prepare_test(data, output, crtc);
 	data->flag |= flags;
 
 	igt_info("LOBF test execution on %s, PIPE %s with VRR range: (%u-%u) Hz\n",
-		 output->name, kmstest_pipe_name(pipe), data->range.min, data->range.max);
+		 output->name, igt_crtc_name(crtc), data->range.min,
+		 data->range.max);
 
 	igt_output_override_mode(output, &data->switch_modes[HIGH_RR_MODE]);
 	flip_and_measure(data, output, rate, 1, TEST_DURATION_NS);
@@ -928,7 +933,8 @@ test_lobf(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 }
 
 static void
-test_cmrr(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
+test_cmrr(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
+	  uint32_t flags)
 {
 	uint32_t result;
 	int i;
@@ -937,7 +943,8 @@ test_cmrr(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 	drmModeModeInfo mode = *igt_output_get_mode(output);
 
 	igt_info("CMRR test execution on %s, PIPE_%s with VRR range: (%u-%u) Hz\n",
-		 output->name, kmstest_pipe_name(pipe), data->range.min, data->range.max);
+		 output->name, igt_crtc_name(crtc), data->range.min,
+		 data->range.max);
 
 	for (i = 0; i < connector->count_modes; i++) {
 		if (is_cmrr_mode(&connector->modes[i])) {
@@ -963,7 +970,8 @@ test_cmrr(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 	igt_output_override_mode(output, &mode);
 
 	if (!igt_display_try_commit2(&data->display, COMMIT_ATOMIC)) {
-		prepare_test(data, output, pipe);
+		prepare_test(data, output,
+			     crtc);
 		result = flip_and_measure_cmrr(data, output, TEST_DURATION_NS * 2);
 		igt_assert_f(result > 75,
 			     "Refresh rate (%u Hz) %"PRIu64"ns: Target CMRR on threshold not reached, result was %u%%\n",
@@ -972,10 +980,8 @@ test_cmrr(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 	}
 }
 
-static void test_cleanup(data_t *data, enum pipe pipe, igt_output_t *output)
+static void test_cleanup(data_t *data, igt_crtc_t *crtc, igt_output_t *output)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crtc_set_prop_value(crtc,
 				    IGT_CRTC_VRR_ENABLED, false);
 
@@ -1112,9 +1118,13 @@ run_vrr_test(data_t *data, test_t test, uint32_t flags)
 
 			igt_dynamic_f("pipe-%s-%s",
 				      igt_crtc_name(crtc), output->name)
-				test(data, crtc->pipe, output, flags);
+				test(data,
+				     crtc,
+				     output, flags);
 
-			test_cleanup(data, crtc->pipe, output);
+			test_cleanup(data,
+				     crtc,
+				     output);
 
 			break;
 		}
