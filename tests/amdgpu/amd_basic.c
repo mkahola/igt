@@ -5,6 +5,7 @@
  * Copyright 2023 Advanced Micro Devices, Inc.
  */
 
+#include <pthread.h>
 #include "lib/amdgpu/amd_memory.h"
 #include "lib/amdgpu/amd_sdma.h"
 #include "lib/amdgpu/amd_PM4.h"
@@ -13,6 +14,8 @@
 #include "lib/amdgpu/amd_gfx.h"
 #include "lib/amdgpu/shaders/amd_shaders.h"
 #include "lib/amdgpu/compute_utils/amd_dispatch.h"
+#include "lib/amdgpu/amdgpu_asic_addr.h"
+#include "ioctl_wrappers.h"
 
 #define BUFFER_SIZE (8 * 1024)
 
@@ -662,6 +665,183 @@ amdgpu_sync_dependency_test(amdgpu_device_handle device_handle, bool user_queue)
 	free(ring_context);
 }
 
+static int wait_for_value64(volatile uint64_t *ptr, uint64_t expected,
+			    uint64_t timeout_ns, uint64_t check_interval_ns)
+{
+	struct timespec start, now, sleep_time;
+	uint64_t elapsed_ns;
+
+	if (!ptr)
+		return -EINVAL;
+
+	clock_gettime(CLOCK_MONOTONIC, &start);
+
+	if (check_interval_ns > 0) {
+		sleep_time.tv_sec = check_interval_ns / 1000000000ULL;
+		sleep_time.tv_nsec = check_interval_ns % 1000000000ULL;
+	}
+
+	while (1) {
+		/* Check current value */
+		if (*ptr == expected)
+			return 0;
+
+		/* Check timeout if specified */
+		if (timeout_ns > 0) {
+			clock_gettime(CLOCK_MONOTONIC, &now);
+			elapsed_ns = (now.tv_sec - start.tv_sec) * 1000000000ULL +
+				     (now.tv_nsec - start.tv_nsec);
+
+			if (elapsed_ns >= timeout_ns)
+				return -ETIMEDOUT;
+		}
+
+		/* Sleep if interval specified, otherwise tight loop */
+		if (check_interval_ns > 0)
+			nanosleep(&sleep_time, NULL);
+		else
+			__asm__ __volatile__("pause" ::: "memory"); /* CPU hint for spin-wait */
+	}
+}
+
+static void* amdgpu_fwm_test_thread(void *data)
+{
+	struct amdgpu_ring_context *ring_context = data;
+	uint64_t *job_start_write_data_ptr = (uint64_t*)ring_context->bo3_cpu;
+	uint64_t *fwm_fence_ptr = (uint64_t*)ring_context->bo3_cpu + 1;
+	int *ret = calloc(1, sizeof(int));
+
+	/* Poll to confirm if job has started. This is done to have low timeout for fences
+	 * wrongly satsified check.
+	 */
+	*ret = wait_for_value64((uint64_t*)job_start_write_data_ptr, 0x1, 2 * 1000000, 1000);
+	if (*ret)
+		return ret;
+
+	/* Poll if job completed without fence satisfied */
+	*ret = wait_for_value64((uint64_t*)ring_context->bo_cpu, 0xdeadbeef, 100 * 1000, 2000);
+	if (*ret == 0) {
+		*ret = -EINVAL;
+		return ret;
+	}
+
+	for (unsigned i = 0; i < 32; i++)
+		fwm_fence_ptr[i] = i + 1;
+
+	*ret = 0;
+	return ret;
+}
+
+/**
+ * FWM PACKET TEST
+ * @param device_handle
+ * @param ip_type
+ */
+static void amdgpu_fwm_test(amdgpu_device_handle device_handle, unsigned ip_type)
+{
+	struct amdgpu_ring_context *ring_context;
+	struct amdgpu_cmd_base *cmd_base = get_cmd_base();
+	const struct amdgpu_ip_block_version *ip_block = get_ip_block(device_handle, ip_type);
+	int r;
+	unsigned int i;
+	struct amdgpu_userq_params *userq_params;
+	pthread_t fwm_test_thread;
+	int *thread_ret;
+
+	ring_context = calloc(1, sizeof(struct amdgpu_ring_context));
+	igt_assert(ring_context);
+	if (ip_block->funcs->family_id == FAMILY_GFX1150)
+		ring_context->max_num_fences_fwm = 4;
+	else
+		ring_context->max_num_fences_fwm = 32;
+
+	ip_block->funcs->userq_create(device_handle, ring_context, ip_block->type);
+
+	/* Allocate bo for dma */
+	ring_context->write_length = 1024;
+	r = amdgpu_bo_alloc_and_map_sync(device_handle , ring_context->write_length, 4096,
+					 AMDGPU_GEM_DOMAIN_GTT, AMDGPU_GEM_CREATE_CPU_GTT_USWC,
+					 AMDGPU_VM_MTYPE_UC, &ring_context->bo,
+					 (void **)&ring_context->bo_cpu, &ring_context->bo_mc,
+					 &ring_context->va_handle,
+					 ring_context->timeline_syncobj_handle,
+					 ++ring_context->point, true);
+	igt_assert_eq(r, 0);
+	memset((void *)ring_context->bo_cpu, 0, ring_context->write_length);
+
+	/* Allocate bo2 for ib */
+	r = amdgpu_bo_alloc_and_map_sync(device_handle, 8192, 4096, AMDGPU_GEM_DOMAIN_GTT,
+					 AMDGPU_GEM_CREATE_CPU_GTT_USWC, AMDGPU_VM_MTYPE_UC,
+					 &ring_context->bo2, (void **)&ring_context->bo2_cpu,
+					 &ring_context->bo_mc2, &ring_context->va_handle2,
+					 ring_context->timeline_syncobj_handle,
+					 ++ring_context->point, true);
+	igt_assert_eq(r, 0);
+	memset((void *)ring_context->bo2_cpu, 0, 8192);
+
+	/* Allocate bo3 for fence wait packet fences */
+	r = amdgpu_bo_alloc_and_map_sync(device_handle, 4096, 4096, AMDGPU_GEM_DOMAIN_GTT,
+					 AMDGPU_GEM_CREATE_CPU_GTT_USWC, AMDGPU_VM_MTYPE_UC,
+					 &ring_context->bo3, (void **)&ring_context->bo3_cpu,
+					 &ring_context->bo_mc3, &ring_context->va_handle3,
+					 ring_context->timeline_syncobj_handle,
+					 ++ring_context->point, true);
+	igt_assert_eq(r, 0);
+	memset((void *)ring_context->bo3_cpu, 0, 4096);
+
+	/* wait for gtt mapping to complete */
+	r = amdgpu_timeline_syncobj_wait(device_handle, ring_context->timeline_syncobj_handle,
+					 ring_context->point);
+	igt_assert_eq(r, 0);
+
+	/* assign cmd buffer for ring context */
+	cmd_base->attach_buf(cmd_base, (void *)ring_context->bo2_cpu, 8192);
+
+	userq_params = (struct amdgpu_userq_params*)alloca(sizeof(struct amdgpu_userq_params) +
+							   sizeof(struct drm_amdgpu_userq_fence_info) * 32);
+	userq_params->fence_info = (struct drm_amdgpu_userq_fence_info*)(userq_params + 1);
+
+	ring_context->userq_params = userq_params;
+	userq_params->job_start_write_data_va_addr = ring_context->bo_mc3;
+	userq_params->job_start_write_data_val = 0x1;
+	userq_params->num_fences = 32;
+	for (i = 0; i < 32; i++) {
+		userq_params->fence_info[i].va = ring_context->bo_mc3 + 8 + (i * 8);
+		userq_params->fence_info[i].value = i + 1;
+	}
+
+	cmd_base->emit(cmd_base, PACKET3(PACKET3_WRITE_DATA, 3));
+	cmd_base->emit(cmd_base, WRITE_DATA_DST_SEL(5) | WR_CONFIRM |
+		       WRITE_DATA_CACHE_POLICY(3));
+	cmd_base->emit(cmd_base, lower_32_bits(ring_context->bo_mc));
+	cmd_base->emit(cmd_base, upper_32_bits(ring_context->bo_mc));
+	cmd_base->emit(cmd_base, 0xdeadbeef);
+
+	/* satisfy fence wait multi packet fences in separate thread for checking if fences
+	 * gets satisifed incorrectly.
+	 */
+	pthread_create(&fwm_test_thread, NULL, amdgpu_fwm_test_thread, ring_context);
+
+	ring_context->pm4_dw = cmd_base->cdw;
+	ip_block->funcs->userq_submit(device_handle, ring_context, ip_block->type,
+				      ring_context->bo_mc2);
+
+	pthread_join(fwm_test_thread, (void **)&thread_ret);
+	igt_assert_eq(*thread_ret, 0);
+	igt_assert_eq_u32(*ring_context->bo_cpu, 0xdeadbeef);
+
+	free(thread_ret);
+	ip_block->funcs->userq_destroy(device_handle, ring_context, ip_block->type);
+	amdgpu_bo_unmap_and_free(ring_context->bo, ring_context->va_handle,
+				 ring_context->bo_mc, ring_context->write_length);
+	amdgpu_bo_unmap_and_free(ring_context->bo2, ring_context->va_handle2,
+				 ring_context->bo_mc2, 8192);
+	amdgpu_bo_unmap_and_free(ring_context->bo3, ring_context->va_handle3,
+				 ring_context->bo_mc3, 4096);
+	free_cmd_base(cmd_base);
+	free(ring_context);
+}
+
 int igt_main()
 {
 	amdgpu_device_handle device;
@@ -808,6 +988,22 @@ int igt_main()
 				userq_arr_cap[AMD_IP_DMA]) {
 			igt_dynamic_f("all-queues-with-umq")
 			amdgpu_test_all_queues(device, true);
+		}
+	}
+
+	igt_describe("Check-GFX-CS-FENCE_WAIT_MULTI-packet");
+	igt_subtest_with_dynamic("cs-gfx-fwm-UMQ") {
+		if (enable_test && userq_arr_cap[AMD_IP_GFX]) {
+			igt_dynamic_f("cs-gfx-fwm-umq")
+				amdgpu_fwm_test(device, AMDGPU_HW_IP_GFX);
+		}
+	}
+
+	igt_describe("Check-COMPUTE-CS-FENCE_WAIT_MULTI-packet");
+	igt_subtest_with_dynamic("cs-compute-fwm-UMQ") {
+		if (enable_test && userq_arr_cap[AMD_IP_COMPUTE]) {
+			igt_dynamic_f("cs-compute-fwm-umq")
+				amdgpu_fwm_test(device, AMDGPU_HW_IP_COMPUTE);
 		}
 	}
 
