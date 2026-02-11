@@ -344,24 +344,24 @@ run_test(data_t *data, enum pipe pipe, igt_output_t *output)
 static void
 run_tests_for_pipe(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	igt_describe("Test atomic mode setting concurrently with multiple planes and screen "
 		     "resolution.");
 	igt_subtest_with_dynamic("multi-plane-atomic-lowres") {
-		for_each_valid_output_on_pipe(&data->display, pipe, output) {
+		for_each_crtc_with_valid_output(&data->display, crtc, output) {
 			igt_display_reset(&data->display);
 
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(display, pipe));
+					    crtc);
 			if (!intel_pipe_output_combo_valid(&data->display))
 				continue;
 
-			igt_require(igt_crtc_for_pipe(display, pipe)->n_planes > 0);
-			igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(pipe), igt_output_name(output))
-				run_test(data, pipe, output);
+			igt_require(crtc->n_planes > 0);
+			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
+				      igt_output_name(output))
+				run_test(data, crtc->pipe, output);
 		}
 	}
 }
