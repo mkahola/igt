@@ -1667,6 +1667,9 @@ static void test_set_breakpoint_online_sigint_debugger(int fd,
 	max_sleep_time = set_breakpoint_time * 11 / 10;
 	igt_info("Maximum sleep_time: %" PRIu64 " us\n", max_sleep_time);
 
+	/* Skip checking canaries as they can be invalid due to signal timing */
+	flags |= DO_NOT_EXPECT_CANARIES;
+
 	ts = (struct timespec) { };
 	igt_nsec_elapsed(&ts);
 
