@@ -559,7 +559,6 @@ static void set_vrr_on_pipe(data_t *data, enum pipe pipe, bool enabled)
 static void prepare_test(
 		data_t *data,
 		igt_output_t *output,
-		enum pipe pipe,
 		drmModeModeInfo *mode)
 {
 	/* Prepare resources */
@@ -625,7 +624,6 @@ static uint32_t
 flip_and_measure(
 		data_t *data,
 		igt_output_t *output,
-		enum pipe pipe,
 		uint64_t interval_ns,
 		uint64_t duration_ns,
 		int anim_type)
@@ -750,7 +748,7 @@ static void init_data(data_t *data, igt_output_t *output)
 	data->vrr_range = get_vrr_range(data, output);
 }
 
-static void finish_test(data_t *data, enum pipe pipe, igt_output_t *output)
+static void finish_test(data_t *data, igt_output_t *output)
 {
 	igt_plane_set_fb(data->primary, NULL);
 	igt_output_set_crtc(output, NULL);
@@ -815,21 +813,21 @@ mode_transition(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t sce
 			"Failure on selecting mode with given type and refresh rate.\n");
 
 	igt_info("stage-1: fps:%d\n", mode_start->vrefresh);
-	prepare_test(data, output, pipe, mode_start);
+	prepare_test(data, output, mode_start);
 	interval = nsec_per_frame(mode_start->vrefresh);
 	set_vrr_on_pipe(data, pipe, true);
-	result = flip_and_measure(data, output, pipe, interval, TEST_DURATION_NS, ANIM_TYPE_SMPTE);
+	result = flip_and_measure(data, output, interval, TEST_DURATION_NS, ANIM_TYPE_SMPTE);
 
 	igt_info("stage-2: simple animation as video playback fps:%d\n", mode_playback->vrefresh);
-	prepare_test(data, output, pipe, mode_playback);
+	prepare_test(data, output, mode_playback);
 	interval = nsec_per_frame(mode_playback->vrefresh);
 	/* Do a short run with VRR before measure to make sure we measure in a stable state */
-	result = flip_and_measure(data, output, pipe, interval, 2 * NSECS_PER_SEC, ANIM_TYPE_CIRCLE_WAVE);
-	result = flip_and_measure(data, output, pipe, interval, TEST_DURATION_NS, ANIM_TYPE_CIRCLE_WAVE);
+	result = flip_and_measure(data, output, interval, 2 * NSECS_PER_SEC, ANIM_TYPE_CIRCLE_WAVE);
+	result = flip_and_measure(data, output, interval, TEST_DURATION_NS, ANIM_TYPE_CIRCLE_WAVE);
 	igt_assert_f(result > 75, "Target refresh rate not meet 75%% (result=%d%%\n", result);
 	set_vrr_on_pipe(data, pipe, false);
 
-	finish_test(data, pipe, output);
+	finish_test(data, output);
 }
 
 /* Runs tests on outputs that are VRR capable. */

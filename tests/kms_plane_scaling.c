@@ -576,7 +576,6 @@ check_scaling_pipe_plane_rot(data_t *d, igt_plane_t *plane,
 			     double sf_plane,
 			     bool is_clip_clamp,
 			     bool is_upscale,
-			     enum pipe pipe,
 			     igt_output_t *output,
 			     igt_rotation_t rot)
 {
@@ -742,7 +741,6 @@ test_scaler_with_modifier_pipe(data_t *d,
 								   sf_plane,
 								   is_clip_clamp,
 								   is_upscale,
-								   crtc->pipe,
 								   output,
 								   IGT_ROTATION_0);
 			if (ret != 0)
@@ -784,7 +782,6 @@ test_scaler_with_rotation_pipe(data_t *d,
 								   sf_plane,
 								   is_clip_clamp,
 								   is_upscale,
-								   crtc->pipe,
 								   output,
 								   rot);
 			if (ret != 0)
@@ -833,7 +830,6 @@ test_scaler_with_pixel_format_pipe(data_t *d, double sf_plane,
 								   sf_plane,
 								   is_clip_clamp,
 								   is_upscale,
-								   crtc->pipe,
 								   output,
 								   IGT_ROTATION_0);
 			if (ret != 0) {
@@ -888,8 +884,7 @@ find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 }
 
 static int
-__test_planes_scaling_combo(data_t *d, int w1, int h1, int w2, int h2,
-			    enum pipe pipe, igt_output_t *output,
+__test_planes_scaling_combo(data_t *d, int w1, int h1, int w2, int h2, igt_output_t *output,
 			    igt_plane_t *p1, igt_plane_t *p2,
 			    struct igt_fb *fb1, struct igt_fb *fb2,
 			    enum scaler_combo_test_type test_type)
@@ -1004,8 +999,7 @@ test_planes_scaling_combo(data_t *d, double sf_plane1,
 
 			if (p1->type == DRM_PLANE_TYPE_CURSOR || p2->type == DRM_PLANE_TYPE_CURSOR)
 				continue;
-			ret = __test_planes_scaling_combo(d, w1, h1, w2, h2,
-							  crtc->pipe, output,
+			ret = __test_planes_scaling_combo(d, w1, h1, w2, h2, output,
 							  p1, p2,
 							  &d->fb[1], &d->fb[2],
 							  test_type);

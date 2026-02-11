@@ -499,7 +499,7 @@ calculate_tolerance(uint64_t *threshold_hi, uint64_t *threshold_lo, uint64_t rat
  * to prevent stuttering or to match a source content rate.
  */
 static uint32_t
-flip_and_measure(data_t *data, igt_output_t *output, enum pipe pipe,
+flip_and_measure(data_t *data, igt_output_t *output,
 		 uint64_t *rates_ns, int num_rates, uint64_t duration_ns)
 {
 	uint64_t start_ns, last_event_ns, target_ns, exp_rate_ns;
@@ -605,7 +605,7 @@ flip_and_measure(data_t *data, igt_output_t *output, enum pipe pipe,
 }
 
 static uint32_t
-flip_and_measure_cmrr(data_t *data, igt_output_t *output, enum pipe pipe,
+flip_and_measure_cmrr(data_t *data, igt_output_t *output,
 		      uint64_t duration_ns)
 {
 	uint64_t start_ns, last_event_ns, event_ns;
@@ -681,7 +681,7 @@ test_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 	 * This is to make sure we were actually in the middle of
 	 * active flipping before doing the DPMS/suspend steps.
 	 */
-	flip_and_measure(data, output, pipe, rate, 1, 250000000ull);
+	flip_and_measure(data, output, rate, 1, 250000000ull);
 
 	if (flags & TEST_DPMS) {
 		kmstest_set_connector_dpms(output->display->drm_fd,
@@ -713,7 +713,7 @@ test_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 	 */
 	if (flags & TEST_FLIPLINE) {
 		rate[0] = igt_kms_frame_time_from_vrefresh(range.max + 5);
-		result = flip_and_measure(data, output, pipe, rate, 1, data->duration_ns);
+		result = flip_and_measure(data, output, rate, 1, data->duration_ns);
 		igt_assert_f(result > 75,
 			     "Refresh rate (%u Hz) %"PRIu64"ns: Target VRR on threshold not reached, result was %u%%\n",
 			     (range.max + 5), rate[0], result);
@@ -721,7 +721,7 @@ test_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 
 	if (flags & ~(TEST_NEGATIVE | TEST_MAXMIN)) {
 		rate[0] = vtest_ns.rate_ns;
-		result = flip_and_measure(data, output, pipe, rate, 1, data->duration_ns);
+		result = flip_and_measure(data, output, rate, 1, data->duration_ns);
 		igt_assert_f(result > 75,
 			     "Refresh rate (%u Hz) %"PRIu64"ns: Target VRR on threshold not reached, result was %u%%\n",
 			     ((range.max + range.min) / 2), rate[0], result);
@@ -729,7 +729,7 @@ test_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 
 	if (flags & TEST_FLIPLINE) {
 		rate[0] = igt_kms_frame_time_from_vrefresh(range.min - 10);
-		result = flip_and_measure(data, output, pipe, rate, 1, data->duration_ns);
+		result = flip_and_measure(data, output, rate, 1, data->duration_ns);
 		igt_assert_f(result < 50,
 			     "Refresh rate (%u Hz) %"PRIu64"ns: Target VRR on threshold exceeded, result was %u%%\n",
 			     (range.min - 10), rate[0], result);
@@ -744,7 +744,7 @@ test_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 			igt_kms_frame_time_from_vrefresh(range_min)
 		};
 
-		result = flip_and_measure(data, output, pipe, maxmin_rates, 2, data->duration_ns);
+		result = flip_and_measure(data, output, maxmin_rates, 2, data->duration_ns);
 		igt_assert_f(result > 75,
 			     "Refresh rates (%u/%u Hz) %"PRIu64"ns/%"PRIu64"ns: Target VRR on threshold not reached, result was %u%%\n",
 			     range.max, range_min, maxmin_rates[0], maxmin_rates[1], result);
@@ -758,7 +758,7 @@ test_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 	 */
 	set_vrr_on_pipe(data, pipe, !(flags & TEST_FASTSET), (flags & TEST_NEGATIVE) ? true : false);
 	rate[0] = vtest_ns.rate_ns;
-	result = flip_and_measure(data, output, pipe, rate, 1, data->duration_ns);
+	result = flip_and_measure(data, output, rate, 1, data->duration_ns);
 	igt_assert_f(result < 10,
 		     "Refresh rate (%u Hz) %"PRIu64"ns: Target VRR %s threshold exceeded, result was %u%%\n",
 		     ((range.max + range.min) / 2), rate[0], (flags & TEST_NEGATIVE)? "on" : "off", result);
@@ -790,7 +790,7 @@ test_seamless_rr_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint3
 	}
 
 	rate[0] = vtest_ns.max;
-	result = flip_and_measure(data, output, pipe, rate, 1, data->duration_ns);
+	result = flip_and_measure(data, output, rate, 1, data->duration_ns);
 	igt_assert_f(result > 75,
 		     "Refresh rate (%u Hz) %"PRIu64"ns: Target VRR %s threshold not reached, result was %u%%\n",
 		     data->range.max, rate[0], vrr ? "on" : "off", result);
@@ -802,7 +802,7 @@ test_seamless_rr_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint3
 	igt_assert(igt_display_try_commit_atomic(&data->display, 0, NULL) == 0);
 
 	rate[0] = vtest_ns.min;
-	result = flip_and_measure(data, output, pipe, rate, 1, data->duration_ns);
+	result = flip_and_measure(data, output, rate, 1, data->duration_ns);
 	igt_assert_f(result > 75,
 		     "Refresh rate (%u Hz) %"PRIu64"ns: Target VRR %s threshold not reached, result was %u%%\n",
 		     data->range.min, rate[0], vrr ? "on" : "off", result);
@@ -814,7 +814,7 @@ test_seamless_rr_basic(data_t *data, enum pipe pipe, igt_output_t *output, uint3
 	igt_assert(igt_display_try_commit_atomic(&data->display, 0, NULL) == 0);
 
 	rate[0] = vtest_ns.rate_ns;
-	result = flip_and_measure(data, output, pipe, rate, 1, data->duration_ns);
+	result = flip_and_measure(data, output, rate, 1, data->duration_ns);
 	igt_assert_f(vrr ? (result > 75) : (result < 10),
 		     "Refresh rate (%u Hz) %"PRIu64"ns: Target VRR %s threshold %s, result was %u%%\n",
 		     ((data->range.max + data->range.min) / 2), rate[0],
@@ -843,7 +843,7 @@ test_seamless_virtual_rr_basic(data_t *data, enum pipe pipe, igt_output_t *outpu
 	igt_output_override_mode(output, &data->switch_modes[HIGH_RR_MODE]);
 	igt_assert(igt_display_try_commit_atomic(&data->display, DRM_MODE_PAGE_FLIP_EVENT, NULL) == 0);
 
-	result = flip_and_measure(data, output, pipe, rate, 1, TEST_DURATION_NS);
+	result = flip_and_measure(data, output, rate, 1, TEST_DURATION_NS);
 	igt_assert_f(result > 75,
 		     "Refresh rate (%u Hz) %"PRIu64"ns: Target threshold not reached, result was %u%%\n",
 		     data->switch_modes[HIGH_RR_MODE].vrefresh, rate[0], result);
@@ -876,7 +876,7 @@ test_seamless_virtual_rr_basic(data_t *data, enum pipe pipe, igt_output_t *outpu
 		igt_assert(igt_display_try_commit_atomic(&data->display, 0, NULL) == 0);
 
 		rate[0] = igt_kms_frame_time_from_vrefresh(vrefresh);
-		result = flip_and_measure(data, output, pipe, rate, 1, TEST_DURATION_NS);
+		result = flip_and_measure(data, output, rate, 1, TEST_DURATION_NS);
 		igt_assert_f(result > 75,
 			     "Refresh rate (%u Hz) %"PRIu64"ns: Target threshold not reached, result was %u%%\n",
 			     vrefresh, rate[0], result);
@@ -903,7 +903,7 @@ test_lobf(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 		 output->name, kmstest_pipe_name(pipe), data->range.min, data->range.max);
 
 	igt_output_override_mode(output, &data->switch_modes[HIGH_RR_MODE]);
-	flip_and_measure(data, output, pipe, rate, 1, TEST_DURATION_NS);
+	flip_and_measure(data, output, rate, 1, TEST_DURATION_NS);
 
 	step_size = (data->range.max - data->range.min) / 5;
 
@@ -913,7 +913,7 @@ test_lobf(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 			 vrefresh, data->switch_modes[HIGH_RR_MODE].vrefresh);
 
 		rate[0] = igt_kms_frame_time_from_vrefresh(vrefresh);
-		flip_and_measure(data, output, pipe, rate, 1, NSECS_PER_SEC);
+		flip_and_measure(data, output, rate, 1, NSECS_PER_SEC);
 
 		if (igt_get_i915_edp_lobf_status(data->drm_fd, output->name)) {
 			lobf_enabled = true;
@@ -964,7 +964,7 @@ test_cmrr(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
 
 	if (!igt_display_try_commit2(&data->display, COMMIT_ATOMIC)) {
 		prepare_test(data, output, pipe);
-		result = flip_and_measure_cmrr(data, output, pipe, TEST_DURATION_NS * 2);
+		result = flip_and_measure_cmrr(data, output, TEST_DURATION_NS * 2);
 		igt_assert_f(result > 75,
 			     "Refresh rate (%u Hz) %"PRIu64"ns: Target CMRR on threshold not reached, result was %u%%\n",
 			     mode.vrefresh, igt_kms_frame_time_from_vrefresh(mode.vrefresh),

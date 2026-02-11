@@ -566,7 +566,6 @@ static void transition_nonblocking(igt_display_t *display, enum pipe pipe_id,
 static void prepare_flip_test(igt_display_t *display,
 			      enum flip_test mode,
 			      enum pipe flip_pipe,
-			      enum pipe cursor_pipe,
 			      struct drm_mode_cursor *arg,
 			      const struct igt_fb *prim_fb,
 			      struct igt_fb *argb_fb,
@@ -663,7 +662,7 @@ static void flip(igt_display_t *display,
 	cursor = set_cursor_on_pipe(display, cursor_pipe, &cursor_fb);
 	populate_cursor_args(display, cursor_pipe, arg, &cursor_fb);
 
-	prepare_flip_test(display, mode, flip_pipe, cursor_pipe, arg, &fb_info, &argb_fb, &cursor_fb2);
+	prepare_flip_test(display, mode, flip_pipe, arg, &fb_info, &argb_fb, &cursor_fb2);
 
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
@@ -777,7 +776,7 @@ static void basic_flip_cursor(igt_display_t *display,
 	cursor = set_cursor_on_pipe(display, pipe, &cursor_fb);
 	populate_cursor_args(display, pipe, arg, &cursor_fb);
 
-	prepare_flip_test(display, mode, pipe, pipe, arg, &fb_info, &argb_fb, &cursor_fb2);
+	prepare_flip_test(display, mode, pipe, arg, &fb_info, &argb_fb, &cursor_fb2);
 
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
@@ -948,7 +947,7 @@ static void flip_vs_cursor(igt_display_t *display, enum flip_test mode, int nloo
 	cursor = set_cursor_on_pipe(display, pipe, &cursor_fb);
 	populate_cursor_args(display, pipe, arg, &cursor_fb);
 
-	prepare_flip_test(display, mode, pipe, pipe, arg, &fb_info, &argb_fb, &cursor_fb2);
+	prepare_flip_test(display, mode, pipe, arg, &fb_info, &argb_fb, &cursor_fb2);
 
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 
@@ -1380,7 +1379,7 @@ static void cursor_vs_flip(igt_display_t *display, enum flip_test mode, int nloo
 	cursor = set_cursor_on_pipe(display, pipe, &cursor_fb);
 	populate_cursor_args(display, pipe, arg, &cursor_fb);
 
-	prepare_flip_test(display, mode, pipe, pipe, arg, &fb_info, &argb_fb, &cursor_fb2);
+	prepare_flip_test(display, mode, pipe, arg, &fb_info, &argb_fb, &cursor_fb2);
 
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 

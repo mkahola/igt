@@ -664,7 +664,7 @@ static void draw_entire_color_array(data_t *data, cairo_t *cr, uint32_t format,
 	}
 }
 
-static void prepare_format_color(data_t *data, enum pipe pipe,
+static void prepare_format_color(data_t *data,
 				 igt_plane_t *plane,
 				 uint32_t format, uint64_t modifier,
 				 int width, int height,
@@ -757,7 +757,7 @@ static void capture_format_crcs_single(data_t *data, enum pipe pipe,
 	struct igt_fb old_fb = *fb;
 	const color_t black = { 0.0f, 0.0f, 0.0f };
 
-	prepare_format_color(data, pipe, plane, format, modifier,
+	prepare_format_color(data, plane, format, modifier,
 			     width, height, encoding, range, &black, fb, true);
 
 	igt_display_commit2(&data->display, data->display.is_atomic ?
@@ -786,7 +786,7 @@ restart_round:
 		struct igt_fb old_fb = *fb;
 		int ret;
 
-		prepare_format_color(data, pipe, plane, format, modifier,
+		prepare_format_color(data, plane, format, modifier,
 				     width, height, encoding, range, c, fb,
 				     false);
 

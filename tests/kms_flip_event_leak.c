@@ -58,7 +58,7 @@ IGT_TEST_DESCRIPTION(
     "itself won't fail even if the kernel leaks the event, but the resulting "
     "dmesg WARN will indicate a failure.");
 
-static void test(data_t *data, enum pipe pipe, igt_output_t *output)
+static void test(data_t *data, igt_output_t *output)
 {
 	igt_plane_t *primary;
 	drmModeModeInfo *mode;
@@ -128,7 +128,7 @@ int igt_main()
 
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
-				test(&data, crtc->pipe, output);
+				test(&data, output);
 			}
 		}
 	}

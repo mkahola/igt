@@ -1592,7 +1592,7 @@ static void pm_test_caching(void)
 	gem_close(drm_fd, handle);
 }
 
-static bool is_preferred_mode_present(igt_output_t *output, enum pipe pipe,
+static bool is_preferred_mode_present(igt_output_t *output,
 				      igt_display_t *display)
 {
 	drmModeModeInfo *mode = NULL;
@@ -1635,7 +1635,7 @@ static void set_prefered_mode(void)
 		if (!intel_pipe_output_combo_valid(display))
 			continue;
 
-		if (is_preferred_mode_present(output, crtc->pipe, display)) {
+		if (is_preferred_mode_present(output, display)) {
 			mode_found = true;
 			break;
 		}

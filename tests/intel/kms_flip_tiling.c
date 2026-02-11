@@ -169,7 +169,7 @@ test_flip_tiling(data_t *data, enum pipe pipe, igt_output_t *output, uint64_t mo
 	igt_remove_fb(data->drm_fd, &data->old_fb[1]);
 }
 
-static void test_cleanup(data_t *data, enum pipe pipe, igt_output_t *output)
+static void test_cleanup(data_t *data, igt_output_t *output)
 {
 	igt_plane_t *primary;
 	primary = igt_output_get_plane(output, 0);
@@ -274,7 +274,7 @@ int igt_main()
 						handle_lost_event(&data);
 				}
 			}
-			test_cleanup(&data, crtc->pipe, output);
+			test_cleanup(&data, output);
 		}
 	}
 

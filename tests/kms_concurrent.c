@@ -67,7 +67,7 @@ struct {
 /*
  * Common code across all tests, acting on data_t
  */
-static void test_init(data_t *data, enum pipe pipe, int n_planes,
+static void test_init(data_t *data, int n_planes,
 		      igt_output_t *output)
 {
 	data->plane = calloc(n_planes, sizeof(*data->plane));
@@ -77,7 +77,7 @@ static void test_init(data_t *data, enum pipe pipe, int n_planes,
 	igt_assert_f(data->fb != NULL, "Failed to allocate memory for FBs\n");
 }
 
-static void test_fini(data_t *data, enum pipe pipe, int n_planes,
+static void test_fini(data_t *data, int n_planes,
 		      igt_output_t *output)
 {
 	int i;
@@ -327,7 +327,7 @@ run_test(data_t *data, enum pipe pipe, igt_output_t *output)
 
 	srand(opt.seed);
 
-	test_init(data, crtc->pipe, n_planes, output);
+	test_init(data, n_planes, output);
 
 	igt_fork(child, 1) {
 		test_plane_position_with_output(data, crtc->pipe, n_planes,
@@ -338,7 +338,7 @@ run_test(data_t *data, enum pipe pipe, igt_output_t *output)
 
 	igt_waitchildren();
 
-	test_fini(data, crtc->pipe, n_planes, output);
+	test_fini(data, n_planes, output);
 }
 
 static void
