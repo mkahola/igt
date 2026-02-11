@@ -24,12 +24,12 @@
 
 #include "kms_color_helper.h"
 
-bool pipe_output_combo_valid(data_t *data, enum pipe pipe)
+bool pipe_output_combo_valid(data_t *data, igt_crtc_t *crtc)
 {
 	bool ret = true;
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(data->output->display, pipe));
+			    crtc);
 	if (!intel_pipe_output_combo_valid(&data->display))
 		ret = false;
 	igt_output_set_crtc(data->output, NULL);
@@ -316,11 +316,10 @@ pipe_set_property_blob(igt_crtc_t *crtc,
 }
 
 static void
-invalid_lut_sizes(data_t *data, enum pipe p,
+invalid_lut_sizes(data_t *data, igt_crtc_t *crtc,
 		  enum igt_atomic_crtc_properties prop, int size)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
 	struct drm_color_lut *lut;
 	size_t lut_size = size * sizeof(lut[0]);
 
@@ -349,21 +348,23 @@ invalid_lut_sizes(data_t *data, enum pipe p,
 }
 
 void
-invalid_gamma_lut_sizes(data_t *data, enum pipe p)
+invalid_gamma_lut_sizes(data_t *data, igt_crtc_t *crtc)
 {
-	invalid_lut_sizes(data, p, IGT_CRTC_GAMMA_LUT, data->gamma_lut_size);
+	invalid_lut_sizes(data, crtc,
+			  IGT_CRTC_GAMMA_LUT,
+			  data->gamma_lut_size);
 }
 
 void
-invalid_degamma_lut_sizes(data_t *data, enum pipe p)
+invalid_degamma_lut_sizes(data_t *data, igt_crtc_t *crtc)
 {
-	invalid_lut_sizes(data, p, IGT_CRTC_DEGAMMA_LUT, data->degamma_lut_size);
+	invalid_lut_sizes(data, crtc,
+			  IGT_CRTC_DEGAMMA_LUT,
+			  data->degamma_lut_size);
 }
 
-void invalid_ctm_matrix_sizes(data_t *data, enum pipe p)
+void invalid_ctm_matrix_sizes(data_t *data, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
 	void *ptr;
 
 	igt_require(igt_crtc_has_prop(crtc, IGT_CRTC_CTM));

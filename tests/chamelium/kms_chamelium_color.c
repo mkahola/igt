@@ -429,10 +429,8 @@ static bool test_pipe_limited_range_ctm(data_t *data,
 }
 
 static void
-prep_pipe(data_t *data, enum pipe p)
+prep_pipe(data_t *data, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
 	igt_require_pipe(&data->display, crtc->pipe);
 
 	if (igt_crtc_has_prop(crtc, IGT_CRTC_DEGAMMA_LUT_SIZE)) {
@@ -450,14 +448,12 @@ prep_pipe(data_t *data, enum pipe p)
 	}
 }
 
-static int test_setup(data_t *data, enum pipe p)
+static int test_setup(data_t *data, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
 	int i = 0;
 
 	igt_display_reset(&data->display);
-	prep_pipe(data, crtc->pipe);
+	prep_pipe(data, crtc);
 	igt_require(crtc->n_planes >= 0);
 
 	data->primary = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
@@ -489,10 +485,11 @@ static int test_setup(data_t *data, enum pipe p)
 }
 
 static void
-run_gamma_degamma_tests_for_pipe(data_t *data, enum pipe p,
-		bool (*test_t)(data_t*, igt_plane_t*, struct chamelium_port*))
+run_gamma_degamma_tests_for_pipe(data_t *data, igt_crtc_t *crtc,
+				 bool (*test_t)(data_t*, igt_plane_t*, struct chamelium_port*))
 {
-	int port_idx = test_setup(data, p);
+	int port_idx = test_setup(data,
+				  crtc);
 
 	igt_require(port_idx >= 0);
 
@@ -500,15 +497,15 @@ run_gamma_degamma_tests_for_pipe(data_t *data, enum pipe p,
 	data->drm_format = DRM_FORMAT_XRGB8888;
 	data->mode = igt_output_get_mode(data->output);
 
-	if (!pipe_output_combo_valid(data, p))
+	if (!pipe_output_combo_valid(data, crtc))
 		return;
 
-	igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(p), data->output->name)
+	igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc), data->output->name)
 		igt_assert(test_t(data, data->primary, data->ports[port_idx]));
 }
 
 static void
-run_ctm_tests_for_pipe(data_t *data, enum pipe p,
+run_ctm_tests_for_pipe(data_t *data, igt_crtc_t *crtc,
 		       color_t *expected_colors,
 		       double *ctm,
 		       int iter)
@@ -519,7 +516,8 @@ run_ctm_tests_for_pipe(data_t *data, enum pipe p,
 		{ 0.0, 1.0, 0.0 },
 		{ 0.0, 0.0, 1.0 }
 	};
-	int port_idx = test_setup(data, p);
+	int port_idx = test_setup(data,
+				  crtc);
 
 	igt_require(port_idx >= 0);
 	/*
@@ -538,10 +536,10 @@ run_ctm_tests_for_pipe(data_t *data, enum pipe p,
 	data->drm_format = DRM_FORMAT_XRGB8888;
 	data->mode = igt_output_get_mode(data->output);
 
-	if (!pipe_output_combo_valid(data, p))
+	if (!pipe_output_combo_valid(data, crtc))
 		return;
 
-	igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(p), data->output->name) {
+	igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc), data->output->name) {
 		bool success = false;
 		int i;
 
@@ -574,10 +572,11 @@ run_ctm_tests_for_pipe(data_t *data, enum pipe p,
 }
 
 static void
-run_limited_range_ctm_test_for_pipe(data_t *data, enum pipe p,
-		bool (*test_t)(data_t*, igt_plane_t*, struct chamelium_port*))
+run_limited_range_ctm_test_for_pipe(data_t *data, igt_crtc_t *crtc,
+				    bool (*test_t)(data_t*, igt_plane_t*, struct chamelium_port*))
 {
-	int port_idx = test_setup(data, p);
+	int port_idx = test_setup(data,
+				  crtc);
 
 	igt_require(port_idx >= 0);
 	igt_require(igt_output_has_prop(data->output, IGT_CONNECTOR_BROADCAST_RGB));
@@ -586,10 +585,10 @@ run_limited_range_ctm_test_for_pipe(data_t *data, enum pipe p,
 	data->drm_format = DRM_FORMAT_XRGB8888;
 	data->mode = igt_output_get_mode(data->output);
 
-	if (!pipe_output_combo_valid(data, p))
+	if (!pipe_output_combo_valid(data, crtc))
 		return;
 
-	igt_dynamic_f("pipe-%s-%s", kmstest_pipe_name(p), data->output->name)
+	igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc), data->output->name)
 		igt_assert(test_t(data, data->primary, data->ports[port_idx]));
 }
 
@@ -689,7 +688,7 @@ run_tests_for_pipe(data_t *data)
 		igt_subtest_with_dynamic_f("%s", gamma_degamma_tests[i].name) {
 			for_each_crtc(&data->display, crtc) {
 				run_gamma_degamma_tests_for_pipe(data,
-								 crtc->pipe,
+								 crtc,
 								 gamma_degamma_tests[i].test_t);
 			}
 		}
@@ -699,7 +698,8 @@ run_tests_for_pipe(data_t *data)
 		igt_describe_f("%s", ctm_tests[i].desc);
 		igt_subtest_with_dynamic_f("%s", ctm_tests[i].name) {
 			for_each_crtc(&data->display, crtc) {
-				run_ctm_tests_for_pipe(data, crtc->pipe,
+				run_ctm_tests_for_pipe(data,
+						       crtc,
 						       ctm_tests[i].colors,
 						       ctm_tests[i].ctm,
 						       ctm_tests[i].iter);
@@ -710,7 +710,8 @@ run_tests_for_pipe(data_t *data)
 	igt_describe("Compare after applying ctm matrix & identity matrix");
 	igt_subtest_with_dynamic("ctm-limited-range") {
 		for_each_crtc(&data->display, crtc) {
-			run_limited_range_ctm_test_for_pipe(data, crtc->pipe,
+			run_limited_range_ctm_test_for_pipe(data,
+							    crtc,
 							    test_pipe_limited_range_ctm);
 		}
 	}

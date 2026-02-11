@@ -46,11 +46,8 @@ static void test_cleanup(data_t *data)
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
 
-static void test_setup(data_t *data, enum pipe p)
+static void test_setup(data_t *data, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
-
 	igt_require_pipe_crc(data->drm_fd);
 	igt_require(crtc);
 	igt_require(crtc->n_planes > 0);
@@ -279,10 +276,11 @@ run_tests_for_plane(data_t *data)
 							 output) {
 				data->output = output;
 
-				if (!pipe_output_combo_valid(data, crtc->pipe))
+				if (!pipe_output_combo_valid(data, crtc))
 					continue;
 
-				test_setup(data, crtc->pipe);
+				test_setup(data,
+					   crtc);
 
 				if (!igt_plane_has_prop(data->primary, IGT_PLANE_COLOR_PIPELINE)) {
 					test_cleanup(data);
