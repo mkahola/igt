@@ -169,6 +169,7 @@ enum {
 	TEST_PANNING_TOP_LEFT           = 1 << 2,
 	TEST_PANNING_BOTTOM_RIGHT       = 1 << 3,
 	TEST_SUSPEND_RESUME             = 1 << 4,
+	TEST_PIXEL_FORMAT               = 1 << 5,
 };
 
 static const struct {
@@ -1489,6 +1490,18 @@ static void run_test(data_t *data, void (*test)(data_t *, enum pipe))
 	int count = 0;
 
 	for_each_crtc_with_single_output(&data->display, crtc, data->output) {
+		if ((data->flags & TEST_PIXEL_FORMAT) &&
+		    !igt_display_has_format_mod(&data->display,
+						DRM_FORMAT_XBGR8888,
+						data->mod)) {
+			igt_info("Skipping: Modifier " IGT_MODIFIER_FMT
+				 " is not supported on pipe %s, output %s\n",
+				 IGT_MODIFIER_ARGS(data->mod),
+				 kmstest_pipe_name(crtc->pipe),
+				 igt_output_name(data->output));
+			continue;
+		}
+
 		igt_display_reset(&data->display);
 
 		igt_output_set_crtc(data->output,
@@ -1517,6 +1530,7 @@ run_tests_for_pipe_plane(data_t *data)
 		igt_describe("verify the pixel formats for given plane and pipe");
 		igt_subtest_with_dynamic_f("pixel-format-%s-modifier", modifiers[i].str) {
 			data->mod = modifiers[i].modifier;
+			data->flags = TEST_PIXEL_FORMAT;
 			run_test(data, test_pixel_formats);
 		}
 	}
@@ -1527,6 +1541,7 @@ run_tests_for_pipe_plane(data_t *data)
 					   modifiers[i].str) {
 			data->mod = modifiers[i].modifier;
 			data->crop = 4;
+			data->flags = TEST_PIXEL_FORMAT;
 			run_test(data, test_pixel_formats);
 		}
 		data->crop = 0;
