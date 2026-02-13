@@ -29,6 +29,13 @@
 
 #include "igt_kms.h"
 
+#define IGT_INTEL_PACKAGE_CSTATE_PATH  "pmc_core/package_cstate_show"
+
+/* DC State Flags */
+#define IGT_INTEL_CHECK_DC5       (1 << 0)
+#define IGT_INTEL_CHECK_DC6       (1 << 1)
+#define IGT_INTEL_CHECK_DC3CO     (1 << 2)
+
 void igt_pm_enable_audio_runtime_pm(void);
 void igt_pm_enable_sata_link_power_management(void);
 void igt_pm_restore_sata_link_power_management(void);
@@ -99,5 +106,13 @@ int igt_pm_get_runtime_usage(struct pci_device *pci_dev);
 void igt_pm_ignore_slpc_efficient_freq(int i915, int gtfd, bool val);
 bool igt_has_pci_pm_capability(struct pci_device *pci_dev);
 void igt_pm_dpms_toggle(igt_output_t *output);
+uint32_t igt_get_dc_counter(const char *dc_data);
+bool igt_support_dc6(int debugfs_fd);
+char *igt_get_dc6_counter(const char *buf);
+uint32_t igt_read_dc_counter(int debugfs_fd, int dc_flag);
+bool igt_dc_state_wait_entry(int debugfs_fd, int dc_flag, int prev_dc_count);
+const char *igt_dc_state_name(int dc_flag);
+void igt_require_dc_counter(int debugfs_fd, int dc_flag);
+unsigned int igt_read_pkgc_counter(int debugfs_root_fd);
 
 #endif /* IGT_PM_H */

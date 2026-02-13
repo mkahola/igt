@@ -25,6 +25,7 @@
  *    David Weinehall <david.weinehall@intel.com>
  *
  */
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <limits.h>
@@ -1542,4 +1543,173 @@ void igt_pm_dpms_toggle(igt_output_t *output)
 				   output->config.connector,
 				   DRM_MODE_DPMS_ON);
 	igt_assert(igt_wait_for_pm_status(IGT_RUNTIME_PM_STATUS_ACTIVE));
+}
+
+/**
+ * igt_get_dc_counter:
+ * @dc_data: String containing DC counter data in format
+ *
+ * Returns the counter value as uint32_t
+ */
+uint32_t igt_get_dc_counter(const char *dc_data)
+{
+	char *e;
+	long ret;
+	char *s = strchr(dc_data, ':');
+
+	igt_assert(s);
+	s++;
+	ret = strtol(s, &e, 10);
+	igt_assert(((ret != LONG_MIN && ret != LONG_MAX) || errno != ERANGE) &&
+		   e > s && *e == '\n' && ret >= 0);
+	return ret;
+}
+
+/**
+ * igt_support_dc6:
+ * @debugfs_fd: DRM file descriptor
+ *
+ * Returns true if DC6 is supported.
+ */
+bool igt_support_dc6(int debugfs_fd)
+{
+	char buf[4096];
+
+	igt_debugfs_simple_read(debugfs_fd, "i915_dmc_info",
+				buf, sizeof(buf));
+	return !!strstr(buf, "DC5 -> DC6 count");
+}
+
+/**
+ * igt_get_dc6_counter: Locate DC6 counter string in debugfs buffer
+ * @buf: Buffer containing i915_dmc_info debugfs output
+ *
+ * Searches for DC6 counter information in the DMC info buffer.
+ */
+char *igt_get_dc6_counter(const char *buf)
+{
+	char *str;
+
+	str = strstr(buf, "DC5 -> DC6 count");
+	if (!str)
+		str = strstr(buf, "DC5 -> DC6 allowed count");
+
+	return str;
+}
+
+/**
+ * igt_read_dc_counter:
+ * @debugfs_fd: DRM file descriptor
+ * @dc_flag: DC state flag (IGT_INTEL_CHECK_DC5, IGT_INTEL_CHECK_DC6, or IGT_INTEL_CHECK_DC3CO)
+ *
+ * Returns current counter value for the specified DC state
+ */
+uint32_t igt_read_dc_counter(int debugfs_fd, int dc_flag)
+{
+	char buf[4096];
+	char *str;
+
+	igt_debugfs_simple_read(debugfs_fd, "i915_dmc_info", buf, sizeof(buf));
+
+	if (dc_flag & IGT_INTEL_CHECK_DC5) {
+		str = strstr(buf, "DC3 -> DC5 count");
+		igt_assert_f(str, "DC5 counter is not available\n");
+	} else if (dc_flag & IGT_INTEL_CHECK_DC6) {
+		str = igt_get_dc6_counter(buf);
+		igt_assert_f(str, "No DC6 counter available\n");
+	} else if (dc_flag & IGT_INTEL_CHECK_DC3CO) {
+		str = strstr(buf, "DC3CO count");
+		igt_assert_f(str, "DC3CO counter is not available\n");
+	} else {
+		igt_assert(!"reached");
+		str = NULL;
+	}
+
+	return igt_get_dc_counter(str);
+}
+
+/**
+ * igt_dc_state_wait_entry:
+ * @debugfs_fd: DRM file descriptor
+ * @dc_flag: DC state flag
+ * @prev_dc_count: Previous counter value to compare against
+ *
+ * Returns true if DC state entry detected within timeout, false otherwise
+ */
+bool igt_dc_state_wait_entry(int debugfs_fd, int dc_flag, int prev_dc_count)
+{
+	return igt_wait(igt_read_dc_counter(debugfs_fd, dc_flag) >
+			prev_dc_count, 3000, 100);
+}
+
+/**
+ * igt_dc_state_name:
+ * @dc_flag: DC state flag
+ *
+ * Converts DC state flag constants to readable string names
+ */
+const char *igt_dc_state_name(int dc_flag)
+{
+	if (dc_flag & IGT_INTEL_CHECK_DC3CO)
+		return "DC3CO";
+	else if (dc_flag & IGT_INTEL_CHECK_DC5)
+		return "DC5";
+	else
+		return "DC6";
+}
+
+/**
+ * igt_require_dc_counter:
+ * @debugfs_fd: File descriptor for the debugfs
+ * @dc_flag: DC counter type to check (IGT_INTEL_CHECK_DC3CO, IGT_INTEL_CHECK_DC5,
+ * or IGT_INTEL_CHECK_DC6)
+ *
+ * Skips the current test if the requested DC counter is not available
+ * on the system.
+ */
+void igt_require_dc_counter(int debugfs_fd, int dc_flag)
+{
+	char *str;
+	char buf[4096];
+
+	igt_debugfs_simple_read(debugfs_fd, "i915_dmc_info",
+				buf, sizeof(buf));
+
+	switch (dc_flag) {
+	case IGT_INTEL_CHECK_DC3CO:
+		igt_skip_on_f(!strstr(buf, "DC3CO count"),
+			      "DC3CO counter is not available\n");
+		break;
+	case IGT_INTEL_CHECK_DC5:
+		igt_skip_on_f(!strstr(buf, "DC3 -> DC5 count"),
+			      "DC5 counter is not available\n");
+		break;
+	case IGT_INTEL_CHECK_DC6:
+		str = igt_get_dc6_counter(buf);
+		igt_skip_on_f(!str, "No DC6 counter available\n");
+		break;
+	default:
+		igt_assert_f(0, "Unknown DC counter %d\n", dc_flag);
+	}
+}
+
+/**
+ * igt_read_pkgc_counter:
+ * @debugfs_root_fd: File descriptor for the debugfs
+ *
+ * Returns PC10 counter value.
+ */
+unsigned int igt_read_pkgc_counter(int debugfs_root_fd)
+{
+	char buf[4096];
+	char *str;
+	int len;
+
+	len = igt_sysfs_read(debugfs_root_fd, IGT_INTEL_PACKAGE_CSTATE_PATH, buf, sizeof(buf) - 1);
+	igt_skip_on_f(len < 0, "PKGC state file not found\n");
+	buf[len] = '\0';
+	str = strstr(buf, "Package C10");
+	igt_skip_on_f(!str, "PKGC10 is not supported.\n");
+
+	return igt_get_dc_counter(str);
 }
