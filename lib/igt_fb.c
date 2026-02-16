@@ -282,6 +282,16 @@ static const struct format_desc_struct {
 	  .num_planes = 1, .plane_bpp = { 16, },
 	  .hsub = 2, .vsub = 1,
 	},
+	{ .name = "YU10", .depth = -1, .drm_id = DRM_FORMAT_YUV410,
+	  .cairo_id = CAIRO_FORMAT_RGB24, .convert = true,
+	  .num_planes = 3, .plane_bpp = { 8, 8, 8, },
+	  .hsub = 4, .vsub = 4,
+	},
+	{ .name = "YU11", .depth = -1, .drm_id = DRM_FORMAT_YUV411,
+	  .cairo_id = CAIRO_FORMAT_RGB24, .convert = true,
+	  .num_planes = 3, .plane_bpp = { 8, 8, 8, },
+	  .hsub = 4, .vsub = 1,
+	},
 	{ .name = "YU12", .depth = -1, .drm_id = DRM_FORMAT_YUV420,
 	  .cairo_id = CAIRO_FORMAT_RGB24, .convert = true,
 	  .num_planes = 3, .plane_bpp = { 8, 8, 8, },
@@ -292,6 +302,21 @@ static const struct format_desc_struct {
 	  .num_planes = 3, .plane_bpp = { 8, 8, 8, },
 	  .hsub = 2, .vsub = 1,
 	},
+	{ .name = "YU24", .depth = -1, .drm_id = DRM_FORMAT_YUV444,
+	  .cairo_id = CAIRO_FORMAT_RGB24, .convert = true,
+	  .num_planes = 3, .plane_bpp = { 8, 8, 8, },
+	  .hsub = 1, .vsub = 1,
+	},
+	{ .name = "YV10", .depth = -1, .drm_id = DRM_FORMAT_YVU410,
+	  .cairo_id = CAIRO_FORMAT_RGB24, .convert = true,
+	  .num_planes = 3, .plane_bpp = { 8, 8, 8, },
+	  .hsub = 4, .vsub = 4,
+	},
+	{ .name = "YV11", .depth = -1, .drm_id = DRM_FORMAT_YVU411,
+	  .cairo_id = CAIRO_FORMAT_RGB24, .convert = true,
+	  .num_planes = 3, .plane_bpp = { 8, 8, 8, },
+	  .hsub = 4, .vsub = 1,
+	},
 	{ .name = "YV12", .depth = -1, .drm_id = DRM_FORMAT_YVU420,
 	  .cairo_id = CAIRO_FORMAT_RGB24, .convert = true,
 	  .num_planes = 3, .plane_bpp = { 8, 8, 8, },
@@ -301,6 +326,11 @@ static const struct format_desc_struct {
 	  .cairo_id = CAIRO_FORMAT_RGB24, .convert = true,
 	  .num_planes = 3, .plane_bpp = { 8, 8, 8, },
 	  .hsub = 2, .vsub = 1,
+	},
+	{ .name = "YV24", .depth = -1, .drm_id = DRM_FORMAT_YVU444,
+	  .cairo_id = CAIRO_FORMAT_RGB24, .convert = true,
+	  .num_planes = 3, .plane_bpp = { 8, 8, 8, },
+	  .hsub = 1, .vsub = 1,
 	},
 	{ .name = "Y410", .depth = -1, .drm_id = DRM_FORMAT_Y410,
 	  .cairo_id = CAIRO_FORMAT_RGBA128F, .convert = true,
@@ -1164,10 +1194,16 @@ static void clear_yuv_buffer(struct igt_fb *fb)
 			 full_range ? 0x800000008000ULL : 0x800010008000ULL,
 			 plane_size[0] / sizeof(uint64_t));
 		break;
+	case DRM_FORMAT_YUV410:
+	case DRM_FORMAT_YUV411:
 	case DRM_FORMAT_YUV420:
 	case DRM_FORMAT_YUV422:
+	case DRM_FORMAT_YUV444:
+	case DRM_FORMAT_YVU410:
+	case DRM_FORMAT_YVU411:
 	case DRM_FORMAT_YVU420:
 	case DRM_FORMAT_YVU422:
+	case DRM_FORMAT_YVU444:
 		igt_assert(ARRAY_SIZE(plane_size) == 3);
 		memset(ptr + fb->offsets[0],
 		       full_range ? 0x00 : 0x10,
@@ -3675,10 +3711,16 @@ static void get_yuv_parameters(struct igt_fb *fb, struct yuv_parameters *params)
 		params->uv_inc = 2;
 		break;
 
+	case DRM_FORMAT_YUV410:
+	case DRM_FORMAT_YUV411:
 	case DRM_FORMAT_YUV420:
 	case DRM_FORMAT_YUV422:
+	case DRM_FORMAT_YUV444:
+	case DRM_FORMAT_YVU410:
+	case DRM_FORMAT_YVU411:
 	case DRM_FORMAT_YVU420:
 	case DRM_FORMAT_YVU422:
+	case DRM_FORMAT_YVU444:
 		params->ay_inc = 1;
 		params->uv_inc = 1;
 		break;
@@ -3709,10 +3751,16 @@ static void get_yuv_parameters(struct igt_fb *fb, struct yuv_parameters *params)
 	case DRM_FORMAT_NV16:
 	case DRM_FORMAT_NV21:
 	case DRM_FORMAT_NV61:
+	case DRM_FORMAT_YUV410:
+	case DRM_FORMAT_YUV411:
 	case DRM_FORMAT_YUV420:
 	case DRM_FORMAT_YUV422:
+	case DRM_FORMAT_YUV444:
+	case DRM_FORMAT_YVU410:
+	case DRM_FORMAT_YVU411:
 	case DRM_FORMAT_YVU420:
 	case DRM_FORMAT_YVU422:
+	case DRM_FORMAT_YVU444:
 	case DRM_FORMAT_P010:
 	case DRM_FORMAT_P012:
 	case DRM_FORMAT_P016:
@@ -3752,15 +3800,21 @@ static void get_yuv_parameters(struct igt_fb *fb, struct yuv_parameters *params)
 		params->v_offset = fb->offsets[1];
 		break;
 
+	case DRM_FORMAT_YUV410:
+	case DRM_FORMAT_YUV411:
 	case DRM_FORMAT_YUV420:
 	case DRM_FORMAT_YUV422:
+	case DRM_FORMAT_YUV444:
 		params->y_offset = fb->offsets[0];
 		params->u_offset = fb->offsets[1];
 		params->v_offset = fb->offsets[2];
 		break;
 
+	case DRM_FORMAT_YVU410:
+	case DRM_FORMAT_YVU411:
 	case DRM_FORMAT_YVU420:
 	case DRM_FORMAT_YVU422:
+	case DRM_FORMAT_YVU444:
 		params->y_offset = fb->offsets[0];
 		params->u_offset = fb->offsets[2];
 		params->v_offset = fb->offsets[1];
@@ -4497,11 +4551,17 @@ static void fb_convert(struct fb_convert *cvt)
 		case DRM_FORMAT_NV61:
 		case DRM_FORMAT_UYVY:
 		case DRM_FORMAT_VYUY:
+		case DRM_FORMAT_YUV410:
+		case DRM_FORMAT_YUV411:
 		case DRM_FORMAT_YUV420:
 		case DRM_FORMAT_YUV422:
+		case DRM_FORMAT_YUV444:
 		case DRM_FORMAT_YUYV:
+		case DRM_FORMAT_YVU410:
+		case DRM_FORMAT_YVU411:
 		case DRM_FORMAT_YVU420:
 		case DRM_FORMAT_YVU422:
+		case DRM_FORMAT_YVU444:
 		case DRM_FORMAT_YVYU:
 			convert_yuv_to_rgb24(cvt);
 			return;
@@ -4515,11 +4575,17 @@ static void fb_convert(struct fb_convert *cvt)
 		case DRM_FORMAT_NV61:
 		case DRM_FORMAT_UYVY:
 		case DRM_FORMAT_VYUY:
+		case DRM_FORMAT_YUV410:
+		case DRM_FORMAT_YUV411:
 		case DRM_FORMAT_YUV420:
 		case DRM_FORMAT_YUV422:
+		case DRM_FORMAT_YUV444:
 		case DRM_FORMAT_YUYV:
+		case DRM_FORMAT_YVU410:
+		case DRM_FORMAT_YVU411:
 		case DRM_FORMAT_YVU420:
 		case DRM_FORMAT_YVU422:
+		case DRM_FORMAT_YVU444:
 		case DRM_FORMAT_YVYU:
 			convert_rgb24_to_yuv(cvt);
 			return;
@@ -5095,9 +5161,15 @@ bool igt_format_is_yuv(uint32_t drm_format)
 	case DRM_FORMAT_NV21:
 	case DRM_FORMAT_NV61:
 	case DRM_FORMAT_YUV420:
+	case DRM_FORMAT_YUV410:
+	case DRM_FORMAT_YUV411:
 	case DRM_FORMAT_YUV422:
+	case DRM_FORMAT_YUV444:
 	case DRM_FORMAT_YVU420:
+	case DRM_FORMAT_YVU410:
+	case DRM_FORMAT_YVU411:
 	case DRM_FORMAT_YVU422:
+	case DRM_FORMAT_YVU444:
 	case DRM_FORMAT_P010:
 	case DRM_FORMAT_P012:
 	case DRM_FORMAT_P016:
