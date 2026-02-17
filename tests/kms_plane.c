@@ -1489,18 +1489,14 @@ static void run_test(data_t *data, void (*test)(data_t *, enum pipe))
 	igt_crtc_t *crtc;
 	int count = 0;
 
+	igt_skip_on_f(((data->flags & TEST_PIXEL_FORMAT) &&
+		       !igt_display_has_format_mod(&data->display,
+		       DRM_FORMAT_XBGR8888, data->mod)),
+		       "Skipping: Modifier " IGT_MODIFIER_FMT
+		       " is not supported on this platform\n",
+		       IGT_MODIFIER_ARGS(data->mod));
+
 	for_each_crtc_with_single_output(&data->display, crtc, data->output) {
-		if ((data->flags & TEST_PIXEL_FORMAT) &&
-		    !igt_display_has_format_mod(&data->display,
-						DRM_FORMAT_XBGR8888,
-						data->mod)) {
-			igt_info("Skipping: Modifier " IGT_MODIFIER_FMT
-				 " is not supported on pipe %s, output %s\n",
-				 IGT_MODIFIER_ARGS(data->mod),
-				 kmstest_pipe_name(crtc->pipe),
-				 igt_output_name(data->output));
-			continue;
-		}
 
 		igt_display_reset(&data->display);
 
