@@ -216,6 +216,55 @@ struct amdgpu_userq_params {
 	uint64_t job_start_write_data_val;
 };
 
+/**
+ * struct amdgpu_dma_limits - hardware transfer limits per IP block
+ *
+ * All sizes are in BYTES.  Packet builders convert internally
+ * (e.g. /4 for DWORD counts in SDMA inline data or GFX PACKET3).
+ *
+ * Queried once with amdgpu_dma_limits_query(), then passed to helpers.
+ */
+struct amdgpu_dma_limits {
+	uint64_t sdma_max_bytes;        /* max SDMA write/fill/copy per packet */
+	uint64_t gfx_max_bytes;         /* max GFX CP_DMA fill/copy per packet */
+	uint64_t compute_max_bytes;     /* max Compute CP_DMA per packet */
+
+	/* safe small sizes for quick smoke tests (bytes) */
+	uint64_t sdma_default_bytes;
+	uint64_t gfx_default_bytes;
+	uint64_t compute_default_bytes;
+};
+
+/**
+ * amdgpu_dma_max_bytes - return HW max transfer size for an IP type
+ */
+static inline uint64_t
+amdgpu_dma_max_bytes(const struct amdgpu_dma_limits *lim,
+		     unsigned int ip_type)
+{
+	switch (ip_type) {
+	case AMDGPU_HW_IP_DMA:     return lim->sdma_max_bytes;
+	case AMDGPU_HW_IP_GFX:     return lim->gfx_max_bytes;
+	case AMDGPU_HW_IP_COMPUTE: return lim->compute_max_bytes;
+	default:                    return lim->sdma_default_bytes;
+	}
+}
+
+/**
+ * amdgpu_dma_default_bytes - return safe small test size for an IP type
+ */
+static inline uint64_t
+amdgpu_dma_default_bytes(const struct amdgpu_dma_limits *lim,
+			 unsigned int ip_type)
+{
+	switch (ip_type) {
+	case AMDGPU_HW_IP_DMA:     return lim->sdma_default_bytes;
+	case AMDGPU_HW_IP_GFX:     return lim->gfx_default_bytes;
+	case AMDGPU_HW_IP_COMPUTE: return lim->compute_default_bytes;
+	default:                    return lim->sdma_default_bytes;
+	}
+}
+
 /* aux struct to hold misc parameters for convenience to maintain */
 struct amdgpu_ring_context {
 

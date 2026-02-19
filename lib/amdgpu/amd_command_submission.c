@@ -1444,3 +1444,99 @@ uint32_t cmd_get_available_rings(amdgpu_device_handle device,
 		return __builtin_popcountll(hw_ip_info.available_rings);
 	}
 }
+
+/**
+ * get_sdma_max_bytes - query SDMA IP version and return max transfer size
+ *
+ * The SDMA COUNT field width varies by generation.
+ * On v4 (Vega) and newer, the COUNT field encodes COUNT-1, i.e.,
+ * COUNT=0 transfers 1 byte, so the true max is 1 << field_width.
+ *
+ *   v1-2 (SI):       21 bits            = 0x1fffff bytes   (~2 MB)
+ *   v3   (VI):       22 bits, 32B align = 0x3fffe0 bytes   (~4 MB)
+ *   v4   (Vega):     22 bits, COUNT-1   = 1<<22 bytes      (4 MB)
+ *   v4.4 (MI):       30 bits, COUNT-1   = 1<<30 bytes      (1 GB)
+ *   v5.0 (NV1x):     22 bits, COUNT-1   = 1<<22 bytes      (4 MB)
+ *   v5.2 (NV2x):     30 bits, COUNT-1   = 1<<30 bytes      (1 GB)
+ *   v6   (NV3x):     30 bits, COUNT-1   = 1<<30 bytes      (1 GB)
+ *   v7   (NV4x):     30 bits, COUNT-1   = 1<<30 bytes      (1 GB)
+ */
+static uint64_t
+get_sdma_max_bytes(amdgpu_device_handle device)
+{
+	struct drm_amdgpu_info_hw_ip ip = {0};
+	int r;
+
+	r = amdgpu_query_hw_ip_info(device, AMDGPU_HW_IP_DMA, 0, &ip);
+	igt_assert_eq(r, 0);
+
+	if (ip.hw_ip_version_major <= 2)
+		return 0x1fffffULL;                     /* SI, raw count */
+	else if (ip.hw_ip_version_major == 3)
+		return 0x3fffe0ULL;                     /* VI, 32B aligned */
+	else if (ip.hw_ip_version_major == 4 && ip.hw_ip_version_minor < 4)
+		return 1ULL << 22;                      /* Vega, COUNT-1 */
+	else if (ip.hw_ip_version_major == 4 && ip.hw_ip_version_minor >= 4)
+		return 1ULL << 30;                      /* MI, COUNT-1 */
+	else if (ip.hw_ip_version_major == 5 && ip.hw_ip_version_minor < 2)
+		return 1ULL << 22;                      /* NV1x, COUNT-1 */
+	else if (ip.hw_ip_version_major == 5 && ip.hw_ip_version_minor >= 2)
+		return 1ULL << 30;                      /* NV2x, COUNT-1 */
+	else if (ip.hw_ip_version_major >= 6)
+		return 1ULL << 30;                      /* NV3x/NV4x+, COUNT-1 */
+
+	igt_skip("Unknown SDMA IP version");
+	return 0;
+}
+
+/**
+ * GFX/Compute use PACKET3_DMA_DATA for fill/copy whose size field is
+ * 26 bits in BYTES (max 64 MB).  PACKET3_WRITE_DATA inline count
+ * is 14 bits in DWORDs (max 16384 DW = 64 KB), but that limit is
+ * handled by pm4 buffer sizing, not by this struct.
+ */
+#define GFX_CP_DMA_MAX_BYTES   (1ULL << 26)  /* 64 MB, 26-bit byte_count */
+
+/**
+ * get_gfx_cp_dma_max_bytes - return max CP DMA (PACKET3_DMA_DATA) transfer size
+ *
+ * The register spec says 26 bits (64 MB) for all generations, but pre-GFX9
+ * hardware (Polaris / GFX8 and older) silently truncates at 20 bits (1 MB).
+ * Observed: const_fill on Polaris writes only 2 MB, rest stays zero.
+ */
+static uint64_t
+get_gfx_cp_dma_max_bytes(amdgpu_device_handle device)
+{
+	struct drm_amdgpu_info_hw_ip ip = {};
+	int r;
+
+	r = amdgpu_query_hw_ip_info(device, AMDGPU_HW_IP_GFX, 0, &ip);
+	igt_assert_eq(r, 0);
+
+	/* GFX9 (Vega) and newer: full 26-bit byte_count */
+	if (ip.hw_ip_version_major >= 9)
+		return GFX_CP_DMA_MAX_BYTES;
+
+	/* GFX8 (Polaris) and older: effective limit is 20 bits */
+	return 1ULL << 20;                         /* 1 MB */
+}
+
+void
+amdgpu_dma_limits_query(amdgpu_device_handle device,
+			    struct amdgpu_dma_limits *limits)
+{
+	memset(limits, 0, sizeof(*limits));
+
+	limits->sdma_max_bytes    = get_sdma_max_bytes(device);
+	limits->gfx_max_bytes     = get_gfx_cp_dma_max_bytes(device);
+	limits->compute_max_bytes = get_gfx_cp_dma_max_bytes(device);
+
+	/*
+	 * Default safe small sizes for quick smoke tests.
+	 * write_linear uses inline data so keep it small (512 bytes = 128 DW).
+	 * const_fill and copy_linear have no inline data, can be larger.
+	 */
+	limits->sdma_default_bytes    = 512;    /* 128 DWORDs */
+	limits->gfx_default_bytes     = 1024;   /* 256 DWORDs */
+	limits->compute_default_bytes = 1024;   /* 256 DWORDs */
+}

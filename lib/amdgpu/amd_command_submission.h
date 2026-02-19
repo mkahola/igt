@@ -121,4 +121,12 @@ bool cmd_ring_available(amdgpu_device_handle device,
 uint32_t cmd_get_available_rings(amdgpu_device_handle device,
                                  enum amd_ip_block_type ip_type,
                                 bool user_queue);
+
+/**
+ * Query HW and populate DMA transfer limits.
+ * All fields in the returned struct are in BYTES.
+ */
+void amdgpu_dma_limits_query(amdgpu_device_handle device,
+                             struct amdgpu_dma_limits *limits);
+
 #endif
