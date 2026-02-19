@@ -42,7 +42,7 @@ sdma_ring_write_linear(const struct amdgpu_ip_funcs *func,
 		     (unsigned long)ring_context->write_length);
 	if (func->family_id == AMDGPU_FAMILY_SI)
 		ring_context->pm4[i++] = SDMA_PACKET_SI(SDMA_OPCODE_WRITE, 0, 0, 0,
-					 ring_context->write_length);
+					 ring_context->write_length / 4);
 	else
 		ring_context->pm4[i++] = SDMA_PACKET(SDMA_OPCODE_WRITE,
 					 SDMA_WRITE_SUB_OPCODE_LINEAR,
@@ -51,9 +51,9 @@ sdma_ring_write_linear(const struct amdgpu_ip_funcs *func,
 	ring_context->pm4[i++] = lower_32_bits(ring_context->bo_mc);
 	ring_context->pm4[i++] = upper_32_bits(ring_context->bo_mc);
 	if (func->family_id >= AMDGPU_FAMILY_AI)
-		ring_context->pm4[i++] = ring_context->write_length - 1;
+		ring_context->pm4[i++] = ring_context->write_length / 4 - 1;
 	else
-		ring_context->pm4[i++] = ring_context->write_length;
+		ring_context->pm4[i++] = ring_context->write_length / 4;
 
 	while (j++ < ring_context->write_length / 4)
 		ring_context->pm4[i++] = func->deadbeaf;
@@ -81,9 +81,9 @@ sdma_ring_bad_write_linear(const struct amdgpu_ip_funcs *func,
 	j = 0;
 
 	if (cmd_error == CMD_STREAM_EXEC_INVALID_PACKET_LENGTH)
-		stream_length = ring_context->write_length / 16;
+		stream_length = ring_context->write_length / 4 / 16;
 	else
-		stream_length = ring_context->write_length;
+		stream_length = ring_context->write_length / 4;
 
 	if (cmd_error == CMD_STREAM_EXEC_INVALID_OPCODE)
 		opcode = 0xf2;
@@ -92,7 +92,7 @@ sdma_ring_bad_write_linear(const struct amdgpu_ip_funcs *func,
 
 	if (func->family_id == AMDGPU_FAMILY_SI)
 		ring_context->pm4[i++] = SDMA_PACKET_SI(opcode, 0, 0, 0,
-					 ring_context->write_length);
+					 ring_context->write_length / 4);
 	else
 		ring_context->pm4[i++] = SDMA_PACKET(opcode,
 					 SDMA_WRITE_SUB_OPCODE_LINEAR,
@@ -108,9 +108,9 @@ sdma_ring_bad_write_linear(const struct amdgpu_ip_funcs *func,
 		ring_context->pm4[i++] = upper_32_bits(ring_context->bo_mc);
 	}
 	if (func->family_id >= AMDGPU_FAMILY_AI)
-		ring_context->pm4[i++] = ring_context->write_length - 1;
+		ring_context->pm4[i++] = ring_context->write_length / 4 - 1;
 	else
-		ring_context->pm4[i++] = ring_context->write_length;
+		ring_context->pm4[i++] = ring_context->write_length / 4;
 
 	while (j++ < stream_length)
 		ring_context->pm4[i++] = func->deadbeaf;

@@ -1511,7 +1511,7 @@ get_sdma_max_bytes(amdgpu_device_handle device)
  * is 14 bits in DWORDs (max 16384 DW = 64 KB), but that limit is
  * handled by pm4 buffer sizing, not by this struct.
  */
-#define GFX_CP_DMA_MAX_BYTES   (1ULL << 26)  /* 64 MB, 26-bit byte_count */
+#define GFX_CP_DMA_MAX_BYTES   ((1ULL << 26) - 4)  /* 64 MB, 26-bit byte_count, DWORD-aligned */
 
 /**
  * get_gfx_cp_dma_max_bytes - return max CP DMA (PACKET3_DMA_DATA) transfer size
