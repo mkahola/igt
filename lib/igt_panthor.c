@@ -7,6 +7,17 @@
 #include "panthor_drm.h"
 
 /**
+ * igt_panthor_skip_on_big_endian:
+ *
+ * Skip Panthor test on big-endian machines.
+ */
+void igt_panthor_skip_on_big_endian(void)
+{
+	igt_skip_on_f(__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__,
+		      "Panthor is unsupported on big-endian arch\n");
+}
+
+/**
  * igt_panthor_group_create:
  * @fd: device file descriptor
  * @group_create: pointer to group creation structure

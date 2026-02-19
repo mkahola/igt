@@ -41,9 +41,10 @@ issue_store_multiple(uint8_t *cs, uint64_t kernel_va, uint32_t constant)
 }
 
 int igt_main() {
-	int fd;
+	int fd = -1;
 
 	igt_fixture() {
+		igt_panthor_skip_on_big_endian();
 		fd = drm_open_driver(DRIVER_PANTHOR);
 	}
 

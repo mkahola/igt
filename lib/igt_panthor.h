@@ -61,11 +61,9 @@ enum cs_flush_mode {
 };
 
 /* There's no plan to support big endian in the UMD, so keep
- * things simple and don't bother supporting it here either.
+ * things simple and don't bother supporting it.
  */
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#error "big endian not supported"
-#endif
+void igt_panthor_skip_on_big_endian(void);
 
 struct cs_instr {
 	union {

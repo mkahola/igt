@@ -7,9 +7,10 @@
 #include "panthor_drm.h"
 
 int igt_main() {
-	int fd;
+	int fd = -1;
 
 	igt_fixture() {
+		igt_panthor_skip_on_big_endian();
 		fd = drm_open_driver(DRIVER_PANTHOR);
 	}
 
