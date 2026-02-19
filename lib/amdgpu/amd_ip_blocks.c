@@ -35,6 +35,11 @@ sdma_ring_write_linear(const struct amdgpu_ip_funcs *func,
 
 	i = 0;
 	j = 0;
+
+	/* Guard: write_length must be DWORD-aligned (bytes) */
+	igt_assert_f(ring_context->write_length % 4 == 0,
+		     "SDMA write_linear: write_length %lu not DWORD-aligned\n",
+		     (unsigned long)ring_context->write_length);
 	if (func->family_id == AMDGPU_FAMILY_SI)
 		ring_context->pm4[i++] = SDMA_PACKET_SI(SDMA_OPCODE_WRITE, 0, 0, 0,
 					 ring_context->write_length);
@@ -50,10 +55,16 @@ sdma_ring_write_linear(const struct amdgpu_ip_funcs *func,
 	else
 		ring_context->pm4[i++] = ring_context->write_length;
 
-	while (j++ < ring_context->write_length)
+	while (j++ < ring_context->write_length / 4)
 		ring_context->pm4[i++] = func->deadbeaf;
 
 	*pm4_dw = i;
+
+	/* Guard: ensure PM4 packet fits in allocated buffer */
+	if (ring_context->pm4_size > 0)
+		igt_assert_f(*pm4_dw <= ring_context->pm4_size,
+			     "SDMA write_linear: pm4_dw %u exceeds buffer %u\n",
+			     *pm4_dw, ring_context->pm4_size);
 
 	return 0;
 }
@@ -232,14 +243,28 @@ gfx_ring_write_linear(const struct amdgpu_ip_funcs *func,
 	i = 0;
 	j = 0;
 
-	ring_context->pm4[i++] = PACKET3(PACKET3_WRITE_DATA, 2 +  ring_context->write_length);
+	/* Guard: write_length must be DWORD-aligned (bytes) */
+	igt_assert_f(ring_context->write_length % 4 == 0,
+		     "GFX write_linear: write_length %lu not DWORD-aligned\n",
+		     (unsigned long)ring_context->write_length);
+	if (ring_context->pm4_size > 0)
+		igt_assert_f(ring_context->write_length / 4 + 4 <= ring_context->pm4_size,
+			     "GFX write_linear: %lu DWORDs + 4 header > pm4 buffer %u\n",
+			     (unsigned long)(ring_context->write_length / 4),
+			     ring_context->pm4_size);
+
+	ring_context->pm4[i++] = PACKET3(PACKET3_WRITE_DATA, 2 + ring_context->write_length / 4);
 	ring_context->pm4[i++] = WRITE_DATA_DST_SEL(5) | WR_CONFIRM;
 	ring_context->pm4[i++] = lower_32_bits(ring_context->bo_mc);
 	ring_context->pm4[i++] = upper_32_bits(ring_context->bo_mc);
-	while (j++ < ring_context->write_length)
+	while (j++ < ring_context->write_length / 4)
 		ring_context->pm4[i++] = func->deadbeaf;
 
 	*pm4_dw = i;
+	if (ring_context->pm4_size > 0)
+		igt_assert_f(*pm4_dw <= ring_context->pm4_size,
+			     "GFX write_linear: pm4_dw %u exceeds buffer %u\n",
+			     *pm4_dw, ring_context->pm4_size);
 	return 0;
 }
 

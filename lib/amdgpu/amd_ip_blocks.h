@@ -271,8 +271,8 @@ struct amdgpu_ring_context {
 	int ring_id; /* ring_id from amdgpu_query_hw_ip_info */
 	int res_cnt; /* num of bo in amdgpu_bo_handle resources[2] */
 
-	uint32_t write_length;  /* length of data */
-	uint32_t write_length2; /* length of data for second packet */
+	uint64_t write_length;  /* transfer size in bytes */
+	uint64_t write_length2; /* transfer size in bytes, second packet */
 	uint32_t *pm4;		/* data of the packet */
 	uint32_t pm4_size;	/* max allocated packet size */
 	bool secure;		/* secure or not */

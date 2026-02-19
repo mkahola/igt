@@ -297,7 +297,7 @@ static void amdgpu_command_submission_multi_fence(amdgpu_device_handle device)
 static void amdgpu_userptr_test(amdgpu_device_handle device)
 {
 	const int pm4_dw = 256;
-	const int sdma_write_length = 4;
+	const int sdma_write_length = 16;	/* 4 DWORDs in bytes */
 
 	struct amdgpu_ring_context *ring_context;
 	int r;
@@ -347,7 +347,8 @@ static void amdgpu_userptr_test(amdgpu_device_handle device)
 
 	 amdgpu_test_exec_cs_helper(device, ip_block->type, ring_context, 0);
 
-	r = ip_block->funcs->compare(ip_block->funcs, ring_context, 1);
+	/* div=4: write_length is bytes, bo_cpu is uint32_t* */
+	r = ip_block->funcs->compare(ip_block->funcs, ring_context, 4);
 	igt_assert_eq(r, 0);
 
 	r = amdgpu_bo_va_op(ring_context->bo, 0, BUFFER_SIZE, ring_context->bo_mc, 0, AMDGPU_VA_OP_UNMAP);
