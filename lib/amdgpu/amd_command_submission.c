@@ -11,8 +11,19 @@
 #include "lib/amdgpu/amd_PM4.h"
 #include "lib/amdgpu/amd_command_submission.h"
 #include "lib/amdgpu/amdgpu_asic_addr.h"
+
 #include "ioctl_wrappers.h"
 
+static const char *
+amdgpu_ip_type_name(unsigned ip_type)
+{
+	switch (ip_type) {
+	case AMDGPU_HW_IP_GFX:     return "GFX";
+	case AMDGPU_HW_IP_COMPUTE: return "Compute";
+	case AMDGPU_HW_IP_DMA:     return "SDMA";
+	default:                    return "Unknown";
+	}
+}
 
 /*
  *
@@ -51,7 +62,7 @@ int amdgpu_test_exec_cs_helper(amdgpu_device_handle device, unsigned int ip_type
 		/* prepare CS */
 		igt_assert(ring_context->pm4_dw <= 1024);
 		/* allocate IB */
-		r = amdgpu_bo_alloc_and_map_sync(device, 4096, 4096,
+		r = amdgpu_bo_alloc_and_map_sync(device, ring_context->write_length, 4096,
 						 AMDGPU_GEM_DOMAIN_GTT, 0, AMDGPU_VM_MTYPE_UC,
 						 &ib_result_handle, &ib_result_cpu,
 						 &ib_result_mc_address, &va_handle,
@@ -406,8 +417,6 @@ void amdgpu_command_submission_write_linear_helper(amdgpu_device_handle device,
 		igt_assert_eq(r, 0);
 	}
 
-
-
 	for (ring_id = 0; (1 << ring_id) & available_rings; ring_id++) {
 		loop = 0;
 		ring_context->ring_id = ring_id;
@@ -445,6 +454,10 @@ void amdgpu_command_submission_write_linear_helper(amdgpu_device_handle device,
 
 			ring_context->ring_id = ring_id;
 
+			igt_info("%s write_linear: ring %d, size %lu bytes (%lu KB)\n",
+				amdgpu_ip_type_name(ip_block->type), ring_id,
+				(unsigned long)ring_context->write_length,
+				(unsigned long)ring_context->write_length / 1024);
 			 amdgpu_test_exec_cs_helper(device, ip_block->type, ring_context, 0);
 
 			/* verify if SDMA test result meets with expected */
@@ -508,6 +521,7 @@ void amdgpu_command_submission_const_fill_helper(amdgpu_device_handle device,
 	int r, loop, ring_id;
 	uint32_t available_rings = 0;
 	uint64_t gtt_flags[2] = {0, AMDGPU_GEM_CREATE_CPU_GTT_USWC};
+	bool do_once = true;
 
 	amdgpu_dma_limits_query(device, &limits);
 
@@ -540,10 +554,11 @@ void amdgpu_command_submission_const_fill_helper(amdgpu_device_handle device,
 		/* prepare resource */
 		loop = 0;
 		ring_context->ring_id = ring_id;
-			ring_context->write_length = (ring_id == 0) ?
-				amdgpu_dma_max_bytes(&limits, ip_block->type) :
-				amdgpu_dma_default_bytes(&limits, ip_block->type);
 			while (loop < 2) {
+				ring_context->write_length = (do_once == true && ring_context->ring_id == 0) ?
+					amdgpu_dma_max_bytes(&limits, ip_block->type) :
+					amdgpu_dma_default_bytes(&limits, ip_block->type);
+				do_once = false;
 				/* allocate UC bo for sDMA use */
 				r = amdgpu_bo_alloc_and_map_sync(device, ring_context->write_length,
 							 4096, AMDGPU_GEM_DOMAIN_GTT,
@@ -572,6 +587,10 @@ void amdgpu_command_submission_const_fill_helper(amdgpu_device_handle device,
 			/* fulfill PM4: test DMA const fill */
 			ip_block->funcs->const_fill(ip_block->funcs, ring_context, &ring_context->pm4_dw);
 
+			igt_info("%s const_fill: ring %d, size %lu bytes (%lu KB)\n",
+				amdgpu_ip_type_name(ip_block->type), ring_id,
+				(unsigned long)ring_context->write_length,
+				(unsigned long)ring_context->write_length / 1024);
 			amdgpu_test_exec_cs_helper(device, ip_block->type, ring_context, 0);
 
 			/* verify if SDMA test result meets with expected */
@@ -613,6 +632,7 @@ void amdgpu_command_submission_copy_linear_helper(amdgpu_device_handle device,
 	int r, loop1, loop2, ring_id;
 	uint32_t available_rings = 0;
 	uint64_t gtt_flags[2] = {0, AMDGPU_GEM_CREATE_CPU_GTT_USWC};
+	bool do_once = true;
 
 	amdgpu_dma_limits_query(device, &limits);
 
@@ -644,13 +664,14 @@ void amdgpu_command_submission_copy_linear_helper(amdgpu_device_handle device,
 	for (ring_id = 0; (1 << ring_id) & available_rings; ring_id++) {
 		loop1 = loop2 = 0;
 			ring_context->ring_id = ring_id;
-			ring_context->write_length = (ring_id == 0) ?
-				amdgpu_dma_max_bytes(&limits, ip_block->type) :
-				amdgpu_dma_default_bytes(&limits, ip_block->type);
-	/* run 9 circle to test all mapping combination */
+		/* run 9 circle to test all mapping combination */
 		while (loop1 < 2) {
 			while (loop2 < 2) {
 				/* allocate UC bo1for sDMA use */
+				ring_context->write_length = (do_once && ring_context->ring_id == 0) ?
+					amdgpu_dma_max_bytes(&limits, ip_block->type) :
+					amdgpu_dma_default_bytes(&limits, ip_block->type);
+				do_once = false;
 				r = amdgpu_bo_alloc_and_map_sync(device, ring_context->write_length,
 							4096, AMDGPU_GEM_DOMAIN_GTT,
 							gtt_flags[loop1],
@@ -702,6 +723,10 @@ void amdgpu_command_submission_copy_linear_helper(amdgpu_device_handle device,
 
 				ip_block->funcs->copy_linear(ip_block->funcs, ring_context, &ring_context->pm4_dw);
 
+				igt_info("%s copy_linear: ring %d, size %lu bytes (%lu KB)\n",
+					amdgpu_ip_type_name(ip_block->type), ring_id,
+					(unsigned long)ring_context->write_length,
+					(unsigned long)ring_context->write_length / 1024);
 				amdgpu_test_exec_cs_helper(device, ip_block->type, ring_context, 0);
 
 				/* verify if SDMA test result meets with expected */
