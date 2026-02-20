@@ -829,6 +829,19 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display,
 		     j__ < igt_crtc_for_pipe((display), (pipe))->n_planes; j__++)
 
 /**
+ * for_each_plane_on_crtc:
+ * @crtc: CRTC to enumerate valid outputs over
+ * @plane: The enumerated plane.
+ *
+ * This for loop iterates over all planes associated to the given @crtc.
+ * If there are no valid planes for this CRTC, nothing happens.
+ */
+#define for_each_plane_on_crtc(crtc, plane) \
+	for (int j__ = 0; assert(igt_can_fail()), \
+		     (plane) = &(crtc)->planes[j__], \
+		     j__ < (crtc)->n_planes; j__++)
+
+/**
  * for_each_connector_mode:
  * @output: Output to enumerate available modes.
  *
