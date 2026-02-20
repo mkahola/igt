@@ -31,7 +31,6 @@ typedef struct {
 	int drm_fd;
 	int width;
 	int height;
-	enum pipe pipe_id;
 	igt_display_t display;
 	igt_plane_t *primary;
 	igt_output_t *output;
@@ -64,12 +63,12 @@ static void test_init(data_t *data)
 	igt_display_t *display = &data->display;
 
 	/* It doesn't matter which pipe we choose on amdpgu. */
-	data->pipe_id = PIPE_A;
-	data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(&data->display, PIPE_A);
 
 	igt_display_reset(display);
 
-	data->output = igt_get_single_output_for_pipe(display, data->pipe_id);
+	data->output = igt_get_single_output_for_pipe(display,
+						      data->crtc->pipe);
 	igt_assert(data->output);
 
 	if (data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_eDP) {

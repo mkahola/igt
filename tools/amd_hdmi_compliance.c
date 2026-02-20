@@ -34,7 +34,6 @@ typedef struct data {
 	igt_plane_t *primary;
 	igt_output_t *output;
 	igt_crtc_t *crtc;
-	enum pipe pipe_id;
 	bool use_virtual_connector;
 	int timeout_seconds;
 } data_t;
@@ -384,8 +383,7 @@ static void test_init(data_t *data, int conn_id)
 {
 	igt_display_t *display = &data->display;
 
-	data->pipe_id = PIPE_A;
-	data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(&data->display, PIPE_A);
 
 	igt_display_reset(display);
 

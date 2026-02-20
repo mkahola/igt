@@ -155,7 +155,6 @@ static const uint32_t scaling_modes[] = {
 typedef struct {
 	int drm_fd;
 	bool limited;
-	enum pipe pipe_id;
 	struct igt_fb fb[4];
 	igt_crtc_t *crtc;
 	igt_display_t display;
@@ -173,8 +172,7 @@ typedef struct {
 
 static void set_filter_strength_on_pipe(data_t *data)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_set_prop_value(igt_crtc_for_pipe(display, data->pipe_id),
+	igt_crtc_set_prop_value(data->crtc,
 				    IGT_CRTC_SHARPNESS_STRENGTH,
 				    data->filter_strength);
 }
@@ -331,7 +329,6 @@ static int test_filter_toggle(data_t *data)
 
 static void test_sharpness_filter(data_t *data,  enum test_type type)
 {
-	igt_display_t *display = &data->display;
 	igt_output_t *output = data->output;
 	drmModeModeInfo *mode = data->mode;
 	int height = mode->hdisplay;
@@ -343,7 +340,8 @@ static void test_sharpness_filter(data_t *data,  enum test_type type)
 	data->plane[0] = igt_crtc_get_plane_type(data->crtc,
 						 DRM_PLANE_TYPE_PRIMARY);
 	igt_skip_on_f(!igt_plane_has_format_mod(data->plane[0], data->format, data->modifier),
-		      "No requested format/modifier on pipe %s\n", kmstest_pipe_name(data->pipe_id));
+		      "No requested format/modifier on pipe %s\n",
+		      igt_crtc_name(data->crtc));
 
 	setup_fb(data->drm_fd, height, width, data->format, data->modifier, &data->fb[0]);
 	igt_plane_set_fb(data->plane[0], &data->fb[0]);
@@ -352,7 +350,8 @@ static void test_sharpness_filter(data_t *data,  enum test_type type)
 		if (igt_plane_has_rotation(data->plane[0], data->rotation))
 			igt_plane_set_rotation(data->plane[0], data->rotation);
 		else
-			igt_skip("No requested rotation on pipe %s\n", kmstest_pipe_name(data->pipe_id));
+			igt_skip("No requested rotation on pipe %s\n",
+				 igt_crtc_name(data->crtc));
 	}
 
 	if (type == TEST_INVALID_FILTER_WITH_SCALING_MODE)
@@ -372,7 +371,7 @@ static void test_sharpness_filter(data_t *data,  enum test_type type)
 		ret = igt_display_try_commit2(&data->display, COMMIT_ATOMIC);
 
 	if (type == TEST_FILTER_DPMS || type == TEST_FILTER_SUSPEND) {
-		pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe_id),
+		pipe_crc = igt_crtc_crc_new(data->crtc,
 					    IGT_PIPE_CRC_SOURCE_AUTO);
 		igt_pipe_crc_collect_crc(pipe_crc, &ref_crc);
 	}
@@ -438,13 +437,12 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 			igt_display_reset(display);
 
 			data->output = output;
-			data->pipe_id = crtc->pipe;
-			data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
+			data->crtc = crtc;
 			data->mode = igt_output_get_mode(data->output);
 
 			if (!has_sharpness_filter(data->crtc)) {
 				igt_info("%s: Doesn't support IGT_CRTC_SHARPNESS_STRENGTH.\n",
-				kmstest_pipe_name(data->pipe_id));
+				igt_crtc_name(data->crtc));
 				continue;
 			}
 
@@ -473,7 +471,8 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 					igt_output_override_mode(data->output, data->mode);
 
 					snprintf(name, sizeof(name), "-tap-%d", data->filter_tap);
-					igt_dynamic_f("pipe-%s-%s%s", kmstest_pipe_name(data->pipe_id),
+					igt_dynamic_f("pipe-%s-%s%s",
+						       igt_crtc_name(data->crtc),
 						       data->output->name, name)
 						test_sharpness_filter(data, type);
 				}
@@ -531,7 +530,9 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 				igt_assert(0);
 			}
 
-			igt_dynamic_f("pipe-%s-%s%s",  kmstest_pipe_name(data->pipe_id), data->output->name, name)
+			igt_dynamic_f("pipe-%s-%s%s",
+				        igt_crtc_name(data->crtc),
+				      data->output->name, name)
 				test_sharpness_filter(data, type);
 
 			if (data->limited)

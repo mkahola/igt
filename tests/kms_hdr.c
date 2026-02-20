@@ -114,7 +114,6 @@ typedef struct data {
 	igt_crtc_t *crtc;
 	igt_pipe_crc_t *pipe_crc;
 	drmModeModeInfo *mode;
-	enum pipe pipe_id;
 	int fd;
 	int w;
 	int h;
@@ -208,8 +207,7 @@ static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
 	igt_display_t *display = &data->display;
 	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 
-	data->pipe_id = crtc->pipe;
-	data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
+	data->crtc = crtc;
 	igt_assert(data->crtc);
 
 	igt_display_reset(display);

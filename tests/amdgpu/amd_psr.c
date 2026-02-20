@@ -62,7 +62,6 @@ typedef struct data {
 	igt_fb_t pm_fb[2];
 	igt_fb_t cs_fb;		/* cursor framebuffer */
 	drmModeModeInfo *mode;
-	enum pipe pipe_id;
 	int fd;
 	int debugfs_fd;
 	int w, h;
@@ -171,12 +170,12 @@ static void test_init(data_t *data)
 	igt_display_t *display = &data->display;
 
 	/* It doesn't matter which pipe we choose on amdpgu. */
-	data->pipe_id = PIPE_A;
-	data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(&data->display, PIPE_A);
 
 	igt_display_reset(display);
 
-	data->output = igt_get_single_output_for_pipe(display, data->pipe_id);
+	data->output = igt_get_single_output_for_pipe(display,
+						      data->crtc->pipe);
 	igt_require(data->output);
 	igt_info("output %s\n", data->output->name);
 
@@ -341,7 +340,6 @@ static void run_check_psr(data_t *data, bool test_null_crtc) {
 
 static void run_check_psr_su_mpo(data_t *data, bool scaling, float scaling_ratio)
 {
-	igt_display_t *display = &data->display;
 	int edp_idx = check_conn_type(data, DRM_MODE_CONNECTOR_eDP);
 	igt_fb_t ref_fb;	/* reference fb */
 	igt_fb_t *flip_fb;
@@ -374,7 +372,7 @@ static void run_check_psr_su_mpo(data_t *data, bool scaling, float scaling_ratio
 			    .5, .5, .5, &ref_fb);
 	igt_plane_set_fb(data->primary, &ref_fb);
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(display, data->pipe_id));
+			    data->crtc);
 	igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
 	/*
@@ -414,7 +412,7 @@ static void run_check_psr_su_mpo(data_t *data, bool scaling, float scaling_ratio
 	draw_color_alpha(&data->ov_fb[1], 0, 0, pm_w_scale, pm_h_scale, .5, .5, .5, .0);
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(display, data->pipe_id));
+			    data->crtc);
 	igt_display_commit_atomic(&data->display, 0, NULL);
 
 	/* multiplane overlay to emulate video playback use case */
@@ -433,7 +431,7 @@ static void run_check_psr_su_mpo(data_t *data, bool scaling, float scaling_ratio
 			igt_plane_set_size(data->primary, pm_w_scale, pm_h_scale);
 		}
 		igt_output_set_crtc(data->output,
-				    igt_crtc_for_pipe(display, data->pipe_id));
+				    data->crtc);
 
 		ret = igt_display_try_commit_atomic(&data->display, DRM_MODE_PAGE_FLIP_EVENT, NULL);
 		igt_require(ret == 0);
@@ -470,7 +468,6 @@ static void run_check_psr_su_mpo(data_t *data, bool scaling, float scaling_ratio
 
 static void panning_rect_fb(data_t *data, igt_fb_t *rect_fb, int rect_w, int rect_h, int curr_x, int curr_y)
 {
-	igt_display_t *display = &data->display;
 	int ret;
 
 	/* set new position for primary plane */
@@ -493,7 +490,7 @@ static void panning_rect_fb(data_t *data, igt_fb_t *rect_fb, int rect_w, int rec
 		igt_plane_set_fb(data->primary, rect_fb);
 		igt_plane_set_size(data->primary, rect_w, rect_h);
 		igt_output_set_crtc(data->output,
-				    igt_crtc_for_pipe(display, data->pipe_id));
+				    data->crtc);
 
 		ret = igt_display_try_commit_atomic(&data->display, DRM_MODE_PAGE_FLIP_EVENT, NULL);
 		igt_require(ret == 0);
@@ -503,7 +500,6 @@ static void panning_rect_fb(data_t *data, igt_fb_t *rect_fb, int rect_w, int rec
 
 static void run_check_psr_su_ffu(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	int edp_idx = check_conn_type(data, DRM_MODE_CONNECTOR_eDP);
 	igt_fb_t ref_fb;	/* reference fb */
 
@@ -521,7 +517,7 @@ static void run_check_psr_su_ffu(data_t *data)
 			    .5, .5, .5, &ref_fb);
 	igt_plane_set_fb(data->primary, &ref_fb);
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(display, data->pipe_id));
+			    data->crtc);
 	igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
 	/*
@@ -619,7 +615,6 @@ static void test_cursor_movement(data_t *data, int iters, int cs_size, enum curs
 
 static void run_check_psr_su_cursor(data_t *data, bool test_mpo)
 {
-	igt_display_t *display = &data->display;
 	int edp_idx = check_conn_type(data, DRM_MODE_CONNECTOR_eDP);
 	const int cs_size = 128;
 	const int delay_sec = 5; /* seconds */
@@ -660,7 +655,7 @@ static void run_check_psr_su_cursor(data_t *data, bool test_mpo)
 	igt_plane_set_position(data->cursor, 0, 0);
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(display, data->pipe_id));
+			    data->crtc);
 	igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
 	/*

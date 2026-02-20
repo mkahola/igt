@@ -42,7 +42,6 @@ typedef struct data {
 	igt_crtc_t *crtc;
 	igt_pipe_crc_t *pipe_crc;
 	drmModeModeInfo *mode;
-	enum pipe pipe_id;
 	int fd;
 	int w;
 	int h;
@@ -61,8 +60,7 @@ static void test_init(data_t *data)
 	bool mall_en = false;
 
 	/* It doesn't matter which pipe we choose on amdpgu. */
-	data->pipe_id = PIPE_A;
-	data->crtc = igt_crtc_for_pipe(display, data->pipe_id);
+	data->crtc = igt_crtc_for_pipe(&data->display, PIPE_A);
 
 	igt_display_reset(display);
 
