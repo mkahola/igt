@@ -77,9 +77,9 @@ static void assert_empty(int fd)
 	do_or_die(poll(&pfd, 1, 0));
 }
 
-static void generate_event(int fd, enum pipe pipe)
+static void generate_event(int fd, igt_crtc_t *crtc)
 {
-	igt_assert(kmstest_get_vblank(fd, pipe, DRM_VBLANK_EVENT));
+	igt_assert(kmstest_get_vblank(fd, crtc->pipe, DRM_VBLANK_EVENT));
 }
 
 static void wait_for_event(int fd)
@@ -132,7 +132,7 @@ static void test_invalid_buffer(int in)
 	teardown(fd);
 }
 
-static void test_fault_buffer(int in, enum pipe pipe)
+static void test_fault_buffer(int in, igt_crtc_t *crtc)
 {
 	int fd = setup(in, 0);
 	struct drm_mode_map_dumb arg;
@@ -146,7 +146,7 @@ static void test_fault_buffer(int in, enum pipe pipe)
 	buf = mmap(0, 4096, PROT_WRITE, MAP_SHARED, fd, arg.offset);
 	igt_assert(buf != MAP_FAILED);
 
-	generate_event(fd, pipe);
+	generate_event(fd, crtc);
 
 	alarm(1);
 
@@ -168,13 +168,13 @@ static void test_empty(int in, int nonblock, int expected)
 	teardown(fd);
 }
 
-static void test_short_buffer(int in, int nonblock, enum pipe pipe)
+static void test_short_buffer(int in, int nonblock, igt_crtc_t *crtc)
 {
 	char buffer[1024]; /* events are typically 32 bytes */
 	int fd = setup(in, nonblock);
 
-	generate_event(fd, pipe);
-	generate_event(fd, pipe);
+	generate_event(fd, crtc);
+	generate_event(fd, crtc);
 
 	wait_for_event(fd);
 
@@ -214,7 +214,7 @@ static void *thread_short_buffer_wakeup(void *arg)
 	return NULL;
 }
 
-static void test_short_buffer_wakeup(int in, enum pipe pipe)
+static void test_short_buffer_wakeup(int in, igt_crtc_t *crtc)
 {
 	const int nt = sysconf(_SC_NPROCESSORS_ONLN) + 1;
 	struct short_buffer_wakeup w = {
@@ -243,7 +243,7 @@ static void test_short_buffer_wakeup(int in, enum pipe pipe)
 		sched_yield();
 
 		/* One event should wake all threads as none consume */
-		generate_event(w.fd, pipe);
+		generate_event(w.fd, crtc);
 
 		clock_gettime(CLOCK_REALTIME, &tv);
 		tv.tv_sec += 5; /* Let's be very generous to the scheduler */
@@ -274,13 +274,12 @@ int igt_main()
 {
 	igt_display_t display;
 	struct igt_fb fb;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_fd_t(fd);
 
 	igt_fixture() {
 		struct sigaction alarm_action = {};
 		igt_output_t *output;
-		igt_crtc_t *crtc;
 
 		igt_assert_neq(sigaction(SIGALRM, NULL, &alarm_action), -1);
 		alarm_action.sa_flags &= ~SA_RESTART;
@@ -302,20 +301,18 @@ int igt_main()
 
 			igt_output_set_crtc(output, crtc);
 			igt_plane_set_fb(igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY), &fb);
-
-			pipe = crtc->pipe;
 			break;
 		}
 
 		igt_display_commit2(&display, display.is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
-		igt_require(kmstest_get_vblank(fd, pipe, 0));
+		igt_require(kmstest_get_vblank(fd, crtc->pipe, 0));
 	}
 
 	igt_subtest("invalid-buffer")
 		test_invalid_buffer(fd);
 
 	igt_subtest("fault-buffer")
-		test_fault_buffer(fd, pipe);
+		test_fault_buffer(fd, crtc);
 
 	igt_subtest("empty-block")
 		test_empty(fd, 0, EINTR);
@@ -324,11 +321,14 @@ int igt_main()
 		test_empty(fd, 1, EAGAIN);
 
 	igt_subtest("short-buffer-block")
-		test_short_buffer(fd, 0, pipe);
+		test_short_buffer(fd, 0,
+				  crtc);
 
 	igt_subtest("short-buffer-nonblock")
-		test_short_buffer(fd, 1, pipe);
+		test_short_buffer(fd, 1,
+				  crtc);
 
 	igt_subtest("short-buffer-wakeup")
-		test_short_buffer_wakeup(fd, pipe);
+		test_short_buffer_wakeup(fd,
+					 crtc);
 }
