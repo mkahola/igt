@@ -97,7 +97,7 @@ typedef struct {
 	igt_display_t display;
 	struct igt_fb primary_fb;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	unsigned int flags;
 #define IDLE	0x1
 #define BUSY	0x2
@@ -130,7 +130,7 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 
 	/* select the pipe we want to use */
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(display, data->pipe));
+			    data->crtc);
 
 	/* create and set the primary plane fb */
 	mode = igt_output_get_mode(output);
@@ -144,7 +144,7 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 
 	igt_display_commit(display);
 
-	igt_wait_for_vblank(igt_crtc_for_pipe(display, data->pipe));
+	igt_wait_for_vblank(data->crtc);
 }
 
 static void cleanup_crtc(data_t *data, int fd, igt_output_t *output)
@@ -192,7 +192,7 @@ static void run_test(data_t *data, void (*testfunc)(data_t *, int, int))
 		memset(&vbl, 0, sizeof(vbl));
 		vbl.request.type =
 			DRM_VBLANK_RELATIVE | DRM_VBLANK_EVENT;
-		vbl.request.type |= kmstest_get_vbl_flag(data->pipe);
+		vbl.request.type |= kmstest_get_vbl_flag(data->crtc->pipe);
 		vbl.request.sequence = 120 + 12;
 		igt_assert_eq(wait_vblank(fd, &vbl), 0);
 	}
@@ -225,14 +225,14 @@ static void run_test(data_t *data, void (*testfunc)(data_t *, int, int))
 }
 
 static bool
-pipe_output_combo_valid(igt_display_t *display,
-			enum pipe pipe, igt_output_t *output)
+pipe_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
+			igt_output_t *output)
 {
 	bool ret = true;
 
 	igt_display_reset(display);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	if (!intel_pipe_output_combo_valid(display))
 		ret = false;
 	igt_output_set_crtc(output, NULL);
@@ -243,15 +243,14 @@ pipe_output_combo_valid(igt_display_t *display,
 static void crtc_id_subtest(data_t *data, int fd)
 {
 	igt_display_t *display = &data->display;
-	enum pipe p = data->pipe;
 	igt_output_t *output = data->output;
 	struct drm_event_vblank buf;
-	const uint32_t pipe_id_flag = kmstest_get_vbl_flag(p);
+	const uint32_t pipe_id_flag = kmstest_get_vbl_flag(data->crtc->pipe);
 	unsigned crtc_id, expected_crtc_id;
 	uint64_t val;
 	union drm_wait_vblank vbl;
 
-	crtc_id = igt_crtc_for_pipe(display, p)->crtc_id;
+	crtc_id = data->crtc->crtc_id;
 	if (drmGetCap(display->drm_fd, DRM_CAP_CRTC_IN_VBLANK_EVENT, &val) == 0)
 		expected_crtc_id = crtc_id;
 	else
@@ -291,7 +290,7 @@ static void crtc_id_subtest(data_t *data, int fd)
 
 static void accuracy(data_t *data, int fd, int nchildren)
 {
-	const uint32_t pipe_id_flag = kmstest_get_vbl_flag(data->pipe);
+	const uint32_t pipe_id_flag = kmstest_get_vbl_flag(data->crtc->pipe);
 	union drm_wait_vblank vbl;
 	unsigned long target;
 	int total = 120 / nchildren;
@@ -330,7 +329,7 @@ static void accuracy(data_t *data, int fd, int nchildren)
 
 static void vblank_query(data_t *data, int fd, int nchildren)
 {
-	const uint32_t pipe_id_flag = kmstest_get_vbl_flag(data->pipe);
+	const uint32_t pipe_id_flag = kmstest_get_vbl_flag(data->crtc->pipe);
 	union drm_wait_vblank vbl;
 	struct timespec start, end;
 	unsigned long sq, count = 0;
@@ -359,7 +358,7 @@ static void vblank_query(data_t *data, int fd, int nchildren)
 
 static void vblank_wait(data_t *data, int fd, int nchildren)
 {
-	const uint32_t pipe_id_flag = kmstest_get_vbl_flag(data->pipe);
+	const uint32_t pipe_id_flag = kmstest_get_vbl_flag(data->crtc->pipe);
 	union drm_wait_vblank vbl;
 	struct timespec start, end;
 	unsigned long sq, count = 0;
@@ -388,12 +387,12 @@ static void vblank_wait(data_t *data, int fd, int nchildren)
 		 elapsed(&start, &end, count));
 }
 
-static int get_vblank(int fd, enum pipe pipe, unsigned flags)
+static int get_vblank(int fd, igt_crtc_t *crtc, unsigned flags)
 {
 	union drm_wait_vblank vbl;
 
 	memset(&vbl, 0, sizeof(vbl));
-	vbl.request.type = DRM_VBLANK_RELATIVE | kmstest_get_vbl_flag(pipe) | flags;
+	vbl.request.type = DRM_VBLANK_RELATIVE | kmstest_get_vbl_flag(crtc->pipe) | flags;
 	do_or_die(igt_ioctl(fd, DRM_IOCTL_WAIT_VBLANK, &vbl));
 
 	return vbl.reply.sequence;
@@ -412,7 +411,7 @@ static void vblank_ts_cont(data_t *data, int fd, int nchildren)
 	int vrefresh = igt_output_get_mode(output)->vrefresh;
 	double time_elapsed;
 
-	seq1 = get_vblank(fd, data->pipe, 0);
+	seq1 = get_vblank(fd, data->crtc, 0);
 	clock_gettime(CLOCK_MONOTONIC, &start);
 
 	if (data->flags & DPMS) {
@@ -436,7 +435,7 @@ static void vblank_ts_cont(data_t *data, int fd, int nchildren)
 		/* Attempting to do a vblank while disabled should return -EINVAL */
 		memset(&vbl, 0, sizeof(vbl));
 		vbl.request.type = _DRM_VBLANK_RELATIVE;
-		vbl.request.type |= kmstest_get_vbl_flag(data->pipe);
+		vbl.request.type |= kmstest_get_vbl_flag(data->crtc->pipe);
 		igt_assert_eq(wait_vblank(fd, &vbl), -EINVAL);
 	}
 
@@ -447,11 +446,11 @@ static void vblank_ts_cont(data_t *data, int fd, int nchildren)
 
 	if (data->flags & MODESET) {
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(display, data->pipe));
+				    data->crtc);
 		igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 	}
 
-	seq2 = get_vblank(fd, data->pipe, 0);
+	seq2 = get_vblank(fd, data->crtc, 0);
 	clock_gettime(CLOCK_MONOTONIC, &end);
 
 	time_elapsed = igt_time_elapsed(&start, &end);
@@ -519,8 +518,8 @@ static void run_subtests(data_t *data)
 				for_each_crtc_with_valid_output(&data->display,
 								crtc,
 								data->output) {
-					data->pipe = crtc->pipe;
-					if (!pipe_output_combo_valid(&data->display, crtc->pipe, data->output))
+					data->crtc = crtc;
+					if (!pipe_output_combo_valid(&data->display, crtc, data->output))
 						continue;
 
 					if (!all_pipes && crtc->pipe != active_pipes[0] &&
@@ -551,8 +550,8 @@ static void run_subtests(data_t *data)
 				for_each_crtc_with_valid_output(&data->display,
 								crtc,
 								data->output) {
-					data->pipe = crtc->pipe;
-					if (!pipe_output_combo_valid(&data->display, crtc->pipe, data->output))
+					data->crtc = crtc;
+					if (!pipe_output_combo_valid(&data->display, crtc, data->output))
 						continue;
 
 					if (!all_pipes && crtc->pipe != active_pipes[0] &&
@@ -650,7 +649,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 		/* Get active pipes. */
 		for_each_crtc(&data.display, crtc) {
-			data.pipe = crtc->pipe;
+			data.crtc = crtc;
 			active_pipes[last_pipe++] = crtc->pipe;
 		}
 		last_pipe--;
@@ -660,8 +659,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_subtest_with_dynamic("invalid") {
 		for_each_crtc_with_valid_output(&data.display, crtc,
 						data.output) {
-			data.pipe = crtc->pipe;
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, data.output))
+			data.crtc = crtc;
+			if (!pipe_output_combo_valid(&data.display, crtc, data.output))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
@@ -676,8 +675,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_subtest_with_dynamic("crtc-id") {
 		for_each_crtc_with_valid_output(&data.display, crtc,
 						data.output) {
-			data.pipe = crtc->pipe;
-			if (!pipe_output_combo_valid(&data.display, crtc->pipe, data.output))
+			data.crtc = crtc;
+			if (!pipe_output_combo_valid(&data.display, crtc, data.output))
 				continue;
 
 			if (!all_pipes && crtc->pipe != active_pipes[0] &&
