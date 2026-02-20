@@ -143,7 +143,6 @@ typedef struct {
 	int drm_fd;
 	igt_display_t display;
 	igt_output_t *output;
-	enum pipe pipe;
 	uint32_t gen;
 	struct igt_fb small_fb;
 	struct igt_fb big_fb;
