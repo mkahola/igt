@@ -116,14 +116,14 @@ static bool has_prime_export(int fd)
 }
 
 static igt_output_t *setup_display(int importer_fd, igt_display_t *display,
-				   enum pipe *pipe)
+				   igt_crtc_t **ret_crtc)
 {
 	igt_crtc_t *crtc;
 	igt_output_t *output;
 	bool found = false;
 
 	for_each_crtc_with_valid_output(display, crtc, output) {
-		*pipe = crtc->pipe;
+		*ret_crtc = crtc;
 		igt_display_reset(display);
 
 		igt_output_set_crtc(output,
@@ -388,7 +388,7 @@ static void test_crc(int exporter_fd, int importer_fd)
 	igt_display_t display;
 	igt_output_t *output;
 	igt_pipe_crc_t *pipe_crc;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	struct igt_fb fb;
 	int dmabuf_fd;
 	struct dumb_bo scratch = {};
@@ -400,10 +400,10 @@ static void test_crc(int exporter_fd, int importer_fd)
 	igt_require_pipe_crc(importer_fd);
 	igt_display_require(&display, importer_fd);
 
-	output = setup_display(importer_fd, &display, &pipe);
+	output = setup_display(importer_fd, &display, &crtc);
 
 	mode = igt_output_get_mode(output);
-	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(&display, pipe),
+	pipe_crc = igt_crtc_crc_new(crtc,
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
 	for (i = 0; i < ARRAY_SIZE(colors); i++) {
@@ -458,7 +458,7 @@ static void test_basic_modeset(int drm_fd)
 {
 	igt_display_t display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	drmModeModeInfo *mode;
 	struct igt_fb fb;
 	uint32_t bo;
@@ -468,7 +468,7 @@ static void test_basic_modeset(int drm_fd)
 	igt_device_set_master(drm_fd);
 	igt_display_require(&display, drm_fd);
 
-	output = setup_display(drm_fd, &display, &pipe);
+	output = setup_display(drm_fd, &display, &crtc);
 	mode = igt_output_get_mode(output);
 	igt_assert(mode);
 
