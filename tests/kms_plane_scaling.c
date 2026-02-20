@@ -690,13 +690,13 @@ static bool test_format(data_t *data,
 	return true;
 }
 
-static bool test_pipe_iteration(data_t *data, enum pipe pipe, int iteration)
+static bool test_pipe_iteration(data_t *data, igt_crtc_t *crtc, int iteration)
 {
 	if (!is_intel_device(data->drm_fd) ||
 	    data->extended)
 		return true;
 
-	if ((pipe > PIPE_B) && (iteration >= 2))
+	if ((crtc->pipe > PIPE_B) && (iteration >= 2))
 		return false;
 
 	return true;
@@ -714,12 +714,10 @@ static uint32_t
 test_scaler_with_modifier_pipe(data_t *d,
 			       double sf_plane,
 			       bool is_clip_clamp,
-			       bool is_upscale,
-			       enum pipe pipe,
+			       bool is_upscale, igt_crtc_t *crtc,
 			       igt_output_t *output)
 {
 	igt_display_t *display = &d->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	unsigned format = DRM_FORMAT_XRGB8888;
 	igt_plane_t *plane;
 	uint32_t ret;
@@ -754,12 +752,10 @@ static uint32_t
 test_scaler_with_rotation_pipe(data_t *d,
 			       double sf_plane,
 			       bool is_clip_clamp,
-			       bool is_upscale,
-			       enum pipe pipe,
+			       bool is_upscale, igt_crtc_t *crtc,
 			       igt_output_t *output)
 {
 	igt_display_t *display = &d->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	unsigned format = DRM_FORMAT_XRGB8888;
 	uint64_t modifier = DRM_FORMAT_MOD_LINEAR;
 	igt_plane_t *plane;
@@ -794,12 +790,10 @@ test_scaler_with_rotation_pipe(data_t *d,
 static uint32_t
 test_scaler_with_pixel_format_pipe(data_t *d, double sf_plane,
 				   bool is_clip_clamp,
-				   bool is_upscale,
-				   enum pipe pipe,
+				   bool is_upscale, igt_crtc_t *crtc,
 				   igt_output_t *output)
 {
 	igt_display_t *display = &d->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	uint64_t modifier = DRM_FORMAT_MOD_LINEAR;
 	igt_plane_t *plane;
 	uint32_t ret;
@@ -819,7 +813,7 @@ test_scaler_with_pixel_format_pipe(data_t *d, double sf_plane,
 		for (int j = 0; j < plane->drm_plane->count_formats; j++) {
 			uint32_t format = plane->drm_plane->formats[j];
 
-			if (!test_pipe_iteration(d, crtc->pipe, j))
+			if (!test_pipe_iteration(d, crtc, j))
 				continue;
 
 			if (test_format(d, &tested_formats, format) &&
@@ -842,7 +836,7 @@ test_scaler_with_pixel_format_pipe(data_t *d, double sf_plane,
 	return ret;
 }
 
-static enum pipe
+static igt_crtc_t *
 find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 {
 	igt_crtc_t *crtc;
@@ -880,7 +874,7 @@ find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 	else
 		igt_require_f(found, "No valid outputs found\n");
 
-	return crtc->pipe;
+	return crtc;
 }
 
 static int
@@ -940,13 +934,11 @@ static void setup_fb(int fd, int width, int height, struct igt_fb *fb)
 
 static uint32_t
 test_planes_scaling_combo(data_t *d, double sf_plane1,
-			  double sf_plane2,
-			  enum pipe pipe,
+			  double sf_plane2, igt_crtc_t *crtc,
 			  igt_output_t *output,
 			  enum scaler_combo_test_type test_type)
 {
 	igt_display_t *display = &d->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeModeInfo *mode;
 	int n_planes;
 	int w1, h1, w2, h2;
@@ -1014,10 +1006,9 @@ test_planes_scaling_combo(data_t *d, double sf_plane1,
 }
 
 static void
-test_invalid_num_scalers(data_t *d, enum pipe pipe, igt_output_t *output)
+test_invalid_num_scalers(data_t *d, igt_crtc_t *crtc, igt_output_t *output)
 {
 	igt_display_t *display = &d->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	int width, height;
 	igt_plane_t *plane[3];
 	drmModeModeInfo *mode;
@@ -1084,29 +1075,30 @@ test_invalid_num_scalers(data_t *d, enum pipe pipe, igt_output_t *output)
 static void test_scaler_with_multi_pipe_plane(data_t *d)
 {
 	igt_display_t *display = &d->display;
+	igt_crtc_t *crtc1;
+	igt_crtc_t *crtc2;
 	igt_output_t *output1, *output2;
 	drmModeModeInfo *mode1, *mode2;
 	igt_plane_t *plane[4];
-	enum pipe pipe1, pipe2;
 	int ret1, ret2;
 
 	cleanup_fbs(d);
 
-	pipe1 = find_connected_pipe(display, false, &output1);
-	pipe2 = find_connected_pipe(display, true, &output2);
+	crtc1 = find_connected_pipe(display, false, &output1);
+	crtc2 = find_connected_pipe(display, true, &output2);
 	igt_skip_on(!output1 || !output2);
 
 	igt_info("Using (pipe %s + %s) and (pipe %s + %s) to run the subtest.\n",
-		 kmstest_pipe_name(pipe1), igt_output_name(output1),
-		 kmstest_pipe_name(pipe2), igt_output_name(output2));
+		 igt_crtc_name(crtc1), igt_output_name(output1),
+		 igt_crtc_name(crtc2), igt_output_name(output2));
 
 	igt_output_set_crtc(output1,
-			    igt_crtc_for_pipe(display, pipe1));
+			    crtc1);
 	igt_output_set_crtc(output2,
-			    igt_crtc_for_pipe(display, pipe2));
+			    crtc2);
 
-	igt_require(get_num_scalers(display, pipe1) >= 2);
-	igt_require(get_num_scalers(display, pipe2) >= 2);
+	igt_require(get_num_scalers(display, crtc1->pipe) >= 2);
+	igt_require(get_num_scalers(display, crtc2->pipe) >= 2);
 
 	plane[0] = igt_output_get_plane(output1, 0);
 	igt_require(plane[0]);
@@ -1169,7 +1161,7 @@ static void test_scaler_with_multi_pipe_plane(data_t *d)
 static void invalid_parameter_tests(data_t *d)
 {
 	igt_display_t *display = &d->display;
-	enum pipe pipe = PIPE_A;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 	igt_fb_t fb;
 	igt_plane_t *plane;
@@ -1189,14 +1181,16 @@ static void invalid_parameter_tests(data_t *d)
 	};
 
 	igt_fixture() {
-		output = igt_get_single_output_for_pipe(&d->display, pipe);
+		crtc = igt_crtc_for_pipe(display, PIPE_A);
+		output = igt_get_single_output_for_pipe(&d->display,
+							crtc->pipe);
 		igt_require(output);
 
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(display, pipe));
+				    crtc);
 		plane = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
-		igt_require(get_num_scalers(&d->display, pipe) >= 1);
+		igt_require(get_num_scalers(&d->display, crtc->pipe) >= 1);
 
 		igt_create_fb(d->drm_fd, 256, 256,
 			      DRM_FORMAT_XRGB8888,
@@ -1280,11 +1274,10 @@ static drmModeModeInfo *find_mode(data_t *data, igt_output_t *output, const stru
  *		max_dst_w = 8192
  *		max_dst_h = 8192
  */
-static void intel_max_source_size_test(data_t *d, enum pipe pipe, igt_output_t *output,
+static void intel_max_source_size_test(data_t *d, igt_crtc_t *crtc,
+				       igt_output_t *output,
 				       const struct invalid_paramtests *param)
 {
-	igt_display_t *display = &d->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_fb_t fb;
 	igt_plane_t *plane;
 	int rval;
@@ -1327,14 +1320,14 @@ static void intel_max_source_size_test(data_t *d, enum pipe pipe, igt_output_t *
 }
 
 static bool
-pipe_output_combo_valid(igt_display_t *display,
-			enum pipe pipe, igt_output_t *output)
+pipe_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
+			igt_output_t *output)
 {
 	bool ret = true;
 
 	igt_display_reset(display);
 
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	igt_output_set_crtc(output, crtc);
 	if (!intel_pipe_output_combo_valid(display))
 		ret = false;
 	igt_output_set_crtc(output, NULL);
@@ -1388,7 +1381,7 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 					igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
 						for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
 							igt_info("Trying on %s\n", igt_output_name(output));
-							if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+							if (!pipe_output_combo_valid(&data.display, crtc, output))
 								continue;
 							if (get_num_scalers(&data.display, crtc->pipe) < 1)
 								continue;
@@ -1397,7 +1390,8 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 									scaler_with_pixel_format_tests[index].sf,
 									false,
 									scaler_with_pixel_format_tests[index].is_upscale,
-									crtc->pipe, output);
+									crtc,
+									output);
 							if (ret == 0)
 								break;
 							igt_info("Required scaling operation not supported on %s trying on next output\n",
@@ -1416,7 +1410,7 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 					igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
 						for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
 							igt_info("Trying on %s\n", igt_output_name(output));
-							if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+							if (!pipe_output_combo_valid(&data.display, crtc, output))
 								continue;
 							if (get_num_scalers(&data.display, crtc->pipe) < 1)
 								continue;
@@ -1425,7 +1419,8 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 									scaler_with_rotation_tests[index].sf,
 									false,
 									scaler_with_rotation_tests[index].is_upscale,
-									crtc->pipe, output);
+									crtc,
+									output);
 							if (ret == 0)
 								break;
 							igt_info("Required scaling operation not supported on %s trying on next output\n",
@@ -1444,7 +1439,7 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 					igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
 						for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
 							igt_info("Trying on %s\n", igt_output_name(output));
-							if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+							if (!pipe_output_combo_valid(&data.display, crtc, output))
 								continue;
 							if (get_num_scalers(&data.display, crtc->pipe) < 1)
 								continue;
@@ -1453,7 +1448,8 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 									scaler_with_modifiers_tests[index].sf,
 									false,
 									scaler_with_modifiers_tests[index].is_upscale,
-									crtc->pipe, output);
+									crtc,
+									output);
 							if (ret == 0)
 								break;
 							igt_info("Required scaling operation not supported on %s trying on next output\n",
@@ -1471,13 +1467,14 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 				igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
 					for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
 						igt_info("Trying on %s\n", igt_output_name(output));
-						if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+						if (!pipe_output_combo_valid(&data.display, crtc, output))
 							continue;
 						if (get_num_scalers(&data.display, crtc->pipe) < 1)
 							continue;
 
 						ret = test_scaler_with_pixel_format_pipe(&data, 0.0, true,
-											 false, crtc->pipe,
+											 false,
+											 crtc,
 											 output);
 						if (ret == 0)
 							break;
@@ -1496,13 +1493,14 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 				igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
 					for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
 						igt_info("Trying on %s\n", igt_output_name(output));
-						if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+						if (!pipe_output_combo_valid(&data.display, crtc, output))
 							continue;
 						if (get_num_scalers(&data.display, crtc->pipe) < 1)
 							continue;
 
 						ret = test_scaler_with_rotation_pipe(&data, 0.0, true,
-										     false, crtc->pipe,
+										     false,
+										     crtc,
 										     output);
 						if (ret == 0)
 							break;
@@ -1520,13 +1518,14 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 				igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
 					for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
 						igt_info("Trying on %s\n", igt_output_name(output));
-						if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+						if (!pipe_output_combo_valid(&data.display, crtc, output))
 							continue;
 						if (get_num_scalers(&data.display, crtc->pipe) < 1)
 							continue;
 
 						ret = test_scaler_with_modifier_pipe(&data, 0.0, true,
-										     false, crtc->pipe,
+										     false,
+										     crtc,
 										     output);
 						if (ret == 0)
 							break;
@@ -1546,14 +1545,15 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 						for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
 							igt_info("Trying on %s\n",
 								 igt_output_name(output));
-							if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+							if (!pipe_output_combo_valid(&data.display, crtc, output))
 								continue;
 							if (get_num_scalers(&data.display, crtc->pipe) < 2)
 								continue;
 							ret = test_planes_scaling_combo(&data,
 								scaler_with_2_planes_tests[index].sf_plane1,
 								scaler_with_2_planes_tests[index].sf_plane2,
-								crtc->pipe, output,
+								crtc,
+								output,
 								scaler_with_2_planes_tests[index].test_type);
 							if (ret == 0)
 								break;
@@ -1581,7 +1581,9 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 						if (find_mode(&data, output, &intel_paramtests[index]))
 							igt_dynamic_f("pipe-%s-%s",
 								      igt_crtc_name(crtc), igt_output_name(output))
-								intel_max_source_size_test(&data, crtc->pipe, output,
+								intel_max_source_size_test(&data,
+											   crtc,
+											   output,
 											   &intel_paramtests[index]);
 						else
 							igt_info("Unable to find the lowest " \
@@ -1599,14 +1601,16 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		igt_describe("Negative test for number of scalers per pipe.");
 		igt_subtest_with_dynamic("invalid-num-scalers") {
 			for_each_crtc_with_valid_output(&data.display, crtc, output) {
-				if (!pipe_output_combo_valid(&data.display, crtc->pipe, output))
+				if (!pipe_output_combo_valid(&data.display, crtc, output))
 					continue;
 				if (get_num_scalers(&data.display, crtc->pipe) < 1)
 						continue;
 
 				igt_dynamic_f("pipe-%s-%s-invalid-num-scalers",
 					      igt_crtc_name(crtc), igt_output_name(output))
-					test_invalid_num_scalers(&data, crtc->pipe, output);
+					test_invalid_num_scalers(&data,
+								 crtc,
+								 output);
 			}
 		}
 	}
