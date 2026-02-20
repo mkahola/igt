@@ -128,10 +128,10 @@ static void do_cleanup_display(igt_display_t *dpy)
 	igt_display_commit2(dpy, dpy->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 }
 
-static void test_plane_scaling(data_t *data, enum pipe pipe, igt_output_t *output)
+static void test_plane_scaling(data_t *data, igt_crtc_t *crtc,
+			       igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	int cdclk_ref, cdclk_new;
 	struct igt_fb fb;
 	igt_plane_t *primary;
@@ -184,10 +184,10 @@ static void test_plane_scaling(data_t *data, enum pipe pipe, igt_output_t *outpu
 	}
 }
 
-static void test_mode_transition(data_t *data, enum pipe pipe, igt_output_t *output)
+static void test_mode_transition(data_t *data, igt_crtc_t *crtc,
+				 igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	int cdclk_ref, cdclk_new;
 	struct igt_fb fb;
 	igt_plane_t *primary;
@@ -338,9 +338,13 @@ static void run_cdclk_test(data_t *data, uint32_t flags)
 
 		igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc), output->name) {
 			if (flags & TEST_PLANESCALING)
-				test_plane_scaling(data, crtc->pipe, output);
+				test_plane_scaling(data,
+						   crtc,
+						   output);
 			if (flags & TEST_MODETRANSITION)
-				test_mode_transition(data, crtc->pipe, output);
+				test_mode_transition(data,
+						     crtc,
+						     output);
 		}
 	}
 }

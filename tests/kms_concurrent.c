@@ -154,11 +154,9 @@ create_fb_for_mode_position(data_t *data, drmModeModeInfo *mode,
 }
 
 static void
-prepare_planes(data_t *data, enum pipe pipe, int max_planes,
+prepare_planes(data_t *data, igt_crtc_t *crtc, int max_planes,
 	       igt_output_t *output)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	drmModeModeInfo *mode;
 	igt_plane_t *primary;
 	int *x;
@@ -228,11 +226,10 @@ prepare_planes(data_t *data, enum pipe pipe, int max_planes,
 }
 
 static void
-test_plane_position_with_output(data_t *data, enum pipe pipe, int max_planes,
+test_plane_position_with_output(data_t *data, igt_crtc_t *crtc,
+				int max_planes,
 				igt_output_t *output)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	int i;
 	int iterations = opt.iterations < 1 ? max_planes : opt.iterations;
 	bool loop_forever = opt.iterations == LOOP_FOREVER ? true : false;
@@ -242,7 +239,8 @@ test_plane_position_with_output(data_t *data, enum pipe pipe, int max_planes,
 
 	i = 0;
 	while (i < iterations || loop_forever) {
-		prepare_planes(data, crtc->pipe, max_planes, output);
+		prepare_planes(data, crtc,
+			       max_planes, output);
 		ret = igt_display_try_commit2(&data->display, COMMIT_ATOMIC);
 
 		for (int c = 0; c < max_planes; c++)
@@ -277,10 +275,9 @@ get_lowres_mode(data_t *data, const drmModeModeInfo *mode_default,
 }
 
 static void
-test_resolution_with_output(data_t *data, enum pipe pipe, int max_planes, igt_output_t *output)
+test_resolution_with_output(data_t *data, igt_crtc_t *crtc, int max_planes,
+			    igt_output_t *output)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	int iterations = opt.iterations < 1 ? max_planes : opt.iterations;
 	bool loop_forever = opt.iterations == LOOP_FOREVER ? true : false;
 	int i;
@@ -312,10 +309,8 @@ test_resolution_with_output(data_t *data, enum pipe pipe, int max_planes, igt_ou
 }
 
 static void
-run_test(data_t *data, enum pipe pipe, igt_output_t *output)
+run_test(data_t *data, igt_crtc_t *crtc, igt_output_t *output)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	int n_planes = crtc->n_planes;
 	igt_display_reset(&data->display);
 
@@ -330,11 +325,15 @@ run_test(data_t *data, enum pipe pipe, igt_output_t *output)
 	test_init(data, n_planes, output);
 
 	igt_fork(child, 1) {
-		test_plane_position_with_output(data, crtc->pipe, n_planes,
+		test_plane_position_with_output(data,
+						crtc,
+						n_planes,
 						output);
 	}
 
-	test_resolution_with_output(data, crtc->pipe, n_planes, output);
+	test_resolution_with_output(data,
+				    crtc,
+				    n_planes, output);
 
 	igt_waitchildren();
 
@@ -361,7 +360,9 @@ run_tests_for_pipe(data_t *data)
 			igt_require(crtc->n_planes > 0);
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output))
-				run_test(data, crtc->pipe, output);
+				run_test(data,
+					 crtc,
+					 output);
 		}
 	}
 }

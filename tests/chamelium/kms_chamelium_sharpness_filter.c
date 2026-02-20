@@ -38,10 +38,8 @@ typedef struct {
 	int port_count;
 } data_t;
 
-static bool pipe_output_combo_valid(data_t *data, enum pipe pipe)
+static bool pipe_output_combo_valid(data_t *data, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	bool ret = true;
 
 	igt_output_set_crtc(data->output,
@@ -177,10 +175,8 @@ static void test_t(data_t *data, igt_plane_t *primary,
 		     "Observed: Frame[0]==Frame[1]: %d, Frame[1]==Frame[2]: %d, Frame[0]==Frame[2]: %d, Frame[1]==Frame[3]: %d\n", match[0], match[1], match[2], match[3]);
 }
 
-static int test_setup(data_t *data, enum pipe p)
+static int test_setup(data_t *data, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
 	int i = 0;
 
 	igt_display_reset(&data->display);
@@ -217,16 +213,15 @@ static int test_setup(data_t *data, enum pipe p)
 	return -1;
 }
 
-static void test_sharpness_filter(data_t *data,  enum pipe p)
+static void test_sharpness_filter(data_t *data, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, p);
-	int port_idx = test_setup(data, crtc->pipe);
+	int port_idx = test_setup(data,
+				  crtc);
 
 	igt_require(port_idx >= 0);
 	igt_require(igt_crtc_has_prop(crtc, IGT_CRTC_SHARPNESS_STRENGTH));
 
-	if (!pipe_output_combo_valid(data, crtc->pipe))
+	if (!pipe_output_combo_valid(data, crtc))
 		return;
 
 	igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc), data->output->name)
@@ -243,7 +238,8 @@ run_sharpness_filter_test(data_t *data)
 	igt_subtest_with_dynamic("filter-basic") {
 		for_each_crtc(display, crtc) {
 			data->filter_strength = MID_FILTER_STRENGTH;
-			test_sharpness_filter(data, crtc->pipe);
+			test_sharpness_filter(data,
+					      crtc);
 		}
 	}
 }

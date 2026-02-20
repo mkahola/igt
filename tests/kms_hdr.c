@@ -202,10 +202,9 @@ static void set_hdr_output_metadata(data_t *data,
 }
 
 /* Prepare test data. */
-static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
+static void prepare_test(data_t *data, igt_output_t *output, igt_crtc_t *crtc)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 
 	data->crtc = crtc;
 	igt_assert(data->crtc);
@@ -232,12 +231,11 @@ static void prepare_test(data_t *data, igt_output_t *output, enum pipe pipe)
 	data->h = data->mode->vdisplay;
 }
 
-static void test_bpc_switch_on_output(data_t *data, enum pipe pipe,
+static void test_bpc_switch_on_output(data_t *data, igt_crtc_t *crtc,
 				      igt_output_t *output,
 				      uint32_t flags)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crc_t ref_crc, new_crc;
 	igt_fb_t afb;
 	int afb_id, ret;
@@ -336,7 +334,8 @@ static void test_bpc_switch(data_t *data, uint32_t flags)
 				continue;
 			}
 
-			prepare_test(data, output, crtc->pipe);
+			prepare_test(data, output,
+				     crtc);
 
 			if (is_intel_device(data->fd) &&
 			    !igt_max_bpc_constraint(display, crtc->pipe, output, 10)) {
@@ -353,7 +352,8 @@ static void test_bpc_switch(data_t *data, uint32_t flags)
 
 			igt_dynamic_f("pipe-%s-%s",
 				      igt_crtc_name(crtc), output->name)
-				test_bpc_switch_on_output(data, crtc->pipe,
+				test_bpc_switch_on_output(data,
+							  crtc,
 							  output, flags);
 
 			/* One pipe is enough */
@@ -470,12 +470,11 @@ static void adjust_brightness(data_t *data, uint32_t flags)
 	igt_assert_eq(igt_backlight_write(context.old, "brightness", &context), 0);
 }
 
-static void test_static_toggle(data_t *data, enum pipe pipe,
+static void test_static_toggle(data_t *data, igt_crtc_t *crtc,
 			       igt_output_t *output,
 			       uint32_t flags)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	struct hdr_output_metadata hdr;
 	igt_crc_t ref_crc, new_crc;
 	igt_fb_t afb;
@@ -584,10 +583,10 @@ static void fill_hdr_output_metadata_sdr(struct hdr_output_metadata *meta)
 	meta->hdmi_metadata_type1.max_cll = 0;
 }
 
-static void test_static_swap(data_t *data, enum pipe pipe, igt_output_t *output, uint32_t flags)
+static void test_static_swap(data_t *data, igt_crtc_t *crtc,
+			     igt_output_t *output, uint32_t flags)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	igt_crc_t ref_crc, new_crc;
 	igt_fb_t afb;
 	int afb_id;
@@ -748,7 +747,8 @@ static void test_hdr(data_t *data, uint32_t flags)
 				continue;
 			}
 
-			prepare_test(data, output, crtc->pipe);
+			prepare_test(data, output,
+				     crtc);
 
 			/* Signal HDR requirement via metadata */
 			fill_hdr_output_metadata_st2084(&hdr);
@@ -787,10 +787,12 @@ static void test_hdr(data_t *data, uint32_t flags)
 				      igt_crtc_name(crtc), output->name) {
 				if (flags & (TEST_NONE | TEST_DPMS | TEST_SUSPEND |
 					     TEST_INVALID_HDR | TEST_BRIGHTNESS))
-					test_static_toggle(data, crtc->pipe,
+					test_static_toggle(data,
+							   crtc,
 							   output, flags);
 				if (flags & TEST_SWAP)
-					test_static_swap(data, crtc->pipe,
+					test_static_swap(data,
+							 crtc,
 							 output, flags);
 				if (flags & TEST_INVALID_METADATA_SIZES)
 					test_invalid_metadata_sizes(data, output);

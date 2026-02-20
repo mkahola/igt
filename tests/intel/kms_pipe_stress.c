@@ -315,22 +315,22 @@ static void *gpu_load(void *ptr)
 	return NULL;
 }
 
-static inline uint32_t pipe_select(enum pipe pipe)
+static inline uint32_t pipe_select(igt_crtc_t *crtc)
 {
-	if (pipe > 1)
-		return pipe << DRM_VBLANK_HIGH_CRTC_SHIFT;
-	else if (pipe > 0)
+	if (crtc->pipe > 1)
+		return crtc->pipe << DRM_VBLANK_HIGH_CRTC_SHIFT;
+	else if (crtc->pipe > 0)
 		return DRM_VBLANK_SECONDARY;
 	else
 		return 0;
 }
 
-static unsigned get_vblank(int fd, enum pipe pipe, unsigned flags)
+static unsigned get_vblank(int fd, igt_crtc_t *crtc, unsigned flags)
 {
 	union drm_wait_vblank vbl;
 
 	memset(&vbl, 0, sizeof(vbl));
-	vbl.request.type = DRM_VBLANK_RELATIVE | pipe_select(pipe) | flags;
+	vbl.request.type = DRM_VBLANK_RELATIVE | pipe_select(crtc) | flags;
 	if (drmIoctl(fd, DRM_IOCTL_WAIT_VBLANK, &vbl))
 		return 0;
 
@@ -338,10 +338,8 @@ static unsigned get_vblank(int fd, enum pipe pipe, unsigned flags)
 }
 
 static int commit_mode(struct data *data, igt_output_t *output,
-		       enum pipe pipe, drmModeModeInfo *mode)
+		       igt_crtc_t *crtc, drmModeModeInfo *mode)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	int ret;
 
 	igt_output_override_mode(output, mode);
@@ -403,20 +401,21 @@ static int try_plane_scaling(struct data *data, igt_plane_t *plane,
 	return ret;
 }
 
-static void cleanup_plane_fbs(struct data *data, enum pipe pipe, int start, int end)
+static void cleanup_plane_fbs(struct data *data, igt_crtc_t *crtc, int start,
+			      int end)
 {
 	int i = start;
 
 	while (i < end) {
 		igt_remove_fb(data->display.drm_fd,
-			      &data->fb[pipe * MAX_PLANES + i]);
-		data->fb[pipe * MAX_PLANES + i].fb_id = 0;
+			      &data->fb[crtc->pipe * MAX_PLANES + i]);
+		data->fb[crtc->pipe * MAX_PLANES + i].fb_id = 0;
 		i++;
 	}
 }
 
 static int pipe_stress(struct data *data, igt_output_t *output,
-		       enum pipe pipe, drmModeModeInfo *mode)
+		       igt_crtc_t *crtc, drmModeModeInfo *mode)
 {
 	igt_plane_t *plane;
 	int i = 0;
@@ -430,13 +429,14 @@ static int pipe_stress(struct data *data, igt_output_t *output,
 	if (!mode)
 		mode = igt_output_get_mode(output);
 
-	if (data->last_mode[pipe] != mode) {
-		ret = commit_mode(data, output, pipe, mode);
+	if (data->last_mode[crtc->pipe] != mode) {
+		ret = commit_mode(data, output,
+				  crtc, mode);
 
 		if (!ret)
 			return ret;
 
-		data->last_mode[pipe] = mode;
+		data->last_mode[crtc->pipe] = mode;
 		new_mode = true;
 	}
 
@@ -444,18 +444,20 @@ static int pipe_stress(struct data *data, igt_output_t *output,
 	 * Looks like we can't have planes on that pipe at all
 	 * or mode hasn't changed
 	 */
-	if (!data->num_planes[pipe] || !new_mode)
+	if (!data->num_planes[crtc->pipe] || !new_mode)
 		return 0;
 
-	for_each_plane_on_pipe(&data->display, pipe, plane) {
+	for_each_plane_on_pipe(&data->display, crtc->pipe, plane) {
 		int plane_width, plane_height;
 		if (plane->type == DRM_PLANE_TYPE_CURSOR) {
-			cursor_plane_set_fb(plane, &data->cursor_fb[pipe],
+			cursor_plane_set_fb(plane,
+					    &data->cursor_fb[crtc->pipe],
 					    cursor_width, cursor_height);
 			plane_width = cursor_width;
 			plane_height = cursor_height;
 		} else {
-			universal_plane_set_fb(plane, &data->fb[pipe * MAX_PLANES + i],
+			universal_plane_set_fb(plane,
+					       &data->fb[crtc->pipe * MAX_PLANES + i],
 					       mode->hdisplay, mode->vdisplay);
 
 			plane_width = (mode->hdisplay * 3) / 4;
@@ -476,19 +478,24 @@ static int pipe_stress(struct data *data, igt_output_t *output,
 					 plane->index, plane_width, plane_height);
 			}
 			if (ret) {
-				igt_info("Plane %d pipe %d try commit failed, exiting\n", i, pipe);
-				data->num_planes[pipe] = i;
-				igt_info("Max num planes for pipe %d set to %d\n", pipe, i);
+				igt_info("Plane %d pipe %d try commit failed, exiting\n", i,
+					 crtc->pipe);
+				data->num_planes[crtc->pipe] = i;
+				igt_info("Max num planes for pipe %d set to %d\n",
+					 crtc->pipe, i);
 				/*
 				 * We have now determined max amount of full sized planes, we will just
 				 * keep it in mind and be smarter next time. Also lets remove unneeded fbs.
 				 * Don't destroy cursor_fb as will take care about it at the end.
 				 */
 				igt_plane_set_fb(plane, NULL);
-				cleanup_plane_fbs(data, pipe, i, MAX_PLANES);
+				cleanup_plane_fbs(data,
+						  crtc,
+						  i,
+						  MAX_PLANES);
 			}
 
-			if (++i >= data->num_planes[pipe])
+			if (++i >= data->num_planes[crtc->pipe])
 				break;
 		}
 	}
@@ -595,14 +602,16 @@ static void stress_pipes(struct data *data, struct timespec *start,
 			     "Currently we don't support more than %d planes!",
 			     MAX_PLANES);
 
-		ret = pipe_stress(data, output, pipe,
-				 data->highest_mode[pipe]);
+		ret = pipe_stress(data, output,
+				  igt_crtc_for_pipe(display, pipe),
+				  data->highest_mode[pipe]);
 		if (ret)
 			break;
 
 		igt_pipe_crc_start(data->pipe_crc[pipe]);
 		igt_pipe_crc_get_current(data->display.drm_fd, data->pipe_crc[pipe], &crc);
-		get_vblank(data->display.drm_fd, pipe,
+		get_vblank(data->display.drm_fd,
+			   igt_crtc_for_pipe(display, pipe),
 			   DRM_VBLANK_NEXTONMISS);
 		igt_pipe_crc_get_current(data->display.drm_fd, data->pipe_crc[pipe], &crc2);
 		igt_pipe_crc_stop(data->pipe_crc[pipe]);

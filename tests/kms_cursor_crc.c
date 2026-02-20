@@ -897,15 +897,15 @@ static bool valid_pipe_output_combo(data_t *data)
 	return ret;
 }
 
-static bool execution_constraint(enum pipe pipe)
+static bool execution_constraint(igt_crtc_t *crtc)
 {
 	if (!extended &&
-	    pipe != active_pipes[0] &&
-	    pipe != active_pipes[last_pipe])
+	    crtc->pipe != active_pipes[0] &&
+	    crtc->pipe != active_pipes[last_pipe])
 		return true;
 
 	if (!extended && igt_run_in_simulation() &&
-	    pipe != active_pipes[0])
+	    crtc->pipe != active_pipes[0])
 		return true;
 
 	return false;
@@ -1008,7 +1008,7 @@ static void run_size_tests(data_t *data, int w, int h)
 
 			for_each_crtc_with_single_output(&data->display, crtc,
 							 data->output) {
-				if (execution_constraint(crtc->pipe))
+				if (execution_constraint(crtc))
 					continue;
 
 				data->crtc = crtc;
@@ -1049,7 +1049,7 @@ static void run_tests_on_pipe(data_t *data)
 	igt_subtest_with_dynamic("cursor-size-change") {
 		for_each_crtc_with_single_output(&data->display, crtc,
 						 data->output) {
-			if (execution_constraint(crtc->pipe))
+			if (execution_constraint(crtc))
 				continue;
 
 			data->crtc = crtc;
@@ -1070,7 +1070,7 @@ static void run_tests_on_pipe(data_t *data)
 	igt_subtest_with_dynamic("cursor-alpha-opaque") {
 		for_each_crtc_with_single_output(&data->display, crtc,
 						 data->output) {
-			if (execution_constraint(crtc->pipe))
+			if (execution_constraint(crtc))
 				continue;
 
 			data->crtc = crtc;
@@ -1091,7 +1091,7 @@ static void run_tests_on_pipe(data_t *data)
 	igt_subtest_with_dynamic("cursor-alpha-transparent") {
 		for_each_crtc_with_single_output(&data->display, crtc,
 						 data->output) {
-			if (execution_constraint(crtc->pipe))
+			if (execution_constraint(crtc))
 				continue;
 
 			data->crtc = crtc;
@@ -1121,7 +1121,7 @@ static void run_tests_on_pipe(data_t *data)
 	igt_subtest_with_dynamic("cursor-tearing-framebuffer-change") {
 		for_each_crtc_with_single_output(&data->display, crtc,
 						 data->output) {
-			if (execution_constraint(crtc->pipe))
+			if (execution_constraint(crtc))
 				continue;
 
 			data->crtc = crtc;
@@ -1141,7 +1141,7 @@ static void run_tests_on_pipe(data_t *data)
 	igt_subtest_with_dynamic("cursor-tearing-position-change") {
 		for_each_crtc_with_single_output(&data->display, crtc,
 						 data->output) {
-			if (execution_constraint(crtc->pipe))
+			if (execution_constraint(crtc))
 				continue;
 
 			data->crtc = crtc;
@@ -1168,7 +1168,7 @@ static void run_tests_on_pipe(data_t *data)
 	igt_subtest_with_dynamic("cursor-dpms") {
 		for_each_crtc_with_single_output(&data->display, crtc,
 						 data->output) {
-			if (execution_constraint(crtc->pipe))
+			if (execution_constraint(crtc))
 				continue;
 
 			data->crtc = crtc;
@@ -1190,7 +1190,7 @@ static void run_tests_on_pipe(data_t *data)
 	igt_subtest_with_dynamic("cursor-suspend") {
 		for_each_crtc_with_single_output(&data->display, crtc,
 						 data->output) {
-			if (execution_constraint(crtc->pipe))
+			if (execution_constraint(crtc))
 				continue;
 
 			data->crtc = crtc;
@@ -1215,7 +1215,7 @@ static void run_tests_on_pipe(data_t *data)
 	igt_subtest_with_dynamic("cursor-size-hints") {
 		for_each_crtc_with_single_output(&data->display, crtc,
 						 data->output) {
-			if (execution_constraint(crtc->pipe))
+			if (execution_constraint(crtc))
 				continue;
 
 			data->crtc = crtc;

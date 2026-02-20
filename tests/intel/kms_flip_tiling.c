@@ -67,13 +67,12 @@ static void pipe_crc_free(data_t *data)
 	data->pipe_crc = NULL;
 }
 
-static void pipe_crc_new(data_t *data, enum pipe pipe)
+static void pipe_crc_new(data_t *data, igt_crtc_t *crtc)
 {
-	igt_display_t *display = &data->display;
 	if (data->pipe_crc)
 		return;
 
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, pipe),
+	data->pipe_crc = igt_crtc_crc_new(crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 	igt_assert(data->pipe_crc);
 	igt_pipe_crc_start(data->pipe_crc);
@@ -108,7 +107,8 @@ static uint64_t pageflip_timeout_us(drmModeModeInfo *mode)
 }
 
 static void
-test_flip_tiling(data_t *data, enum pipe pipe, igt_output_t *output, uint64_t modifier[2])
+test_flip_tiling(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
+		 uint64_t modifier[2])
 {
 	drmModeModeInfo *mode;
 	igt_plane_t *primary;
@@ -139,7 +139,7 @@ test_flip_tiling(data_t *data, enum pipe pipe, igt_output_t *output, uint64_t mo
 	igt_require_f(try_commit(&data->display) == 0,
 		      "commit failed with " IGT_MODIFIER_FMT "\n",
 		      IGT_MODIFIER_ARGS(modifier[1]));
-	pipe_crc_new(data, pipe);
+	pipe_crc_new(data, crtc);
 	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, &reference_crc);
 
 	/* Commit the first fb. */
@@ -266,7 +266,7 @@ int igt_main()
 						      igt_fb_modifier_name(modifier[0]),
 						      igt_fb_modifier_name(modifier[1]))
 						test_flip_tiling(&data,
-								 crtc->pipe,
+								 crtc,
 								 output,
 								 modifier);
 

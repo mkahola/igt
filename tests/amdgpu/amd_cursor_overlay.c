@@ -84,12 +84,12 @@ typedef struct data {
 } data_t;
 
 /* Retuns the number of available overlay planes. */
-static int get_overlay_planes_count(igt_display_t *display, enum pipe pipe)
+static int get_overlay_planes_count(igt_display_t *display, igt_crtc_t *crtc)
 {
 	int count = 0;
 	igt_plane_t *plane;
 
-	for_each_plane_on_pipe(display, pipe, plane)
+	for_each_plane_on_pipe(display, crtc->pipe, plane)
 		if (plane->type == DRM_PLANE_TYPE_OVERLAY)
 			count++;
 
@@ -130,11 +130,9 @@ static bool can_support_all_overlay_planes(int available_overlay_planes, int fam
 }
 
 /* Common test setup. */
-static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
+static void test_init(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 		      unsigned int flags, int available_overlay_planes)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe_id);
 	int i;
 
 	data->crtc = crtc;
@@ -487,7 +485,7 @@ int igt_main()
 					crtc);
 
 				available_overlay_planes = get_overlay_planes_count(display,
-										    crtc->pipe);
+										    crtc);
 
 				/* Require at least one overlay plane. */
 				if (!available_overlay_planes)
@@ -503,7 +501,9 @@ int igt_main()
 					igt_skip("%s subtest requires 3 overlay planes with a supported DCN.\n",
 						 tests[i].name);
 
-				test_init(&data, crtc->pipe, output,
+				test_init(&data,
+					  crtc,
+					  output,
 					  tests[i].flags,
 					  available_overlay_planes);
 

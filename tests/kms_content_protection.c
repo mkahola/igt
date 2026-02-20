@@ -444,12 +444,11 @@ static bool write_srm_as_fw(const __u8 *srm, int len)
 }
 
 static void test_content_protection_on_output(igt_output_t *output,
-					      enum pipe pipe,
+					      igt_crtc_t *crtc,
 					      enum igt_commit_style commit_style,
 					      int content_type)
 {
 	igt_display_t *display = &data.display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe);
 	bool ret;
 
 	test_cp_enable_with_retry(output, commit_style, 3, content_type, false,
@@ -747,7 +746,7 @@ test_content_protection(enum igt_commit_style commit_style, int content_type)
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      output->name)
 				test_content_protection_on_output(output,
-								  crtc->pipe,
+								  crtc,
 								  commit_style,
 								  content_type);
 

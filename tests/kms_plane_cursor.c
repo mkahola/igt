@@ -89,11 +89,9 @@ typedef struct data {
 } data_t;
 
 /* Common test setup. */
-static void test_init(data_t *data, enum pipe pipe_id, igt_output_t *output,
+static void test_init(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 		      unsigned int flags)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, pipe_id);
 	data->crtc = crtc;
 	data->output = output;
 
@@ -343,7 +341,9 @@ int igt_main()
 				if (!intel_pipe_output_combo_valid(display))
 					continue;
 
-				test_init(&data, crtc->pipe, output,
+				test_init(&data,
+					  crtc,
+					  output,
 					  tests[i].flags);
 
 				for (j = 0; j < ARRAY_SIZE(cursor_sizes); j++) {
