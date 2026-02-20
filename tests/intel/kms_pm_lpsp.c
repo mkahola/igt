@@ -232,7 +232,7 @@ int igt_main()
 				continue;
 
 			for_each_crtc(display, crtc) {
-				if (!igt_pipe_connector_valid(crtc->pipe, output))
+				if (!igt_crtc_connector_valid(crtc, output))
 					continue;
 
 				/* LPSP is low power single pipe usages i.e. PIPE_A */

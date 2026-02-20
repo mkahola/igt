@@ -849,7 +849,7 @@ static void compare_crcs(int fd, igt_display_t *display, igt_fb_t *ref_fb, igt_f
 		pipe_crc = igt_crtc_crc_new(crtc,
 					    IGT_PIPE_CRC_SOURCE_AUTO);
 		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
-		igt_require(igt_pipe_connector_valid(crtc->pipe, output));
+		igt_require(igt_crtc_connector_valid(crtc, output));
 		igt_output_set_crtc(output, crtc);
 
 		commit_fb(display, plane, ref_fb, mode);
@@ -904,7 +904,7 @@ static void test_display_pxp_fb(int fd, igt_display_t *display)
 		mode = igt_output_get_mode(output);
 		crtc = igt_crtc_for_pipe(display, i);
 		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
-		igt_require(igt_pipe_connector_valid(i, output));
+		igt_require(igt_crtc_connector_valid(crtc, output));
 		igt_output_set_crtc(output,
 				    crtc);
 
@@ -962,7 +962,7 @@ static void test_display_black_pxp_fb(int fd, igt_display_t *display)
 		mode = igt_output_get_mode(output);
 		crtc = igt_crtc_for_pipe(display, i);
 		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
-		igt_require(igt_pipe_connector_valid(i, output));
+		igt_require(igt_crtc_connector_valid(crtc, output));
 		igt_output_set_crtc(output,
 				    crtc);
 

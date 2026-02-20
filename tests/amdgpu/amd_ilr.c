@@ -87,7 +87,7 @@ static void test_init(data_t *data, igt_output_t *output)
 	set_all_output_pipe_to_none(data);
 
 	for_each_crtc(&data->display, crtc) {
-		if (igt_pipe_connector_valid(crtc->pipe, output)) {
+		if (igt_crtc_connector_valid(crtc, output)) {
 			data->crtc = crtc;
 			break;
 		}

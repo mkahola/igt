@@ -880,7 +880,7 @@ test_content_protection_mst(int content_type)
 		pipe_found = false;
 		for_each_crtc(display, crtc) {
 			if (igt_crtc_is_free(crtc) &&
-			    igt_pipe_connector_valid(crtc->pipe, output)) {
+			    igt_crtc_connector_valid(crtc, output)) {
 				pipe_found = true;
 				break;
 			}

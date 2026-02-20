@@ -845,7 +845,7 @@ run_test(data_t *data, uint32_t scene)
 		}
 
 		for_each_crtc(&data->display, crtc)
-			if (igt_pipe_connector_valid(crtc->pipe, output)) {
+			if (igt_crtc_connector_valid(crtc, output)) {
 				igt_display_reset(&data->display);
 				igt_output_set_crtc(output,
 						    crtc);

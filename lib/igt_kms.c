@@ -7274,7 +7274,7 @@ bool intel_pipe_output_combo_valid(igt_display_t *display)
 		if (output->pending_pipe == PIPE_NONE)
 			continue;
 
-		if (!igt_pipe_connector_valid(output->pending_pipe, output)) {
+		if (!igt_crtc_connector_valid(igt_crtc_for_pipe(display, output->pending_pipe), output)) {
 			igt_info("Output %s is disconnected (or) pipe-%s & %s cannot be used together\n",
 				 igt_output_name(output),
 				 kmstest_pipe_name(output->pending_pipe),

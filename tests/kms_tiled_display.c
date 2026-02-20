@@ -246,7 +246,7 @@ static void setup_mode(data_t *data)
 					continue;
 			}
 
-			if (igt_pipe_connector_valid(crtc->pipe, output)) {
+			if (igt_crtc_connector_valid(crtc, output)) {
 				conns[count].crtc = crtc;
 				conns[count].output = output;
 
