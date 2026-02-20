@@ -1157,8 +1157,8 @@ int igt_main()
 	data_t data = {};
 	igt_output_t *outputs[IGT_MAX_PIPES * IGT_MAX_PIPES];
 	int i, y, z;
-	int pipes[IGT_MAX_PIPES * IGT_MAX_PIPES];
-	int n_pipes = 0;
+	igt_crtc_t *crtcs[IGT_MAX_PIPES * IGT_MAX_PIPES];
+	int n_crtcs = 0;
 	int coexist_features[IGT_MAX_PIPES * IGT_MAX_PIPES];
 	const char *append_fbc_subtest[2] = {
 		"",
@@ -1212,14 +1212,14 @@ int igt_main()
 			if (!output_supports_pr_psr2_sel_fetch)
 				continue;
 
-			pipes[n_pipes] = data.pipe;
-			outputs[n_pipes] = data.output;
+			crtcs[n_crtcs] = crtc;
+			outputs[n_crtcs] = data.output;
 
-			coexist_features[n_pipes] = 0;
+			coexist_features[n_crtcs] = 0;
 			if (is_dsc_supported_by_sink(data.drm_fd, data.output))
-				coexist_features[n_pipes] |= FEATURE_DSC;
+				coexist_features[n_crtcs] |= FEATURE_DSC;
 
-			n_pipes++;
+			n_crtcs++;
 			pr_psr2_sel_fetch_supported = true;
 		}
 		igt_require_f(pr_psr2_sel_fetch_supported,
@@ -1244,8 +1244,8 @@ int igt_main()
 						   append_fbc_subtest[y],
 						   append_psr_subtest[z],
 						   op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
@@ -1265,8 +1265,8 @@ int igt_main()
 							   append_fbc_subtest[y],
 							   append_psr_subtest[z],
 							   op_str(data.op)) {
-					for (i = 0; i < n_pipes; i++) {
-						data.pipe = pipes[i];
+					for (i = 0; i < n_crtcs; i++) {
+						data.pipe = crtcs[i]->pipe;
 						data.output = outputs[i];
 
 						if (!pipe_output_combo_valid(&data))
@@ -1286,8 +1286,8 @@ int igt_main()
 						   append_fbc_subtest[y],
 						   append_psr_subtest[z],
 						   op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
@@ -1303,8 +1303,8 @@ int igt_main()
 			igt_describe("Test that selective fetch works on cursor plane");
 			igt_subtest_with_dynamic_f("%s%scursor-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
@@ -1320,8 +1320,8 @@ int igt_main()
 				     "moving cursor plane (no update)");
 			igt_subtest_with_dynamic_f("%s%scursor-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
@@ -1337,8 +1337,8 @@ int igt_main()
 				     "plane exceeding partially visible area (no update)");
 			igt_subtest_with_dynamic_f("%s%scursor-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
@@ -1354,8 +1354,8 @@ int igt_main()
 				     "exceeding fully visible area (no update)");
 			igt_subtest_with_dynamic_f("%s%scursor-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
@@ -1372,8 +1372,8 @@ int igt_main()
 			igt_describe("Test that selective fetch works on moving overlay plane");
 			igt_subtest_with_dynamic_f("%s%s%s-sf-dmg-area", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
@@ -1388,8 +1388,8 @@ int igt_main()
 				     "plane (no update)");
 			igt_subtest_with_dynamic_f("%s%soverlay-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
@@ -1405,8 +1405,8 @@ int igt_main()
 				     "plane partially exceeding visible area (no update)");
 			igt_subtest_with_dynamic_f("%s%soverlay-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
@@ -1422,8 +1422,8 @@ int igt_main()
 				     "fully exceeding visible area (no update)");
 			igt_subtest_with_dynamic_f("%s%soverlay-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
@@ -1440,8 +1440,8 @@ int igt_main()
 				     "with blended overlay plane");
 			igt_subtest_with_dynamic_f("%s%s%s-sf-dmg-area", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
@@ -1460,8 +1460,8 @@ int igt_main()
 			igt_describe("Test that selective fetch works on overlay plane");
 			igt_subtest_with_dynamic_f("%s%soverlay-%s-sf", append_fbc_subtest[y],
 						   append_psr_subtest[z], op_str(data.op)) {
-				for (i = 0; i < n_pipes; i++) {
-					data.pipe = pipes[i];
+				for (i = 0; i < n_crtcs; i++) {
+					data.pipe = crtcs[i]->pipe;
 					data.output = outputs[i];
 
 					if (!pipe_output_combo_valid(&data))
