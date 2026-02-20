@@ -97,7 +97,7 @@ igt_output_t *chamelium_prepare_output(chamelium_data_t *data,
 void chamelium_enable_output(chamelium_data_t *data,
 			     struct chamelium_port *port, igt_output_t *output,
 			     drmModeModeInfo *mode, struct igt_fb *fb);
-enum pipe chamelium_get_pipe_for_output(igt_display_t *display,
+igt_crtc_t * chamelium_get_pipe_for_output(igt_display_t *display,
 					igt_output_t *output);
 
 int chamelium_get_pattern_fb(chamelium_data_t *data, size_t width,

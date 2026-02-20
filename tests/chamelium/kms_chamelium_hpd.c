@@ -230,7 +230,7 @@ static void test_hotplug(chamelium_data_t *data, struct chamelium_port *port,
 			 int toggle_count, enum test_modeset_mode modeset_mode)
 {
 	int i;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	struct igt_fb fb = { 0 };
 	drmModeModeInfo mode;
 	struct udev_monitor *mon = igt_watch_uevents();
@@ -259,15 +259,15 @@ static void test_hotplug(chamelium_data_t *data, struct chamelium_port *port,
 				 * connected */
 				output = chamelium_get_output_for_port(data,
 								       port);
-				pipe = chamelium_get_pipe_for_output(
-					&data->display, output);
+				crtc = chamelium_get_pipe_for_output(&data->display,
+								     output);
 				mode = chamelium_get_mode_for_port(
 					data->chamelium, port);
 				chamelium_create_fb_for_mode(data, &fb, &mode);
 			}
 
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(output->display, pipe));
+					    crtc);
 			chamelium_enable_output(data, port, output, &mode, &fb);
 		}
 

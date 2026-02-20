@@ -287,7 +287,7 @@ static void edid_stress_resolution(chamelium_data_t *data,
 		drmModeModeInfo mode;
 		struct igt_fb fb = { 0 };
 		igt_output_t *output;
-		enum pipe pipe;
+		igt_crtc_t *crtc;
 		bool is_video_stable;
 		int screen_res_w, screen_res_h;
 
@@ -311,9 +311,9 @@ static void edid_stress_resolution(chamelium_data_t *data,
 		mode = chamelium_get_mode_for_port(chamelium, port);
 		chamelium_create_fb_for_mode(data, &fb, &mode);
 		output = chamelium_get_output_for_port(data, port);
-		pipe = chamelium_get_pipe_for_output(&data->display, output);
+		crtc = chamelium_get_pipe_for_output(&data->display, output);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(output->display, pipe));
+				    crtc);
 		chamelium_enable_output(data, port, output, &mode, &fb);
 
 		/* Capture the screen resolution and verify. */
@@ -350,7 +350,7 @@ static void edid_resolution_list(chamelium_data_t *data,
 	int count_modes;
 	int i;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	chamelium_unplug(chamelium, port);
 	chamelium_set_edid(data, port, IGT_CUSTOM_EDID_FULL);
@@ -366,8 +366,9 @@ static void edid_resolution_list(chamelium_data_t *data,
 	count_modes = connector->count_modes;
 
 	output = chamelium_get_output_for_port(data, port);
-	pipe = chamelium_get_pipe_for_output(&data->display, output);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(output->display, pipe));
+	crtc = chamelium_get_pipe_for_output(&data->display, output);
+	igt_output_set_crtc(output,
+			    crtc);
 
 	for (i = 0; i < count_modes; ++i)
 		igt_debug("#%d %s %uHz\n", i, modes[i].name, modes[i].vrefresh);

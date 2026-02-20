@@ -133,7 +133,7 @@ igt_output_t *chamelium_prepare_output(chamelium_data_t *data,
 {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	/* The chamelium's default EDID has a lot of resolutions, way more then
 	 * we need to test. Additionally the default EDID doesn't support HDMI
@@ -152,8 +152,8 @@ igt_output_t *chamelium_prepare_output(chamelium_data_t *data,
 	/* Refresh pipe to update connected status */
 	igt_output_set_crtc(output, NULL);
 
-	pipe = chamelium_get_pipe_for_output(display, output);
-	igt_output_set_crtc(output, igt_crtc_for_pipe(display, pipe));
+	crtc = chamelium_get_pipe_for_output(display, output);
+	igt_output_set_crtc(output, crtc);
 
 	return output;
 }
@@ -201,7 +201,7 @@ void chamelium_enable_output(chamelium_data_t *data,
 }
 
 /* Return pipe attached to @outpu.t */
-enum pipe chamelium_get_pipe_for_output(igt_display_t *display,
+igt_crtc_t * chamelium_get_pipe_for_output(igt_display_t *display,
 					igt_output_t *output)
 {
 	igt_crtc_t *crtc;
@@ -216,7 +216,7 @@ enum pipe chamelium_get_pipe_for_output(igt_display_t *display,
 		}
 
 		igt_output_set_crtc(output, NULL);
-		return crtc->pipe;
+		return crtc;
 	}
 
 	igt_assert_f(false, "No pipe found for output %s\n",
