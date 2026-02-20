@@ -691,7 +691,7 @@ static void setup_test_plane(data_t *data, int test_plane)
 	igt_display_commit(&data->display);
 }
 
-static enum pipe get_pipe_for_output(igt_display_t *display,
+static igt_crtc_t * get_pipe_for_output(igt_display_t *display,
 				     igt_output_t *output)
 {
 	igt_crtc_t *crtc;
@@ -705,7 +705,7 @@ static enum pipe get_pipe_for_output(igt_display_t *display,
 			continue;
 		}
 
-		return crtc->pipe;
+		return crtc;
 	}
 
 	igt_assert_f(false, "No pipe found for output %s\n",
@@ -714,7 +714,7 @@ static enum pipe get_pipe_for_output(igt_display_t *display,
 
 static void test_setup(data_t *data)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	drmModeConnectorPtr connector;
 	bool psr_entered = false;
 
@@ -729,7 +729,7 @@ static void test_setup(data_t *data)
 		igt_require_f(data->fbc_flag,
 			      "Can't test FBC with PSR\n");
 
-	pipe = get_pipe_for_output(&data->display, data->output);
+	crtc = get_pipe_for_output(&data->display, data->output);
 	data->crtc_id = data->output->config.crtc->crtc_id;
 	connector = data->output->config.connector;
 
@@ -750,7 +750,7 @@ static void test_setup(data_t *data)
 		if (psr_wait_entry_if_enabled(data)) {
 			if (data->fbc_flag == true && data->op_fbc_mode == FBC_ENABLED)
 				igt_assert_f(intel_fbc_wait_until_enabled(data->drm_fd,
-									  pipe),
+									  crtc->pipe),
 									  "FBC still disabled\n");
 			psr_entered = true;
 			break;
