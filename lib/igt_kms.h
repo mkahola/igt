@@ -670,19 +670,6 @@ static inline bool igt_output_is_connected(igt_output_t *output)
 }
 
 /**
- * igt_pipe_connector_valid:
- * @pipe: pipe to check.
- * @output: #igt_output_t to check.
- *
- * Checks whether the given pipe and output can be used together.
- */
-static inline bool igt_pipe_connector_valid(enum pipe pipe, igt_output_t *output)
-{
-	return igt_output_is_connected(output) &&
-		output->config.valid_crtc_index_mask & (1 << (pipe));
-}
-
-/**
  * igt_crtc_connector_valid:
  * @crtc: CRTC to check.
  * @output: #igt_output_t to check.
@@ -799,20 +786,6 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display,
 		 __output < &__outputs[igt_display_n_crtcs(display)]; __output++) \
 		for_each_if (*__output && \
 			     ((crtc) = igt_crtc_for_pipe((display), (__output - __outputs)), (output) = *__output, 1))
-
-/**
- * for_each_valid_output_on_pipe:
- * @display: a pointer to an #igt_display_t structure
- * @pipe: Pipe to enumerate valid outputs over
- * @output: The enumerated output.
- *
- * This for loop is called over all connected @output that can be used
- * on this @pipe . If there are no valid outputs for this pipe, nothing
- * happens.
- */
-#define for_each_valid_output_on_pipe(display, pipe, output) \
-	for_each_connected_output((display), (output)) \
-		for_each_if (igt_pipe_connector_valid((pipe), (output)))
 
 /**
  * for_each_valid_output_on_crtc:
