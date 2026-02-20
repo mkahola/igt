@@ -39,7 +39,6 @@ typedef struct data {
 	igt_crtc_t *crtc[MAX_PIPES];
 	igt_pipe_crc_t *pipe_crc[MAX_PIPES];
 	drmModeModeInfo mode[MAX_PIPES];
-	enum pipe pipe_id[MAX_PIPES];
 	int fd;
 } data_t;
 
@@ -65,7 +64,6 @@ static void test_init(data_t *data)
 	int i, n;
 
 	for_each_crtc(display, crtc) {
-		data->pipe_id[crtc->pipe] = crtc->pipe;
 		data->crtc[crtc->pipe] = crtc;
 		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
 								    DRM_PLANE_TYPE_PRIMARY);
@@ -135,7 +133,7 @@ static void test_dsc_enable(data_t *data)
 				      0,
 				      &ref_fb);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(display, data->pipe_id[crtc->pipe]));
+				    crtc);
 		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 
@@ -283,7 +281,7 @@ static void test_dsc_slice_dimensions_change(data_t *data)
 				      0,
 				      &ref_fb);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(display, data->pipe_id[crtc->pipe]));
+				    crtc);
 		igt_plane_set_fb(data->primary[crtc->pipe], &ref_fb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 
@@ -379,7 +377,7 @@ static void test_dsc_link_settings(data_t *data)
 				      0,
 				      &ref_fb[crtc->pipe]);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(display, data->pipe_id[crtc->pipe]));
+				    crtc);
 		igt_plane_set_fb(data->primary[crtc->pipe],
 				 &ref_fb[crtc->pipe]);
 	}
@@ -506,7 +504,7 @@ static void test_dsc_bpc(data_t *data)
 					      0,
 					      &ref_fb[crtc->pipe]);
 			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(display, data->pipe_id[crtc->pipe]));
+					    crtc);
 			igt_plane_set_fb(data->primary[crtc->pipe],
 					 &ref_fb[crtc->pipe]);
 		}
@@ -529,7 +527,7 @@ static void test_dsc_bpc(data_t *data)
 			/* Check current bpc */
 			igt_info("Verifying display %s has correct bpc\n", output->name);
 			igt_assert_output_bpc_equal(data->fd,
-						    data->pipe_id[crtc->pipe],
+						    crtc->pipe,
 						    output->name,
 						    bpc_vals[bpc]);
 

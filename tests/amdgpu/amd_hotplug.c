@@ -42,7 +42,6 @@ typedef struct data {
 	igt_crtc_t *crtc[MAX_PIPES];
 	igt_pipe_crc_t *pipe_crc[MAX_PIPES];
 	drmModeModeInfo mode[MAX_PIPES];
-	enum pipe pipe_id[MAX_PIPES];
 	int w[MAX_PIPES];
 	int h[MAX_PIPES];
 	int fd;
@@ -55,7 +54,6 @@ static void test_init(data_t *data)
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc) {
-		data->pipe_id[crtc->pipe] = crtc->pipe;
 		data->crtc[crtc->pipe] = crtc;
 		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
 								    DRM_PLANE_TYPE_PRIMARY);
@@ -165,7 +163,7 @@ static void test_hotplug_basic(data_t *data, bool suspend)
 				      DRM_FORMAT_XRGB8888, 0,
 				      &ref_fb[crtc->pipe]);
 		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(display, data->pipe_id[crtc->pipe]));
+				    crtc);
 		igt_plane_set_fb(data->primary[crtc->pipe],
 				 &ref_fb[crtc->pipe]);
 	}

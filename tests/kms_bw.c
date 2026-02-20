@@ -70,7 +70,6 @@ typedef struct data {
         igt_crtc_t *crtc[IGT_MAX_PIPES];
         igt_pipe_crc_t *pipe_crc[IGT_MAX_PIPES];
         drmModeModeInfo mode[IGT_MAX_PIPES];
-        enum pipe pipe_id[IGT_MAX_PIPES];
         int w[IGT_MAX_PIPES];
         int h[IGT_MAX_PIPES];
         int fd;
@@ -126,7 +125,6 @@ static void test_init(data_t *data, bool physical)
 	data->connected_outputs = 0;
 
 	for_each_crtc(display, crtc) {
-		data->pipe_id[crtc->pipe] = crtc->pipe;
 		data->crtc[crtc->pipe] = crtc;
 		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
 								    DRM_PLANE_TYPE_PRIMARY);
