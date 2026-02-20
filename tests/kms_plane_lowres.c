@@ -66,7 +66,7 @@ typedef struct {
 	igt_display_t display;
 	uint32_t devid;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	struct igt_fb fb_primary;
 	struct igt_fb fb_plane[2];
 	struct {
@@ -273,7 +273,7 @@ test_planes_on_pipe(data_t *data, uint64_t modifier)
 	igt_plane_t *plane;
 	unsigned tested = 0;
 
-	for_each_plane_on_pipe(&data->display, data->pipe, plane)
+	for_each_plane_on_pipe(&data->display, data->crtc->pipe, plane)
 		tested += test_planes_on_pipe_with_output(data, plane, modifier);
 
 	igt_assert(tested > 0);
@@ -289,7 +289,6 @@ static void test_cleanup(data_t *data)
 
 static void run_test(data_t *data, uint64_t modifier)
 {
-	igt_display_t *display = &data->display;
 	igt_crtc_t *crtc;
 	igt_output_t *output;
 
@@ -299,17 +298,17 @@ static void run_test(data_t *data, uint64_t modifier)
 	for_each_crtc(&data->display, crtc) {
 		for_each_valid_output_on_pipe(&data->display, crtc->pipe,
 					      output) {
-			data->pipe = crtc->pipe;
+			data->crtc = crtc;
 			data->output = output;
 
 			igt_display_reset(&data->display);
 			igt_output_set_crtc(data->output,
-					    igt_crtc_for_pipe(display, data->pipe));
+					    data->crtc);
 
 			if (!intel_pipe_output_combo_valid(&data->display))
 				continue;
 
-			data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+			data->pipe_crc = igt_crtc_crc_new(data->crtc,
 							  IGT_PIPE_CRC_SOURCE_AUTO);
 
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),

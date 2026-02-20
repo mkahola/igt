@@ -177,7 +177,7 @@ typedef struct {
 	int drm_fd;
 	igt_display_t display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	enum test_flags flags;
 	igt_plane_t *plane;
 	igt_pipe_crc_t *pipe_crc;
@@ -1040,7 +1040,7 @@ static bool try_config(data_t *data, enum test_fb_flags fb_flags,
 
 static int test_ccs(data_t *data)
 {
-	igt_display_t *display = &data->display;	int valid_tests = 0;
+	int valid_tests = 0;
 	igt_crc_t crc, ref_crc;
 	enum test_fb_flags fb_flags = 0;
 
@@ -1053,7 +1053,7 @@ static int test_ccs(data_t *data)
 		 IGT_FORMAT_ARGS(data->format), IGT_MODIFIER_ARGS(data->ccs_modifier));
 
 	if (data->flags & TEST_CRC) {
-		data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+		data->pipe_crc = igt_crtc_crc_new(data->crtc,
 						  IGT_PIPE_CRC_SOURCE_AUTO);
 
 		if (try_config(data, fb_flags | FB_COMPRESSED, &ref_crc) &&
@@ -1154,7 +1154,7 @@ static void test_output(data_t *data, const int testnum)
 
 			for_each_crtc_with_valid_output(&data->display, crtc,
 							data->output) {
-				data->pipe = crtc->pipe;
+				data->crtc = crtc;
 				igt_display_reset(&data->display);
 
 				igt_output_set_crtc(data->output,

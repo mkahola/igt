@@ -33,7 +33,7 @@ typedef struct {
 	struct igt_fb fb[2];
 	igt_output_t *output;
 	igt_plane_t *primary;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_crc_t ref_crc;
 	igt_pipe_crc_t *pipe_crc;
 	uint32_t devid;
@@ -48,7 +48,7 @@ static void prepare_crtc(data_t *data)
 	igt_display_reset(display);
 	/* select the pipe we want to use */
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(display, data->pipe));
+			    data->crtc);
 
 	mode = igt_output_get_mode(output);
 
@@ -65,7 +65,7 @@ static void prepare_crtc(data_t *data)
 	if (data->pipe_crc)
 		igt_pipe_crc_free(data->pipe_crc);
 
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	/* get reference crc for the white fb */
@@ -226,7 +226,7 @@ static void select_valid_pipe_output_combo(data_t *data)
 	igt_display_t *display = &data->display;
 
 	for_each_crtc_with_valid_output(display, crtc, data->output) {
-		data->pipe = crtc->pipe;
+		data->crtc = crtc;
 		igt_display_reset(display);
 
 		igt_output_set_crtc(data->output,

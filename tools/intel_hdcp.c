@@ -28,7 +28,7 @@ typedef struct data {
 	struct igt_fb fb;
 	int height, width;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	enum hdcp_type hdcp_type;
 	int user_cmd;
 	bool running;
@@ -628,7 +628,7 @@ static void test_init(data_t *data)
 	igt_display_reset(&data->display);
 
 	for_each_crtc_with_valid_output(&data->display, crtc, data->output) {
-		data->pipe = crtc->pipe;
+		data->crtc = crtc;
 		if (!igt_output_has_prop(data->output, IGT_CONNECTOR_CONTENT_PROTECTION))
 			continue;
 

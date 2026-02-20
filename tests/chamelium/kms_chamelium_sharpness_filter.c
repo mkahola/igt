@@ -26,7 +26,7 @@ IGT_TEST_DESCRIPTION("Test to validate content adaptive sharpness filter using C
 
 typedef struct {
 	int drm_fd;
-	enum pipe pipe_id;
+	igt_crtc_t *crtc;
 	struct igt_fb fb;
 	igt_display_t display;
 	igt_output_t *output;
@@ -55,16 +55,14 @@ static bool pipe_output_combo_valid(data_t *data, enum pipe pipe)
 
 static void set_filter_strength_on_pipe(data_t *data)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_set_prop_value(igt_crtc_for_pipe(display, data->pipe_id),
+	igt_crtc_set_prop_value(data->crtc,
 				    IGT_CRTC_SHARPNESS_STRENGTH,
 				    data->filter_strength);
 }
 
 static void reset_filter_strength_on_pipe(data_t *data)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_set_prop_value(igt_crtc_for_pipe(display, data->pipe_id),
+	igt_crtc_set_prop_value(data->crtc,
 				    IGT_CRTC_SHARPNESS_STRENGTH, 0);
 }
 
@@ -115,14 +113,13 @@ static void cleanup(data_t *data)
 static void test_t(data_t *data, igt_plane_t *primary,
 		   struct chamelium_port *port)
 {
-	igt_display_t *display = &data->display;
 	struct chamelium_frame_dump *frame[4];
 	drmModeModeInfo *mode;
 	int height, width;
 	bool match[4], match_ok = false;
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(display, data->pipe_id));
+			    data->crtc);
 
 	mode = igt_output_get_mode(data->output);
 	height = mode->hdisplay;
@@ -198,7 +195,7 @@ static int test_setup(data_t *data, enum pipe p)
 	 */
         for_each_valid_output_on_pipe(&data->display, crtc->pipe,
 				      data->output) {
-		data->pipe_id = crtc->pipe;
+		data->crtc = crtc;
 		for (i = 0; i < data->port_count; i++) {
 			if ((data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_HDMIA ||
 			     data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_HDMIB) &&
@@ -209,7 +206,7 @@ static int test_setup(data_t *data, enum pipe p)
 
 	for_each_valid_output_on_pipe(&data->display, crtc->pipe,
 				      data->output) {
-		data->pipe_id = crtc->pipe;
+		data->crtc = crtc;
 		for (i = 0; i < data->port_count; i++) {
 			if (strcmp(data->output->name,
 				   chamelium_port_get_name(data->ports[i])) == 0)

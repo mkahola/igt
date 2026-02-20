@@ -152,7 +152,7 @@ typedef struct {
 	int drm_fd;
 	uint32_t devid;
 	igt_display_t display;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 	igt_plane_t *plane;
 	igt_pipe_crc_t *pipe_crc;
@@ -376,8 +376,7 @@ static void prep_fb(data_t *data)
 
 static void set_c8_lut(data_t *data)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, data->pipe);
+	igt_crtc_t *crtc = data->crtc;
 	struct drm_color_lut *lut;
 	int i, lut_size = 256;
 
@@ -398,8 +397,7 @@ static void set_c8_lut(data_t *data)
 
 static void unset_lut(data_t *data)
 {
-	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, data->pipe);
+	igt_crtc_t *crtc = data->crtc;
 
 	igt_crtc_replace_prop_blob(crtc, IGT_CRTC_GAMMA_LUT, NULL, 0);
 }
@@ -510,7 +508,6 @@ static bool test_plane(data_t *data)
 
 static bool test_pipe(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	uint16_t width, height;
 	drmModeModeInfo *mode;
 	igt_plane_t *primary;
@@ -518,10 +515,10 @@ static bool test_pipe(data_t *data)
 	bool run_in_simulation = igt_run_in_simulation();
 
 	igt_info("Using (pipe %s + %s) to run the subtest.\n",
-		 kmstest_pipe_name(data->pipe), igt_output_name(data->output));
+		 igt_crtc_name(data->crtc), igt_output_name(data->output));
 
 	if (data->format == DRM_FORMAT_C8 &&
-	    !igt_crtc_has_prop(igt_crtc_for_pipe(display, data->pipe),
+	    !igt_crtc_has_prop(data->crtc,
 				   IGT_CRTC_GAMMA_LUT))
 		return false;
 
@@ -541,7 +538,7 @@ static bool test_pipe(data_t *data)
 		      data->format, data->modifier, &data->small_fb);
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(display, data->pipe));
+			    data->crtc);
 
 	primary = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, NULL);
@@ -569,10 +566,10 @@ static bool test_pipe(data_t *data)
 	igt_display_commit2(&data->display, data->display.is_atomic ?
 			    COMMIT_ATOMIC : COMMIT_UNIVERSAL);
 
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
-	for_each_plane_on_pipe(&data->display, data->pipe, data->plane) {
+	for_each_plane_on_pipe(&data->display, data->crtc->pipe, data->plane) {
 		ret = test_plane(data);
 		if (ret || run_in_simulation)
 			break;
@@ -589,7 +586,6 @@ static bool test_pipe(data_t *data)
 static bool
 max_hw_stride_async_flip_test(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	uint32_t ret;
 	const uint32_t w = data->output->config.default_mode.hdisplay,
 		       h = data->output->config.default_mode.vdisplay;
@@ -599,10 +595,10 @@ max_hw_stride_async_flip_test(data_t *data)
 	igt_require(data->display.is_atomic);
 
 	igt_info("Using (pipe %s + %s) to run the subtest.\n",
-		 kmstest_pipe_name(data->pipe), igt_output_name(data->output));
+		 igt_crtc_name(data->crtc), igt_output_name(data->output));
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(display, data->pipe));
+			    data->crtc);
 
 	primary = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
 
@@ -636,7 +632,7 @@ max_hw_stride_async_flip_test(data_t *data)
 		 data->hw_stride);
 	generate_pattern(data, &data->big_fb_flip[1], 640, 480);
 
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 	igt_pipe_crc_start(data->pipe_crc);
 
@@ -714,7 +710,7 @@ static void test_scanout(data_t *data)
 		    data->format, data->modifier);
 
 	for_each_crtc_with_valid_output(&data->display, crtc, data->output) {
-		data->pipe = crtc->pipe;
+		data->crtc = crtc;
 		igt_display_reset(&data->display);
 
 		igt_output_set_crtc(data->output,

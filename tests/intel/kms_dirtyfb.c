@@ -58,7 +58,7 @@ typedef struct {
 	uint64_t modifier;
 	igt_output_t *output;
 	igt_pipe_crc_t *pipe_crc;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	struct igt_fb fbs[3];
 
@@ -100,7 +100,7 @@ static bool check_support(data_t *data)
 	case FEATURE_NONE:
 		return true;
 	case FEATURE_FBC:
-		if (!intel_fbc_supported_on_chipset(data->drm_fd, data->pipe)) {
+		if (!intel_fbc_supported_on_chipset(data->drm_fd, data->crtc->pipe)) {
 			igt_info("FBC is not supported on this chipset\n");
 			return false;
 		}
@@ -127,7 +127,7 @@ static bool check_support(data_t *data)
 		return true;
 
 	case FEATURE_DRRS:
-		if (!(intel_is_drrs_supported(data->drm_fd, data->pipe) &&
+		if (!(intel_is_drrs_supported(data->drm_fd, data->crtc->pipe) &&
 		      intel_output_has_drrs(data->drm_fd, data->output))) {
 			igt_info("Output doesn't support DRRS\n");
 			return false;
@@ -153,7 +153,7 @@ static void enable_feature(data_t *data)
 		psr_enable(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL);
 		break;
 	case FEATURE_DRRS:
-		intel_drrs_enable(data->drm_fd, data->pipe);
+		intel_drrs_enable(data->drm_fd, data->crtc->pipe);
 		break;
 	case FEATURE_DEFAULT:
 		break;
@@ -169,7 +169,7 @@ static void check_feature_enabled(data_t *data)
 		break;
 	case FEATURE_FBC:
 		igt_assert_f(intel_fbc_wait_until_enabled(data->drm_fd,
-							  data->pipe),
+							  data->crtc->pipe),
 			     "FBC still disabled\n");
 		break;
 	case FEATURE_PSR:
@@ -178,7 +178,7 @@ static void check_feature_enabled(data_t *data)
 			     "PSR still disabled\n");
 		break;
 	case FEATURE_DRRS:
-		igt_assert_f(!intel_is_drrs_inactive(data->drm_fd, data->pipe),
+		igt_assert_f(!intel_is_drrs_inactive(data->drm_fd, data->crtc->pipe),
 			     "DRRS INACTIVE\n");
 		break;
 	case FEATURE_DEFAULT:
@@ -195,7 +195,7 @@ static void check_feature(data_t *data)
 		break;
 	case FEATURE_FBC:
 		igt_assert_f(intel_fbc_wait_until_enabled(data->drm_fd,
-							  data->pipe),
+							  data->crtc->pipe),
 			     "FBC disabled\n");
 		/* TODO: Add compression check here */
 		break;
@@ -205,7 +205,7 @@ static void check_feature(data_t *data)
 		psr_sink_error_check(data->debugfs_fd, PSR_MODE_1, data->output);
 		break;
 	case FEATURE_DRRS:
-		igt_assert_f(!intel_is_drrs_inactive(data->drm_fd, data->pipe),
+		igt_assert_f(!intel_is_drrs_inactive(data->drm_fd, data->crtc->pipe),
 			     "DRRS INACTIVE\n");
 		break;
 	case FEATURE_DEFAULT:
@@ -222,18 +222,17 @@ static void disable_features(data_t *data)
 	if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL))
 		psr_disable(data->drm_fd, data->debugfs_fd, NULL);
 
-	intel_drrs_disable(data->drm_fd, data->pipe);
+	intel_drrs_disable(data->drm_fd, data->crtc->pipe);
 }
 
 static void prepare(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	igt_plane_t *primary;
 
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(display, data->pipe));
+			    data->crtc);
 
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_create_color_fb(data->drm_fd, data->mode->hdisplay,
@@ -378,7 +377,7 @@ int igt_main()
 			for_each_crtc(&data.display, crtc) {
 				int valid_tests = 0;
 
-				data.pipe = crtc->pipe;
+				data.crtc = crtc;
 
 				for_each_valid_output_on_pipe(&data.display,
 							      crtc->pipe,

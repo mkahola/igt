@@ -64,7 +64,7 @@ typedef struct _data data_t;
 
 struct _data {
 	int drm_fd;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_display_t display;
 	igt_output_t *output;
 	drmModeResPtr res;
@@ -255,7 +255,6 @@ adjust_mode_overflow_vrefresh(data_t *data, drmModeModeInfoPtr mode)
 static void
 test_output(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	igt_output_t *output = data->output;
 	drmModeModeInfo mode;
 	struct igt_fb fb;
@@ -278,7 +277,7 @@ test_output(data_t *data)
 
 	kmstest_unset_all_crtcs(data->drm_fd, data->res);
 
-	crtc_id = igt_crtc_for_pipe(display, data->pipe)->crtc_id;
+	crtc_id = data->crtc->crtc_id;
 
 	ret = drmModeSetCrtc(data->drm_fd, crtc_id,
 			     fb.fb_id, 0, 0,
@@ -370,7 +369,7 @@ int igt_main()
 					      igt_crtc_name(crtc),
 					      igt_output_name(output)) {
 					data.output = output;
-					data.pipe = crtc->pipe;
+					data.crtc = crtc;
 					data.adjust_mode = subtests[i].adjust_mode;
 					test_output(&data);
 				}

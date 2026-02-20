@@ -74,7 +74,7 @@ typedef struct {
 	struct igt_fb primary_fb;
 	igt_output_t *output;
 	uint32_t crtc_id;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	unsigned int flags;
 #define IDLE 1
 #define BUSY 2
@@ -106,7 +106,7 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 
 	/* select the pipe we want to use */
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(display, data->pipe));
+			    data->crtc);
 
 	/* create and set the primary plane fb */
 	mode = igt_output_get_mode(output);
@@ -123,7 +123,7 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 
 	igt_display_commit(display);
 
-	igt_wait_for_vblank(igt_crtc_for_pipe(display, data->pipe));
+	igt_wait_for_vblank(data->crtc);
 }
 
 static void cleanup_crtc(data_t *data, int fd, igt_output_t *output)
@@ -171,7 +171,7 @@ static void run_test(data_t *data, int fd, void (*testfunc)(data_t *, int, int))
 
 	igt_info("Beginning %s on pipe %s, connector %s (%d threads)\n",
 		 igt_subtest_name(),
-		 kmstest_pipe_name(data->pipe),
+		 igt_crtc_name(data->crtc),
 		 igt_output_name(output),
 		 nchildren);
 
@@ -199,7 +199,7 @@ static void run_test(data_t *data, int fd, void (*testfunc)(data_t *, int, int))
 
 	igt_info("\n%s on pipe %s, connector %s: PASSED\n\n",
 		 igt_subtest_name(),
-		 kmstest_pipe_name(data->pipe),
+		 igt_crtc_name(data->crtc),
 		 igt_output_name(output));
 
 	/* cleanup what prepare_crtc() has done */
@@ -321,7 +321,7 @@ int igt_main()
 					igt_dynamic_f("pipe-%s-%s",
 						      igt_crtc_name(crtc),
 						      igt_output_name(output)) {
-						data.pipe = crtc->pipe;
+						data.crtc = crtc;
 						data.output = output;
 						data.flags = m->flags;
 						run_test(&data, fd, f->func);

@@ -70,7 +70,7 @@ typedef struct {
 	struct igt_fb primary_fb;
 	struct igt_fb fb;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_crc_t ref_crc;
 	int curw, curh; /* cursor size */
 	igt_pipe_crc_t *pipe_crc;
@@ -114,7 +114,6 @@ static void create_cursor_fb(data_t *data, int cur_w, int cur_h)
 static void cursor_move(data_t *data, int x, int y, int i)
 {
 	int crtc_id = data->output->config.crtc->crtc_id;
-	igt_display_t *display = &data->display;
 
 	igt_debug("[%d] x=%d, y=%d\n", i, x, y);
 
@@ -124,9 +123,9 @@ static void cursor_move(data_t *data, int x, int y, int i)
 	 * fails). So let's accept a failure from the ioctl in that case.
 	 */
 	igt_assert(drmModeMoveCursor(data->drm_fd, crtc_id, x, y) == 0 ||
-		   (IS_CHERRYVIEW(data->devid) && data->pipe == PIPE_C &&
+		   (IS_CHERRYVIEW(data->devid) && data->crtc->pipe == PIPE_C &&
 		    x < 0 && x > -data->curw));
-	igt_wait_for_vblank(igt_crtc_for_pipe(display, data->pipe));
+	igt_wait_for_vblank(data->crtc);
 }
 
 #define XSTEP 8
@@ -267,7 +266,7 @@ static void prepare_crtc(data_t *data)
 
 	/* select the pipe we want to use */
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(display, data->pipe));
+			    data->crtc);
 
 	mode = igt_output_get_mode(data->output);
 	igt_create_pattern_fb(data->drm_fd, mode->hdisplay, mode->vdisplay,
@@ -284,7 +283,7 @@ static void prepare_crtc(data_t *data)
 	data->jump_y = (mode->vdisplay - data->curh) / 2;
 
 	/* create the pipe_crc object for this pipe */
-	data->pipe_crc = igt_crtc_crc_new_nonblock(igt_crtc_for_pipe(display, data->pipe),
+	data->pipe_crc = igt_crtc_crc_new_nonblock(data->crtc,
 						   IGT_PIPE_CRC_SOURCE_AUTO);
 
 	/* get reference crc w/o cursor */
@@ -397,7 +396,7 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 				for_each_crtc_with_single_output(&data.display,
 								 crtc,
 								 data.output) {
-					data.pipe = crtc->pipe;
+					data.crtc = crtc;
 					if (!extended && crtc->pipe != active_pipes[0] &&
 					    crtc->pipe != active_pipes[last_pipe])
 						continue;

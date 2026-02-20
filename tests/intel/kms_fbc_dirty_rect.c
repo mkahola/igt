@@ -60,7 +60,7 @@ typedef struct {
 	drmModeModeInfo *mode;
 	igt_output_t *output;
 	igt_pipe_crc_t *pipe_crc;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	u32 format;
 
 	struct igt_fb fb[N_FBS];
@@ -122,7 +122,7 @@ set_fb_and_collect_crc(data_t *data, igt_plane_t *plane, struct igt_fb *fb,
 	igt_pipe_crc_start(data->pipe_crc);
 	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, crc);
 	igt_pipe_crc_stop(data->pipe_crc);
-	igt_assert_f(intel_fbc_is_enabled(data->drm_fd, data->pipe,
+	igt_assert_f(intel_fbc_is_enabled(data->drm_fd, data->crtc->pipe,
 					  IGT_LOG_INFO),
 					  "FBC is not enabled\n");
 }
@@ -404,16 +404,15 @@ static void cleanup(data_t *data)
 
 static bool prepare_test(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	igt_display_reset(&data->display);
 
 	data->mode = igt_output_get_mode(data->output);
 	igt_output_set_crtc(data->output,
-			    igt_crtc_for_pipe(display, data->pipe));
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+			    data->crtc);
+	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
-	igt_require_f(intel_fbc_supported_on_chipset(data->drm_fd, data->pipe),
+	igt_require_f(intel_fbc_supported_on_chipset(data->drm_fd, data->crtc->pipe),
 		      "FBC not supported by the chipset on pipe\n");
 
 	if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL) ||
@@ -461,7 +460,7 @@ int igt_main()
 		data.feature = FEATURE_FBC;
 
 		for_each_crtc(&data.display, crtc) {
-			data.pipe = crtc->pipe;
+			data.crtc = crtc;
 			if (single_pipe)
 				break;
 			for_each_valid_output_on_pipe(&data.display,
@@ -486,7 +485,7 @@ int igt_main()
 		data.feature = FEATURE_FBC;
 
 		for_each_crtc(&data.display, crtc) {
-			data.pipe = crtc->pipe;
+			data.crtc = crtc;
 			if (single_pipe)
 				break;
 			for_each_valid_output_on_pipe(&data.display,
@@ -513,7 +512,7 @@ int igt_main()
 		data.feature = FEATURE_FBC;
 
 		for_each_crtc(&data.display, crtc) {
-			data.pipe = crtc->pipe;
+			data.crtc = crtc;
 			if (single_pipe)
 				break;
 			for_each_valid_output_on_pipe(&data.display,

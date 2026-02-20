@@ -31,7 +31,7 @@ IGT_TEST_DESCRIPTION(
 "such as context flipping.");
 
 typedef struct {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	int drm_fd;
 	int nv_crc_dir;
 	igt_display_t display;
@@ -105,7 +105,6 @@ static void destroy_crc_colors(data_t *data, struct color_fb *colors, size_t len
  */
 static void test_ctx_flip_detection(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	struct color_fb colors[] = {
 		HEX_COLOR(0xFF, 0x00, 0x18),
 		HEX_COLOR(0xFF, 0xA5, 0x2C),
@@ -123,7 +122,7 @@ static void test_ctx_flip_detection(data_t *data)
 	int start = -1, frame, start_color = -1, i;
 	bool found_skip = false;
 
-	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+	pipe_crc = igt_crtc_crc_new(data->crtc,
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
 	create_crc_colors(data, colors, n_colors, pipe_crc);
@@ -222,7 +221,6 @@ static void test_ctx_flip_detection(data_t *data)
  */
 static void test_ctx_flip_skip_current_frame(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	struct color_fb colors[] = {
 		{ .r = 1.0, .g = 0.0, .b = 0.0 },
 		{ .r = 0.0, .g = 1.0, .b = 0.0 },
@@ -235,7 +233,7 @@ static void test_ctx_flip_skip_current_frame(data_t *data)
 	const int n_colors = ARRAY_SIZE(colors);
 	const int n_crcs = 30;
 
-	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+	pipe_crc = igt_crtc_crc_new(data->crtc,
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 	create_crc_colors(data, colors, n_colors, pipe_crc);
 
@@ -265,11 +263,10 @@ static void test_ctx_flip_skip_current_frame(data_t *data)
 
 static void test_ctx_flip_threshold_reset_after_capture(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	igt_pipe_crc_t *pipe_crc;
 	uint32_t value = 0;
 
-	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+	pipe_crc = igt_crtc_crc_new(data->crtc,
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
 	set_crc_flip_threshold(data, 5);
@@ -285,8 +282,7 @@ static void test_ctx_flip_threshold_reset_after_capture(data_t *data)
 
 static void test_source(data_t *data, const char *source)
 {
-	igt_display_t *display = &data->display;
-	igt_pipe_crc_t *pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+	igt_pipe_crc_t *pipe_crc = igt_crtc_crc_new(data->crtc,
 						    source);
 	igt_crc_t *crcs;
 
@@ -303,7 +299,6 @@ static void test_source(data_t *data, const char *source)
 
 static void test_source_outp_inactive(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	struct color_fb colors[] = {
 		{ .r = 1.0, .g = 0.0, .b = 0.0 },
 		{ .r = 0.0, .g = 1.0, .b = 0.0 },
@@ -311,7 +306,7 @@ static void test_source_outp_inactive(data_t *data)
 	igt_pipe_crc_t *pipe_crc;
 	const int n_colors = ARRAY_SIZE(colors);
 
-	pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, data->pipe),
+	pipe_crc = igt_crtc_crc_new(data->crtc,
 				    "outp-inactive");
 	create_crc_colors(data, colors, n_colors, pipe_crc);
 
@@ -344,8 +339,9 @@ int igt_main()
 		igt_fixture() {
 			int dir;
 
-			data.pipe = pipe;
-			igt_display_require_output_on_pipe(&data.display, pipe);
+			data.crtc = igt_crtc_for_pipe(&data.display, pipe);
+			igt_display_require_output_on_pipe(&data.display,
+							   data.crtc->pipe);
 
 			/* Disable the output from the previous iteration of pipe tests, if there is
 			 * one
@@ -355,14 +351,15 @@ int igt_main()
 				igt_display_commit(&data.display);
 			}
 
-			data.output = igt_get_single_output_for_pipe(&data.display, pipe);
+			data.output = igt_get_single_output_for_pipe(&data.display,
+								     data.crtc->pipe);
 			data.mode = igt_output_get_mode(data.output);
 
 			/* None of these tests need to perform modesets, just page flips. So running
 			 * display setup here is fine
 			 */
 			igt_output_set_crtc(data.output,
-					    igt_crtc_for_pipe(data.output->display, pipe));
+					    data.crtc);
 			data.primary = igt_output_get_plane(data.output, 0);
 			igt_create_color_fb(data.drm_fd,
 					    data.mode->hdisplay,
@@ -374,7 +371,9 @@ int igt_main()
 			igt_plane_set_fb(data.primary, &data.default_fb);
 			igt_display_commit(&data.display);
 
-			dir = igt_debugfs_crtc_dir(data.drm_fd, pipe, O_DIRECTORY);
+			dir = igt_debugfs_crtc_dir(data.drm_fd,
+						   data.crtc->pipe,
+						   O_DIRECTORY);
 			igt_require_fd(dir);
 			data.nv_crc_dir = openat(dir, "nv_crc", O_DIRECTORY);
 			close(dir);

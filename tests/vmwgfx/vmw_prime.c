@@ -174,7 +174,7 @@ struct gpu_process_t {
 	struct vmw_surface *fb_surface;
 	igt_output_t *output;
 	igt_plane_t *primary;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_crc_t reference_tri_crc;
 };
 
@@ -204,7 +204,7 @@ static void prepare_crtc(struct gpu_process_t *gpu)
 
 	/* select the pipe we want to use */
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(display, gpu->pipe));
+			    gpu->crtc);
 
 	mode = igt_output_get_mode(output);
 
@@ -231,7 +231,7 @@ static void prepare_crtc_surface(struct gpu_process_t *gpu)
 
 	/* select the pipe we want to use */
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(display, gpu->pipe));
+			    gpu->crtc);
 
 	mode = igt_output_get_mode(output);
 
@@ -297,7 +297,7 @@ static void draw_triangle_3d(struct gpu_process_t *gpu, uint32_t draw_flags)
 		int prime_fd;
 
 		gpu->output = output;
-		gpu->pipe = crtc->pipe;
+		gpu->crtc = crtc;
 
 		prepare_crtc(gpu);
 		pipe_crc = igt_pipe_crc_new(gpu->mdevice.drm_fd, crtc->pipe,
@@ -364,7 +364,7 @@ static void draw_dumb_buffer(struct gpu_process_t *gpu)
 
 	for_each_crtc_with_valid_output(display, crtc, output) {
 		gpu->output = output;
-		gpu->pipe = crtc->pipe;
+		gpu->crtc = crtc;
 
 		prepare_crtc_surface(gpu);
 		pipe_crc = igt_pipe_crc_new(gpu->mdevice.drm_fd, crtc->pipe,

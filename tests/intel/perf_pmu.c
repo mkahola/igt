@@ -1040,7 +1040,7 @@ typedef struct {
 	igt_display_t display;
 	struct igt_fb primary_fb;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 } data_t;
 
 static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
@@ -1051,7 +1051,7 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 
 	/* select the pipe we want to use */
 	igt_output_set_crtc(output,
-			    igt_crtc_for_pipe(display, data->pipe));
+			    data->crtc);
 
 	/* create and set the primary plane fb */
 	mode = igt_output_get_mode(output);
@@ -1066,7 +1066,7 @@ static void prepare_crtc(data_t *data, int fd, igt_output_t *output)
 
 	igt_display_commit(display);
 
-	igt_wait_for_vblank(igt_crtc_for_pipe(display, data->pipe));
+	igt_wait_for_vblank(data->crtc);
 }
 
 static void cleanup_crtc(data_t *data, int fd, igt_output_t *output)
@@ -1192,7 +1192,7 @@ event_wait(int gem_fd, const intel_ctx_t *ctx,
 
 		gem_write(gem_fd, obj.handle, 0, batch, sizeof(batch));
 
-		data.pipe = crtc->pipe;
+		data.crtc = crtc;
 		prepare_crtc(&data, gem_fd, output);
 
 		fd = open_pmu(gem_fd,
@@ -1202,7 +1202,7 @@ event_wait(int gem_fd, const intel_ctx_t *ctx,
 
 		igt_fork_helper(&waiter) {
 			const uint32_t pipe_id_flag =
-					kmstest_get_vbl_flag(data.pipe);
+					kmstest_get_vbl_flag(data.crtc->pipe);
 
 			for (;;) {
 				union drm_wait_vblank vbl = { };

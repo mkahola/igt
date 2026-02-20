@@ -140,7 +140,7 @@ typedef struct {
 	int flip_count;
 	int frame_count;
 	bool flip_pending;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	bool alternate_sync_async;
 	bool suspend_resume;
 	bool hang;
@@ -292,7 +292,6 @@ static void require_overlay_flip_support(data_t *data)
 
 static void test_init(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode;
 
 	igt_display_reset(&data->display);
@@ -300,11 +299,11 @@ static void test_init(data_t *data)
 
 	mode = igt_output_get_mode(data->output);
 
-	data->crtc_id = igt_crtc_for_pipe(display, data->pipe)->crtc_id;
+	data->crtc_id = data->crtc->crtc_id;
 	data->refresh_rate = mode->vrefresh;
 
 	igt_output_set_crtc(data->output,
-		            igt_crtc_for_pipe(display, data->pipe));
+		            data->crtc);
 
 	data->plane = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
 	if (data->overlay_path)
@@ -912,7 +911,7 @@ static void run_test(data_t *data, void (*test)(data_t *))
 		require_atomic_async_cap(data);
 
 	for_each_crtc_with_valid_output(display, crtc, data->output) {
-		data->pipe = crtc->pipe;
+		data->crtc = crtc;
 		igt_display_reset(display);
 
 		igt_output_set_crtc(data->output,
@@ -980,7 +979,7 @@ static void run_test_with_async_format_modifiers(data_t *data, void (*test)(data
 	igt_vec_init(&tested_formats, sizeof(struct format_mod));
 
 	for_each_crtc_with_valid_output(&data->display, crtc, data->output) {
-		data->pipe = crtc->pipe;
+		data->crtc = crtc;
 		test_init(data);
 
 		igt_assert_f(data->plane->async_format_mod_count > 0,
@@ -1034,7 +1033,7 @@ static void run_test_with_modifiers(data_t *data, void (*test)(data_t *))
 		require_atomic_async_cap(data);
 
 	for_each_crtc_with_valid_output(&data->display, crtc, data->output) {
-		data->pipe = crtc->pipe;
+		data->crtc = crtc;
 		test_init(data);
 
 		igt_require_f(data->plane->async_format_mod_count > 0,
