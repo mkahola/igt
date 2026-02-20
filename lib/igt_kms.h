@@ -815,6 +815,20 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display,
 		for_each_if (igt_pipe_connector_valid((pipe), (output)))
 
 /**
+ * for_each_valid_output_on_crtc:
+ * @display: a pointer to an #igt_display_t structure
+ * @crtc: CRTC to enumerate valid outputs over
+ * @output: The enumerated output.
+ *
+ * This for loop is called over all connected @output that can be used
+ * on this @crtc . If there are no valid outputs for this CRTC, nothing
+ * happens.
+ */
+#define for_each_valid_output_on_crtc(display, crtc, output) \
+	for_each_connected_output((display), (output)) \
+		for_each_if (igt_crtc_connector_valid((crtc), (output)))
+
+/**
  * for_each_plane_on_crtc:
  * @crtc: CRTC to enumerate valid outputs over
  * @plane: The enumerated plane.
