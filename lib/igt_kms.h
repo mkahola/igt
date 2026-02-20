@@ -815,20 +815,6 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display,
 		for_each_if (igt_pipe_connector_valid((pipe), (output)))
 
 /**
- * for_each_plane_on_pipe:
- * @display: a pointer to an #igt_display_t structure
- * @pipe: Pipe to enumerate valid outputs over
- * @plane: The enumerated plane.
- *
- * This for loop iterates over all planes associated to the given @pipe.
- * If there are no valid planes for this pipe, nothing happens.
- */
-#define for_each_plane_on_pipe(display, pipe, plane)			\
-	for (int j__ = 0; assert(igt_can_fail()), \
-		     (plane) = &igt_crtc_for_pipe((display), (pipe))->planes[j__], \
-		     j__ < igt_crtc_for_pipe((display), (pipe))->n_planes; j__++)
-
-/**
  * for_each_plane_on_crtc:
  * @crtc: CRTC to enumerate valid outputs over
  * @plane: The enumerated plane.
