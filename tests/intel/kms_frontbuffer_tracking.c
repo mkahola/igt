@@ -4233,7 +4233,7 @@ int igt_main_args("", long_options, help_str, opt_handler, NULL)
 				pipe_crc = NULL;
 				setup_crcs();
 
-				for_each_valid_output_on_pipe(&drm.display, crtc->pipe, output) {
+				for_each_valid_output_on_crtc(&drm.display, crtc, output) {
 					init_mode_params(&prim_mode_params, output, crtc);
 					setup_fbc();
 
