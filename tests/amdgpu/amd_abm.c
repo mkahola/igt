@@ -170,10 +170,9 @@ static void test_fini(data_t *data)
 {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
-	enum pipe pipe;
 
 	/* Disable ABM before exit test */
-	for_each_valid_output_on_pipe(&data->display, pipe, output) {
+	for_each_valid_output_on_pipe(&data->display, data->pipe_id, output) {
 		if (output->config.connector->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 		set_abm_level(data, output, 0);
@@ -328,9 +327,8 @@ static void backlight_dpms_cycle(data_t *data)
 	int max_brightness;
 	int pwm_1, pwm_2;
 	igt_output_t *output;
-	enum pipe pipe;
 
-	for_each_valid_output_on_pipe(&data->display, pipe, output) {
+	for_each_valid_output_on_pipe(&data->display, data->pipe_id, output) {
 		if (output->config.connector->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 
@@ -359,10 +357,9 @@ static void backlight_monotonic_basic(data_t *data)
 	int prev_pwm, pwm;
 	int brightness_step;
 	int brightness;
-	enum pipe pipe;
 	igt_output_t *output;
 
-	for_each_valid_output_on_pipe(&data->display, pipe, output) {
+	for_each_valid_output_on_pipe(&data->display, data->pipe_id, output) {
 		if (output->config.connector->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 		ret = backlight_read_max_brightness(&max_brightness);
@@ -393,10 +390,9 @@ static void backlight_monotonic_abm(data_t *data)
 	int prev_pwm, pwm;
 	int brightness_step;
 	int brightness;
-	enum pipe pipe;
 	igt_output_t *output;
 
-	for_each_valid_output_on_pipe(&data->display, pipe, output) {
+	for_each_valid_output_on_pipe(&data->display, data->pipe_id, output) {
 		if (output->config.connector->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 		ret = backlight_read_max_brightness(&max_brightness);
@@ -426,10 +422,9 @@ static void abm_enabled(data_t *data)
 	int ret, i;
 	int max_brightness;
 	int pwm, prev_pwm, pwm_without_abm;
-	enum pipe pipe;
 	igt_output_t *output;
 
-	for_each_valid_output_on_pipe(&data->display, pipe, output) {
+	for_each_valid_output_on_pipe(&data->display, data->pipe_id, output) {
 		if (output->config.connector->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 
@@ -460,10 +455,9 @@ static void abm_gradual(data_t *data)
 	int convergence_delay = 10;
 	int prev_pwm, pwm, curr;
 	int max_brightness;
-	enum pipe pipe;
 	igt_output_t *output;
 
-	for_each_valid_output_on_pipe(&data->display, pipe, output) {
+	for_each_valid_output_on_pipe(&data->display, data->pipe_id, output) {
 		if (output->config.connector->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 
