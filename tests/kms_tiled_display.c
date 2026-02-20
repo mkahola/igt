@@ -65,7 +65,7 @@ IGT_TEST_DESCRIPTION("Test for genlocked CRTCs with tiled displays");
 typedef struct {
 	igt_output_t *output;
 	igt_tile_info_t tile;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	drmModeConnectorPtr connector;
 	bool got_page_flip;
 } data_connector_t;
@@ -213,7 +213,6 @@ static int mode_linetime_us(const drmModeModeInfo *mode)
 
 static void setup_mode(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	int count = 0, prev = 0, i = 0;
 	bool pipe_in_use = false, found = false;
 	igt_crtc_t *crtc;
@@ -238,7 +237,7 @@ static void setup_mode(data_t *data)
 
 			if (count > 0) {
 				for (prev = count - 1; prev >= 0; prev--) {
-					if (crtc->pipe == conns[prev].pipe) {
+					if (crtc->pipe == conns[prev].crtc->pipe) {
 						pipe_in_use = true;
 						break;
 					}
@@ -248,15 +247,15 @@ static void setup_mode(data_t *data)
 			}
 
 			if (igt_pipe_connector_valid(crtc->pipe, output)) {
-				conns[count].pipe = crtc->pipe;
+				conns[count].crtc = crtc;
 				conns[count].output = output;
 
 				igt_output_set_crtc(conns[count].output,
-						    igt_crtc_for_pipe(display, conns[count].pipe));
+						    conns[count].crtc);
 				break;
 			}
 		}
-		igt_require(conns[count].pipe != PIPE_NONE);
+		igt_require(conns[count].crtc != NULL);
 
 		for (i = 0; i < conns[count].connector->count_modes; i++) {
 			mode = &conns[count].connector->modes[i];
@@ -326,11 +325,10 @@ static void setup_framebuffer(data_t *data)
 
 static data_connector_t *conn_for_crtc(data_t *data, unsigned int crtc_id)
 {
-	igt_display_t *display = &data->display;
 	for (int i = 0; i < data->num_h_tiles; i++) {
 		data_connector_t *conn = &data->conns[i];
 
-		if (igt_crtc_for_pipe(display, conn->pipe)->crtc_id == crtc_id)
+		if (conn->crtc->crtc_id == crtc_id)
 			return conn;
 	}
 
