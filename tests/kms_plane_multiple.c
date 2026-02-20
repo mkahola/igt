@@ -527,9 +527,9 @@ static void test_plane_position_2_display(data_t *data, igt_crtc_t *crtc1,
 		for_each_if((((output) = &(display)->outputs[j__]), \
 			      igt_output_is_connected((output))))
 
-#define for_each_valid_output_on_pipe_local(display, pipe, output) \
+#define for_each_valid_output_on_crtc_local(display, crtc, output) \
 	for_each_connected_output_local((display), (output)) \
-		for_each_if(igt_pipe_connector_valid((pipe), (output)))
+		for_each_if(igt_crtc_connector_valid((crtc), (output)))
 
 static void run_2_display_test(data_t *data, uint64_t modifier, const char *name)
 {
@@ -549,8 +549,7 @@ static void run_2_display_test(data_t *data, uint64_t modifier, const char *name
 				if (crtc->pipe == crtc2->pipe)
 					continue;
 
-				for_each_valid_output_on_pipe_local(display,
-								    crtc2->pipe,
+				for_each_valid_output_on_crtc_local(display, crtc2,
 								    output2) {
 					if (output1 == output2)
 						continue;
