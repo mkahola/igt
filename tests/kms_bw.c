@@ -228,7 +228,8 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 
 		igt_plane_set_fb(data->primary[i], &buffer[i]);
 		igt_info("Assigning pipe %s to output %s with mode %s\n",
-			 kmstest_pipe_name(i), igt_output_name(output), mode->name);
+			 igt_crtc_name(crtc), igt_output_name(output),
+			 mode->name);
 	}
 
 	ret = igt_display_try_commit_atomic(display,

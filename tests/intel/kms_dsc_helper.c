@@ -93,7 +93,7 @@ bool check_gen11_dp_constraint(int drmfd, igt_output_t *output,
 	if ((connector->connector_type == DRM_MODE_CONNECTOR_DisplayPort) &&
 	    (crtc->pipe == PIPE_A) && IS_GEN11(devid)) {
 		igt_info("DSC not supported on pipe %s on %s in gen11 platforms\n",
-			 kmstest_pipe_name(crtc->pipe), output->name);
+			 igt_crtc_name(crtc), output->name);
 		return false;
 	}
 
