@@ -7964,3 +7964,26 @@ igt_crtc_t *igt_crtc_for_crtc_id(igt_display_t *display, uint32_t crtc_id)
 
 	return NULL;
 }
+
+/**
+ * igt_first_crtc_with_single_output:
+ * @display: a pointer to an #igt_display_t structure
+ * @ret_output: Returned output
+ *
+ * Returns: The first CRTC with a connected output (the output
+ * is returned via @ret_output)
+ */
+igt_crtc_t *igt_first_crtc_with_single_output(igt_display_t *display, igt_output_t **ret_output)
+{
+	igt_output_t *output;
+	igt_crtc_t *crtc;
+
+	for_each_crtc_with_single_output(display, crtc, output) {
+		*ret_output = output;
+		return crtc;
+	}
+
+	*ret_output = NULL;
+
+	return NULL;
+}
