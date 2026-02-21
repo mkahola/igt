@@ -363,7 +363,8 @@ test_plane_position_with_output(data_t *data, igt_crtc_t *crtc,
 			       data->plane1, modifier, c, output, data->fb1);
 		err = igt_display_try_commit2(&data->display, COMMIT_ATOMIC);
 
-		for_each_plane_on_pipe(&data->display, crtc->pipe, plane)
+		for_each_plane_on_crtc(crtc,
+				       plane)
 			igt_plane_set_fb(plane, NULL);
 
 		igt_output_set_crtc(output, NULL);
@@ -394,7 +395,8 @@ test_plane_position_with_output(data_t *data, igt_crtc_t *crtc,
 		igt_assert_crc_equal(&data->ref_crc1, &crc);
 		igt_pipe_crc_stop(data->pipe_crc1);
 
-		for_each_plane_on_pipe(&data->display, crtc->pipe, plane)
+		for_each_plane_on_crtc(crtc,
+				       plane)
 			igt_plane_set_fb(plane, NULL);
 
 		igt_output_set_crtc(output, NULL);

@@ -447,7 +447,8 @@ static int pipe_stress(struct data *data, igt_output_t *output,
 	if (!data->num_planes[crtc->pipe] || !new_mode)
 		return 0;
 
-	for_each_plane_on_pipe(&data->display, crtc->pipe, plane) {
+	for_each_plane_on_crtc(crtc,
+			       plane) {
 		int plane_width, plane_height;
 		if (plane->type == DRM_PLANE_TYPE_CURSOR) {
 			cursor_plane_set_fb(plane,

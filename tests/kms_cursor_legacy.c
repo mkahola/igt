@@ -384,7 +384,7 @@ static	igt_plane_t
 {
 	igt_plane_t *plane, *cursor = NULL;
 
-	for_each_plane_on_pipe(display, crtc->pipe, plane) {
+	for_each_plane_on_crtc(crtc, plane) {
 		if (plane->type != DRM_PLANE_TYPE_CURSOR)
 			continue;
 

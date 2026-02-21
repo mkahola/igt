@@ -93,7 +93,7 @@ static void cleanup_pipe(igt_display_t *display, igt_crtc_t *crtc,
 {
 	igt_plane_t *plane;
 
-	for_each_plane_on_pipe(display, crtc->pipe, plane)
+	for_each_plane_on_crtc(crtc, plane)
 		igt_plane_set_fb(plane, NULL);
 
 	igt_output_set_crtc(output, NULL);
@@ -246,7 +246,7 @@ static void run_colorop_property_tests(igt_display_t *display,
 	prepare_pipe(display, crtc, output,
 		     &fb);
 
-	for_each_plane_on_pipe(display, crtc->pipe, plane) {
+	for_each_plane_on_crtc(crtc, plane) {
 		igt_info("Testing colorop properties on plane %s.#%d-%s (output: %s)\n",
 			 igt_crtc_name(crtc), plane->index,
 			 kmstest_plane_type_name(plane->type), output->name);
@@ -283,7 +283,7 @@ static void run_plane_property_tests(igt_display_t *display, igt_crtc_t *crtc,
 	prepare_pipe(display, crtc, output,
 		     &fb);
 
-	for_each_plane_on_pipe(display, crtc->pipe, plane) {
+	for_each_plane_on_crtc(crtc, plane) {
 		igt_info("Testing plane properties on %s.#%d-%s (output: %s)\n",
 			 igt_crtc_name(crtc), plane->index,
 			 kmstest_plane_type_name(plane->type), output->name);
@@ -527,9 +527,10 @@ static void test_object_invalid_properties(igt_display_t *display,
 				        crtc->crtc_id,
 				        DRM_MODE_OBJECT_CRTC, atomic);
 
-	for_each_crtc(display, crtc)
-		for_each_plane_on_pipe(display, crtc->pipe, plane)
+	for_each_crtc(display, crtc) {
+		for_each_plane_on_crtc(crtc, plane)
 			test_invalid_properties(display->drm_fd, id, type, plane->drm_plane->plane_id, DRM_MODE_OBJECT_PLANE, atomic);
+	}
 
 	for_each_output(display, output)
 		test_invalid_properties(display->drm_fd, id, type, output->id, DRM_MODE_OBJECT_CONNECTOR, atomic);
@@ -935,9 +936,10 @@ static void invalid_properties(igt_display_t *display, bool atomic)
 				               crtc->crtc_id,
 				               DRM_MODE_OBJECT_CRTC, atomic);
 
-	for_each_crtc(display, crtc)
-		for_each_plane_on_pipe(display, crtc->pipe, plane)
+	for_each_crtc(display, crtc) {
+		for_each_plane_on_crtc(crtc, plane)
 			test_object_invalid_properties(display, plane->drm_plane->plane_id, DRM_MODE_OBJECT_PLANE, atomic);
+	}
 
 	for_each_output(display, output)
 		test_object_invalid_properties(display, output->id, DRM_MODE_OBJECT_CONNECTOR, atomic);

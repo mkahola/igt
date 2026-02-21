@@ -1174,8 +1174,7 @@ static void test_output(data_t *data, const int testnum)
 						igt_display_require_output_on_pipe(&data->display,
 										   crtc->pipe);
 
-						for_each_plane_on_pipe(&data->display,
-								       crtc->pipe,
+						for_each_plane_on_crtc(crtc,
 								       data->plane) {
 							if (skip_plane(data, data->plane))
 								continue;

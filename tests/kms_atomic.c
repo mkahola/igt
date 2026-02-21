@@ -1406,7 +1406,8 @@ static void atomic_clear(data_t *data, igt_crtc_t *crtc, igt_output_t *output)
 {
 	igt_plane_t *plane;
 
-	for_each_plane_on_pipe(&data->display, crtc->pipe, plane) {
+	for_each_plane_on_crtc(crtc,
+			       plane) {
 		igt_plane_set_fb(plane, NULL);
 		igt_plane_set_position(plane, 0, 0);
 	}

@@ -67,7 +67,8 @@ int igt_main()
 
 		igt_display_require(&display, drm_fd);
 		for_each_crtc(&display, crtc) {
-			for_each_plane_on_pipe(&display, crtc->pipe, plane) {
+			for_each_plane_on_crtc(crtc,
+					       plane) {
 				max_id = max(max_id, plane->drm_plane->plane_id);
 			}
 		}
@@ -79,7 +80,7 @@ int igt_main()
 	igt_subtest_with_dynamic("basic") {
 		for_each_crtc(&display, crtc) {
 			igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
-				for_each_plane_on_pipe(&display, crtc->pipe,
+				for_each_plane_on_crtc(crtc,
 						       plane) {
 					bool is_valid = (plane->type == DRM_PLANE_TYPE_PRIMARY ||
 							 plane->type == DRM_PLANE_TYPE_CURSOR);

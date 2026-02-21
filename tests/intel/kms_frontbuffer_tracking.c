@@ -2768,7 +2768,8 @@ static void plane_fbc_rte_subtest(const struct test_mode *t)
 
 	wanted_crc = &blue_crcs[t->format].crc;
 
-	for_each_plane_on_pipe(&drm.display, prim_mode_params.crtc->pipe, plane) {
+	for_each_plane_on_crtc(prim_mode_params.crtc,
+			       plane) {
 		if (!is_valid_plane(plane))
 			continue;
 

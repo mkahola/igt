@@ -104,7 +104,8 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, igt_crtc_t *crtc,
 	 * because most of the modeset operations must be fast
 	 * later on.
 	 */
-	for_each_plane_on_pipe(&data->display, crtc->pipe, plane) {
+	for_each_plane_on_crtc(crtc,
+			       plane) {
 		if (plane->type == DRM_PLANE_TYPE_CURSOR) {
 			igt_plane_set_fb(plane, &argb_fb);
 			igt_fb_set_size(&argb_fb, plane, cursor_width, cursor_height);
@@ -161,7 +162,8 @@ test_rmfb(struct rmfb_data *data, igt_output_t *output, igt_crtc_t *crtc,
 
 	drmModeFreeCrtc(drm_crtc);
 
-	for_each_plane_on_pipe(&data->display, crtc->pipe, plane) {
+	for_each_plane_on_crtc(crtc,
+			       plane) {
 		drmModePlanePtr planeres = drmModeGetPlane(data->drm_fd, plane->drm_plane->plane_id);
 
 		igt_assert_eq(planeres->fb_id, 0);

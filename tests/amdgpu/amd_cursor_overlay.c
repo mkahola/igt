@@ -89,7 +89,7 @@ static int get_overlay_planes_count(igt_display_t *display, igt_crtc_t *crtc)
 	int count = 0;
 	igt_plane_t *plane;
 
-	for_each_plane_on_pipe(display, crtc->pipe, plane)
+	for_each_plane_on_crtc(crtc, plane)
 		if (plane->type == DRM_PLANE_TYPE_OVERLAY)
 			count++;
 

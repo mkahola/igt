@@ -87,9 +87,10 @@ static void igt_display_all_off(igt_display_t *display)
 	for_each_connected_output(display, output)
 		igt_output_set_crtc(output, NULL);
 
-	for_each_crtc(display, crtc)
-		for_each_plane_on_pipe(display, crtc->pipe, plane)
+	for_each_crtc(display, crtc) {
+		for_each_plane_on_crtc(crtc, plane)
 			igt_plane_set_fb(plane, NULL);
+	}
 
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 }

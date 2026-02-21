@@ -1312,7 +1312,8 @@ test_pixel_formats(data_t *data, igt_crtc_t *crtc)
 
 	set_legacy_lut(data, crtc, LUT_MASK);
 
-	for_each_plane_on_pipe(&data->display, crtc->pipe, plane) {
+	for_each_plane_on_crtc(crtc,
+			       plane) {
 		if (skip_plane(data, plane))
 			continue;
 		/* Cursor planes do not support cropping, skip generating subtest on cursor plane */

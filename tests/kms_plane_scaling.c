@@ -717,7 +717,6 @@ test_scaler_with_modifier_pipe(data_t *d,
 			       bool is_upscale, igt_crtc_t *crtc,
 			       igt_output_t *output)
 {
-	igt_display_t *display = &d->display;
 	unsigned format = DRM_FORMAT_XRGB8888;
 	igt_plane_t *plane;
 	uint32_t ret;
@@ -726,7 +725,7 @@ test_scaler_with_modifier_pipe(data_t *d,
 
 	igt_output_set_crtc(output, crtc);
 
-	for_each_plane_on_pipe(display, crtc->pipe, plane) {
+	for_each_plane_on_crtc(crtc, plane) {
 		if (plane->type == DRM_PLANE_TYPE_CURSOR)
 			continue;
 
@@ -755,7 +754,6 @@ test_scaler_with_rotation_pipe(data_t *d,
 			       bool is_upscale, igt_crtc_t *crtc,
 			       igt_output_t *output)
 {
-	igt_display_t *display = &d->display;
 	unsigned format = DRM_FORMAT_XRGB8888;
 	uint64_t modifier = DRM_FORMAT_MOD_LINEAR;
 	igt_plane_t *plane;
@@ -765,7 +763,7 @@ test_scaler_with_rotation_pipe(data_t *d,
 
 	igt_output_set_crtc(output, crtc);
 
-	for_each_plane_on_pipe(display, crtc->pipe, plane) {
+	for_each_plane_on_crtc(crtc, plane) {
 		if (plane->type == DRM_PLANE_TYPE_CURSOR)
 			continue;
 
@@ -793,7 +791,6 @@ test_scaler_with_pixel_format_pipe(data_t *d, double sf_plane,
 				   bool is_upscale, igt_crtc_t *crtc,
 				   igt_output_t *output)
 {
-	igt_display_t *display = &d->display;
 	uint64_t modifier = DRM_FORMAT_MOD_LINEAR;
 	igt_plane_t *plane;
 	uint32_t ret;
@@ -802,7 +799,7 @@ test_scaler_with_pixel_format_pipe(data_t *d, double sf_plane,
 
 	igt_output_set_crtc(output, crtc);
 
-	for_each_plane_on_pipe(display, crtc->pipe, plane) {
+	for_each_plane_on_crtc(crtc, plane) {
 		struct igt_vec tested_formats;
 
 		if (plane->type == DRM_PLANE_TYPE_CURSOR)
