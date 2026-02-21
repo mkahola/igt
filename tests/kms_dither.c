@@ -103,7 +103,7 @@ static dither_status_t get_dither_state(data_t *data, igt_crtc_t *crtc)
 	igt_assert_eq(sscanf(start_loc, ", dither=%s", tmp), 1);
 	status.dither = !strcmp(tmp, "yes,");
 
-	status.bpc = igt_get_pipe_current_bpc(data->drm_fd, crtc->pipe);
+	status.bpc = igt_get_pipe_current_bpc(crtc);
 
 	return status;
 }
@@ -213,7 +213,7 @@ run_dither_test(data_t *data, int fb_bpc, int fb_format, int output_bpc)
 			continue;
 		}
 
-		if (igt_get_output_max_bpc(data->drm_fd, output->name) < output_bpc) {
+		if (igt_get_output_max_bpc(output) < output_bpc) {
 			igt_info("Output %s: Doesn't support %d-bpc.\n",
 				 igt_output_name(output), output_bpc);
 			continue;

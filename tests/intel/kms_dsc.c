@@ -226,7 +226,7 @@ static void update_display(data_t *data, uint32_t test_type)
 	restore_force_dsc_fractional_bpp_en();
 
 	if (test_type & TEST_DSC_BPC) {
-		current_bpc = igt_get_pipe_current_bpc(data->drm_fd, data->crtc->pipe);
+		current_bpc = igt_get_pipe_current_bpc(data->crtc);
 		igt_skip_on_f(data->input_bpc != current_bpc,
 			      "Input bpc = %d is not equal to current bpc = %d\n",
 			      data->input_bpc, current_bpc);
@@ -270,7 +270,7 @@ static void test_dsc(data_t *data, uint32_t test_type, int bpc,
 		    !check_gen11_dp_constraint(data->drm_fd, data->output, data->crtc))
 			continue;
 
-		if (igt_get_output_max_bpc(data->drm_fd, output->name) < MIN_DSC_BPC) {
+		if (igt_get_output_max_bpc(output) < MIN_DSC_BPC) {
 			igt_info("Output %s doesn't support min %d-bpc\n", igt_output_name(data->output), MIN_DSC_BPC);
 			continue;
 		}

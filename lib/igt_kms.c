@@ -6568,14 +6568,16 @@ bool igt_get_i915_edp_lobf_status(int drmfd, char *connector_name)
  *
  * Returns: The maximum bpc from the connector debugfs.
  */
-unsigned int igt_get_output_max_bpc(int drmfd, char *connector_name)
+unsigned int igt_get_output_max_bpc(igt_output_t *output)
 {
+	igt_display_t *display = output->display;
+	int drmfd = display->drm_fd;
 	char buf[24];
 	char *start_loc;
 	int fd, res;
 	unsigned int maximum;
 
-	fd = igt_debugfs_connector_dir(drmfd, connector_name, O_RDONLY);
+	fd = igt_debugfs_connector_dir(drmfd, output->name, O_RDONLY);
 	igt_assert(fd >= 0);
 
 	res = igt_debugfs_simple_read(fd, "output_bpc", buf, sizeof(buf));
@@ -6596,15 +6598,17 @@ unsigned int igt_get_output_max_bpc(int drmfd, char *connector_name)
  *
  * Returns: The current bpc from the crtc debugfs.
  */
-unsigned int igt_get_pipe_current_bpc(int drmfd, enum pipe pipe)
+unsigned int igt_get_pipe_current_bpc(igt_crtc_t *crtc)
 {
+	igt_display_t *display = crtc->display;
+	int drmfd = display->drm_fd;
 	char buf[24];
 	char debugfs_name[24];
 	char *start_loc;
 	int fd, res;
 	unsigned int current;
 
-	fd = igt_debugfs_crtc_dir(drmfd, pipe, O_RDONLY);
+	fd = igt_debugfs_crtc_dir(drmfd, crtc->pipe, O_RDONLY);
 	igt_assert(fd >= 0);
 
 	if (is_intel_device(drmfd))
@@ -6625,11 +6629,11 @@ unsigned int igt_get_pipe_current_bpc(int drmfd, enum pipe pipe)
 	return current;
 }
 
-static unsigned int get_current_bpc(int drmfd, enum pipe pipe,
-				    char *output_name, unsigned int bpc)
+static unsigned int get_current_bpc(igt_crtc_t *crtc, igt_output_t *output,
+				    unsigned int bpc)
 {
-	unsigned int maximum = igt_get_output_max_bpc(drmfd, output_name);
-	unsigned int current = igt_get_pipe_current_bpc(drmfd, pipe);
+	unsigned int maximum = igt_get_output_max_bpc(output);
+	unsigned int current = igt_get_pipe_current_bpc(crtc);
 
 	igt_require_f(maximum >= bpc,
 		      "Monitor doesn't support %u bpc, max is %u\n", bpc,
@@ -6647,10 +6651,11 @@ static unsigned int get_current_bpc(int drmfd, enum pipe pipe,
  *
  * Assert if crtc's current bpc is not matched with the requested one.
  */
-void igt_assert_output_bpc_equal(int drmfd, enum pipe pipe,
-				 char *output_name, unsigned int bpc)
+void igt_assert_output_bpc_equal(igt_crtc_t *crtc, igt_output_t *output,
+				 unsigned int bpc)
 {
-	unsigned int current = get_current_bpc(drmfd, pipe, output_name, bpc);
+	unsigned int current = get_current_bpc(crtc,
+					       output, bpc);
 
 	igt_assert_eq(current, bpc);
 }
@@ -6668,10 +6673,11 @@ void igt_assert_output_bpc_equal(int drmfd, enum pipe pipe,
  * Returns: True if crtc's current bpc is matched with the requested bpc,
  * else False.
  */
-bool igt_check_output_bpc_equal(int drmfd, enum pipe pipe,
-				char *output_name, unsigned int bpc)
+bool igt_check_output_bpc_equal(igt_crtc_t *crtc, igt_output_t *output,
+				unsigned int bpc)
 {
-	unsigned int current = get_current_bpc(drmfd, pipe, output_name, bpc);
+	unsigned int current = get_current_bpc(crtc,
+					       output, bpc);
 
 	return (current == bpc);
 }
@@ -6710,8 +6716,7 @@ bool igt_max_bpc_constraint(igt_display_t *display, igt_crtc_t *crtc,
 					    display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY))
 			continue;
 
-		if (!igt_check_output_bpc_equal(display->drm_fd, crtc->pipe,
-						output->name, bpc))
+		if (!igt_check_output_bpc_equal(crtc, output, bpc))
 			continue;
 
 		return true;

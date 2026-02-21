@@ -69,7 +69,7 @@ typedef struct {
 } gamma_lut_t;
 
 bool pipe_output_combo_valid(data_t *data, igt_crtc_t *crtc);
-bool panel_supports_deep_color(int fd, char *output_name);
+bool panel_supports_deep_color(igt_output_t *output);
 uint64_t get_max_bpc(igt_output_t *output);
 void paint_gradient_rectangles(data_t *data,
 			       drmModeModeInfo *mode,

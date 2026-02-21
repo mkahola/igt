@@ -1233,12 +1233,12 @@ bool igt_override_all_active_output_modes_to_fit_bw(igt_display_t *display);
 bool igt_fit_modes_in_bw(igt_display_t *display);
 bool igt_has_lobf_debugfs(int drmfd, igt_output_t *output);
 bool igt_get_i915_edp_lobf_status(int drmfd, char *connector_name);
-unsigned int igt_get_output_max_bpc(int drmfd, char *connector_name);
-unsigned int igt_get_pipe_current_bpc(int drmfd, enum pipe pipe);
-void igt_assert_output_bpc_equal(int drmfd, enum pipe pipe,
-				char *output_name, unsigned int bpc);
-bool igt_check_output_bpc_equal(int drmfd, enum pipe pipe,
-				char *output_name, unsigned int bpc);
+unsigned int igt_get_output_max_bpc(igt_output_t *output);
+unsigned int igt_get_pipe_current_bpc(igt_crtc_t *crtc);
+void igt_assert_output_bpc_equal(igt_crtc_t *crtc, igt_output_t *output,
+				 unsigned int bpc);
+bool igt_check_output_bpc_equal(igt_crtc_t *crtc, igt_output_t *output,
+				unsigned int bpc);
 
 int sort_drm_modes_by_clk_dsc(const void *a, const void *b);
 int sort_drm_modes_by_clk_asc(const void *a, const void *b);

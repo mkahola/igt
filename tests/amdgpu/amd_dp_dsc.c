@@ -478,7 +478,7 @@ static void test_dsc_bpc(data_t *data)
 		if (!output || !igt_output_is_connected(output))
 			continue;
 		igt_info("Checking bpc support of conn %s\n", output->name);
-		max_supported_bpc[crtc->pipe] = igt_get_output_max_bpc(data->fd, output->name);
+		max_supported_bpc[crtc->pipe] = igt_get_output_max_bpc(output);
 	}
 
 	/* Setup all outputs */
@@ -526,9 +526,8 @@ static void test_dsc_bpc(data_t *data)
 
 			/* Check current bpc */
 			igt_info("Verifying display %s has correct bpc\n", output->name);
-			igt_assert_output_bpc_equal(data->fd,
-						    crtc->pipe,
-						    output->name,
+			igt_assert_output_bpc_equal(crtc,
+						    output,
 						    bpc_vals[bpc]);
 
 			/* Log current mode and DSC status */

@@ -875,7 +875,7 @@ run_deep_color_tests_for_pipe(data_t *data, igt_crtc_t *crtc)
 			continue;
 		}
 
-		if (!panel_supports_deep_color(data->drm_fd, output->name)) {
+		if (!panel_supports_deep_color(output)) {
 			igt_info("Output %s: Doesn't support deep-color.\n",
 				 igt_output_name(output));
 			continue;

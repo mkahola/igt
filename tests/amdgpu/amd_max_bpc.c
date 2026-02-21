@@ -74,8 +74,8 @@ static void test_init(data_t *data)
 
 	data->mode = igt_output_get_mode(data->output);
 	igt_assert(data->mode);
-	igt_assert_output_bpc_equal(data->fd, data->crtc->pipe,
-				    data->output->name, 8);
+	igt_assert_output_bpc_equal(data->crtc,
+				    data->output, 8);
 
 	data->primary =
 		igt_crtc_get_plane_type(data->crtc, DRM_PLANE_TYPE_PRIMARY);
