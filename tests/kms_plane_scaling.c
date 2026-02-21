@@ -843,7 +843,9 @@ find_connected_pipe(igt_display_t *display, bool second, igt_output_t **output)
 	igt_display_reset(display);
 
 	for_each_crtc(display, crtc) {
-		for_each_valid_output_on_pipe(display, crtc->pipe, *output) {
+		for_each_valid_output_on_crtc(display,
+					      crtc,
+					      *output) {
 			if (igt_output_get_driving_crtc(*output) != NULL)
 				continue;
 
@@ -1373,7 +1375,9 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 			igt_subtest_with_dynamic(scaler_with_pixel_format_tests[index].name) {
 				for_each_crtc(&data.display, crtc) {
 					igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
-						for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
+						for_each_valid_output_on_crtc(&data.display,
+									      crtc,
+									      output) {
 							igt_info("Trying on %s\n", igt_output_name(output));
 							if (!pipe_output_combo_valid(&data.display, crtc, output))
 								continue;
@@ -1402,7 +1406,9 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 			igt_subtest_with_dynamic(scaler_with_rotation_tests[index].name) {
 				for_each_crtc(&data.display, crtc) {
 					igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
-						for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
+						for_each_valid_output_on_crtc(&data.display,
+									      crtc,
+									      output) {
 							igt_info("Trying on %s\n", igt_output_name(output));
 							if (!pipe_output_combo_valid(&data.display, crtc, output))
 								continue;
@@ -1431,7 +1437,9 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 			igt_subtest_with_dynamic(scaler_with_modifiers_tests[index].name) {
 				for_each_crtc(&data.display, crtc) {
 					igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
-						for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
+						for_each_valid_output_on_crtc(&data.display,
+									      crtc,
+									      output) {
 							igt_info("Trying on %s\n", igt_output_name(output));
 							if (!pipe_output_combo_valid(&data.display, crtc, output))
 								continue;
@@ -1459,7 +1467,9 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		igt_subtest_with_dynamic("plane-scaler-with-clipping-clamping-pixel-formats") {
 			for_each_crtc(&data.display, crtc) {
 				igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
-					for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
+					for_each_valid_output_on_crtc(&data.display,
+								      crtc,
+								      output) {
 						igt_info("Trying on %s\n", igt_output_name(output));
 						if (!pipe_output_combo_valid(&data.display, crtc, output))
 							continue;
@@ -1485,7 +1495,9 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		igt_subtest_with_dynamic("plane-scaler-with-clipping-clamping-rotation") {
 			for_each_crtc(&data.display, crtc) {
 				igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
-					for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
+					for_each_valid_output_on_crtc(&data.display,
+								      crtc,
+								      output) {
 						igt_info("Trying on %s\n", igt_output_name(output));
 						if (!pipe_output_combo_valid(&data.display, crtc, output))
 							continue;
@@ -1510,7 +1522,9 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		igt_subtest_with_dynamic("plane-scaler-with-clipping-clamping-modifiers") {
 			for_each_crtc(&data.display, crtc) {
 				igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
-					for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
+					for_each_valid_output_on_crtc(&data.display,
+								      crtc,
+								      output) {
 						igt_info("Trying on %s\n", igt_output_name(output));
 						if (!pipe_output_combo_valid(&data.display, crtc, output))
 							continue;
@@ -1536,7 +1550,9 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 			igt_subtest_with_dynamic(scaler_with_2_planes_tests[index].name) {
 				for_each_crtc(&data.display, crtc) {
 					igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
-						for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
+						for_each_valid_output_on_crtc(&data.display,
+									      crtc,
+									      output) {
 							igt_info("Trying on %s\n",
 								 igt_output_name(output));
 							if (!pipe_output_combo_valid(&data.display, crtc, output))
@@ -1565,7 +1581,9 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 			igt_subtest_with_dynamic(intel_paramtests[index].testname) {
 				igt_require_intel(data.drm_fd);
 				for_each_crtc(&data.display, crtc) {
-					for_each_valid_output_on_pipe(&data.display, crtc->pipe, output) {
+					for_each_valid_output_on_crtc(&data.display,
+								      crtc,
+								      output) {
 						if (igt_crtc_num_scalers(crtc) < 1)
 							continue;
 						/*

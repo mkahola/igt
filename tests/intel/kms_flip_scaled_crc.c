@@ -913,8 +913,8 @@ int igt_main()
 			free_fbs(&data);
 			for_each_crtc(&data.display, crtc) {
 				bool found = false;
-				for_each_valid_output_on_pipe(&data.display,
-							      crtc->pipe,
+				for_each_valid_output_on_crtc(&data.display,
+							      crtc,
 							      output) {
 					igt_display_reset(&data.display);
 
@@ -936,8 +936,8 @@ int igt_main()
 					}
 				}
 				if (!found) {
-					for_each_valid_output_on_pipe(&data.display,
-								      crtc->pipe,
+					for_each_valid_output_on_crtc(&data.display,
+								      crtc,
 								      output) {
 						igt_display_reset(&data.display);
 

@@ -347,7 +347,9 @@ static void colorop_properties(igt_display_t *display, bool atomic)
 	for_each_crtc(display, crtc) {
 		found = false;
 
-		for_each_valid_output_on_pipe(display, crtc->pipe, output) {
+		for_each_valid_output_on_crtc(display,
+					      crtc,
+					      output) {
 			igt_display_reset(display);
 
 			igt_output_set_crtc(output,

@@ -41,7 +41,9 @@ static void igt_display_all_on(igt_display_t *display)
 	for_each_crtc(display, crtc) {
 		igt_output_t *output;
 
-		for_each_valid_output_on_pipe(display, crtc->pipe, output) {
+		for_each_valid_output_on_crtc(display,
+					      crtc,
+					      output) {
 			igt_plane_t *primary;
 			drmModeModeInfo *mode;
 

@@ -297,7 +297,8 @@ static void run_test(data_t *data, uint64_t modifier)
 		return;
 
 	for_each_crtc(&data->display, crtc) {
-		for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+		for_each_valid_output_on_crtc(&data->display,
+					      crtc,
 					      output) {
 			data->crtc = crtc;
 			data->output = output;

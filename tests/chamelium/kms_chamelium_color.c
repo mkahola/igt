@@ -460,7 +460,8 @@ static int test_setup(data_t *data, igt_crtc_t *crtc)
 	 * Prefer to run this test on HDMI connector if its connected, since on DP we
 	 * sometimes face DP FSM issue
 	 */
-        for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+        for_each_valid_output_on_crtc(&data->display,
+				      crtc,
 				      data->output) {
                 for (i = 0; i < data->port_count; i++) {
                         if ((data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_HDMIA ||
@@ -470,7 +471,8 @@ static int test_setup(data_t *data, igt_crtc_t *crtc)
                 }
         }
 
-	for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+	for_each_valid_output_on_crtc(&data->display,
+				      crtc,
 				      data->output) {
 		for (i = 0; i < data->port_count; i++) {
 			if (strcmp(data->output->name,

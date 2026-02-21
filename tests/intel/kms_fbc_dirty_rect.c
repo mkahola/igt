@@ -463,8 +463,9 @@ int igt_main()
 			data.crtc = crtc;
 			if (single_pipe)
 				break;
-			for_each_valid_output_on_pipe(&data.display,
-						      crtc->pipe, data.output) {
+			for_each_valid_output_on_crtc(&data.display,
+						      crtc,
+						      data.output) {
 				data.format = DRM_FORMAT_XRGB8888;
 
 				igt_dynamic_f("pipe-%s-%s",
@@ -488,8 +489,9 @@ int igt_main()
 			data.crtc = crtc;
 			if (single_pipe)
 				break;
-			for_each_valid_output_on_pipe(&data.display,
-						      crtc->pipe, data.output) {
+			for_each_valid_output_on_crtc(&data.display,
+						      crtc,
+						      data.output) {
 				data.format = DRM_FORMAT_XRGB8888;
 
 				igt_dynamic_f("pipe-%s-%s",
@@ -515,8 +517,9 @@ int igt_main()
 			data.crtc = crtc;
 			if (single_pipe)
 				break;
-			for_each_valid_output_on_pipe(&data.display,
-						      crtc->pipe, data.output) {
+			for_each_valid_output_on_crtc(&data.display,
+						      crtc,
+						      data.output) {
 				for (int i = 0; i < num_formats; i++) {
 					/* on simulation platforms , limit to single format */
 					if (data.is_simulation && i > 0)

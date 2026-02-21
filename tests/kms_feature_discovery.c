@@ -98,8 +98,8 @@ int igt_main() {
 			igt_fixture() {
 				/* this is what most of the 2x tests are doing */
 				for_each_crtc(&display, crtc) {
-					for_each_valid_output_on_pipe(&display,
-								      crtc->pipe,
+					for_each_valid_output_on_crtc(&display,
+								      crtc,
 								      output) {
 						if (igt_output_get_driving_crtc(output) == NULL) {
 							igt_output_set_crtc(output,

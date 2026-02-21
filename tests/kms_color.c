@@ -637,7 +637,8 @@ static void test_pipe_limited_range_ctm(data_t *data,
 	degamma_linear = generate_table(data->degamma_lut_size, 1.0);
 	gamma_linear = generate_table(data->gamma_lut_size, 1.0);
 
-	for_each_valid_output_on_pipe(&data->display, primary->crtc->pipe,
+	for_each_valid_output_on_crtc(&data->display,
+				      primary->crtc,
 				      output) {
 		drmModeModeInfo *mode;
 		struct igt_fb fb_modeset, fb;
@@ -862,7 +863,9 @@ run_deep_color_tests_for_pipe(data_t *data, igt_crtc_t *crtc)
 
 	test_setup(data, crtc);
 
-	for_each_valid_output_on_pipe(&data->display, crtc->pipe, output) {
+	for_each_valid_output_on_crtc(&data->display,
+				      crtc,
+				      output) {
 		uint64_t max_bpc = get_max_bpc(output);
 		bool ret;
 

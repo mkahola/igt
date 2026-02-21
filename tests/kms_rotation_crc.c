@@ -942,7 +942,9 @@ static void test_multi_plane_rotation(data_t *data, igt_crtc_t *crtc)
 
 	igt_display_require_output(display);
 
-	for_each_valid_output_on_pipe(display, crtc->pipe, output) {
+	for_each_valid_output_on_crtc(display,
+				      crtc,
+				      output) {
 		int i, j, k, l, flipsw, fliphw;
 
 		igt_display_reset(display);

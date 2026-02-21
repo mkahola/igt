@@ -2827,7 +2827,9 @@ static bool igt_pipe_has_valid_output(igt_display_t *display, enum pipe pipe)
 
 	igt_require_pipe(display, pipe);
 
-	for_each_valid_output_on_pipe(display, pipe, output)
+	for_each_valid_output_on_crtc(display,
+				      igt_crtc_for_pipe(display, pipe),
+				      output)
 		return true;
 
 	return false;

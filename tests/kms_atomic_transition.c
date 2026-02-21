@@ -884,7 +884,8 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 
 		event_mask |= 1 << crtc->pipe;
 
-		for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+		for_each_valid_output_on_crtc(&data->display,
+					      crtc,
 					      output) {
 			if (igt_output_get_driving_crtc(output) != NULL)
 				continue;
@@ -979,7 +980,8 @@ retry:
 			data->pipe_crcs[crtc->pipe] = igt_crtc_crc_new(crtc,
 							      IGT_PIPE_CRC_SOURCE_AUTO);
 
-		for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+		for_each_valid_output_on_crtc(&data->display,
+					      crtc,
 					      output) {
 			if (igt_output_get_driving_crtc(output) != NULL)
 				continue;
@@ -1110,7 +1112,8 @@ static void run_modeset_transition(data_t *data, int requested_outputs, bool non
 	for_each_crtc(&data->display, crtc) {
 		igt_output_t *output;
 
-		for_each_valid_output_on_pipe(&data->display, crtc->pipe,
+		for_each_valid_output_on_crtc(&data->display,
+					      crtc,
 					      output) {
 			int i;
 

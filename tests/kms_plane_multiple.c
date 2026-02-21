@@ -544,7 +544,9 @@ static void run_2_display_test(data_t *data, uint64_t modifier, const char *name
 	igt_display_reset(display);
 
 	for_each_crtc(display, crtc) {
-		for_each_valid_output_on_pipe(display, crtc->pipe, output1) {
+		for_each_valid_output_on_crtc(display,
+					      crtc,
+					      output1) {
 			for_each_crtc(display, crtc2) {
 				if (crtc->pipe == crtc2->pipe)
 					continue;

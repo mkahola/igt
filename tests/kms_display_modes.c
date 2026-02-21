@@ -196,7 +196,9 @@ static void run_extendedmode_test(data_t *data) {
 	igt_display_reset(display);
 
 	for_each_crtc(display, crtc) {
-		for_each_valid_output_on_pipe(display, crtc->pipe, output1) {
+		for_each_valid_output_on_crtc(display,
+					      crtc,
+					      output1) {
 
 			for_each_crtc(display, crtc2) {
 				if (crtc->pipe == crtc2->pipe)
