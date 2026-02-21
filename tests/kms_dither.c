@@ -140,7 +140,9 @@ static void test_dithering(data_t *data, igt_crtc_t *crtc,
 	if (ret)
 		goto cleanup;
 
-	constraint = igt_max_bpc_constraint(display, crtc->pipe, output,
+	constraint = igt_max_bpc_constraint(display,
+					    crtc,
+					    output,
 					    output_bpc);
 	if (!constraint)
 		goto cleanup;

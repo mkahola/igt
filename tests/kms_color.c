@@ -897,7 +897,7 @@ run_deep_color_tests_for_pipe(data_t *data, igt_crtc_t *crtc)
 				    crtc);
 
 		if (is_intel_device(data->drm_fd) &&
-		    !igt_max_bpc_constraint(&data->display, crtc->pipe, output, 10)) {
+		    !igt_max_bpc_constraint(&data->display, crtc, output, 10)) {
 			igt_info("Output %s: Doesn't support 10-bpc.\n",
 				 igt_output_name(output));
 			continue;

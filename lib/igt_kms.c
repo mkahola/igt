@@ -6699,7 +6699,7 @@ bool igt_check_output_bpc_equal(int drmfd, enum pipe pipe,
  *
  * Returns: True if suitable mode found to use requested bpc, else False.
  */
-bool igt_max_bpc_constraint(igt_display_t *display, enum pipe pipe,
+bool igt_max_bpc_constraint(igt_display_t *display, igt_crtc_t *crtc,
 			    igt_output_t *output, int bpc)
 {
 	drmModeConnector *connector = output->config.connector;
@@ -6717,7 +6717,7 @@ bool igt_max_bpc_constraint(igt_display_t *display, enum pipe pipe,
 					    display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY))
 			continue;
 
-		if (!igt_check_output_bpc_equal(display->drm_fd, pipe,
+		if (!igt_check_output_bpc_equal(display->drm_fd, crtc->pipe,
 						output->name, bpc))
 			continue;
 

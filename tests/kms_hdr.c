@@ -338,7 +338,7 @@ static void test_bpc_switch(data_t *data, uint32_t flags)
 				     crtc);
 
 			if (is_intel_device(data->fd) &&
-			    !igt_max_bpc_constraint(display, crtc->pipe, output, 10)) {
+			    !igt_max_bpc_constraint(display, crtc, output, 10)) {
 				igt_info("%s: No suitable mode found to use 10 bpc.\n",
 					 igt_output_name(output));
 
@@ -762,7 +762,7 @@ static void test_hdr(data_t *data, uint32_t flags)
 			}
 
 			if (is_intel_device(data->fd) &&
-			    !igt_max_bpc_constraint(display, crtc->pipe, output, 10)) {
+			    !igt_max_bpc_constraint(display, crtc, output, 10)) {
 				igt_info("%s: No suitable mode found to use 10 bpc.\n",
 					 igt_output_name(output));
 

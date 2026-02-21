@@ -1261,8 +1261,8 @@ int sort_drm_modes_by_res_asc(const void *a, const void *b);
 void igt_sort_connector_modes(drmModeConnector *connector,
 		int (*comparator)(const void *, const void*));
 
-bool igt_max_bpc_constraint(igt_display_t *display, enum pipe pipe,
-		igt_output_t *output, int bpc);
+bool igt_max_bpc_constraint(igt_display_t *display, igt_crtc_t *crtc,
+			    igt_output_t *output, int bpc);
 int igt_get_max_dotclock(int fd);
 int igt_get_max_cdclk(int fd);
 int igt_get_current_cdclk(int fd);
