@@ -713,8 +713,6 @@ static void test_pipe_limited_range_ctm(data_t *data,
 static void
 prep_pipe(data_t *data, igt_crtc_t *crtc)
 {
-	igt_require_pipe(&data->display, crtc->pipe);
-
 	if (igt_crtc_has_prop(crtc, IGT_CRTC_DEGAMMA_LUT_SIZE)) {
 		data->degamma_lut_size =
 			igt_crtc_get_prop(crtc,

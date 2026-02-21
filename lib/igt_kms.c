@@ -2813,17 +2813,7 @@ void igt_display_reset(igt_display_t *display)
 static void igt_fill_plane_format_mod(igt_display_t *display, igt_plane_t *plane);
 static void igt_fill_display_format_mod(igt_display_t *display);
 
-/**
- * igt_require_pipe:
- * @display: pointer to igt_display_t
- * @pipe: pipe which need to check
- *
- * Skip a (sub-)test if the pipe not valid.
- *
- * Should be used everywhere where a test checks pipe and skip
- * test when pipe is not valid.
- */
-void igt_require_pipe(igt_display_t *display, enum pipe pipe)
+static void igt_require_pipe(igt_display_t *display, enum pipe pipe)
 {
 	igt_skip_on_f(pipe >= igt_display_n_crtcs(display) || !igt_crtc_for_pipe(display, pipe)->valid,
 			"Pipe %s does not exist\n",

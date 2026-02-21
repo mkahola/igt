@@ -1241,19 +1241,6 @@ int igt_connector_sysfs_open(int drm_fd,
 uint32_t igt_reduce_format(uint32_t format);
 
 
-/*
- * igt_require_pipe:
- * @display: pointer to igt_display_t
- * @pipe: pipe which need to check
- *
- * Skip a (sub-)test if the pipe not valid.
- *
- * Should be used everywhere where a test checks pipe and skip
- * test when pipe is not valid.
- */
-void igt_require_pipe(igt_display_t *display,
-		enum pipe pipe);
-
 void igt_dump_connectors_fd(int drmfd);
 void igt_dump_crtcs_fd(int drmfd);
 bool igt_override_all_active_output_modes_to_fit_bw(igt_display_t *display);
