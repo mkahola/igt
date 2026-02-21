@@ -594,25 +594,25 @@ static void stress_pipes(struct data *data, struct timespec *start,
 	igt_crc_t crc, crc2;
 
 	for_each_connected_output(&data->display, output) {
+		igt_crtc_t *crtc;
 
 		if (!data->highest_mode[pipe])
 			continue;
 
-		igt_assert_f(igt_crtc_for_pipe(display, pipe)->n_planes < MAX_PLANES,
+		crtc = igt_crtc_for_pipe(display, pipe);
+
+		igt_assert_f(crtc->n_planes < MAX_PLANES,
 			     "Currently we don't support more than %d planes!",
 			     MAX_PLANES);
 
-		ret = pipe_stress(data, output,
-				  igt_crtc_for_pipe(display, pipe),
+		ret = pipe_stress(data, output, crtc,
 				  data->highest_mode[pipe]);
 		if (ret)
 			break;
 
 		igt_pipe_crc_start(data->pipe_crc[pipe]);
 		igt_pipe_crc_get_current(data->display.drm_fd, data->pipe_crc[pipe], &crc);
-		get_vblank(data->display.drm_fd,
-			   igt_crtc_for_pipe(display, pipe),
-			   DRM_VBLANK_NEXTONMISS);
+		get_vblank(data->display.drm_fd, crtc, DRM_VBLANK_NEXTONMISS);
 		igt_pipe_crc_get_current(data->display.drm_fd, data->pipe_crc[pipe], &crc2);
 		igt_pipe_crc_stop(data->pipe_crc[pipe]);
 		igt_assert_crc_equal(&crc, &crc2);
@@ -755,14 +755,16 @@ static void destroy_framebuffers(struct data *data)
 	int i, j;
 
 	for (i = 0; i < IGT_MAX_PIPES; i++) {
+		igt_crtc_t *crtc;
 
 		if (!data->highest_mode[i])
 			continue;
 
+		crtc = igt_crtc_for_pipe(display, i);
+
 		for (j = 0; j < MAX_PLANES; j++) {
 			if (data->fb[i * MAX_PLANES + j].fb_id) {
-				igt_plane_set_fb(&igt_crtc_for_pipe(display, i)->planes[j],
-						 NULL);
+				igt_plane_set_fb(&crtc->planes[j], NULL);
 				igt_remove_fb(data->display.drm_fd, &data->fb[i * MAX_PLANES + j]);
 				data->fb[i * MAX_PLANES + j].fb_id = 0;
 			}
@@ -808,6 +810,7 @@ static void prepare_test(struct data *data)
 
 	for (i = 0; i < IGT_MAX_PIPES; i++) {
 		drmModeConnector *connector = (drmModeConnector *)data->connectors[i];
+		igt_crtc_t *crtc;
 
 		if (!connector)
 			continue;
@@ -818,17 +821,17 @@ static void prepare_test(struct data *data)
 		}
 		igt_assert(data->highest_mode[i]);
 
+		crtc = igt_crtc_for_pipe(display, i);
+
 		if (data->highest_mode[i]) {
 			igt_info("Using mode: \n");
 			kmstest_dump_mode(data->highest_mode[i]);
-			data->pipe_crc[i] = igt_crtc_crc_new(igt_crtc_for_pipe(display, i),
-							     IGT_PIPE_CRC_SOURCE_AUTO);
+			data->pipe_crc[i] = igt_crtc_crc_new(crtc, IGT_PIPE_CRC_SOURCE_AUTO);
 		} else
 			data->pipe_crc[i] = NULL;
 
 		if (data->num_planes[i] == -1)
-			data->num_planes[i] = igt_crtc_for_pipe(display,
-								i)->n_planes;
+			data->num_planes[i] = crtc->n_planes;
 
 		igt_info("Max number of planes is %d for pipe %d\n",
 			 data->num_planes[i], i);

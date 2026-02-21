@@ -1314,6 +1314,8 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 
 	igt_describe("Rotation test on both planes by making them fully visible");
 	igt_subtest_f("multiplane-rotation") {
+		igt_crtc_t *crtc = igt_crtc_for_pipe(&data.display, PIPE_A);
+
 		igt_require(gen >= 9);
 		cleanup_crtc(&data);
 		data.planepos[0].origo = p_top | p_left;
@@ -1322,13 +1324,14 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		data.planepos[1].origo = p_top | p_right;
 		data.planepos[1].x = -.4f;
 		data.planepos[1].y = .1f;
-		test_multi_plane_rotation(&data,
-					  igt_crtc_for_pipe(&data.display, PIPE_A));
+		test_multi_plane_rotation(&data, crtc);
 	}
 
 	igt_describe("Rotation test on both planes by cropping left/top corner of primary plane and"
 			"right/top corner of sprite plane");
 	igt_subtest_f("multiplane-rotation-cropping-top") {
+		igt_crtc_t *crtc = igt_crtc_for_pipe(&data.display, PIPE_A);
+
 		igt_require(gen >= 9);
 		cleanup_crtc(&data);
 		data.planepos[0].origo = p_top | p_left;
@@ -1337,13 +1340,14 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		data.planepos[1].origo = p_top | p_right;
 		data.planepos[1].x = -.15f;
 		data.planepos[1].y = -.15f;
-		test_multi_plane_rotation(&data,
-					  igt_crtc_for_pipe(&data.display, PIPE_A));
+		test_multi_plane_rotation(&data, crtc);
 	}
 
 	igt_describe("Rotation test on both planes by cropping left/bottom corner of primary plane"
 			"and right/bottom corner of sprite plane");
 	igt_subtest_f("multiplane-rotation-cropping-bottom") {
+		igt_crtc_t *crtc = igt_crtc_for_pipe(&data.display, PIPE_A);
+
 		igt_require(gen >= 9);
 		cleanup_crtc(&data);
 		data.planepos[0].origo = p_bottom | p_left;
@@ -1352,8 +1356,7 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		data.planepos[1].origo = p_bottom | p_right;
 		data.planepos[1].x = -.15f;
 		data.planepos[1].y = -.20f;
-		test_multi_plane_rotation(&data,
-					  igt_crtc_for_pipe(&data.display, PIPE_A));
+		test_multi_plane_rotation(&data, crtc);
 	}
 
 	/*

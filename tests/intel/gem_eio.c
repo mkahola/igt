@@ -1032,17 +1032,20 @@ static void display_helper(igt_display_t *dpy, int *done)
 		drmModeModeInfoPtr mode;
 		igt_plane_t *primary;
 		igt_output_t *output;
+		igt_crtc_t *crtc;
 		int pipe;
 
 		pipe = rand() % igt_display_n_crtcs(dpy);
-		if (!igt_crtc_for_pipe(dpy, pipe)->valid)
+
+		crtc = igt_crtc_for_pipe(dpy, pipe);
+		if (!crtc || !crtc->valid)
 			continue;
-		output = igt_get_single_output_for_pipe(dpy, pipe);
+
+		output = igt_get_single_output_for_pipe(dpy, crtc->pipe);
 		if (!output)
 			continue;
 
-		igt_output_set_crtc(output,
-				    igt_crtc_for_pipe(dpy, pipe));
+		igt_output_set_crtc(output, crtc);
 		mode = igt_output_get_mode(output);
 
 		if (fb.width != mode->hdisplay || fb.height != mode->vdisplay) {

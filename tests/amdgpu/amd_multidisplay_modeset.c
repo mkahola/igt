@@ -279,6 +279,8 @@ static void multiple_display_test(struct data_t *data, enum sub_test test_mode)
 			igt_info("\n\nnmode loop:%d -----\n", i);
 		j = 0;
 		for_each_connected_output(display, output) {
+			igt_crtc_t *crtc;
+
 			if (test_mode == DISPLAY_ENABLE_DISABLE) {
 				/* only enable display mapping to
 				 * bitmap_disps with value 1
@@ -323,12 +325,13 @@ static void multiple_display_test(struct data_t *data, enum sub_test test_mode)
 				igt_output_override_mode(output, kmode);
 			}
 
+			crtc = igt_crtc_for_pipe(display, j);
+
 			igt_create_pattern_fb(data->fd, kmode->hdisplay,
 					kmode->vdisplay, DRM_FORMAT_XRGB8888,
 					0, (buf + j));
 
-			igt_output_set_crtc(output,
-					    igt_crtc_for_pipe(display, j));
+			igt_output_set_crtc(output, crtc);
 			igt_plane_set_fb(data->primary[j], (buf + j));
 			j++;
 		}
