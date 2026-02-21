@@ -1171,7 +1171,7 @@ int igt_main()
 		"pr-"
 	};
 	int psr_status[] = {PSR_MODE_2, PR_MODE_SEL_FETCH};
-	bool fbc_chipset_support;
+	bool fbc_chipset_support = false;
 	int disp_ver;
 
 	igt_fixture() {
@@ -1185,7 +1185,6 @@ int igt_main()
 
 		data.devid = intel_get_drm_devid(data.drm_fd);
 		disp_ver = intel_display_ver(data.devid);
-		fbc_chipset_support = intel_fbc_supported_on_chipset(data.drm_fd, data.pipe);
 
 		data.damage_area_count = MAX_DAMAGE_AREAS;
 		data.primary_format = DRM_FORMAT_XRGB8888;
@@ -1199,6 +1198,10 @@ int igt_main()
 		for_each_crtc_with_valid_output(&data.display, crtc,
 						data.output) {
 			data.pipe = crtc->pipe;
+
+			if (intel_fbc_supported_on_chipset(data.drm_fd, data.pipe))
+				fbc_chipset_support = true;
+
 			for (i = 0; i < ARRAY_SIZE(psr_status); i++) {
 				data.psr_mode = psr_status[i];
 				output_supports_pr_psr2_sel_fetch = pipe_output_combo_valid(&data);
