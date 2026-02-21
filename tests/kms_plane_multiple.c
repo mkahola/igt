@@ -476,11 +476,13 @@ static void test_plane_position_2_display(data_t *data, igt_crtc_t *crtc1,
 					  igt_output_t *output1, igt_output_t *output2,
 					  uint64_t modifier)
 {
-	igt_display_t *display = &data->display;
 	color_t blue  = { 0.0f, 0.0f, 1.0f };
 	igt_crc_t crc1, crc2;
-	int n_planes = opt.all_planes ?
-		       igt_crtc_for_pipe(display, 0)->n_planes : DEFAULT_N_PLANES;
+	int n_planes;
+
+	n_planes = min(crtc1->n_planes, crtc2->n_planes);
+	if (!opt.all_planes)
+		n_planes = min(n_planes, DEFAULT_N_PLANES);
 
 	/*
 	 * Note: We could use the dynamic way of calculating the maximum planes here
