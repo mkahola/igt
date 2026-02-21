@@ -774,7 +774,6 @@ int igt_main()
 {
 	int z, y;
 	enum operations op;
-	enum pipe pipe;
 	const char *append_subtest_name[3] = {
 		"psr-",
 		"psr2-",
@@ -787,10 +786,12 @@ int igt_main()
 	int modes[] = {PSR_MODE_1, PSR_MODE_2, PR_MODE};
 	int fbc_status[] = {FBC_DISABLED, FBC_ENABLED};
 	igt_output_t *output;
-	bool fbc_chipset_support;
+	bool fbc_chipset_support = false;
 	int disp_ver;
 
 	igt_fixture() {
+		igt_crtc_t *crtc;
+
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
 		data.debugfs_fd = igt_debugfs_dir(data.drm_fd);
 		kmstest_set_vt_graphics_mode();
@@ -799,7 +800,11 @@ int igt_main()
 		igt_display_require(&data.display, data.drm_fd);
 		igt_require_f(output_supports_psr(&data), "Sink does not support PSR/PSR2/PR\n");
 		disp_ver = intel_display_ver(data.devid);
-		fbc_chipset_support = intel_fbc_supported_on_chipset(data.drm_fd, pipe);
+
+		for_each_crtc(&data.display, crtc) {
+			if (intel_fbc_supported_on_chipset(data.drm_fd, crtc->pipe))
+				fbc_chipset_support = true;
+		}
 	}
 
 	for (y = 0; y < ARRAY_SIZE(fbc_status); y++) {
