@@ -1516,10 +1516,8 @@ static void scanout(int i915,
 
 	igt_display_reset(dpy);
 
-	crtc = igt_crtc_for_pipe(dpy, PIPE_A);
-
-	output = igt_get_single_output_for_pipe(dpy, crtc->pipe);
-	igt_require(output);
+	crtc = igt_first_crtc_with_single_output(dpy, &output);
+	igt_require(crtc);
 
 	igt_output_set_crtc(output, crtc);
 

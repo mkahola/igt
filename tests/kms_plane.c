@@ -1341,7 +1341,7 @@ test_pixel_formats(data_t *data, igt_crtc_t *crtc)
 static void test_planar_settings(data_t *data)
 {
 	igt_display_t *display = &data->display;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, PIPE_A);
+	igt_crtc_t *crtc;
 	igt_output_t *output;
 	igt_fb_t fb, fb_ref;
 	igt_plane_t *primary;
@@ -1363,8 +1363,8 @@ static void test_planar_settings(data_t *data)
 		igt_require(display_ver >= 9);
 	}
 
-	output = igt_get_single_output_for_pipe(&data->display, crtc->pipe);
-	igt_require(output);
+	crtc = igt_first_crtc_with_single_output(display, &output);
+	igt_require(crtc);
 
 	igt_output_set_crtc(output, crtc);
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);

@@ -1181,13 +1181,10 @@ static void invalid_parameter_tests(data_t *d)
 	};
 
 	igt_fixture() {
-		crtc = igt_crtc_for_pipe(display, PIPE_A);
-		output = igt_get_single_output_for_pipe(&d->display,
-							crtc->pipe);
-		igt_require(output);
+		crtc = igt_first_crtc_with_single_output(display, &output);
+		igt_require(crtc);
 
-		igt_output_set_crtc(output,
-				    crtc);
+		igt_output_set_crtc(output, crtc);
 		plane = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 
 		igt_require(get_num_scalers(&d->display, crtc->pipe) >= 1);
