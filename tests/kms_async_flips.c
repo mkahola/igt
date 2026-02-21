@@ -124,7 +124,6 @@ IGT_TEST_DESCRIPTION("Test asynchronous page flips.");
 
 typedef struct {
 	int drm_fd;
-	uint32_t crtc_id;
 	uint32_t refresh_rate;
 	struct igt_fb bufs[NUM_FBS];
 	struct igt_fb bufs_overlay[NUM_FBS];
@@ -299,11 +298,9 @@ static void test_init(data_t *data)
 
 	mode = igt_output_get_mode(data->output);
 
-	data->crtc_id = data->crtc->crtc_id;
 	data->refresh_rate = mode->vrefresh;
 
-	igt_output_set_crtc(data->output,
-		            data->crtc);
+	igt_output_set_crtc(data->output, data->crtc);
 
 	data->plane = igt_output_get_plane_type(data->output, DRM_PLANE_TYPE_PRIMARY);
 	if (data->overlay_path)
@@ -398,7 +395,7 @@ static int perform_flip(data_t *data, int frame, int flags)
 	bufs = data->overlay_path ? data->bufs_overlay : data->bufs;
 
 	if (!data->atomic_path) {
-		ret = drmModePageFlip(data->drm_fd, data->crtc_id,
+		ret = drmModePageFlip(data->drm_fd, data->crtc->crtc_id,
 				     bufs[frame % NUM_FBS].fb_id, flags, data);
 	} else {
 		igt_plane_set_fb(plane, &bufs[frame % NUM_FBS]);
@@ -555,9 +552,8 @@ static void test_async_flip(data_t *data)
 
 static void wait_for_vblank(data_t *data, unsigned long *vbl_time, unsigned int *seq)
 {
-	int crtc_index = kmstest_get_crtc_index_from_id(data->drm_fd, data->crtc_id);
 	drmVBlank wait_vbl = {
-		.request.type = DRM_VBLANK_RELATIVE | kmstest_get_vbl_flag(crtc_index),
+		.request.type = DRM_VBLANK_RELATIVE | kmstest_get_vbl_flag(data->crtc->crtc_index),
 		.request.sequence = 1,
 	};
 
@@ -581,7 +577,7 @@ static void test_timestamp(data_t *data)
 	 * So flip timestamp can be verified only from the second flip.
 	 * The first async flip just enables the async address update.
 	 */
-	ret = drmModePageFlip(data->drm_fd, data->crtc_id,
+	ret = drmModePageFlip(data->drm_fd, data->crtc->crtc_id,
 			      data->bufs[0].fb_id,
 			      flags, data);
 
@@ -591,7 +587,7 @@ static void test_timestamp(data_t *data)
 
 	wait_for_vblank(data, &vbl_time, &seq);
 
-	ret = drmModePageFlip(data->drm_fd, data->crtc_id,
+	ret = drmModePageFlip(data->drm_fd, data->crtc->crtc_id,
 			      data->bufs[0].fb_id,
 			      flags, data);
 
@@ -639,7 +635,7 @@ static void test_cursor(data_t *data)
 			    DRM_FORMAT_MOD_LINEAR, 1., 1., 1., &cursor_fb);
 
 	cur.flags = DRM_MODE_CURSOR_BO;
-	cur.crtc_id = data->crtc_id;
+	cur.crtc_id = data->crtc->crtc_id;
 	cur.width = width;
 	cur.height = height;
 	cur.handle = cursor_fb.gem_handle;
@@ -700,13 +696,13 @@ static void test_invalid(data_t *data)
 	 */
 	if (!data->atomic_path) {
 		/* first async flip is expected to allow modifier changes */
-		ret = drmModePageFlip(data->drm_fd, data->crtc_id, fb[1].fb_id, flags, data);
+		ret = drmModePageFlip(data->drm_fd, data->crtc->crtc_id, fb[1].fb_id, flags, data);
 		igt_assert_eq(ret, 0);
 
 		wait_flip_event(data);
 
 		/* subsequent async flips should reject modifier changes */
-		ret = drmModePageFlip(data->drm_fd, data->crtc_id, fb[0].fb_id, flags, data);
+		ret = drmModePageFlip(data->drm_fd, data->crtc->crtc_id, fb[0].fb_id, flags, data);
 		igt_assert(ret == -EINVAL);
 	} else {
 		igt_plane_set_fb(data->plane, &fb[1]);
@@ -728,10 +724,9 @@ static void test_invalid(data_t *data)
 
 static void queue_vblank(data_t *data)
 {
-	int crtc_index = kmstest_get_crtc_index_from_id(data->drm_fd, data->crtc_id);
 	drmVBlank wait_vbl = {
 		.request.type = DRM_VBLANK_RELATIVE | DRM_VBLANK_EVENT |
-			kmstest_get_vbl_flag(crtc_index),
+			kmstest_get_vbl_flag(data->crtc->crtc_index),
 		.request.sequence = 1,
 		.request.signal = (long)data,
 	};
@@ -827,7 +822,6 @@ static void paint_fb(data_t *data, struct igt_fb *fb,
 
 static void test_crc(data_t *data)
 {
-	igt_display_t *display = &data->display;
 	unsigned int frame = 0;
 	unsigned int start;
 	int ret, width, height;
@@ -847,12 +841,11 @@ static void test_crc(data_t *data)
 	paint_fb(data, &data->bufs[frame], width, height, 0xff0000ff);
 	paint_fb(data, &data->bufs[!frame], width, height, 0xff0000ff);
 
-	ret = drmModeSetCrtc(data->drm_fd, data->crtc_id, data->bufs[frame].fb_id, 0, 0,
+	ret = drmModeSetCrtc(data->drm_fd, data->crtc->crtc_id, data->bufs[frame].fb_id, 0, 0,
 			     &data->output->config.connector->connector_id, 1, mode);
 	igt_assert_eq(ret, 0);
 
-	data->pipe_crc = igt_crtc_crc_new(igt_crtc_for_pipe(display, kmstest_get_crtc_index_from_id(data->drm_fd, data->crtc_id)),
-					  IGT_PIPE_CRC_SOURCE_AUTO);
+	data->pipe_crc = igt_crtc_crc_new(data->crtc, IGT_PIPE_CRC_SOURCE_AUTO);
 
 	igt_pipe_crc_start(data->pipe_crc);
 	igt_pipe_crc_get_single(data->pipe_crc, &data->ref_crc);
