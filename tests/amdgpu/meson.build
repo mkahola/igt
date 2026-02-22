@@ -10,6 +10,7 @@ if libdrm_amdgpu.found()
 			  'amd_bo',
 			  'amd_bypass',
 			  'amd_color',
+                          'amd_cross_gpu_sync',
 			  'amd_cp_dma_misc',
 			  'amd_cs_nop',
 			  'amd_cursor_overlay',
