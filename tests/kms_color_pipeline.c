@@ -43,7 +43,7 @@ static void test_cleanup(data_t *data)
 	}
 
 	igt_output_set_crtc(data->output, NULL);
-	igt_display_commit2(&data->display, COMMIT_ATOMIC);
+	igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 }
 
 static void test_setup(data_t *data, igt_crtc_t *crtc)
@@ -61,7 +61,7 @@ static void test_setup(data_t *data, igt_crtc_t *crtc)
 	data->pipe_crc = igt_crtc_crc_new(data->primary->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
-	igt_display_commit2(&data->display, COMMIT_ATOMIC);
+	igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 }
 
 static bool ctm_colorop_only(kms_colorop_t *colorops[])
@@ -108,14 +108,14 @@ static bool test_plane_colorops(data_t *data,
 	disable_ctm(plane->crtc);
 	disable_degamma(plane->crtc);
 	disable_gamma(plane->crtc);
-	igt_display_commit2(display, COMMIT_ATOMIC);
+	igt_display_commit_atomic(&data->display, 0, NULL);
 
 	/* Reference (software-equivalent) CRC */
 	set_color_pipeline_bypass(plane);
 	paint_rectangles(data, mode, exp_colors, &fb);
 
 	igt_plane_set_fb(plane, &fb);
-	igt_display_commit2(display, COMMIT_ATOMIC);
+	igt_display_commit_atomic(&data->display, 0, NULL);
 	igt_wait_for_vblank(plane->crtc);
 	igt_pipe_crc_collect_crc(data->pipe_crc, &crc_ref);
 
@@ -131,7 +131,7 @@ static bool test_plane_colorops(data_t *data,
 		paint_gradient_rectangles(data, mode, fb_colors, &fb);
 
 	igt_plane_set_fb(plane, &fb);
-	igt_display_commit2(display, COMMIT_ATOMIC);
+	igt_display_commit_atomic(&data->display, 0, NULL);
 	igt_wait_for_vblank(plane->crtc);
 	igt_pipe_crc_collect_crc(data->pipe_crc, &crc_pipe);
 
@@ -141,7 +141,7 @@ static bool test_plane_colorops(data_t *data,
 	set_color_pipeline_bypass(plane);
 	reset_colorops(colorops);
 	igt_plane_set_fb(plane, NULL);
-	igt_display_commit2(display, COMMIT_ATOMIC);
+	igt_display_commit_atomic(&data->display, 0, NULL);
 
 	igt_remove_fb(data->drm_fd, &fb);
 
