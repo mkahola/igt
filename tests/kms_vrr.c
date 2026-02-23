@@ -903,6 +903,16 @@ test_lobf(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 	prepare_test(data, output, crtc);
 	data->flag |= flags;
 
+	if (flags & TEST_LINK_OFF) {
+		if (!igt_has_lobf_debugfs(data->drm_fd, output))
+			igt_skip("i915_edp_lobf_status not present for %s\n",
+				 igt_output_name(output));
+
+		if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL) ||
+		    psr_sink_support(data->drm_fd, data->debugfs_fd, PR_MODE, NULL))
+			psr_disable(data->drm_fd, data->debugfs_fd, NULL);
+	}
+
 	igt_info("LOBF test execution on %s, PIPE %s with VRR range: (%u-%u) Hz\n",
 		 output->name, igt_crtc_name(crtc), data->range.min,
 		 data->range.max);
@@ -998,7 +1008,6 @@ static void test_cleanup(data_t *data, igt_crtc_t *crtc, igt_output_t *output)
 
 static bool output_constraint(data_t *data, igt_output_t *output, uint32_t flags)
 {
-	data->debugfs_fd = igt_debugfs_dir(data->drm_fd);
 
 	if ((flags & (TEST_SEAMLESS_VRR | TEST_SEAMLESS_DRRS | TEST_CMRR)) &&
 	    output->config.connector->connector_type != DRM_MODE_CONNECTOR_eDP) {
@@ -1010,18 +1019,6 @@ static bool output_constraint(data_t *data, igt_output_t *output, uint32_t flags
 	    !intel_output_has_drrs(data->drm_fd, output)) {
 		igt_info("%s: Won't support DRRS.\n", igt_output_name(output));
 		return false;
-	}
-
-	if (flags & TEST_LINK_OFF) {
-		if (!igt_has_lobf_debugfs(data->drm_fd, output)) {
-			igt_info("i915_edp_lobf_status not present for %s\n",
-				 igt_output_name(output));
-			return false;
-		}
-
-		if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL) ||
-		    psr_sink_support(data->drm_fd, data->debugfs_fd, PR_MODE, NULL))
-			psr_disable(data->drm_fd, data->debugfs_fd, NULL);
 	}
 
 	/* Reset output */
@@ -1057,7 +1054,6 @@ static bool output_constraint(data_t *data, igt_output_t *output, uint32_t flags
 
 	data->range.min = data->switch_modes[LOW_RR_MODE].vrefresh;
 
-	close(data->debugfs_fd);
 	return true;
 }
 
@@ -1168,6 +1164,7 @@ int igt_main_args("drs:", long_opts, help_str, opt_handler, &data)
 {
 	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
+		data.debugfs_fd = igt_debugfs_dir(data.drm_fd);
 
 		kmstest_set_vt_graphics_mode();
 
@@ -1243,6 +1240,7 @@ int igt_main_args("drs:", long_opts, help_str, opt_handler, &data)
 	}
 
 	igt_fixture() {
+		close(data.debugfs_fd);
 		igt_display_fini(&data.display);
 		drm_close_driver(data.drm_fd);
 	}
