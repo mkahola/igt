@@ -593,8 +593,6 @@ static void get_attrs_limited(struct udev_device *dev, struct igt_device *idev)
 
 	for (int i = 0; i < ARRAY_SIZE(attrs); i++) {
 		value = udev_device_get_sysattr_value(dev, attrs[i]);
-		if (!value)
-			continue;
 		igt_device_add_attr(idev, attrs[i], value);
 		DBG("attr: %s, val: %s\n", attrs[i], value);
 	}
