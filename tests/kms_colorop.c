@@ -6,7 +6,11 @@
 #include "sw_sync.h"
 #include "kms_colorop_helper.h"
 
+#ifdef ANDROID
+#include "android/glib.h"
+#else
 #include <glib.h>
+#endif
 
 /**
  * TEST: kms colorop
