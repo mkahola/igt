@@ -84,16 +84,58 @@ static bool ctm_colorop_only(kms_colorop_t *colorops[])
 	return true;
 }
 
+static void
+capture_ref_crc(data_t *data, igt_output_t *output,
+		const color_t *fb_color, igt_crc_t *crc /* out */)
+{
+	struct igt_fb fb;
+	drmModeModeInfo *mode;
+	igt_plane_t *primary;
+	char *crc_str;
+	int ret;
+
+	/*
+	 * Since CRC is collected at Pipe level,
+	 * collecting crc for primary plane
+	 * is enough for reference.
+	 */
+	primary = igt_output_get_plane(output, DRM_PLANE_TYPE_PRIMARY);
+
+	mode = igt_output_get_mode(output);
+	igt_assert_fd(igt_create_fb(data->drm_fd,
+				    mode->hdisplay, mode->vdisplay,
+				    DRM_FORMAT_XRGB8888,
+				    DRM_FORMAT_MOD_LINEAR,
+				    &fb));
+
+	paint_rectangles(data, mode, fb_color, &fb);
+	igt_plane_set_fb(primary, &fb);
+	ret = igt_display_try_commit_atomic(&data->display, 0, NULL);
+	igt_assert(!ret);
+
+	igt_wait_for_vblank(primary->crtc);
+	igt_pipe_crc_collect_crc(data->pipe_crc, crc);
+
+	igt_plane_set_fb(primary, NULL);
+	igt_display_commit_atomic(&data->display, 0, NULL);
+
+	igt_remove_fb(data->drm_fd, &fb);
+
+	crc_str = igt_crc_to_string(crc);
+	igt_debug("CRC for reference fb: %s\n", crc_str);
+	free(crc_str);
+}
+
 static void _test_plane_colorops(data_t *data,
 				 igt_plane_t *plane,
 				 const color_t *fb_colors,
-				 const color_t *exp_colors,
+				 igt_crc_t *crc_ref,
 				 kms_colorop_t *colorops[])
 {
 	igt_display_t *display = &data->display;
 	drmModeModeInfo *mode = data->mode;
 	igt_colorop_t *color_pipeline;
-	igt_crc_t crc_ref, crc_pipe;
+	igt_crc_t crc_pipe;
 	struct igt_fb fb;
 
 	color_pipeline = get_color_pipeline(display, plane, colorops);
@@ -106,18 +148,6 @@ static void _test_plane_colorops(data_t *data,
 				 DRM_FORMAT_XRGB8888,
 				 DRM_FORMAT_MOD_LINEAR,
 				 &fb));
-	igt_plane_set_fb(plane, &fb);
-
-	igt_display_commit_atomic(&data->display, 0, NULL);
-
-	/* Reference (software-equivalent) CRC */
-	set_color_pipeline_bypass(plane);
-	paint_rectangles(data, mode, exp_colors, &fb);
-
-	igt_plane_set_fb(plane, &fb);
-	igt_display_commit_atomic(&data->display, 0, NULL);
-	igt_wait_for_vblank(plane->crtc);
-	igt_pipe_crc_collect_crc(data->pipe_crc, &crc_ref);
 
 	/* Hardware pipeline CRC */
 	set_color_pipeline(display, plane, colorops, color_pipeline);
@@ -135,7 +165,7 @@ static void _test_plane_colorops(data_t *data,
 	igt_wait_for_vblank(plane->crtc);
 	igt_pipe_crc_collect_crc(data->pipe_crc, &crc_pipe);
 
-	igt_assert_crc_equal(&crc_ref, &crc_pipe);
+	igt_assert_crc_equal(crc_ref, &crc_pipe);
 
 	/* Cleanup per-test state */
 	set_color_pipeline_bypass(plane);
@@ -154,6 +184,9 @@ static void test_plane_colorops(data_t *data, igt_crtc_t *crtc,
 	int n_planes = crtc->n_planes;
 	igt_output_t *output = data->output;
 	igt_plane_t *plane;
+	igt_crc_t ref_crc;
+
+	capture_ref_crc(data, output, exp_colors, &ref_crc);
 
 	for (int plane_id = 0; plane_id < n_planes; plane_id++) {
 		plane = igt_output_get_plane(output, plane_id);
@@ -162,7 +195,8 @@ static void test_plane_colorops(data_t *data, igt_crtc_t *crtc,
 			continue;
 
 		igt_dynamic_f("pipe-%s-plane-%u", kmstest_pipe_name(crtc->pipe), plane_id)
-			_test_plane_colorops(data, plane, fb_colors, exp_colors, colorops);
+			_test_plane_colorops(data, plane, fb_colors,
+					     &ref_crc, colorops);
 	}
 }
 
