@@ -146,6 +146,15 @@ static const uint32_t xe2_render_copy[][4] = {
 	{ 0x8010c031, 0x00000004, 0x58000c24, 0x00c40000 },
 };
 
+static const uint32_t xe3p_render_copy[][4] = {
+	{ 0x8010005b, 0x200002a0, 0x02020604, 0x06640104 },
+	{ 0x8010005b, 0x710402a8, 0x02022000, 0x06140104 },
+	{ 0x8010005b, 0x200002a0, 0x02020634, 0x06440104 },
+	{ 0x8010005b, 0x720402a8, 0x02022000, 0x06540204 },
+	{ 0x80122031, 0x0c240000, 0x20027114, 0x00800000 },
+	{ 0x8010c031, 0x00000004, 0x58000c24, 0x00c40000 },
+};
+
 static uint32_t lnl_compression_format(const struct intel_buf *buf)
 {
 	switch (buf->bpp) {
@@ -737,7 +746,7 @@ gen9_emit_state_base_address(struct intel_bb *ibb) {
 static void
 gen7_emit_urb(struct intel_bb *ibb) {
 	/* XXX: Min valid values from mesa */
-	const int vs_entries = 64;
+	const int vs_entries = intel_gen(ibb->devid) >= 35 ? 128 : 64;
 	const int vs_size = 2;
 	const int vs_start = 4;
 
@@ -1397,11 +1406,24 @@ void xe2_render_copyfunc(struct intel_bb *ibb,
 			 struct intel_buf *dst, uint32_t dst_x, uint32_t dst_y)
 {
 	_gen9_render_op(ibb, src, src_x, src_y,
+			width, height, dst, dst_x, dst_y,
+			NULL,
+			NULL,
+			xe2_render_copy,
+			sizeof(xe2_render_copy));
+}
+
+void xe3p_render_copyfunc(struct intel_bb *ibb,
+			  struct intel_buf *src, uint32_t src_x, uint32_t src_y,
+			  uint32_t width, uint32_t height,
+			  struct intel_buf *dst, uint32_t dst_x, uint32_t dst_y)
+{
+	_gen9_render_op(ibb, src, src_x, src_y,
 			  width, height, dst, dst_x, dst_y,
 			  NULL,
 			  NULL,
-			  xe2_render_copy,
-			  sizeof(xe2_render_copy));
+			  xe3p_render_copy,
+			  sizeof(xe3p_render_copy));
 }
 
 void mtl_render_copyfunc(struct intel_bb *ibb,

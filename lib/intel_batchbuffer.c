@@ -669,6 +669,8 @@ igt_render_copyfunc_t igt_get_render_copyfunc(int fd)
 		copy = mtl_render_copyfunc;
 	else if (IS_DG2(devid))
 		copy = gen12p71_render_copyfunc;
+	else if (intel_gen(devid) >= 35)
+		copy = xe3p_render_copyfunc;
 	else if (intel_gen(devid) >= 20)
 		copy = xe2_render_copyfunc;
 	else if (IS_GEN12(devid))
