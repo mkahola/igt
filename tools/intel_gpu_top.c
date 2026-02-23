@@ -1117,8 +1117,7 @@ static const char *json_indent[] = {
 	"\t\t\t\t\t",
 };
 
-static unsigned int json_prev_struct_members;
-static unsigned int json_struct_members;
+static bool json_has_member[ARRAY_SIZE(json_indent)];
 
 FILE *out;
 
@@ -1127,20 +1126,18 @@ json_open_struct(const char *name)
 {
 	assert(json_indent_level < ARRAY_SIZE(json_indent));
 
-	json_prev_struct_members = json_struct_members;
-	json_struct_members = 0;
-
 	if (name)
 		fprintf(out, "%s%s\"%s\": {\n",
-			json_prev_struct_members ? ",\n" : "",
+			json_has_member[json_indent_level] ? ",\n" : "",
 			json_indent[json_indent_level],
 			name);
 	else
 		fprintf(out, "%s\n%s{\n",
-			json_prev_struct_members ? "," : "",
+			json_has_member[json_indent_level] ? "," : "",
 			json_indent[json_indent_level]);
 
 	json_indent_level++;
+	json_has_member[json_indent_level] = false;
 }
 
 static void
@@ -1149,6 +1146,7 @@ json_close_struct(void)
 	assert(json_indent_level > 0);
 
 	fprintf(out, "\n%s}", json_indent[--json_indent_level]);
+	json_has_member[json_indent_level] = true;
 
 	if (json_indent_level == 0)
 		fflush(stdout);
@@ -1160,10 +1158,10 @@ __json_add_member(const char *key, const char *val)
 	assert(json_indent_level < ARRAY_SIZE(json_indent));
 
 	fprintf(out, "%s%s\"%s\": \"%s\"",
-		json_struct_members ? ",\n" : "",
+		json_has_member[json_indent_level] ? ",\n" : "",
 		json_indent[json_indent_level], key, val);
 
-	json_struct_members++;
+	json_has_member[json_indent_level] = true;
 }
 
 static unsigned int
@@ -1173,10 +1171,10 @@ json_add_member(const struct cnt_group *parent, struct cnt_item *item,
 	assert(json_indent_level < ARRAY_SIZE(json_indent));
 
 	fprintf(out, "%s%s\"%s\": ",
-		json_struct_members ? ",\n" : "",
+		json_has_member[json_indent_level] ? ",\n" : "",
 		json_indent[json_indent_level], item->name);
 
-	json_struct_members++;
+	json_has_member[json_indent_level] = true;
 
 	if (!strcmp(item->name, "unit"))
 		fprintf(out, "\"%s\"", item->unit);
