@@ -138,9 +138,9 @@ def generate_metric_sets(args, gen):
                     metric_set->c_offset = metric_set->b_offset + 8;
                     metric_set->perfcnt_offset = metric_set->c_offset + 8;
                 """))
-        elif gen.chipset == "lnl" or gen.chipset == "bmg" or gen.chipset == "ptl":
+        elif gen.chipset == "lnl" or gen.chipset == "bmg" or gen.chipset == "ptl" or gen.chipset == "cri":
             # See intel_xe_perf_accumulate_reports for the offsets
-            if set.oa_format == "128B_MPEC8_NOA16":
+            if set.oa_format == "128B_MPEC8_NOA16" or set.oa_format == "128B_MERT_PEC8":
                 c(textwrap.dedent("""\
                     metric_set->perf_oa_format = XE_OAM_FORMAT_MPEC8u32_B8_C8;
 

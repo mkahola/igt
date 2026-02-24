@@ -104,6 +104,7 @@ class Registry:
                            'LNL',
                            'BMG',
                            'PTL',
+                           'CRI',
                           )
         if name in known_chipsets:
             return name

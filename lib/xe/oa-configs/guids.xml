@@ -2792,4 +2792,12 @@
     <guid config_hash="9ba03e5fddcfeaa0491b3a9b4ec1b634" mdapi_config_hash="1ecdf9e15989b70c1ca406e745876727" id="dac47689-630c-4a44-a9e9-e8c94e3a33c4" chipset="ptl" name="XvePipelineRaytracingProfile" />
     <guid config_hash="daed5f485b35c73cf7376a59c886992e" mdapi_config_hash="98662c6a0439289f06b36a78a73fc4b5" id="2d53df97-44b8-4bf1-aa33-2de98fe6f6ad" chipset="ptl" name="MediaSet1" />
     <guid config_hash="d32738bc3e05a752254ccd370a891c90" mdapi_config_hash="883c847bdfecb4051eb3fde4009cf4ec" id="36cf7053-8097-4389-bc5d-a652553de240" chipset="ptl" name="MediaSet2" />
+    <guid config_hash="6d0ce3976ab6146a111dc5c0e2add012" mdapi_config_hash="8349cdab35084177a4cd098db5bb9b74" id="9fc46cf1-92cd-4dd7-99cc-d349ed779980" chipset="cri" name="ComputeBasic" />
+    <guid config_hash="272fc7596206077ec395ce8e99756af0" mdapi_config_hash="c95cb4d75c3480ec042966e2d4c327cd" id="e658f5ac-8ace-4951-8f44-0cb77cac3afe" chipset="cri" name="L1Profile" />
+    <guid config_hash="8d424146fdcc72c4199f823cdace3d16" mdapi_config_hash="407a62421e464cd23f36663b03d7957f" id="7a949ef3-b6fa-4ae2-a483-d3b7d03b98bc" chipset="cri" name="VectorEngineProfile" />
+    <guid config_hash="3b3b53ad2b6edf11892e44f50fb68e1a" mdapi_config_hash="4f6f0ed6d88f373fa7f52b7cfc4e9022" id="ae64b97e-60be-4e1b-8415-f88915aad009" chipset="cri" name="VectorEngineStalls" />
+    <guid config_hash="d1c76f75a5ba6af682681afe443e75f7" mdapi_config_hash="b7a93546c884827855f8df5aba358cb3" id="331884b0-bd9e-4262-bacd-c6fb4265a317" chipset="cri" name="TestOa" />
+    <guid config_hash="c2f94065b493d35375c790319db4367e" mdapi_config_hash="1b82e5c8cc3446ce358522d9494557f3" id="ab8af1a9-2db0-410f-a9c9-3d8e35b74a0f" chipset="cri" name="MertExtSet" />
+    <guid config_hash="daed5f485b35c73cf7376a59c886992e" mdapi_config_hash="98662c6a0439289f06b36a78a73fc4b5" id="7d45bd5d-49d6-4de2-9b14-bbeb91a7905b" chipset="cri" name="MediaSet1" />
+    <guid config_hash="74821ef3fc37586d03e7c14362df4474" mdapi_config_hash="92f898d329bc9a2b52f805f19643363b" id="08357a1e-f136-4133-a2c0-89e02a9b80f4" chipset="cri" name="MediaSet2" />
 </guids>

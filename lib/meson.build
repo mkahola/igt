@@ -480,6 +480,7 @@ xe_oa_hardware = [
   'lnl',
   'bmg',
   'ptl',
+  'cri',
 ]
 
 xe_xml_files = []

@@ -168,6 +168,7 @@ chipsets = [ 'hsw',
              'lnl',
              'bmg',
              'ptl',
+             'cri',
 ]
 
 for chipset in chipsets:

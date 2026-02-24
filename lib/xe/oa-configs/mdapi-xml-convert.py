@@ -183,7 +183,16 @@ mtl_chipset_oa_formats = {
 xe2_chipset_oa_formats = {
     '576B_PEC64LL': xe2_chipset_params_pec,
     '256B_GENERIC_NOA16': xehpsdv_chipset_params,
+    '192B_MPEC8LL_NOA16': mtl_chipset_oam_samedia_ll_params,
     '128B_MPEC8_NOA16': mtl_chipset_oam_samedia_params,
+}
+
+xe3_chipset_oa_formats = {
+    '576B_PEC64LL': xe2_chipset_params_pec,
+    '256B_GENERIC_NOA16': xehpsdv_chipset_params,
+    '192B_MPEC8LL_NOA16': mtl_chipset_oam_samedia_ll_params,
+    '128B_MPEC8_NOA16': mtl_chipset_oam_samedia_params,
+    '128B_MERT_PEC8': mtl_chipset_oam_samedia_params,
 }
 
 chipsets = {
@@ -207,6 +216,7 @@ chipsets = {
     'LNL': xe2_chipset_oa_formats,
     'BMG': xe2_chipset_oa_formats,
     'PTL': xe2_chipset_oa_formats,
+    'CRI': xe3_chipset_oa_formats,
 }
 
 xehp_plus = ( 'ACM', 'MTL' )
@@ -448,7 +458,7 @@ def read_token_to_rpn_read(chipset, token, raw_offsets, oa_format):
     if oa_format == '256B_GENERIC_NOA16':
         return read_token_to_rpn_read_oag(chipset, token, raw_offsets, oa_format)
 
-    if oa_format in ['192B_MPEC8LL_NOA16', '128B_MPEC8_NOA16']:
+    if oa_format in ['192B_MPEC8LL_NOA16', '128B_MPEC8_NOA16', '128B_MERT_PEC8']:
         return read_token_to_rpn_read_oam(chipset, token, raw_offsets, oa_format)
 
     if oa_format in ['576B_PEC64LL']:
