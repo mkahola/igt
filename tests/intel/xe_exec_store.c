@@ -114,7 +114,7 @@ static void persistance_batch(struct data *data, uint64_t addr)
  * Description: Test to verify store dword on all available engines.
  */
 static void basic_inst(int fd, int inst_type, struct drm_xe_engine_class_instance *eci,
-		       uint16_t dev_id)
+		       uint16_t dev_id, uint32_t region)
 {
 	struct drm_xe_sync sync[2] = {
 		{ .type = DRM_XE_SYNC_TYPE_SYNCOBJ, .flags = DRM_XE_SYNC_FLAG_SIGNAL, },
@@ -143,8 +143,7 @@ static void basic_inst(int fd, int inst_type, struct drm_xe_engine_class_instanc
 	bo_size = sizeof(*data);
 	bo_size = xe_bb_size(fd, bo_size);
 
-	bo = xe_bo_create(fd, vm, bo_size,
-			  vram_if_possible(fd, eci->gt_id),
+	bo = xe_bo_create(fd, vm, bo_size, region,
 			  DRM_XE_GEM_CREATE_FLAG_NEEDS_VISIBLE_VRAM);
 
 	exec_queue = xe_exec_queue_create(fd, vm, eci, 0);
@@ -193,7 +192,7 @@ static void basic_inst(int fd, int inst_type, struct drm_xe_engine_class_instanc
  * @page-sized: page-sized
  */
 static void store_cachelines(int fd, struct drm_xe_engine_class_instance *eci,
-			     unsigned int flags)
+			     unsigned int flags, uint32_t region)
 {
 	struct drm_xe_sync sync[2] = {
 		{ .type = DRM_XE_SYNC_TYPE_SYNCOBJ, .flags = DRM_XE_SYNC_FLAG_SIGNAL, },
@@ -225,8 +224,7 @@ static void store_cachelines(int fd, struct drm_xe_engine_class_instance *eci,
 	sync[0].handle = syncobj_create(fd, 0);
 
 	for (i = 0; i < count; i++) {
-		bo[i] = xe_bo_create(fd, vm, bo_size,
-				     vram_if_possible(fd, eci->gt_id),
+		bo[i] = xe_bo_create(fd, vm, bo_size, region,
 				     DRM_XE_GEM_CREATE_FLAG_NEEDS_VISIBLE_VRAM);
 		bo_map[i] = xe_bo_map(fd, bo[i], bo_size);
 		dst_offset[i] = intel_allocator_alloc_with_strategy(ahnd, bo[i],
@@ -282,7 +280,7 @@ static void store_cachelines(int fd, struct drm_xe_engine_class_instance *eci,
  * SUBTEST: persistent
  * Description: Validate MI_PRT_BATCH_BUFFER_START functionality
  */
-static void persistent(int fd)
+static void persistent(int fd, uint32_t region)
 {
 	struct drm_xe_sync sync = {
 		.type = DRM_XE_SYNC_TYPE_SYNCOBJ,
@@ -309,12 +307,10 @@ static void persistent(int fd)
 	batch_size = xe_bb_size(fd, batch_size);
 
 	engine = xe_engine(fd, 1);
-	sd_batch = xe_bo_create(fd, vm, batch_size,
-			      vram_if_possible(fd, engine->instance.gt_id),
-			      DRM_XE_GEM_CREATE_FLAG_NEEDS_VISIBLE_VRAM);
-	prt_batch = xe_bo_create(fd, vm, batch_size,
-			      vram_if_possible(fd, engine->instance.gt_id),
-			      DRM_XE_GEM_CREATE_FLAG_NEEDS_VISIBLE_VRAM);
+	sd_batch = xe_bo_create(fd, vm, batch_size, region,
+				DRM_XE_GEM_CREATE_FLAG_NEEDS_VISIBLE_VRAM);
+	prt_batch = xe_bo_create(fd, vm, batch_size, region,
+				 DRM_XE_GEM_CREATE_FLAG_NEEDS_VISIBLE_VRAM);
 
 	xe_vm_bind_sync(fd, vm, sd_batch, 0, addr, batch_size);
 	sd_data = xe_bo_map(fd, sd_batch, batch_size);
@@ -419,7 +415,7 @@ static void long_shader(int fd, struct drm_xe_engine_class_instance *hwe,
  * Test category: functionality test
  *
  */
-static void mem_transaction_ordering(int fd, size_t bo_size, bool fence)
+static void mem_transaction_ordering(int fd, size_t bo_size, bool fence, uint32_t region)
 {
 	struct drm_xe_engine_class_instance inst = {
 		.engine_class = DRM_XE_ENGINE_CLASS_COPY,
@@ -456,8 +452,7 @@ static void mem_transaction_ordering(int fd, size_t bo_size, bool fence)
 	sync[0].handle = syncobj_create(fd, 0);
 
 	for (i = 0; i < count; i++) {
-		bo[i] = xe_bo_create_caching(fd, vm, bo_size, system_memory(fd), 0,
-					     DRM_XE_GEM_CPU_CACHING_WC);
+		bo[i] = xe_bo_create_caching(fd, vm, bo_size, region, 0, DRM_XE_GEM_CPU_CACHING_WC);
 		bo_map[i] = xe_bo_map(fd, bo[i], bo_size);
 		offset[i] = intel_allocator_alloc_with_strategy(ahnd, bo[i],
 								bo_size, 0,
@@ -493,7 +488,6 @@ static void mem_transaction_ordering(int fd, size_t bo_size, bool fence)
 	}
 	if (fence)
 		batch_map[b++] = MI_MEM_FENCE | MI_WRITE_FENCE;
-
 	batch_map[b++] = MI_BATCH_BUFFER_END;
 	sync[0].flags &= ~DRM_XE_SYNC_FLAG_SIGNAL;
 	sync[1].flags |= DRM_XE_SYNC_FLAG_SIGNAL;
@@ -538,44 +532,72 @@ int igt_main()
 	struct drm_xe_engine_class_instance *hwe;
 	int fd;
 	uint16_t dev_id;
+	uint32_t region;
+	uint64_t memreg;
 	struct drm_xe_engine *engine;
 
 	igt_fixture() {
 		fd = drm_open_driver(DRIVER_XE);
 		xe_device_get(fd);
 		dev_id = intel_get_drm_devid(fd);
+		memreg = all_memory_regions(fd);
 	}
 
-	igt_subtest("basic-store") {
-		engine = xe_engine(fd, 1);
-		basic_inst(fd, STORE, &engine->instance, dev_id);
-	}
-
-	igt_subtest("basic-cond-batch") {
-		engine = xe_engine(fd, 1);
-		basic_inst(fd, COND_BATCH, &engine->instance, dev_id);
-	}
-
-	igt_subtest_with_dynamic("basic-all") {
-		xe_for_each_engine(fd, hwe) {
-			igt_dynamic_f("Engine-%s-Instance-%d-Tile-%d",
-				      xe_engine_class_string(hwe->engine_class),
-				      hwe->engine_instance,
-				      hwe->gt_id);
-			basic_inst(fd, STORE, hwe, dev_id);
+	igt_subtest_with_dynamic("basic-store") {
+		xe_for_each_mem_region(fd, memreg, region) {
+			igt_dynamic_f("region-%s", xe_region_name(region)) {
+				engine = xe_engine(fd, 1);
+				basic_inst(fd, STORE, &engine->instance, dev_id, region);
+			}
 		}
 	}
 
-	igt_subtest("cachelines")
-		xe_for_each_engine(fd, hwe)
-			store_cachelines(fd, hwe, 0);
+	igt_subtest_with_dynamic("basic-cond-batch") {
+		xe_for_each_mem_region(fd, memreg, region) {
+			igt_dynamic_f("region-%s", xe_region_name(region)) {
+				engine = xe_engine(fd, 1);
+				basic_inst(fd, COND_BATCH, &engine->instance, dev_id, region);
+			}
+		}
+	}
 
-	igt_subtest("page-sized")
-		xe_for_each_engine(fd, hwe)
-			store_cachelines(fd, hwe, PAGES);
+	igt_subtest_with_dynamic("basic-all") {
+		xe_for_each_mem_region(fd, memreg, region) {
+			xe_for_each_engine(fd, hwe) {
+				igt_dynamic_f("Engine-%s-Instance-%d-Tile-%d-Region-%s",
+					      xe_engine_class_string(hwe->engine_class),
+					      hwe->engine_instance,
+					      hwe->gt_id,
+					      xe_region_name(region))
+					basic_inst(fd, STORE, hwe, dev_id, region);
+			}
+		}
+	}
 
-	igt_subtest("persistent")
-		persistent(fd);
+	igt_subtest_with_dynamic("cachelines") {
+		xe_for_each_mem_region(fd, memreg, region) {
+			xe_for_each_engine(fd, hwe) {
+				igt_dynamic_f("region-%s", xe_region_name(region))
+					store_cachelines(fd, hwe, 0, region);
+			}
+		}
+	}
+
+	igt_subtest_with_dynamic("page-sized") {
+		xe_for_each_mem_region(fd, memreg, region) {
+			xe_for_each_engine(fd, hwe) {
+				igt_dynamic_f("region-%s", xe_region_name(region))
+					store_cachelines(fd, hwe, PAGES, region);
+			}
+		}
+	}
+
+	igt_subtest_with_dynamic("persistent") {
+		xe_for_each_mem_region(fd, memreg, region) {
+			igt_dynamic_f("region-%s", xe_region_name(region))
+				persistent(fd, region);
+		}
+	}
 
 	igt_subtest_with_dynamic("long-shader-bb-check") {
 		struct igt_collection *set;
@@ -615,10 +637,12 @@ int igt_main()
 			{ SZ_8M,  "8M" },
 		};
 
-		for (size_t i = 0; i < ARRAY_SIZE(sizes); i++) {
-			igt_dynamic_f("size-%s", sizes[i].label) {
-				mem_transaction_ordering(fd, sizes[i].size, true);
-				mem_transaction_ordering(fd, sizes[i].size, false);
+		xe_for_each_mem_region(fd, memreg, region) {
+			for (size_t i = 0; i < ARRAY_SIZE(sizes); i++) {
+				igt_dynamic_f("region-%s", xe_region_name(region)) {
+					mem_transaction_ordering(fd, sizes[i].size, true, region);
+					mem_transaction_ordering(fd, sizes[i].size, false, region);
+				}
 			}
 		}
 	}
