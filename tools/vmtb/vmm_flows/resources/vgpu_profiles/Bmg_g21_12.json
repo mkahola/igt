@@ -1,58 +1,58 @@
 {
-    "version": "1.1",
+    "version": "1.2",
     "PFResources": {
         "Default": "MinimumPFResources",
         "Profile": {
             "MinimumPFResources": {
-                "LocalMemoryEccOn": 402653184,
-                "LocalMemoryEccOff": 402653184,
-                "Contexts": 1024,
+                "LocalMemoryEccOn": 134217728,
+                "LocalMemoryEccOff": 134217728,
+                "Contexts": 256,
                 "Doorbells": 16,
-                "GGTTSize": 268435456
+                "GGTTSize": 67108864
             }
         }
     },
     "vGPUResources": {
         "Default": null,
         "Profile": {
-            "Flex170_16": {
+            "Bmg_12": {
                 "VFCount": 1,
-                "LocalMemoryEccOff": 16777216000,
-                "LocalMemoryEccOn": 2147483648,
+                "LocalMemoryEccOff": 12717129728,
+                "LocalMemoryEccOn": 12717129728,
                 "Contexts": 1024,
                 "Doorbells": 240,
                 "GGTTSize": 4026531840
             },
-            "Flex170_8": {
+            "Bmg_6": {
                 "VFCount": 2,
-                "LocalMemoryEccOff": 8388608000,
-                "LocalMemoryEccOn": 2147483648,
+                "LocalMemoryEccOff": 6341787648,
+                "LocalMemoryEccOn": 6341787648,
                 "Contexts": 1024,
                 "Doorbells": 120,
                 "GGTTSize": 2013265920
             },
-            "Flex170_4": {
-                "VFCount": 4,
-                "LocalMemoryEccOff": 4194304000,
-                "LocalMemoryEccOn": 2147483648,
+            "Bmg_4": {
+                "VFCount": 3,
+                "LocalMemoryEccOff": 4211081216,
+                "LocalMemoryEccOn": 4211081216,
                 "Contexts": 1024,
-                "Doorbells": 60,
-                "GGTTSize": 1006632960
+                "Doorbells": 80,
+                "GGTTSize": 1342177280
             },
-            "Flex170_2": {
-                "VFCount": 8,
-                "LocalMemoryEccOff": 2097152000,
-                "LocalMemoryEccOn": 1073741824,
+            "Bmg_2": {
+                "VFCount": 6,
+                "LocalMemoryEccOff": 2080374784,
+                "LocalMemoryEccOn": 2080374784,
                 "Contexts": 1024,
-                "Doorbells": 30,
-                "GGTTSize": 503316480
+                "Doorbells": 40,
+                "GGTTSize": 671088640
             },
-            "Flex170_1": {
-                "VFCount": 16,
-                "LocalMemoryEccOff": 1048576000,
-                "LocalMemoryEccOn": 536870912,
+            "Bmg_1": {
+                "VFCount": 12,
+                "LocalMemoryEccOff": 1023410176,
+                "LocalMemoryEccOn": 1023410176,
                 "Contexts": 1024,
-                "Doorbells": 15,
+                "Doorbells": 20,
                 "GGTTSize": 251658240
             }
         }

@@ -1,0 +1,97 @@
+{
+    "version": "0.1",
+    "PFResources": {
+        "Default": "MinimumPFResources",
+        "Profile": {
+            "MinimumPFResources": {
+                "LocalMemoryEccOn": 0,
+                "LocalMemoryEccOff": 0,
+                "Contexts": 256,
+                "Doorbells": 16,
+                "GGTTSize": 67108864
+            }
+        }
+    },
+    "vGPUResources": {
+        "Default": null,
+        "Profile": {
+            "Ptl_1": {
+                "VFCount": 1,
+                "LocalMemoryEccOff": 0,
+                "LocalMemoryEccOn": 0,
+                "Contexts": 1024,
+                "Doorbells": 240,
+                "GGTTSize": 4026531840
+            },
+            "Ptl_2": {
+                "VFCount": 2,
+                "LocalMemoryEccOff": 0,
+                "LocalMemoryEccOn": 0,
+                "Contexts": 1024,
+                "Doorbells": 120,
+                "GGTTSize": 2013265920
+            },
+            "Ptl_4": {
+                "VFCount": 4,
+                "LocalMemoryEccOff": 0,
+                "LocalMemoryEccOn": 0,
+                "Contexts": 1024,
+                "Doorbells": 60,
+                "GGTTSize": 1006632960
+            }
+        }
+    },
+    "vGPUScheduler": {
+        "Default": "Flexible_30fps_GPUTimeSlicing",
+        "Profile": {
+            "Flexible_30fps_GPUTimeSlicing": {
+                "GPUTimeSlicing": {
+                    "ScheduleIfIdle": false,
+                    "PFExecutionQuantum": 20,
+                    "PFPreemptionTimeout": 20000,
+                    "VFAttributes": {
+                        "VFExecutionQuantum": "lambda VFCount : max( 32 // VFCount, 1)",
+                        "VFPreemptionTimeout": "lambda VFCount : 128000 if (VFCount == 1) else max( 64000 // VFCount, 16000)"
+                    }
+                }
+            },
+            "Fixed_30fps_GPUTimeSlicing": {
+                "GPUTimeSlicing": {
+                    "ScheduleIfIdle": true,
+                    "PFExecutionQuantum": 20,
+                    "PFPreemptionTimeout": 20000,
+                    "VFAttributes": {
+                        "VFExecutionQuantum": "lambda VFCount : max( 32 // VFCount, 1)",
+                        "VFPreemptionTimeout": "lambda VFCount : 128000 if (VFCount == 1) else max( 64000 // VFCount, 16000)"
+                    }
+                }
+            },
+            "Flexible_BurstableQoS_GPUTimeSlicing": {
+                "GPUTimeSlicing": {
+                    "ScheduleIfIdle": false,
+                    "PFExecutionQuantum": 20,
+                    "PFPreemptionTimeout": 20000,
+                    "VFAttributes": {
+                        "VFExecutionQuantum": "lambda VFCount : min((2000 // max(VFCount-1,1)*0.5, 50))",
+                        "VFPreemptionTimeout": "lambda VFCount : (2000 // max(VFCount-1,1) - min((2000 // max(VFCount-1,1))*0.5, 50))*1000"
+                    }
+                }
+            }
+        }
+    },
+    "vGPUSecurity": {
+        "Default": "Disabled",
+        "Profile": {
+            "Disabled": {
+                "ResetAfterVfSwitch": false,
+                "GuCSamplingPeriod": 0,
+                "GuCThresholdCATError": 0,
+                "GuCThresholdPageFault": 0,
+                "GuCThresholdH2GStorm": 0,
+                "GuCThresholdDbStorm": 0,
+                "GuCThresholdGTIrqStorm": 0,
+                "GuCThresholdEngineReset": 0
+            }
+        }
+    }
+}
