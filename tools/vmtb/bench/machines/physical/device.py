@@ -11,7 +11,7 @@ from bench import exceptions
 from bench.configurators import pci
 from bench.configurators.vgpu_profile import (VgpuProfile, VgpuResourcesConfig,
                                               VgpuSchedulerConfig)
-from bench.drivers.driver_interface import DriverInterface, SchedulingPriority
+from bench.drivers.driver_interface import PfDriverInterface, SchedulingPriority
 from bench.helpers.log import LogDecorators
 from bench.machines.device_interface import DeviceInterface
 
@@ -46,12 +46,12 @@ class Device(DeviceInterface):
     def __init__(self, bdf: str, driver: str) -> None:
         self.pci_info = self.PciInfo(bdf)
         self.gpu_model = pci.get_gpu_model(self.pci_info.devid)
-        self.driver: DriverInterface = self.instantiate_driver(driver, self.pci_info.minor_number)
+        self.driver: PfDriverInterface = self.instantiate_driver(self.pci_info.bdf, driver)
 
     def __str__(self) -> str:
         return f'Dev-{self.pci_info.bdf}'
 
-    def instantiate_driver(self, driver_name: str, card_index: int) -> Any:
+    def instantiate_driver(self, bdf: str, driver_name: str) -> Any:
         module_name = f'bench.drivers.{driver_name}'
         class_name = f'{driver_name.capitalize()}Driver'
 
@@ -62,7 +62,7 @@ class Device(DeviceInterface):
             logging.error("Driver module/class is not available: %s", exc)
             raise exceptions.VmtbConfigError(f'Requested driver module {driver_name} is not available!')
 
-        return driver_class(card_index)
+        return driver_class(bdf)
 
     def set_drivers_autoprobe(self, val: bool) -> None:
         self.driver.set_drivers_autoprobe(int(val))
@@ -164,26 +164,27 @@ class Device(DeviceInterface):
         If 'set_resources' parameter is True - apply the full vGPU profile (hard resources and scheduling).
         Otherwise, set only scheduling profile (e.g. in case of auto resources provisioning).
         """
-        main_gt_nums = [gt_num for gt_num in range(self.get_num_gts()) if not self.is_gt_media_type(gt_num)]
-
+        all_gt_nums = list(range(self.get_num_gts()))
+        main_gt_nums = [gt_num for gt_num in all_gt_nums if not self.is_gt_media_type(gt_num)]
         logger.info("[%s] Provision %sxVFs on main GT%s", self.pci_info.bdf, num_vfs, main_gt_nums)
 
-        for gt_num in main_gt_nums:
+        for gt_num in all_gt_nums:
             if set_resources:
                 self.set_resources(0, gt_num, profile.resources)
-            self.set_scheduling(0, gt_num, profile.scheduler)
             self.driver.set_pf_policy_reset_engine(gt_num, int(profile.security.reset_after_vf_switch))
 
+        self.set_scheduling(0, profile.scheduler)
+
         for vf_num in range(1, num_vfs + 1):
-            gt_nums = main_gt_nums
             if len(main_gt_nums) > 1 and num_vfs > 1:
                 # Multi-tile device Mode 2|3 - odd VFs on GT0, even on GT1
-                gt_nums = [main_gt_nums[0] if vf_num % 2 else main_gt_nums[1]]
+                all_gt_nums = [main_gt_nums[0] if vf_num % 2 else main_gt_nums[1]]
 
-            for gt_num in gt_nums:
+            for gt_num in all_gt_nums:
                 if set_resources:
                     self.set_resources(vf_num, gt_num, profile.resources)
-                self.set_scheduling(vf_num, gt_num, profile.scheduler)
+
+            self.set_scheduling(vf_num, profile.scheduler)
 
     def provision(self, profile: VgpuProfile) -> None:
         """Provision PF and VF(s) based on requested vGPU profile."""
@@ -194,44 +195,47 @@ class Device(DeviceInterface):
         self.__set_provisioning(num_vfs, profile, set_resources=False)
 
     # fn_num = 0 for PF, 1..n for VF
-    def set_scheduling(self, fn_num: int, gt_num: int, scheduling_config: VgpuSchedulerConfig) -> None:
-        """Write sysfs/debugfs PF/VF scheduling attributes."""
+    def set_scheduling(self, fn_num: int, scheduling_config: VgpuSchedulerConfig) -> None:
+        """Write sysfs PF/VF scheduling attributes."""
         logger.debug("[%s] Set scheduling for PCI Function %s", self.pci_info.bdf, fn_num)
+
         if fn_num == 0:
-            self.driver.set_pf_policy_sched_if_idle(gt_num, int(scheduling_config.scheduleIfIdle))
-            self.driver.set_exec_quantum_ms(0, gt_num, scheduling_config.pfExecutionQuanta)
-            self.driver.set_preempt_timeout_us(0, gt_num, scheduling_config.pfPreemptionTimeout)
+            eq, pt = scheduling_config.pfExecutionQuanta, scheduling_config.pfPreemptionTimeout
         else:
-            self.driver.set_exec_quantum_ms(fn_num, gt_num, scheduling_config.vfExecutionQuanta)
-            self.driver.set_preempt_timeout_us(fn_num, gt_num, scheduling_config.vfPreemptionTimeout)
+            eq, pt = scheduling_config.vfExecutionQuanta, scheduling_config.vfPreemptionTimeout
+
+        self.driver.set_exec_quantum_ms(fn_num, eq)
+        self.driver.set_preempt_timeout_us(fn_num, pt)
+
+        if scheduling_config.scheduleIfIdle:
+            self.driver.set_bulk_sched_priority(SchedulingPriority.NORMAL)
 
     def set_resources(self, fn_num: int, gt_num: int, resources_config: VgpuResourcesConfig) -> None:
-        """Write sysfs/debugfs PF/VF resources attributes."""
+        """Write debugfs PF/VF resources attributes."""
         logger.debug("[%s] Set resources for PCI Function %s", self.pci_info.bdf, fn_num)
         if fn_num == 0:
-            self.driver.set_pf_ggtt_spare(gt_num, resources_config.pfGgtt)
-            self.driver.set_pf_lmem_spare(gt_num, resources_config.pfLmem)
+            if not self.is_gt_media_type(gt_num):
+                self.driver.set_pf_ggtt_spare(gt_num, resources_config.pfGgtt)
+                self.driver.set_pf_lmem_spare(gt_num, resources_config.pfLmem)
             self.driver.set_pf_contexts_spare(gt_num, resources_config.pfContexts)
             self.driver.set_pf_doorbells_spare(gt_num, resources_config.pfDoorbells)
         else:
-            self.driver.set_ggtt_quota(fn_num, gt_num, resources_config.vfGgtt)
-            self.driver.set_lmem_quota(fn_num, gt_num, resources_config.vfLmem)
+            if not self.is_gt_media_type(gt_num):
+                self.driver.set_ggtt_quota(fn_num, gt_num, resources_config.vfGgtt)
+                self.driver.set_lmem_quota(fn_num, gt_num, resources_config.vfLmem)
             self.driver.set_contexts_quota(fn_num, gt_num, resources_config.vfContexts)
             self.driver.set_doorbells_quota(fn_num, gt_num, resources_config.vfDoorbells)
 
-    def reset_provisioning(self, num_vfs: int) -> None:
-        """Clear provisioning config for a requested number of VFs.
-        Function calls the sysfs control interface to clear VF provisioning settings
-        and restores the auto provisioning mode.
-        """
-        logger.info("[%s] Reset %s VFs provisioning configuration", self.pci_info.bdf, num_vfs)
+    def clear_provisioning_attributes(self, num_vfs: int) -> None:
+        """Clear provisioning attributes for a requested number of VFs."""
+        # Provisioning config are likely wiped out by (xe) debugfs/restore_auto_provisioning,
+        # but explicit clear shouldn't harm.
+        self.driver.set_bulk_sched_priority(SchedulingPriority.LOW)
+        self.driver.set_bulk_exec_quantum_ms(0)
+        self.driver.set_bulk_preempt_timeout_us(0)
+
         for gt_num in range(self.get_num_gts()):
-            if self.get_scheduling_priority(gt_num) != SchedulingPriority.LOW:
-                self.set_scheduling_priority(gt_num, SchedulingPriority.LOW)
-            self.driver.set_pf_policy_sched_if_idle(gt_num, 0)
             self.driver.set_pf_policy_reset_engine(gt_num, 0)
-            self.driver.set_exec_quantum_ms(0, gt_num, 0)
-            self.driver.set_preempt_timeout_us(0, gt_num, 0)
             self.driver.set_doorbells_quota(0, gt_num, 0)
             # PF contexts cannot be set from sysfs
 
@@ -242,14 +246,24 @@ class Device(DeviceInterface):
                     self.driver.set_ggtt_quota(vf_num, gt_num, 0)
                     self.driver.set_lmem_quota(vf_num, gt_num, 0)
 
+    def reset_provisioning(self, num_vfs: int) -> None:
+        """Clear provisioning config for a given number of VFs and restore auto provisioning mode."""
+        logger.info("[%s] Reset %sxVF provisioning configuration", self.pci_info.bdf, num_vfs)
+        self.clear_provisioning_attributes(num_vfs)
+        self.driver.restore_auto_provisioning()
+
     def cancel_work(self) -> None:
         """Drop and reset remaining GPU execution at exit."""
         self.driver.cancel_work()
 
-    def get_scheduling_priority(self, gt_num: int) -> SchedulingPriority:
-        return self.driver.get_pf_sched_priority(gt_num)
+    def get_scheduling_priority(self, fn_num: int) -> SchedulingPriority:
+        """Get scheduling priority for a given VF or PF."""
+        return self.driver.get_sched_priority(fn_num)
 
-    def set_scheduling_priority(self, gt_num: int, val: SchedulingPriority) -> None:
-        # In order to set scheduling priority, strict scheduling policy needs to be default
-        # self.drm_driver.set_pf_policy_sched_if_idle(gt_num, 0)
-        self.driver.set_pf_sched_priority(gt_num, val)
+    def set_scheduling_priority(self, val: SchedulingPriority) -> None:
+        """Set scheduling priority for PF and all VFs. Normal priority enables strict scheduling."""
+        self.driver.set_bulk_sched_priority(val)
+
+    def set_pf_scheduling_priority(self, val: SchedulingPriority) -> None:
+        """Set scheduling priority for PF only. High prioritizes PF execution over VFs."""
+        self.driver.set_pf_sched_priority(val)

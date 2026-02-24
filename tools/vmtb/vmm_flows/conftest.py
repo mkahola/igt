@@ -253,13 +253,17 @@ def fixture_setup_vms(get_vmtb_config, get_cmdline_config, get_host, request):
             ts.vgpu_profile.resources.vfLmem = org_vgpu_profile_vfLmem
 
     else:
-        device.driver.set_auto_provisioning(True)
-        if ts.testing_config.scheduling_mode is not VfSchedulingMode.INFINITE:
-            # Auto provisioning with concrete scheduling (i.e. different than HW default: infinite)
-            ts.vgpu_profile.print_scheduler_config()
-            device.provision_scheduling(num_vfs, ts.vgpu_profile)
+        device.driver.restore_auto_provisioning()
 
     assert device.create_vf(num_vfs) == num_vfs
+
+    if (ts.testing_config.provisioning_mode is VfProvisioningMode.AUTO and
+        ts.testing_config.scheduling_mode is not VfSchedulingMode.INFINITE):
+        # Auto resources provisioning with concrete scheduling (i.e. different than HW default: infinite).
+        # Scheduler params override must be done after enabling VFs
+        # to allow hard resources auto provisioning by KMD.
+        ts.vgpu_profile.print_scheduler_config()
+        device.provision_scheduling(num_vfs, ts.vgpu_profile)
 
     if tc.auto_poweron_vm:
         bdf_list = [device.get_vf_bdf(vf) for vf in range(1, num_vms + 1)]

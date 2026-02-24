@@ -2,85 +2,42 @@
 # Copyright © 2024-2026 Intel Corporation
 
 import logging
+import re
 import typing
 from pathlib import Path
 
-from bench import exceptions
-from bench.drivers.driver_interface import (DriverInterface,
+from bench.drivers.driver_interface import (PfDriverInterface,
                                             SchedulingPriority, VfControl)
-from bench.helpers.log import LogDecorators
 
 logger = logging.getLogger('XeDriver')
 
 
-class XeDriver(DriverInterface):
-    def __init__(self, card_index: int) -> None:
-        self.sysfs_card_path = Path(f'/sys/class/drm/card{card_index}')
-        self.debugfs_path = Path(f'/sys/kernel/debug/dri/{card_index}')
-
-    @staticmethod
-    def get_name() -> str:
+class XeDriver(PfDriverInterface):
+    """Xe driver abstraction class, implements PfDriverInterface.
+    Provide xe specific sysfs/debugfs access and other operations on Host.
+    """
+    def get_name(self) -> str:
         return 'xe'
 
-    @LogDecorators.parse_kmsg
-    def __write_fs(self, base_path: Path, name: str, value: str) -> None:
-        path = base_path / name
-        try:
-            path.write_text(value)
-            logger.debug("Write: %s -> %s", value, path)
-        except Exception as exc:
-            logger.error("Unable to write %s -> %s", value, path)
-            raise exceptions.HostError(f'Could not write to {path}. Error: {exc}') from exc
-
-    @LogDecorators.parse_kmsg
-    def __read_fs(self,  base_path: Path, name: str) -> str:
-        path = base_path / name
-        try:
-            ret = path.read_text()
-        except Exception as exc:
-            logger.error("Unable to read %s", path)
-            raise exceptions.HostError(f'Could not read from {path}. Error: {exc}') from exc
-
-        logger.debug("Read: %s -> %s", path, ret.strip())
-        return ret
-
-    def __write_sysfs(self, name: str, value: str) -> None:
-        self.__write_fs(self.sysfs_card_path / 'device', name, value)
-
-    def __read_sysfs(self, name: str) -> str:
-        return str(self.__read_fs(self.sysfs_card_path / 'device', name))
-
-    def __write_debugfs(self, name: str, value: str) -> None:
-        self.__write_fs(self.debugfs_path, name, value)
-
-    def __read_debugfs(self, name: str) -> str:
-        return str(self.__read_fs(self.debugfs_path, name))
-
-    def bind(self, bdf: str) -> None:
-        self.__write_sysfs('driver/bind', bdf)
-
-    def unbind(self, bdf: str) -> None:
-        self.__write_sysfs('driver/unbind', bdf)
-
     def get_totalvfs(self) -> int:
-        return int(self.__read_sysfs('sriov_totalvfs'))
+        return int(self.read_sysfs(self.sysfs_device_path / 'sriov_totalvfs'))
 
     def get_numvfs(self) -> int:
-        return int(self.__read_sysfs('sriov_numvfs'))
+        return int(self.read_sysfs(self.sysfs_device_path / 'sriov_numvfs'))
 
     def set_numvfs(self, val: int) -> None:
-        self.__write_sysfs('sriov_numvfs', str(val))
+        self.write_sysfs(self.sysfs_device_path / 'sriov_numvfs', str(val))
 
     def get_drivers_autoprobe(self) -> int:
-        return int(self.__read_sysfs('sriov_drivers_autoprobe'))
+        return int(self.read_sysfs(self.sysfs_device_path / 'sriov_drivers_autoprobe'))
 
     def set_drivers_autoprobe(self, val: int) -> None:
-        self.__write_sysfs('sriov_drivers_autoprobe', str(val))
+        self.write_sysfs(self.sysfs_device_path / 'sriov_drivers_autoprobe', str(val))
 
     def get_num_gts(self) -> int:
         gt_num = 0
         # Fixme: tile0 only at the moment, add support for multiple tiles if needed
-        path = self.sysfs_card_path / 'device' / 'tile0' / 'gt'
+        path = self.sysfs_device_path / 'tile0' / 'gt'
 
         if path.exists():
             gt_num = 1
@@ -101,12 +58,9 @@ class XeDriver(DriverInterface):
         path = self.debugfs_path / f'gt{gt_num}' / 'pf' / 'ggtt_spare'
         return not path.exists()
 
-    def get_auto_provisioning(self) -> bool:
-        raise exceptions.NotAvailableError('auto_provisioning attribute not available')
-
-    def set_auto_provisioning(self, val: bool) -> None:
-        # No-op - xe driver doesn't publish this attribute
-        pass
+    def restore_auto_provisioning(self) -> None:
+        path = self.debugfs_path / 'sriov' / 'restore_auto_provisioning'
+        self.write_debugfs(str(path), str(1))
 
     def cancel_work(self) -> None:
         # Function to cancel all remaing work on GPU (for test cleanup).
@@ -114,84 +68,77 @@ class XeDriver(DriverInterface):
         pass
 
     # Create debugfs path to given parameter (without a base part):
-    # gt@gt_num/[pf|vf@vf_num]/@attr
-    # @vf_num: VF number (1-based) or 0 for PF
+    # gt@gt_num/[pf|vf@fn_num]/@attr
+    # @fn_num: VF number (1-based) or 0 for PF
     # @gt_num: GT instance number
     # @subdir: subdirectory for attribute or empty string if not exists
     # @attr: iov parameter name
     # Returns: iov debugfs path to @attr
-    def __helper_create_debugfs_path(self, vf_num: int, gt_num: int, subdir: str, attr: str) -> str:
-        vf_gt_part = f'gt{gt_num}/pf' if vf_num == 0 else f'gt{gt_num}/vf{vf_num}'
-        return f'{vf_gt_part}/{subdir}/{attr}'
+    def __helper_create_debugfs_path(self, fn_num: int, gt_num: int, subdir: str, attr: str) -> str:
+        gt_fn_part = f'gt{gt_num}/pf' if fn_num == 0 else f'gt{gt_num}/vf{fn_num}'
+        return f'{gt_fn_part}/{subdir}/{attr}'
+
+    # Create sysfs sriov_admin path to given scheduling parameter (without a base part):
+    # sriov_admin/[pf|vf@fn_num]/profile/@attr
+    # @fn_num: VF number (1-based) or 0 for PF
+    # @attr: iov parameter name
+    # Returns: iov sysfs path to @attr
+    def __helper_create_sriov_admin_path(self, fn_num: int, attr: str) -> str:
+        fn_part = 'pf' if fn_num == 0 else f'vf{fn_num}'
+        return f'sriov_admin/{fn_part}/profile/{attr}'
 
     # PF spare resources
     # Debugfs location: [SRIOV debugfs base path]/gtM/pf/xxx_spare
     def get_pf_ggtt_spare(self, gt_num: int) -> int:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'ggtt_spare')
-        return int(self.__read_debugfs(path))
+        return int(self.read_debugfs(path))
 
     def set_pf_ggtt_spare(self, gt_num: int, val: int) -> None:
         path = self.__helper_create_debugfs_path(0, gt_num, '',  'ggtt_spare')
-        self.__write_debugfs(path, str(val))
+        self.write_debugfs(path, str(val))
 
     def get_pf_lmem_spare(self, gt_num: int) -> int:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'lmem_spare')
-        return int(self.__read_debugfs(path)) if self.has_lmem() else 0
+        return int(self.read_debugfs(path)) if self.has_lmem() else 0
 
     def set_pf_lmem_spare(self, gt_num: int, val: int) -> None:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'lmem_spare')
         if self.has_lmem():
-            self.__write_debugfs(path, str(val))
+            self.write_debugfs(path, str(val))
 
     def get_pf_contexts_spare(self, gt_num: int) -> int:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'contexts_spare')
-        return int(self.__read_debugfs(path))
+        return int(self.read_debugfs(path))
 
     def set_pf_contexts_spare(self, gt_num: int, val: int) -> None:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'contexts_spare')
-        self.__write_debugfs(path, str(val))
+        self.write_debugfs(path, str(val))
 
     def get_pf_doorbells_spare(self, gt_num: int) -> int:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'doorbells_spare')
-        return int(self.__read_debugfs(path))
+        return int(self.read_debugfs(path))
 
     def set_pf_doorbells_spare(self, gt_num: int, val: int) -> None:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'doorbells_spare')
-        self.__write_debugfs(path, str(val))
+        self.write_debugfs(path, str(val))
 
     # PF specific provisioning parameters
     # Debugfs location: [SRIOV debugfs base path]/gtM/pf
-    def get_pf_sched_priority(self, gt_num: int) -> SchedulingPriority:
-        logger.warning("PF sched_priority param not available")
-        return SchedulingPriority.LOW
-
-    def set_pf_sched_priority(self, gt_num: int, val: SchedulingPriority) -> None:
-        logger.warning("PF sched_priority param not available")
-
     def get_pf_policy_reset_engine(self, gt_num: int) -> int:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'reset_engine')
-        return int(self.__read_debugfs(path))
+        return int(self.read_debugfs(path))
 
     def set_pf_policy_reset_engine(self, gt_num: int, val: int) -> None:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'reset_engine')
-        self.__write_debugfs(path, str(val))
+        self.write_debugfs(path, str(val))
 
     def get_pf_policy_sample_period_ms(self, gt_num: int) -> int:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'sample_period_ms')
-        return int(self.__read_debugfs(path))
+        return int(self.read_debugfs(path))
 
     def set_pf_policy_sample_period_ms(self, gt_num: int, val: int) -> None:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'sample_period_ms')
-        self.__write_debugfs(path, str(val))
-
-    def get_pf_policy_sched_if_idle(self, gt_num: int) -> int:
-        path = self.__helper_create_debugfs_path(0, gt_num, '', 'sched_if_idle')
-        return int(self.__read_debugfs(path))
-
-    def set_pf_policy_sched_if_idle(self, gt_num: int, val: int) -> None:
-        # In order to set strict scheduling policy, PF scheduling priority needs to be default
-        path = self.__helper_create_debugfs_path(0, gt_num, '', 'sched_if_idle')
-        self.__write_debugfs(path, str(val))
+        self.write_debugfs(path, str(val))
 
     # VF and PF provisioning parameters
     # Debugfs location: [SRIOV debugfs base path]/gtM/[pf|vfN]
@@ -202,7 +149,7 @@ class XeDriver(DriverInterface):
             return 0
 
         path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'ggtt_quota')
-        return int(self.__read_debugfs(path))
+        return int(self.read_debugfs(path))
 
     def set_ggtt_quota(self, vf_num: int, gt_num: int, val: int) -> None:
         if vf_num == 0:
@@ -210,7 +157,7 @@ class XeDriver(DriverInterface):
             return
 
         path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'ggtt_quota')
-        self.__write_debugfs(path, str(val))
+        self.write_debugfs(path, str(val))
 
     def get_lmem_quota(self, vf_num: int, gt_num: int) -> int:
         if vf_num == 0:
@@ -218,7 +165,7 @@ class XeDriver(DriverInterface):
             return 0
 
         path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'lmem_quota')
-        return int(self.__read_debugfs(path)) if self.has_lmem() else 0
+        return int(self.read_debugfs(path)) if self.has_lmem() else 0
 
     def set_lmem_quota(self, vf_num: int, gt_num: int, val: int) -> None:
         if vf_num == 0:
@@ -227,7 +174,7 @@ class XeDriver(DriverInterface):
 
         path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'lmem_quota')
         if self.has_lmem():
-            self.__write_debugfs(path, str(val))
+            self.write_debugfs(path, str(val))
 
     def get_contexts_quota(self, vf_num: int, gt_num: int) -> int:
         if vf_num == 0:
@@ -235,7 +182,7 @@ class XeDriver(DriverInterface):
             return 0
 
         path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'contexts_quota')
-        return int(self.__read_debugfs(path))
+        return int(self.read_debugfs(path))
 
     def set_contexts_quota(self, vf_num: int, gt_num: int, val: int) -> None:
         if vf_num == 0:
@@ -243,7 +190,7 @@ class XeDriver(DriverInterface):
             return
 
         path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'contexts_quota')
-        self.__write_debugfs(path, str(val))
+        self.write_debugfs(path, str(val))
 
     def get_doorbells_quota(self, vf_num: int, gt_num: int) -> int:
         if vf_num == 0:
@@ -251,7 +198,7 @@ class XeDriver(DriverInterface):
             return 0
 
         path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'doorbells_quota')
-        return int(self.__read_debugfs(path))
+        return int(self.read_debugfs(path))
 
     def set_doorbells_quota(self, vf_num: int, gt_num: int, val: int) -> None:
         if vf_num == 0:
@@ -259,23 +206,51 @@ class XeDriver(DriverInterface):
             return
 
         path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'doorbells_quota')
-        self.__write_debugfs(path, str(val))
+        self.write_debugfs(path, str(val))
 
-    def get_exec_quantum_ms(self, vf_num: int, gt_num: int) -> int:
-        path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'exec_quantum_ms')
-        return int(self.__read_debugfs(path))
+    # VF and PF scheduling parameters
+    # Sysfs location: [SRIOV sysfs base path]/sriov_admin/[pf|vfN]/profile
+    # @fn_num: VF number (1-based) or 0 for PF
+    def get_exec_quantum_ms(self, fn_num: int) -> int:
+        sriov_admin_path = self.__helper_create_sriov_admin_path(fn_num, 'exec_quantum_ms')
+        return int(self.read_sysfs(self.sysfs_device_path / sriov_admin_path))
 
-    def set_exec_quantum_ms(self, vf_num: int, gt_num: int, val: int) -> None:
-        path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'exec_quantum_ms')
-        self.__write_debugfs(path, str(val))
+    def set_exec_quantum_ms(self, fn_num: int, val: int) -> None:
+        sriov_admin_path = self.__helper_create_sriov_admin_path(fn_num, 'exec_quantum_ms')
+        self.write_sysfs(self.sysfs_device_path / sriov_admin_path, str(val))
 
-    def get_preempt_timeout_us(self, vf_num: int, gt_num: int) -> int:
-        path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'preempt_timeout_us')
-        return int(self.__read_debugfs(path))
+    def set_bulk_exec_quantum_ms(self, val: int) -> None:
+        self.write_sysfs(self.sysfs_device_path / 'sriov_admin/.bulk_profile/exec_quantum_ms', str(val))
 
-    def set_preempt_timeout_us(self, vf_num: int, gt_num: int, val: int) -> None:
-        path = self.__helper_create_debugfs_path(vf_num, gt_num, '', 'preempt_timeout_us')
-        self.__write_debugfs(path, str(val))
+    def get_preempt_timeout_us(self, fn_num: int) -> int:
+        sriov_admin_path = self.__helper_create_sriov_admin_path(fn_num, 'preempt_timeout_us')
+        return int(self.read_sysfs(self.sysfs_device_path / sriov_admin_path))
+
+    def set_preempt_timeout_us(self, fn_num: int, val: int) -> None:
+        sriov_admin_path = self.__helper_create_sriov_admin_path(fn_num, 'preempt_timeout_us')
+        self.write_sysfs(self.sysfs_device_path / sriov_admin_path, str(val))
+
+    def set_bulk_preempt_timeout_us(self, val: int) -> None:
+        self.write_sysfs(self.sysfs_device_path / 'sriov_admin/.bulk_profile/preempt_timeout_us', str(val))
+
+    def get_sched_priority(self, fn_num: int) -> SchedulingPriority:
+        sriov_admin_path = self.__helper_create_sriov_admin_path(fn_num, 'sched_priority')
+        ret = self.read_sysfs(self.sysfs_device_path / sriov_admin_path).rstrip()
+
+        match = re.search(r'\[(low|normal|high)\]', ret)
+        if match:
+            return SchedulingPriority(match.group(1))
+
+        logger.error("Unexpected sched_priority value (must be low/normal/high)")
+        raise ValueError('Unexpected sched_priority value (must be low/normal/high)')
+
+    def set_pf_sched_priority(self, val: SchedulingPriority) -> None:
+        # Independent sched_prio setting is available for PF only
+        sriov_admin_path = self.__helper_create_sriov_admin_path(0, 'sched_priority')
+        self.write_sysfs(self.sysfs_device_path / sriov_admin_path, val)
+
+    def set_bulk_sched_priority(self, val: SchedulingPriority) -> None:
+        self.write_sysfs(self.sysfs_device_path / 'sriov_admin/.bulk_profile/sched_priority', val)
 
     # Control state of the running VF (WO)
     # Debugfs location: [SRIOV debugfs base path]/gtM/vfN/control
@@ -285,7 +260,7 @@ class XeDriver(DriverInterface):
     # For debug purposes only.
     def set_vf_control(self, vf_num: int, val: VfControl) -> None:
         path = self.__helper_create_debugfs_path(vf_num, 0, '', 'control')
-        self.__write_debugfs(path, val)
+        self.write_debugfs(path, val)
 
     # Read [attribute]_available value from debugfs:
     # /sys/kernel/debug/dri/[card_index]/gt@gt_num/pf/@attr_available
