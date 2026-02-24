@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import base64
 import json
@@ -58,7 +58,8 @@ class VirtualMachine(MachineInterface):
 
             return timeout_wrapper
 
-    def __init__(self, vm_number: int, backing_image: str, driver: str, igt_config: VmtbIgtConfig) -> None:
+    def __init__(self, vm_number: int, backing_image: str, driver: str,
+                 igt_config: VmtbIgtConfig, vf_migration_support: bool) -> None:
         self.vf_bdf: typing.Optional[str] = None
         self.process: typing.Optional[subprocess.Popen] = None
         self.vmnum: int = vm_number
@@ -68,6 +69,7 @@ class VirtualMachine(MachineInterface):
         self.qmp_sockpath = posixpath.join('/tmp', f'mon{self.vmnum}.sock')
         self.drm_driver_name: str = driver
         self.igt_config: VmtbIgtConfig = igt_config
+        self.vf_migration: bool = vf_migration_support
 
         if not posixpath.exists(backing_image):
             logger.error('No image for VM%s', self.vmnum)
@@ -153,6 +155,9 @@ class VirtualMachine(MachineInterface):
                    '-vnc', f':{self.vmnum}',
                    '-serial', 'stdio',
                    '-m', '4096',
+                   '-vga', 'none',
+                   '-net', 'nic',
+                   '-net', f'user,hostfwd=tcp::{10000 + self.vmnum}-:22',
                    '-drive', f'file={self.image if not self.migrate_destination_vm else self.migrate_source_image}',
                    '-chardev', f'socket,path={self.questagent_sockpath},server=on,wait=off,id=qga{self.vmnum}',
                    '-device', 'virtio-serial',
@@ -161,8 +166,9 @@ class VirtualMachine(MachineInterface):
                    '-mon', f'chardev=mon{self.vmnum},mode=control']
 
         if self.vf_bdf:
-            command.extend(['-enable-kvm', '-cpu', 'host'])
-            command.extend(['-device', f'vfio-pci,host={self.vf_bdf},enable-migration=on'])
+            command.extend(['-enable-kvm', '-cpu', 'host', '-device', f'vfio-pci,host={self.vf_bdf}'])
+            if self.vf_migration:
+                command[-1] += ',enable-migration=on'
 
         if self.migrate_destination_vm:
             # If VM is migration destination - run in stopped/prelaunch state (explicit resume required)

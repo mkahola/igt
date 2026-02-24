@@ -1,25 +1,24 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import json
 import logging
 import re
 import typing
-
 from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
 from bench import exceptions
-from bench.helpers.helpers import (modprobe_driver, modprobe_driver_check)
-from bench.helpers.log import HOST_DMESG_FILE
-from bench.configurators.vgpu_profile_config import VgpuProfileConfigurator, VfSchedulingMode
 from bench.configurators.vgpu_profile import VgpuProfile
+from bench.configurators.vgpu_profile_config import (VfSchedulingMode,
+                                                     VgpuProfileConfigurator)
 from bench.configurators.vmtb_config import VmtbConfigurator
-from bench.machines.host import Host, Device
+from bench.helpers.helpers import modprobe_driver, modprobe_driver_check
+from bench.helpers.log import HOST_DMESG_FILE
+from bench.machines.host import Device, Host
 from bench.machines.virtual.vm import VirtualMachine
-
 
 logger = logging.getLogger('Conftest')
 
@@ -89,15 +88,20 @@ class VmmTestingSetup:
         self.host.load_drivers()
         self.host.discover_devices()
 
+        # VF migration requires vendor specific VFIO driver (e.g. xe-vfio-pci)
+        vf_migration_support: bool = self.host.is_driver_loaded(f'{self.host.drm_driver_name}-vfio-pci')
+
         logger.info("\nDUT info:"
                     "\n\tCard index: %s"
                     "\n\tPCI BDF: %s "
                     "\n\tDevice ID: %s (%s)"
-                    "\n\tHost DRM driver: %s",
+                    "\n\tHost DRM driver: %s"
+                    "\n\tVF migration support: %s",
                     self.host.dut_index,
                     self.get_dut().pci_info.bdf,
                     self.get_dut().pci_info.devid, self.get_dut().gpu_model,
-                    self.get_dut().driver.get_name())
+                    self.get_dut().driver.get_name(),
+                    vf_migration_support)
 
         self.vgpu_profile: VgpuProfile = self.get_vgpu_profile()
 
@@ -105,7 +109,8 @@ class VmmTestingSetup:
         self.vms: typing.List[VirtualMachine] = [
             VirtualMachine(vm_idx, self.guest_os_image,
                            vmtb_config.get_guest_config().driver,
-                           vmtb_config.get_guest_config().igt_config)
+                           vmtb_config.get_guest_config().igt_config,
+                           vf_migration_support)
             for vm_idx in range(min(self.vgpu_profile.num_vfs, self.testing_config.max_num_vms))]
 
     def get_vgpu_profile(self) -> VgpuProfile:
