@@ -12,7 +12,8 @@ import pytest
 
 from bench import exceptions
 from bench.configurators.vgpu_profile import VgpuProfile
-from bench.configurators.vgpu_profile_config import (VfSchedulingMode,
+from bench.configurators.vgpu_profile_config import (VfProvisioningMode,
+                                                     VfSchedulingMode,
                                                      VgpuProfileConfigurator)
 from bench.configurators.vmtb_config import VmtbConfigurator
 from bench.helpers.helpers import modprobe_driver, modprobe_driver_check
@@ -39,6 +40,7 @@ class VmmTestingConfig:
     Available settings:
     - num_vfs: requested number of VFs to enable
     - max_num_vms: maximal number of VMs (the value can be different than enabled number of VFs)
+    - provisioning_mode: auto (fair resources allocation by a driver) or vGPU profile
     - scheduling_mode: requested vGPU scheduling profile (infinite maps to default 0's)
     - auto_poweron_vm: assign VFs and power on VMs automatically in setup fixture
     - auto_probe_vm_driver: probe guest DRM driver in setup fixture (VM must be powered on)
@@ -47,6 +49,7 @@ class VmmTestingConfig:
     """
     num_vfs: int = 1
     max_num_vms: int = 2
+    provisioning_mode: VfProvisioningMode = VfProvisioningMode.AUTO
     scheduling_mode: VfSchedulingMode = VfSchedulingMode.INFINITE
 
     auto_poweron_vm: bool = True
@@ -56,12 +59,14 @@ class VmmTestingConfig:
     wa_reduce_vf_lmem: bool = False
 
     def __str__(self) -> str:
-        return f'{self.num_vfs}VF'
+        test_config_id = f'{self.num_vfs}VF-(P:{self.provisioning_mode.name} S:{self.scheduling_mode.name})'
+        return test_config_id
 
     def __repr__(self) -> str:
         return (f'\nVmmTestingConfig:'
                 f'\nNum VFs = {self.num_vfs} / max num VMs = {self.max_num_vms}'
-                f'\nVF scheduling mode = {self.scheduling_mode}'
+                f'\nVF provisioning mode = {self.provisioning_mode.name}'
+                f'\nVF scheduling mode = {self.scheduling_mode.name}'
                 f'\nSetup flags:'
                 f'\n\tVM - auto power-on = {self.auto_poweron_vm}'
                 f'\n\tVM - auto DRM driver probe = {self.auto_probe_vm_driver}'
@@ -107,7 +112,9 @@ class VmmTestingSetup:
         # [vmtb_root]/vmm_flows/resources/wsim/ptl (last subdir is lowercase key/name from pci.GpuModel class)
         self.wsim_wl_dir = vmtb_root_path / vmtb_config.config.wsim_wl_path / self.get_dut().gpu_model.name.lower()
 
-        self.vgpu_profile: VgpuProfile = self.get_vgpu_profile()
+        if (self.testing_config.provisioning_mode is VfProvisioningMode.VGPU_PROFILE
+            or self.testing_config.scheduling_mode is not VfSchedulingMode.INFINITE):
+            self.vgpu_profile: VgpuProfile = self.get_vgpu_profile()
 
         # Start maximum requested number of VMs, but not more than VFs supported by the given vGPU profile
         self.vms: typing.List[VirtualMachine] = [
@@ -115,7 +122,7 @@ class VmmTestingSetup:
                            vmtb_config.get_guest_config().driver,
                            vmtb_config.get_guest_config().igt_config,
                            vf_migration_support)
-            for vm_idx in range(min(self.vgpu_profile.num_vfs, self.testing_config.max_num_vms))]
+            for vm_idx in range(min(self.testing_config.num_vfs, self.testing_config.max_num_vms))]
 
     def get_vgpu_profile(self) -> VgpuProfile:
         configurator = VgpuProfileConfigurator(self.vgpu_profiles_dir, self.get_dut().gpu_model)
@@ -125,8 +132,6 @@ class VmmTestingSetup:
         except exceptions.VgpuProfileError as exc:
             logger.error("Suitable vGPU profile not found: %s", exc)
             raise exceptions.VgpuProfileError('Invalid test setup - vGPU profile not found!')
-
-        vgpu_profile.print_parameters()
 
         return vgpu_profile
 
@@ -224,20 +229,35 @@ def fixture_setup_vms(get_vmtb_config, get_cmdline_config, get_host, request):
     ts: VmmTestingSetup = VmmTestingSetup(get_vmtb_config, get_cmdline_config, host, tc)
 
     device: Device = ts.get_dut()
-    num_vfs = ts.vgpu_profile.num_vfs
+    num_vfs = ts.testing_config.num_vfs
     num_vms = ts.get_num_vms()
 
     logger.info('[Test setup: %sVF-%sVM]', num_vfs, num_vms)
 
-    # XXX: VF migration on discrete devices (with LMEM) is currently quite slow.
-    # As a temporary workaround, reduce size of LMEM assigned to VFs to speed up a state save/load process.
-    if tc.wa_reduce_vf_lmem and device.has_lmem():
-        logger.debug("W/A: reduce VFs LMEM quota to accelerate state save/restore")
-        org_vgpu_profile_vfLmem = ts.vgpu_profile.resources.vfLmem
-        # Assign max 512 MB to VF
-        ts.vgpu_profile.resources.vfLmem = min(ts.vgpu_profile.resources.vfLmem // 2, 536870912)
+    if ts.testing_config.provisioning_mode is VfProvisioningMode.VGPU_PROFILE:
+        # XXX: Double migration is slow on discrete GPUs (with VRAM),
+        # As a workaround, reduce VRAM size assigned to VFs to speed up a save process.
+        # This w/a should be removed when a save/restore time improves.
+        if tc.wa_reduce_vf_lmem and device.has_lmem():
+            logger.debug("W/A: reduce VFs LMEM quota to accelerate state save")
+            org_vgpu_profile_vfLmem = ts.vgpu_profile.resources.vfLmem
+            # Assign max 512 MB to VF
+            ts.vgpu_profile.resources.vfLmem = min(ts.vgpu_profile.resources.vfLmem // 2, 536870912)
 
-    device.provision(ts.vgpu_profile)
+        ts.vgpu_profile.print_parameters()
+        device.provision(ts.vgpu_profile)
+
+        # XXX: cleanup counterpart for VFs LMEM quota workaround:
+        # restore original value after vGPU profile applied
+        if tc.wa_reduce_vf_lmem and device.has_lmem():
+            ts.vgpu_profile.resources.vfLmem = org_vgpu_profile_vfLmem
+
+    else:
+        device.driver.set_auto_provisioning(True)
+        if ts.testing_config.scheduling_mode is not VfSchedulingMode.INFINITE:
+            # Auto provisioning with concrete scheduling (i.e. different than HW default: infinite)
+            ts.vgpu_profile.print_scheduler_config()
+            device.provision_scheduling(num_vfs, ts.vgpu_profile)
 
     assert device.create_vf(num_vfs) == num_vfs
 
@@ -257,10 +277,39 @@ def fixture_setup_vms(get_vmtb_config, get_cmdline_config, get_host, request):
     yield ts
 
     logger.info('[Test teardown: %sVF-%sVM]', num_vfs, num_vms)
-    # XXX: cleanup counterpart for VFs LMEM quota workaround - restore original value
-    if tc.wa_reduce_vf_lmem and device.has_lmem():
-        ts.vgpu_profile.resources.vfLmem = org_vgpu_profile_vfLmem
+    ts.teardown()
 
+
+# Obsolete fixtures 'create_Xhost_Yvm' - 'fixture_setup_vms' is preferred
+@pytest.fixture(scope='function')
+def create_1host_1vm(get_vmtb_config, get_cmdline_config, get_host):
+    num_vfs, num_vms = 1, 1
+    ts: VmmTestingSetup = VmmTestingSetup(get_vmtb_config, get_cmdline_config, get_host,
+                                          VmmTestingConfig(num_vfs, num_vms))
+
+    logger.info('[Test setup: %sVF-%sVM]', num_vfs, num_vms)
+    logger.debug(repr(ts.testing_config))
+
+    logger.info('[Test execution: %sVF-%sVM]', num_vfs, num_vms)
+    yield ts
+
+    logger.info('[Test teardown: %sVF-%sVM]', num_vfs, num_vms)
+    ts.teardown()
+
+
+@pytest.fixture(scope='function')
+def create_1host_2vm(get_vmtb_config, get_cmdline_config, get_host):
+    num_vfs, num_vms = 2, 2
+    ts: VmmTestingSetup = VmmTestingSetup(get_vmtb_config, get_cmdline_config, get_host,
+                                          VmmTestingConfig(num_vfs, num_vms))
+
+    logger.info('[Test setup: %sVF-%sVM]', num_vfs, num_vms)
+    logger.debug(repr(ts.testing_config))
+
+    logger.info('[Test execution: %sVF-%sVM]', num_vfs, num_vms)
+    yield ts
+
+    logger.info('[Test teardown: %sVF-%sVM]', num_vfs, num_vms)
     ts.teardown()
 
 

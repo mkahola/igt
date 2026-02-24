@@ -7,7 +7,7 @@ from typing import List, Tuple
 
 import pytest
 
-from bench.configurators.vgpu_profile_config import VfSchedulingMode
+from bench.configurators.vgpu_profile_config import VfProvisioningMode, VfSchedulingMode
 from bench.executors.gem_wsim import (ONE_CYCLE_DURATION_MS,
                                       PREEMPT_10MS_WORKLOAD, GemWsim,
                                       GemWsimResult,
@@ -27,20 +27,23 @@ DELAY_FOR_WORKLOAD_SEC = 2 # Waiting gem_wsim to be running [seconds]
 DELAY_FOR_RELOAD_SEC = 3 # Waiting before driver reloading [seconds]
 
 
-def set_test_config(test_variants: List[Tuple[int, VfSchedulingMode]],
+def set_test_config(test_variants: List[Tuple[int, VfProvisioningMode, VfSchedulingMode]],
                     max_vms: int = 2, vf_driver_load: bool = True) -> List[VmmTestingConfig]:
     """Helper function to provide a parametrized test with a list of test configuration variants."""
     logger.debug("Init test variants: %s", test_variants)
     test_configs: List[VmmTestingConfig] = []
 
     for config in test_variants:
-        (num_vfs, scheduling_mode) = config
-        test_configs.append(VmmTestingConfig(num_vfs, max_vms, scheduling_mode, auto_probe_vm_driver=vf_driver_load))
+        (num_vfs, provisioning_mode, scheduling_mode) = config
+        test_configs.append(VmmTestingConfig(num_vfs, max_vms, provisioning_mode, scheduling_mode,
+                                             auto_probe_vm_driver=vf_driver_load))
 
     return test_configs
 
 
-test_variants_1 = [(1, VfSchedulingMode.DEFAULT_PROFILE), (2, VfSchedulingMode.DEFAULT_PROFILE)]
+test_variants_1 = [(1, VfProvisioningMode.VGPU_PROFILE, VfSchedulingMode.DEFAULT_PROFILE),
+                   (2, VfProvisioningMode.VGPU_PROFILE, VfSchedulingMode.DEFAULT_PROFILE),
+                   (2, VfProvisioningMode.AUTO, VfSchedulingMode.INFINITE)]
 
 @pytest.mark.parametrize('setup_vms', set_test_config(test_variants_1), ids=idfn_test_config, indirect=['setup_vms'])
 class TestVmSetup:
@@ -60,8 +63,9 @@ class TestVmSetup:
             assert driver_check(vm)
 
 
-test_variants_2 = [(1, VfSchedulingMode.DEFAULT_PROFILE), (2, VfSchedulingMode.DEFAULT_PROFILE),
-                   (4, VfSchedulingMode.DEFAULT_PROFILE)]
+test_variants_2 = [(1, VfProvisioningMode.VGPU_PROFILE, VfSchedulingMode.DEFAULT_PROFILE),
+                   (2, VfProvisioningMode.VGPU_PROFILE, VfSchedulingMode.DEFAULT_PROFILE),
+                   (4, VfProvisioningMode.VGPU_PROFILE, VfSchedulingMode.DEFAULT_PROFILE)]
 
 @pytest.mark.parametrize('setup_vms', set_test_config(test_variants_2), ids=idfn_test_config, indirect=['setup_vms'])
 class TestVmWorkload:
@@ -102,7 +106,8 @@ class TestVmWorkload:
         logger.info("Execute wsim parallel on VMs - results: %s", result)
 
 
-test_variants_3 = [(2, VfSchedulingMode.DEFAULT_PROFILE), (4, VfSchedulingMode.DEFAULT_PROFILE)]
+test_variants_3 = [(2, VfProvisioningMode.VGPU_PROFILE, VfSchedulingMode.DEFAULT_PROFILE),
+                   (4, VfProvisioningMode.VGPU_PROFILE, VfSchedulingMode.DEFAULT_PROFILE)]
 
 @pytest.mark.parametrize('setup_vms', set_test_config(test_variants=test_variants_3, max_vms=4, vf_driver_load=False),
                          ids = idfn_test_config, indirect=['setup_vms'])

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import logging
 import typing
@@ -95,11 +95,18 @@ class XeDriver(DriverInterface):
         path = self.debugfs_path / 'gt0' / 'pf' / 'lmem_spare'
         return path.exists()
 
+    def is_media_gt(self, gt_num: int) -> bool:
+        # XXX: is lack of PF's ggtt/lmem_spare or VF's ggtt/lmem_quota
+        # a best way to check for standalone media GT?
+        path = self.debugfs_path / f'gt{gt_num}' / 'pf' / 'ggtt_spare'
+        return not path.exists()
+
     def get_auto_provisioning(self) -> bool:
         raise exceptions.NotAvailableError('auto_provisioning attribute not available')
 
     def set_auto_provisioning(self, val: bool) -> None:
-        raise exceptions.NotAvailableError('auto_provisioning attribute not available')
+        # No-op - xe driver doesn't publish this attribute
+        pass
 
     def cancel_work(self) -> None:
         # Function to cancel all remaing work on GPU (for test cleanup).
@@ -129,11 +136,12 @@ class XeDriver(DriverInterface):
 
     def get_pf_lmem_spare(self, gt_num: int) -> int:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'lmem_spare')
-        return int(self.__read_debugfs(path))
+        return int(self.__read_debugfs(path)) if self.has_lmem() else 0
 
     def set_pf_lmem_spare(self, gt_num: int, val: int) -> None:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'lmem_spare')
-        self.__write_debugfs(path, str(val))
+        if self.has_lmem():
+            self.__write_debugfs(path, str(val))
 
     def get_pf_contexts_spare(self, gt_num: int) -> int:
         path = self.__helper_create_debugfs_path(0, gt_num, '', 'contexts_spare')

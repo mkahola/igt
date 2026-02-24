@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import abc
 import enum
@@ -63,6 +63,10 @@ class DriverInterface(abc.ABC):
 
     @abc.abstractmethod
     def has_lmem(self) -> bool:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def is_media_gt(self, gt_num: int) -> bool:
         raise NotImplementedError
 
     @abc.abstractmethod

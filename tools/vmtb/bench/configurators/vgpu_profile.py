@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import json
 import logging
@@ -55,8 +55,19 @@ class VgpuProfile:
     def print_parameters(self) -> None:
         logger.info(
             "\nvGPU Profile:\n"
-            "   Num VFs = %s\n"
-            "\nResources:\n"
+            "   Num VFs = %s\n",
+            self.num_vfs)
+        self.print_resources_config()
+        self.print_scheduler_config()
+        logger.info(
+            "\nSecurity:\n"
+            "   Reset After Vf Switch = %s\n",
+            self.security.reset_after_vf_switch
+        )
+
+    def print_resources_config(self) -> None:
+        logger.info(
+            "\nResources config:\n"
             "   PF:\n"
             "\tLMEM = %s B\n"
             "\tContexts = %s\n"
@@ -66,24 +77,24 @@ class VgpuProfile:
             "\tLMEM = %s B\n"
             "\tContexts = %s\n"
             "\tDoorbells = %s\n"
-            "\tGGTT = %s B\n"
-            "\nScheduling:\n"
+            "\tGGTT = %s B\n",
+            self.resources.pfLmem, self.resources.pfContexts, self.resources.pfDoorbells, self.resources.pfGgtt,
+            self.resources.vfLmem, self.resources.vfContexts, self.resources.vfDoorbells, self.resources.vfGgtt,
+        )
+
+    def print_scheduler_config(self) -> None:
+        logger.info(
+            "\nScheduling config:\n"
             "   Schedule If Idle = %s\n"
             "   PF:\n"
             "\tExecution Quanta = %s ms\n"
             "\tPreemption Timeout = %s us\n"
             "   VF:\n"
             "\tExecution Quanta = %s ms\n"
-            "\tPreemption Timeout = %s us\n"
-            "\nSecurity:\n"
-            "   Reset After Vf Switch = %s\n",
-            self.num_vfs,
-            self.resources.pfLmem, self.resources.pfContexts, self.resources.pfDoorbells, self.resources.pfGgtt,
-            self.resources.vfLmem, self.resources.vfContexts, self.resources.vfDoorbells, self.resources.vfGgtt,
+            "\tPreemption Timeout = %s us\n",
             self.scheduler.scheduleIfIdle,
             self.scheduler.pfExecutionQuanta, self.scheduler.pfPreemptionTimeout,
-            self.scheduler.vfExecutionQuanta, self.scheduler.vfPreemptionTimeout,
-            self.security.reset_after_vf_switch
+            self.scheduler.vfExecutionQuanta, self.scheduler.vfPreemptionTimeout
         )
 
 

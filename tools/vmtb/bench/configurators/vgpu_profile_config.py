@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import logging
 from enum import Enum
@@ -15,6 +15,11 @@ from bench.configurators.vgpu_profile import (VgpuProfile,
                                               VgpuSecurityConfig)
 
 logger = logging.getLogger('DeviceConfigurator')
+
+
+class VfProvisioningMode(Enum):
+    VGPU_PROFILE = 0
+    AUTO = 1
 
 
 class VfSchedulingMode(str, Enum):
