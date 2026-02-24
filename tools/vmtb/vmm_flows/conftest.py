@@ -81,12 +81,12 @@ class VmmTestingSetup:
 
         self.vgpu_profiles_dir = vmtb_config.vmtb_config_file.parent / vmtb_config.config.vgpu_profiles_path
 
-        self.host.dut_index = self.dut_index
         self.host.drm_driver_name = vmtb_config.get_host_config().driver
         self.host.igt_config = vmtb_config.get_host_config().igt_config
 
         self.host.load_drivers()
         self.host.discover_devices()
+        self.dut: Device = self.host.get_device(self.dut_index)
 
         # VF migration requires vendor specific VFIO driver (e.g. xe-vfio-pci)
         vf_migration_support: bool = self.host.is_driver_loaded(f'{self.host.drm_driver_name}-vfio-pci')
@@ -97,7 +97,7 @@ class VmmTestingSetup:
                     "\n\tDevice ID: %s (%s)"
                     "\n\tHost DRM driver: %s"
                     "\n\tVF migration support: %s",
-                    self.host.dut_index,
+                    self.dut_index,
                     self.get_dut().pci_info.bdf,
                     self.get_dut().pci_info.devid, self.get_dut().gpu_model,
                     self.get_dut().driver.get_name(),
@@ -127,11 +127,12 @@ class VmmTestingSetup:
         return vgpu_profile
 
     def get_dut(self) -> Device:
-        try:
-            return self.host.gpu_devices[self.dut_index]
-        except IndexError as exc:
-            logger.error("Invalid VMTB config - device card index = %s not available", self.dut_index)
-            raise exceptions.VmtbConfigError(f'Device card index = {self.dut_index} not available') from exc
+        if self.dut is None:
+            logger.error("Invalid VMTB config - DRM card%s is not bound to %s driver",
+                         self.dut_index, self.host.drm_driver_name)
+            raise exceptions.VmtbConfigError(f'Invalid VMTB config - DRM card{self.dut_index} device not supported')
+
+        return self.dut
 
     @property
     def get_vm(self):

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import logging
 import time
@@ -82,7 +82,7 @@ class TestVmWorkload:
             logger.info("[%s] Verify result of basic WL", igt.target)
             assert igt_check(igt)
 
-        logger.info("[%s] Verify result of basic WL", ts.host)
+        logger.info("[Host %s] Verify result of basic WL", ts.get_dut())
         igt_run_check(ts.host, IgtType.EXEC_STORE)
 
     def test_wsim(self, setup_vms):

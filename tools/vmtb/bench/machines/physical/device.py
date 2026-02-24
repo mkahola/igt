@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import importlib
 import logging
@@ -47,6 +47,9 @@ class Device(DeviceInterface):
         self.pci_info = self.PciInfo(bdf)
         self.gpu_model: str = pci.get_gpu_model(self.pci_info.devid)
         self.driver: DriverInterface = self.instantiate_driver(driver, self.pci_info.minor_number)
+
+    def __str__(self) -> str:
+        return f'Dev-{self.pci_info.bdf}'
 
     def instantiate_driver(self, driver_name: str, card_index: int) -> Any:
         module_name = f'bench.drivers.{driver_name}'

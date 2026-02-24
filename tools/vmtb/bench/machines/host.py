@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import logging
-import re
 import shlex
 import signal
 import subprocess
@@ -24,13 +23,12 @@ class Host(MachineInterface):
     def __init__(self) -> None:
         self.running_procs: typing.Dict[int, subprocess.Popen] = {}
         self.gpu_devices: typing.List[Device] = []
-        self.dut_index: int = 0
         # Initialize in conftest/VmmTestingSetup:
         self.drm_driver_name: str
         self.igt_config: VmtbIgtConfig
 
     def __str__(self) -> str:
-        return f'Host-{self.gpu_devices[self.dut_index].pci_info.bdf}'
+        return 'Host'
 
     @LogDecorators.parse_kmsg
     def execute(self, command: str) -> int:
@@ -181,8 +179,12 @@ class Host(MachineInterface):
 
         logger.debug("Detected GPU PCI device(s):")
         for dev in self.gpu_devices:
-            logger.debug("[%s] PCI BDF: %s / DevID: %s (%s)",
+            logger.debug("[card%s] PCI BDF: %s / DevID: %s (%s)",
                           dev.pci_info.minor_number, dev.pci_info.bdf, dev.pci_info.devid, dev.gpu_model)
+
+    def get_device(self, dev_minor: int) -> typing.Optional[Device]:
+        """Find device with a given minor number within detected GPU devices list."""
+        return next((dev for dev in self.gpu_devices if dev.pci_info.minor_number == dev_minor), None)
 
     def suspend(self, mode: SuspendMode = SuspendMode.ACPI_S3) -> None:
         """Perform host suspend cycle (ACPI S3) via rtcwake tool."""
