@@ -359,6 +359,7 @@ static const char *oa_unit_name[] = {
 	[DRM_XE_OA_UNIT_TYPE_OAG] = "oag",
 	[DRM_XE_OA_UNIT_TYPE_OAM] = "oam",
 	[DRM_XE_OA_UNIT_TYPE_OAM_SAG] = "sag",
+	[DRM_XE_OA_UNIT_TYPE_MERT] = "mert",
 };
 
 /* Wrapper to deconstify @inst for xe_exec_queue_create */
@@ -381,6 +382,8 @@ static struct intel_xe_perf_metric_set *oa_unit_metric_set(const struct drm_xe_o
 		 (oau->oa_unit_type == DRM_XE_OA_UNIT_TYPE_OAM ||
 		  oau->oa_unit_type == DRM_XE_OA_UNIT_TYPE_OAM_SAG))
 		test_set_name = "MediaSet1";
+	else if (oau->oa_unit_type == DRM_XE_OA_UNIT_TYPE_MERT)
+		test_set_name = "MertExtSet";
 	else
 		igt_assert_f(!"reached", "Unknown oa_unit_type %d\n", oau->oa_unit_type);
 
