@@ -99,6 +99,11 @@ class Host(MachineInterface):
     def dir_exists(self, path: str) -> bool:
         return Path(path).is_dir()
 
+    def dir_list(self, path: str) -> typing.List[str]:
+        # TODO: implement, currently no-op to fulfill MachineInterface requirement
+        logger.warning("Host.dir_list() is not implemented yet!")
+        return []
+
     def get_drm_driver_name(self) -> str:
         # Used as a part of MachineInterface for helpers
         return self.drm_driver_name

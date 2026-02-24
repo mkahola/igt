@@ -518,6 +518,11 @@ class VirtualMachine(MachineInterface):
             return False
         return True
 
+    def dir_list(self, path: str) -> typing.List[str]:
+        # TODO: implement, currently no-op to fulfill MachineInterface requirement
+        logger.warning("VirtualMachine.dir_list() is not implemented yet!")
+        return []
+
     def link_exists(self, path: str) -> bool:
         pid = self.execute(f'/bin/sh -c "[ -h {path} ]"')
         status = self.execute_wait(pid)

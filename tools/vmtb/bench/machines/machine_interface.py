@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import abc
 import enum
@@ -54,6 +54,10 @@ class MachineInterface(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def dir_exists(self, path: str) -> bool:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def dir_list(self, path: str) -> typing.List[str]:
         raise NotImplementedError
 
     @abc.abstractmethod
