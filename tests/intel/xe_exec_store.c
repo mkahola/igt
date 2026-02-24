@@ -28,6 +28,7 @@
 
 #define STORE 0
 #define COND_BATCH 1
+#define MAX_DATA_WRITE ((size_t)(262143)) //Maximum data MEM_COPY operate for linear mode
 
 struct data {
 	uint32_t batch[16];
@@ -412,6 +413,126 @@ static void long_shader(int fd, struct drm_xe_engine_class_instance *hwe,
 	free(buf);
 }
 
+/**
+ * SUBTEST: mem-write-ordering-check
+ * Description: Verify that copy engines writes to sys mem is ordered
+ * Test category: functionality test
+ *
+ */
+static void mem_transaction_ordering(int fd, size_t bo_size, bool fence)
+{
+	struct drm_xe_engine_class_instance inst = {
+		.engine_class = DRM_XE_ENGINE_CLASS_COPY,
+	};
+	struct drm_xe_sync sync[2] = {
+		{ .type = DRM_XE_SYNC_TYPE_SYNCOBJ, .flags = DRM_XE_SYNC_FLAG_SIGNAL, },
+		{ .type = DRM_XE_SYNC_TYPE_SYNCOBJ, .flags = DRM_XE_SYNC_FLAG_SIGNAL, }
+	};
+
+	struct drm_xe_exec exec = {
+		.num_batch_buffer = 1,
+		.num_syncs = 2,
+		.syncs = to_user_pointer(&sync),
+	};
+
+	int count = 3; // src, dest, batch
+	int i, b = 0;
+	uint64_t offset[count];
+	uint64_t dst_offset;
+	uint64_t src_offset;
+	uint32_t exec_queues, vm, syncobjs;
+	uint32_t bo[count], *bo_map[count];
+	uint64_t ahnd;
+	uint32_t *batch_map;
+	int src_idx = 0, dst_idx = 1;
+	size_t bytes_written, size;
+
+	bo_size = ALIGN(bo_size, xe_get_default_alignment(fd));
+	bytes_written = bo_size;
+	vm = xe_vm_create(fd, 0, 0);
+	ahnd = intel_allocator_open(fd, 0, INTEL_ALLOCATOR_SIMPLE);
+	exec_queues = xe_exec_queue_create(fd, vm, &inst, 0);
+	syncobjs = syncobj_create(fd, 0);
+	sync[0].handle = syncobj_create(fd, 0);
+
+	for (i = 0; i < count; i++) {
+		bo[i] = xe_bo_create_caching(fd, vm, bo_size, system_memory(fd), 0,
+					     DRM_XE_GEM_CPU_CACHING_WC);
+		bo_map[i] = xe_bo_map(fd, bo[i], bo_size);
+		offset[i] = intel_allocator_alloc_with_strategy(ahnd, bo[i],
+								bo_size, 0,
+								ALLOC_STRATEGY_NONE);
+		xe_vm_bind_async(fd, vm, 0, bo[i], 0, offset[i], bo_size, sync, 1);
+	}
+
+	batch_map = xe_bo_map(fd, bo[i - 1], bo_size);
+	exec.address = offset[i - 1];
+
+	// Fill source buffer with a pattern
+	for (i = 0; i < bo_size; i++)
+		((uint8_t *)bo_map[src_idx])[i] = i % bo_size;
+
+	dst_offset = offset[dst_idx];
+	src_offset = offset[src_idx];
+	while (bo_size) {
+		size = min(MAX_DATA_WRITE, bo_size);
+		batch_map[b++] = MEM_COPY_CMD;
+		batch_map[b++] = size - 1;// src # of bytes
+		batch_map[b++] = 0; //src height
+		batch_map[b++] = -1; // src pitch
+		batch_map[b++] = -1; // dist pitch
+		batch_map[b++] = src_offset;
+		batch_map[b++] = src_offset  >> 32;
+		batch_map[b++] = dst_offset;
+		batch_map[b++] = dst_offset  >> 32;
+		batch_map[b++] = intel_get_uc_mocs_index(fd) << 25 | intel_get_uc_mocs_index(fd);
+
+		src_offset += size;
+		dst_offset += size;
+		bo_size -= size;
+	}
+	if (fence)
+		batch_map[b++] = MI_MEM_FENCE | MI_WRITE_FENCE;
+
+	batch_map[b++] = MI_BATCH_BUFFER_END;
+	sync[0].flags &= ~DRM_XE_SYNC_FLAG_SIGNAL;
+	sync[1].flags |= DRM_XE_SYNC_FLAG_SIGNAL;
+	sync[1].handle = syncobjs;
+	exec.exec_queue_id = exec_queues;
+	xe_exec(fd, &exec);
+	igt_assert(syncobj_wait(fd, &syncobjs, 1, INT64_MAX, 0, NULL));
+
+	if (fence) {
+		igt_assert(memcmp(bo_map[src_idx], bo_map[dst_idx], bytes_written) == 0);
+	} else {
+		bool detected_out_of_order = false;
+
+		for (i = bo_size - 1; i >= 0; i--) {
+			if (((uint8_t *)bo_map[src_idx])[i] != ((uint8_t *)bo_map[dst_idx])[i]) {
+				detected_out_of_order = true;
+				break;
+			}
+		}
+
+		if (detected_out_of_order)
+			igt_info("Test detected out of order write at idx %d\n", i);
+		else
+			igt_info("Test didn't detect out of order writes\n");
+	}
+
+	for (i = 0; i < count; i++) {
+		munmap(bo_map[i], bo_size);
+		gem_close(fd, bo[i]);
+	}
+
+	munmap(batch_map, bo_size);
+	put_ahnd(ahnd);
+	syncobj_destroy(fd, sync[0].handle);
+	syncobj_destroy(fd, syncobjs);
+	xe_exec_queue_destroy(fd, exec_queues);
+	xe_vm_destroy(fd, vm);
+}
+
 int igt_main()
 {
 	struct drm_xe_engine_class_instance *hwe;
@@ -481,6 +602,25 @@ int igt_main()
 		}
 
 		igt_collection_destroy(set);
+	}
+
+	igt_describe("Verify memory relax ordering using copy/write operations");
+	igt_subtest_with_dynamic("mem-write-ordering-check") {
+		struct {
+			size_t size;
+			const char *label;
+		} sizes[] = {
+			{ SZ_1M,  "1M" },
+			{ SZ_2M,  "2M" },
+			{ SZ_8M,  "8M" },
+		};
+
+		for (size_t i = 0; i < ARRAY_SIZE(sizes); i++) {
+			igt_dynamic_f("size-%s", sizes[i].label) {
+				mem_transaction_ordering(fd, sizes[i].size, true);
+				mem_transaction_ordering(fd, sizes[i].size, false);
+			}
+		}
 	}
 
 	igt_fixture() {
