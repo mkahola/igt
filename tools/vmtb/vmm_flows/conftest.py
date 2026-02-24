@@ -16,7 +16,6 @@ from bench.configurators.vgpu_profile_config import (VfProvisioningMode,
                                                      VfSchedulingMode,
                                                      VgpuProfileConfigurator)
 from bench.configurators.vmtb_config import VmtbConfigurator
-from bench.helpers.helpers import modprobe_driver, modprobe_driver_check
 from bench.helpers.log import HOST_DMESG_FILE
 from bench.machines.host import Device, Host
 from bench.machines.virtual.vm import VirtualMachine
@@ -273,9 +272,9 @@ def fixture_setup_vms(get_vmtb_config, get_cmdline_config, get_host, request):
         ts.poweron_vms()
 
         if tc.auto_probe_vm_driver:
-            modprobe_cmds = [modprobe_driver(vm) for vm in ts.get_vm]
-            for i, cmd in enumerate(modprobe_cmds):
-                assert modprobe_driver_check(ts.get_vm[i], cmd), f'modprobe failed on VM{i}'
+            for vm in ts.get_vm:
+                vm.load_drm_driver()
+                vm.discover_devices()
 
     logger.info('[Test execution: %sVF-%sVM]', num_vfs, num_vms)
     yield ts
