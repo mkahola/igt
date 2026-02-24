@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import json
 import logging
@@ -123,17 +123,18 @@ class QmpMonitor():
         ret: typing.Dict = {}
 
         qmp_msg = self.qmp_queue.get()
-        # logger.debug('[QMP RSP Queue] -> %s', qmp_msg)
-        if 'return' in qmp_msg:
-            ret = qmp_msg.get('return')
-            for block in ret:
-                if block.get('drv') == 'qcow2':
-                    node_name = block.get('node-name')
-                    # Get the most recent state snapshot from the snapshots list:
-                    snapshots = block.get('image').get('snapshots')
-                    if snapshots:
-                        snapshot_tag = snapshots[-1].get('name')
-                    break
+        while 'return' not in qmp_msg:
+            qmp_msg = self.qmp_queue.get()
+
+        ret = qmp_msg.get('return')
+        for block in ret:
+            if block.get('drv') == 'qcow2' and block.get('ro') is False:
+                node_name = block.get('node-name')
+                # Get the most recent state snapshot from the snapshots list:
+                snapshots = block.get('image').get('snapshots')
+                if snapshots:
+                    snapshot_tag = snapshots[-1].get('name')
+                break
 
         return (node_name, snapshot_tag)
 
