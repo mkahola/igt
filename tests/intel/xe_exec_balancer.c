@@ -32,7 +32,7 @@
  *	of a class simultaneously
  * Test category: functionality test
  */
-static void test_all_active(int fd, int gt, int class)
+static bool test_all_active(int fd, int gt, int class)
 {
 	uint32_t vm;
 	uint64_t addr = 0x1a0000;
@@ -58,7 +58,7 @@ static void test_all_active(int fd, int gt, int class)
 
 	num_placements = xe_gt_fill_engines_by_class(fd, gt, class, eci);
 	if (num_placements < 2)
-		return;
+		return false;
 
 	vm = xe_vm_create(fd, 0, 0);
 	bo_size = sizeof(*data) * num_placements;
@@ -110,6 +110,8 @@ static void test_all_active(int fd, int gt, int class)
 	munmap(data, bo_size);
 	gem_close(fd, bo);
 	xe_vm_destroy(fd, vm);
+
+	return true;
 }
 
 #define MAX_N_EXEC_QUEUES	16
@@ -156,7 +158,7 @@ static void test_all_active(int fd, int gt, int class)
  * @parallel-userptr-invalidate:	parallel userptr invalidate
  * @parallel-userptr-invalidate-race:	parallel userptr invalidate racy
  */
-static void
+static bool
 test_exec(int fd, int gt, int class, int n_exec_queues, int n_execs,
 	  unsigned int flags)
 {
@@ -186,7 +188,7 @@ test_exec(int fd, int gt, int class, int n_exec_queues, int n_execs,
 
 	num_placements = xe_gt_fill_engines_by_class(fd, gt, class, eci);
 	if (num_placements < 2)
-		return;
+		return false;
 
 	vm = xe_vm_create(fd, 0, 0);
 	bo_size = sizeof(*data) * n_execs;
@@ -326,6 +328,8 @@ test_exec(int fd, int gt, int class, int n_exec_queues, int n_execs,
 		free(data);
 	}
 	xe_vm_destroy(fd, vm);
+
+	return true;
 }
 
 /**
@@ -365,7 +369,7 @@ test_exec(int fd, int gt, int class, int n_exec_queues, int n_execs,
  * @parallel-userptr-invalidate-race:	parallel userptr invalidate racy
  */
 
-static void
+static bool
 test_cm(int fd, int gt, int class, int n_exec_queues, int n_execs,
 	unsigned int flags)
 {
@@ -399,7 +403,7 @@ test_cm(int fd, int gt, int class, int n_exec_queues, int n_execs,
 
 	num_placements = xe_gt_fill_engines_by_class(fd, gt, class, eci);
 	if (num_placements < 2)
-		return;
+		return false;
 
 	vm = xe_vm_create(fd, DRM_XE_VM_CREATE_FLAG_LR_MODE, 0);
 	bo_size = sizeof(*data) * n_execs;
@@ -557,6 +561,8 @@ test_cm(int fd, int gt, int class, int n_exec_queues, int n_execs,
 		free(data);
 	}
 	xe_vm_destroy(fd, vm);
+
+	return true;
 }
 
 
@@ -591,76 +597,140 @@ int igt_main()
 	igt_fixture()
 		fd = drm_open_driver(DRIVER_XE);
 
-	igt_subtest("virtual-all-active")
-		xe_for_each_gt(fd, gt)
+	igt_subtest("virtual-all-active") {
+		bool has_necessary_engines = false;
+
+		xe_for_each_gt(fd, gt) {
 			xe_for_each_engine_class(class)
-				test_all_active(fd, gt, class);
+				has_necessary_engines |=
+					test_all_active(fd, gt, class);
+		}
+		igt_require(has_necessary_engines);
+	}
 
 	for (const struct section *s = sections; s->name; s++) {
-		igt_subtest_f("once-%s", s->name)
-			xe_for_each_gt(fd, gt)
-				xe_for_each_engine_class(class)
-					test_exec(fd, gt, class, 1, 1,
-						  s->flags);
+		igt_subtest_f("once-%s", s->name) {
+			bool has_necessary_engines = false;
 
-		igt_subtest_f("twice-%s", s->name)
-			xe_for_each_gt(fd, gt)
+			xe_for_each_gt(fd, gt) {
 				xe_for_each_engine_class(class)
-					test_exec(fd, gt, class, 1, 2,
-						  s->flags);
+					has_necessary_engines |=
+						test_exec(fd, gt, class, 1, 1, s->flags);
+			}
+			igt_require(has_necessary_engines);
+		}
 
-		igt_subtest_f("many-%s", s->name)
-			xe_for_each_gt(fd, gt)
-				xe_for_each_engine_class(class)
-					test_exec(fd, gt, class, 1,
-						  s->flags & (REBIND | INVALIDATE) ?
-						  64 : 1024,
-						  s->flags);
+		igt_subtest_f("twice-%s", s->name) {
+			bool has_necessary_engines = false;
 
-		igt_subtest_f("many-execqueues-%s", s->name)
-			xe_for_each_gt(fd, gt)
+			xe_for_each_gt(fd, gt) {
 				xe_for_each_engine_class(class)
-					test_exec(fd, gt, class, 16,
-						  s->flags & (REBIND | INVALIDATE) ?
-						  64 : 1024,
-						  s->flags);
+					has_necessary_engines |=
+						test_exec(fd, gt, class, 1, 2, s->flags);
+			}
+			igt_require(has_necessary_engines);
+		}
 
-		igt_subtest_f("no-exec-%s", s->name)
-			xe_for_each_gt(fd, gt)
-				xe_for_each_engine_class(class)
-					test_exec(fd, gt, class, 1, 0,
-						  s->flags);
+		igt_subtest_f("many-%s", s->name) {
+			bool has_necessary_engines = false;
 
-		igt_subtest_f("once-cm-%s", s->name)
-			xe_for_each_gt(fd, gt)
+			xe_for_each_gt(fd, gt) {
 				xe_for_each_engine_class(class)
-					test_cm(fd, gt, class, 1, 1, s->flags);
+					has_necessary_engines |=
+						test_exec(fd, gt, class, 1,
+							  s->flags & (REBIND | INVALIDATE) ?
+							  64 : 1024,
+							  s->flags);
+			}
+			igt_require(has_necessary_engines);
+		}
 
-		igt_subtest_f("twice-cm-%s", s->name)
-			xe_for_each_gt(fd, gt)
-				xe_for_each_engine_class(class)
-					test_cm(fd, gt, class, 1, 2, s->flags);
+		igt_subtest_f("many-execqueues-%s", s->name) {
+			bool has_necessary_engines = false;
 
-		igt_subtest_f("many-cm-%s", s->name)
-			xe_for_each_gt(fd, gt)
+			xe_for_each_gt(fd, gt) {
 				xe_for_each_engine_class(class)
-					test_cm(fd, gt, class, 1,
-						s->flags & (REBIND | INVALIDATE) ?
-						64 : 1024,
-						s->flags);
+					has_necessary_engines |=
+						test_exec(fd, gt, class, 16,
+							  s->flags & (REBIND | INVALIDATE) ?
+							  64 : 1024,
+							  s->flags);
+			}
+			igt_require(has_necessary_engines);
+		}
 
-		igt_subtest_f("many-execqueues-cm-%s", s->name)
-			xe_for_each_gt(fd, gt)
-				xe_for_each_engine_class(class)
-					test_cm(fd, gt, class, 16,
-						s->flags & (REBIND | INVALIDATE) ?
-						64 : 1024,
-						s->flags);
+		igt_subtest_f("no-exec-%s", s->name) {
+			bool has_necessary_engines = false;
 
-		igt_subtest_f("no-exec-cm-%s", s->name)
-			xe_for_each_gt(fd, gt)
+			xe_for_each_gt(fd, gt) {
 				xe_for_each_engine_class(class)
-					test_cm(fd, gt, class, 1, 0, s->flags);
+					has_necessary_engines |=
+						test_exec(fd, gt, class, 1, 0,
+							  s->flags);
+			}
+			igt_require(has_necessary_engines);
+		}
+
+		igt_subtest_f("once-cm-%s", s->name) {
+			bool has_necessary_engines = false;
+
+			xe_for_each_gt(fd, gt) {
+				xe_for_each_engine_class(class)
+					has_necessary_engines |=
+						test_cm(fd, gt, class, 1, 1, s->flags);
+			}
+			igt_require(has_necessary_engines);
+		}
+
+		igt_subtest_f("twice-cm-%s", s->name) {
+			bool has_necessary_engines = false;
+
+			xe_for_each_gt(fd, gt) {
+				xe_for_each_engine_class(class)
+					has_necessary_engines |=
+						test_cm(fd, gt, class, 1, 2, s->flags);
+			}
+			igt_require(has_necessary_engines);
+		}
+
+		igt_subtest_f("many-cm-%s", s->name) {
+			bool has_necessary_engines = false;
+
+			xe_for_each_gt(fd, gt) {
+				xe_for_each_engine_class(class)
+					has_necessary_engines |=
+						test_cm(fd, gt, class, 1,
+							s->flags & (REBIND | INVALIDATE) ?
+							64 : 1024,
+							s->flags);
+			}
+			igt_require(has_necessary_engines);
+		}
+
+		igt_subtest_f("many-execqueues-cm-%s", s->name) {
+			bool has_necessary_engines = false;
+
+			xe_for_each_gt(fd, gt) {
+				xe_for_each_engine_class(class)
+					has_necessary_engines |=
+						test_cm(fd, gt, class, 16,
+							s->flags & (REBIND | INVALIDATE) ?
+							64 : 1024,
+							s->flags);
+			}
+			igt_require(has_necessary_engines);
+		}
+
+		igt_subtest_f("no-exec-cm-%s", s->name) {
+			bool has_necessary_engines = false;
+
+			xe_for_each_gt(fd, gt) {
+				xe_for_each_engine_class(class)
+					has_necessary_engines |=
+						test_cm(fd, gt, class, 1, 0, s->flags);
+			}
+			igt_require(has_necessary_engines);
+		}
 	}
 
 	igt_fixture()
