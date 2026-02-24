@@ -32,6 +32,10 @@ def pytest_addoption(parser):
                      help='Device card index for test execution')
 
 
+# Label indicating Max VFs configurarion variant, intended for pass to VmmTestingConfig.
+MAX_VFS = "Max"
+
+
 @dataclass
 class VmmTestingConfig:
     """Structure represents test configuration used by a setup fixture.
@@ -54,16 +58,23 @@ class VmmTestingConfig:
     auto_poweron_vm: bool = True
     auto_probe_vm_driver: bool = True
     unload_host_drivers_on_teardown: bool = False
+    enable_max_vfs: bool = False
     # Temporary W/A: reduce size of LMEM assigned to VFs to speed up a VF state save-restore process
     wa_reduce_vf_lmem: bool = False
 
+    def __post_init__(self):
+        if self.num_vfs is MAX_VFS:
+            self.enable_max_vfs = True
+            self.num_vfs = 0 # Actual value set in VmmTestingSetup
+
     def __str__(self) -> str:
-        test_config_id = f'{self.num_vfs}VF-(P:{self.provisioning_mode.name} S:{self.scheduling_mode.name})'
+        test_config_id = (f'{self.num_vfs if not self.enable_max_vfs else "Max"}VF'
+                          + f'-(P:{self.provisioning_mode.name} S:{self.scheduling_mode.name})')
         return test_config_id
 
     def __repr__(self) -> str:
         return (f'\nVmmTestingConfig:'
-                f'\nNum VFs = {self.num_vfs} / max num VMs = {self.max_num_vms}'
+                f'\nNum VFs = {self.num_vfs if not self.enable_max_vfs else "Max"} / max num VMs = {self.max_num_vms}'
                 f'\nVF provisioning mode = {self.provisioning_mode.name}'
                 f'\nVF scheduling mode = {self.scheduling_mode.name}'
                 f'\nSetup flags:'
@@ -89,6 +100,7 @@ class VmmTestingSetup:
         self.host.load_drivers()
         self.host.discover_devices()
         self.dut: Device = self.host.get_device(self.dut_index)
+        self.total_vfs: int = self.get_dut().driver.get_totalvfs()
 
         # VF migration requires vendor specific VFIO driver (e.g. xe-vfio-pci)
         vf_migration_support: bool = self.host.is_driver_loaded(f'{self.host.drm_driver_name}-vfio-pci')
@@ -98,11 +110,13 @@ class VmmTestingSetup:
                     "\n\tPCI BDF: %s "
                     "\n\tDevice ID: %s (%s)"
                     "\n\tHost DRM driver: %s"
-                    "\n\tVF migration support: %s",
+                    "\n\tMax VFs supported: %s"
+                    "\n\tVF migration supported: %s",
                     self.dut_index,
                     self.get_dut().pci_info.bdf,
                     self.get_dut().pci_info.devid, self.get_dut().gpu_model,
                     self.get_dut().driver.get_name(),
+                    self.total_vfs,
                     vf_migration_support)
 
         vmtb_root_path = vmtb_config.vmtb_config_file.parent
@@ -115,6 +129,9 @@ class VmmTestingSetup:
             or self.testing_config.scheduling_mode is not VfSchedulingMode.INFINITE):
             self.vgpu_profile: VgpuProfile = self.get_vgpu_profile()
 
+        if self.testing_config.provisioning_mode is VfProvisioningMode.AUTO and self.testing_config.enable_max_vfs:
+            self.testing_config.num_vfs = self.total_vfs
+
         # Start maximum requested number of VMs, but not more than VFs supported by the given vGPU profile
         self.vms: typing.List[VirtualMachine] = [
             VirtualMachine(vm_idx, self.guest_os_image,
@@ -125,6 +142,12 @@ class VmmTestingSetup:
 
     def get_vgpu_profile(self) -> VgpuProfile:
         configurator = VgpuProfileConfigurator(self.vgpu_profiles_dir, self.get_dut().gpu_model)
+        if self.testing_config.enable_max_vfs:
+            # Get a vGPU profile with the most VFs (not necessarily equal to sysfs/sriov_totalvfs)
+            self.testing_config.num_vfs = max(configurator.supported_vgpu_profiles.vf_resources,
+                                              key=lambda profile: profile.vf_count).vf_count
+            logger.debug("Max VFs supported by vGPU profiles: %s", self.testing_config.num_vfs)
+
         try:
             vgpu_profile = configurator.get_vgpu_profile(self.testing_config.num_vfs,
                                                          self.testing_config.scheduling_mode)
