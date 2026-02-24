@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import json
 import logging
@@ -40,6 +40,7 @@ class VmtbConfig:
     host_config: VmtbHostConfig
     guest_config: VmtbGuestConfig
     vgpu_profiles_path: str
+    wsim_wl_path: str
     guc_ver_path: str
     ci_host_dmesg_file: str
 
@@ -104,6 +105,7 @@ class VmtbConfigJsonReader:
             host_config=vmtb_host_config,
             guest_config=vmtb_guest_config,
             vgpu_profiles_path=config_json['resources']['vgpu_profiles_path'],
+            wsim_wl_path=config_json['resources']['wsim_wl_path'],
             guc_ver_path=config_json['resources']['guc_ver_path'],
             ci_host_dmesg_file=config_json['ci']['host_dmesg_file'])
 

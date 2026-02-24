@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright © 2024 Intel Corporation
+# Copyright © 2024-2026 Intel Corporation
 
 import enum
 import json
@@ -34,6 +34,7 @@ igt_tests: typing.Dict[IgtType, typing.Tuple[str, str]] = {
 class IgtExecutor(ExecutorInterface):
     def __init__(self, target: MachineInterface,
                  test: typing.Union[str, IgtType],
+                 num_repeats: int = 1,
                  timeout: int = DEFAULT_TIMEOUT) -> None:
         self.igt_config = target.get_igt_config()
 
@@ -46,18 +47,25 @@ class IgtExecutor(ExecutorInterface):
         self.results: typing.Dict[str, typing.Any] = {}
         self.target: MachineInterface = target
         self.igt: str = test if isinstance(test, str) else self.select_igt_variant(target.get_drm_driver_name(), test)
-        self.target.write_file_content(testlist, self.igt)
-        self.timeout: int = timeout
 
         logger.info("[%s] Execute IGT test: %s", target, self.igt)
+        if num_repeats > 1:
+            logger.debug("Repeat IGT execution %s times", num_repeats)
+            self.igt = (self.igt + '\n') * num_repeats
+
+        self.target.write_file_content(testlist, self.igt)
+        self.timeout: int = timeout
+        self.proc_result = ProcessResult()
         self.pid: int = self.target.execute(command)
 
     # Executor interface implementation
     def status(self) -> ProcessResult:
-        return self.target.execute_status(self.pid)
+        self.proc_result = self.target.execute_status(self.pid)
+        return self.proc_result
 
     def wait(self) -> ProcessResult:
-        return self.target.execute_wait(self.pid, self.timeout)
+        self.proc_result = self.target.execute_wait(self.pid, self.timeout)
+        return self.proc_result
 
     def sendsig(self, sig: signal.Signals) -> None:
         self.target.execute_signal(self.pid, sig)
@@ -69,9 +77,25 @@ class IgtExecutor(ExecutorInterface):
         self.sendsig(signal.SIGKILL)
 
     # IGT specific methods
+    def is_running(self) -> bool:
+        return not self.status().exited
+
+    def check_results(self) -> bool:
+        """Verify IGT test results. Return True for test success, False on fail."""
+        if not self.proc_result.exited:
+            self.proc_result = self.wait()
+
+        if self.proc_result.exit_code == 0 and self.did_pass():
+            logger.debug("[%s] IGT passed", self.target)
+            return True
+
+        logger.error("[%s] IGT failed: %s", self.target, self.proc_result)
+        return False
+
     def get_results_log(self) -> typing.Dict:
         # Results are cached
         if self.results:
+            logger.debug("Get available IGT results from cache")
             return self.results
         path = posixpath.join(self.igt_config.result_dir, 'results.json')
         result = self.target.read_file_content(path)
@@ -95,7 +119,7 @@ class IgtExecutor(ExecutorInterface):
                 continue
             fail_case = fail_case + aggregate[key]
 
-        logger.debug('Full IGT test results:\n%s', json.dumps(results, indent=4))
+        logger.debug("[%s] Full IGT test results:\n%s", self.target, json.dumps(results, indent=4))
 
         if fail_case > 0:
             logger.error('Test failed!')

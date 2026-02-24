@@ -79,8 +79,6 @@ class VmmTestingSetup:
         self.guest_os_image = vmtb_config.get_guest_config().os_image_path if cmdline_config['vm_image'] is None \
                          else cmdline_config['vm_image']
 
-        self.vgpu_profiles_dir = vmtb_config.vmtb_config_file.parent / vmtb_config.config.vgpu_profiles_path
-
         self.host.drm_driver_name = vmtb_config.get_host_config().driver
         self.host.igt_config = vmtb_config.get_host_config().igt_config
 
@@ -102,6 +100,12 @@ class VmmTestingSetup:
                     self.get_dut().pci_info.devid, self.get_dut().gpu_model,
                     self.get_dut().driver.get_name(),
                     vf_migration_support)
+
+        vmtb_root_path = vmtb_config.vmtb_config_file.parent
+        self.vgpu_profiles_dir = vmtb_root_path / vmtb_config.config.vgpu_profiles_path
+        # Device specific wsim descriptors directory path, e.g.:
+        # [vmtb_root]/vmm_flows/resources/wsim/ptl (last subdir is lowercase key/name from pci.GpuModel class)
+        self.wsim_wl_dir = vmtb_root_path / vmtb_config.config.wsim_wl_path / self.get_dut().gpu_model.name.lower()
 
         self.vgpu_profile: VgpuProfile = self.get_vgpu_profile()
 

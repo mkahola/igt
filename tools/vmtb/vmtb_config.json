@@ -23,6 +23,7 @@
     },
     "resources": {
         "vgpu_profiles_path": "vmm_flows/resources/vgpu_profiles",
+        "wsim_wl_path": "vmm_flows/resources/wsim",
         "guc_ver_path": "vmm_flows/resources/guc"
     },
     "ci": {

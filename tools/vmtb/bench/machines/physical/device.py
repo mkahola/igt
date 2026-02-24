@@ -45,7 +45,7 @@ class Device(DeviceInterface):
 
     def __init__(self, bdf: str, driver: str) -> None:
         self.pci_info = self.PciInfo(bdf)
-        self.gpu_model: str = pci.get_gpu_model(self.pci_info.devid)
+        self.gpu_model = pci.get_gpu_model(self.pci_info.devid)
         self.driver: DriverInterface = self.instantiate_driver(driver, self.pci_info.minor_number)
 
     def __str__(self) -> str:
