@@ -6095,6 +6095,20 @@ uint32_t kmstest_get_vbl_flag(int crtc_index)
 	return flag;
 }
 
+/**
+ * igt_crtc_get_vbl_flag:
+ * @crtc: CRTC
+ *
+ * Convert a CRTC into flag representation
+ * expected by DRM_IOCTL_WAIT_VBLANK.
+ *
+ * See #igt_wait_for_vblank_count for details.
+ */
+uint32_t igt_crtc_get_vbl_flag(igt_crtc_t *crtc)
+{
+	return kmstest_get_vbl_flag(crtc->crtc_index);
+}
+
 static inline const uint32_t *
 formats_ptr(const struct drm_format_modifier_blob *blob)
 {

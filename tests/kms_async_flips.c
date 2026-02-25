@@ -553,7 +553,7 @@ static void test_async_flip(data_t *data)
 static void wait_for_vblank(data_t *data, unsigned long *vbl_time, unsigned int *seq)
 {
 	drmVBlank wait_vbl = {
-		.request.type = DRM_VBLANK_RELATIVE | kmstest_get_vbl_flag(data->crtc->crtc_index),
+		.request.type = DRM_VBLANK_RELATIVE | igt_crtc_get_vbl_flag(data->crtc),
 		.request.sequence = 1,
 	};
 
@@ -731,9 +731,9 @@ static void queue_vblank(data_t *data)
 {
 	drmVBlank wait_vbl = {
 		.request.type = DRM_VBLANK_RELATIVE | DRM_VBLANK_EVENT |
-			kmstest_get_vbl_flag(data->crtc->crtc_index),
-		.request.sequence = 1,
-		.request.signal = (long)data,
+			igt_crtc_get_vbl_flag(data->crtc),
+			.request.sequence = 1,
+			.request.signal = (long)data,
 	};
 
 	do_ioctl(data->drm_fd, DRM_IOCTL_WAIT_VBLANK, &wait_vbl);

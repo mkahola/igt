@@ -1202,7 +1202,7 @@ event_wait(int gem_fd, const intel_ctx_t *ctx,
 
 		igt_fork_helper(&waiter) {
 			const uint32_t pipe_id_flag =
-					kmstest_get_vbl_flag(data.crtc->crtc_index);
+					igt_crtc_get_vbl_flag(data.crtc);
 
 			for (;;) {
 				union drm_wait_vblank vbl = { };
