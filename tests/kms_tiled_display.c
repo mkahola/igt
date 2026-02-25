@@ -221,7 +221,6 @@ static void setup_mode(data_t *data)
 	data_connector_t *conns = data->conns;
 
 	/*
-	 * The output is set to PIPE_NONE and then assigned a pipe.
 	 * This is done to ensure a complete modeset occures every
 	 * time the test is run.
 	 */
