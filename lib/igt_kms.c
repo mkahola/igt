@@ -2821,15 +2821,12 @@ static void igt_require_pipe(igt_display_t *display, enum pipe pipe)
 			kmstest_pipe_name(pipe));
 }
 
-static bool igt_pipe_has_valid_output(igt_display_t *display, enum pipe pipe)
+static bool igt_crtc_has_valid_output(igt_crtc_t *crtc)
 {
+	igt_display_t *display = crtc->display;
 	igt_output_t *output;
 
-	igt_require_pipe(display, pipe);
-
-	for_each_valid_output_on_crtc(display,
-				      igt_crtc_for_pipe(display, pipe),
-				      output)
+	for_each_valid_output_on_crtc(display, crtc, output)
 		return true;
 
 	return false;
@@ -2949,7 +2946,7 @@ void igt_display_reset_outputs(igt_display_t *display)
 	for_each_crtc(display, crtc) {
 		igt_output_t *output;
 
-		if (!igt_pipe_has_valid_output(display, crtc->pipe))
+		if (!igt_crtc_has_valid_output(crtc))
 			continue;
 
 		output = igt_get_single_output_for_pipe(display, crtc->pipe);
@@ -3266,7 +3263,9 @@ void igt_display_require_output(igt_display_t *display)
  */
 void igt_display_require_output_on_pipe(igt_display_t *display, enum pipe pipe)
 {
-	if (!igt_pipe_has_valid_output(display, pipe))
+	igt_require_pipe(display, pipe);
+
+	if (!igt_crtc_has_valid_output(igt_crtc_for_pipe(display, pipe)))
 		igt_skip("No valid connector found on pipe %s\n", kmstest_pipe_name(pipe));
 }
 
