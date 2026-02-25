@@ -970,28 +970,6 @@ static uint32_t set_fb_on_crtc(int fd, int pipe, struct vgem_bo *bo, uint32_t fb
 	return 0;
 }
 
-static inline uint32_t pipe_select(int pipe)
-{
-	if (pipe > 1)
-		return pipe << DRM_VBLANK_HIGH_CRTC_SHIFT;
-	else if (pipe > 0)
-		return DRM_VBLANK_SECONDARY;
-	else
-		return 0;
-}
-
-static unsigned get_vblank(int fd, int pipe, unsigned flags)
-{
-	union drm_wait_vblank vbl;
-
-	memset(&vbl, 0, sizeof(vbl));
-	vbl.request.type = DRM_VBLANK_RELATIVE | pipe_select(pipe) | flags;
-	if (drmIoctl(fd, DRM_IOCTL_WAIT_VBLANK, &vbl))
-		return 0;
-
-	return vbl.reply.sequence;
-}
-
 static void flip_to_vgem(int i915, int vgem,
 			 struct vgem_bo *bo,
 			 uint32_t fb_id,
@@ -1013,7 +991,7 @@ static void flip_to_vgem(int i915, int vgem,
 			igt_assert_f(poll(&pfd, 1, 0) == 0,
 				     "flip to %s completed whilst busy\n",
 				     name);
-			get_vblank(i915, 0, DRM_VBLANK_NEXTONMISS);
+			kmstest_get_vblank(i915, 0, DRM_VBLANK_NEXTONMISS);
 		}
 	}
 	igt_waitchildren_timeout(2, "flip blocked by waiting for busy vgem fence");
@@ -1023,12 +1001,12 @@ static void flip_to_vgem(int i915, int vgem,
 		unsigned long miss;
 
 		/* Signal fence at the start of the next vblank */
-		get_vblank(i915, 0, DRM_VBLANK_NEXTONMISS);
+		kmstest_get_vblank(i915, 0, DRM_VBLANK_NEXTONMISS);
 		vgem_fence_signal(vgem, fence);
 
 		miss = 0;
 		igt_until_timeout(5) {
-			get_vblank(i915, 0, DRM_VBLANK_NEXTONMISS);
+			kmstest_get_vblank(i915, 0, DRM_VBLANK_NEXTONMISS);
 			if (poll(&pfd, 1, 0))
 				break;
 			miss++;
