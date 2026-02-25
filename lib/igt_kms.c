@@ -7340,14 +7340,14 @@ int igt_get_dp_mst_connector_id(igt_output_t *output)
 }
 
 /**
- * get_num_scalers:
- * @display: the display
- * @pipe: display pipe
+ * igt_crtc_num_scalers:
+ * @crtc: the CRTC
  *
- * Returns: Number of scalers supported per pipe.
+ * Returns: Number of scalers supported on the CRTC.
  */
-int get_num_scalers(igt_display_t *display, enum pipe pipe)
+int igt_crtc_num_scalers(igt_crtc_t *crtc)
 {
+	igt_display_t *display = crtc->display;
 	char buf[8120];
 	char *start_loc1, *start_loc2;
 	int dir, res;
@@ -7355,7 +7355,7 @@ int get_num_scalers(igt_display_t *display, enum pipe pipe)
 	int drm_fd = display->drm_fd;
 	char dest[20] = ":pipe ";
 
-	strcat(dest, kmstest_pipe_name(pipe));
+	strcat(dest, igt_crtc_name(crtc));
 
 	if (is_intel_device(drm_fd) &&
 	    intel_display_ver(intel_get_drm_devid(drm_fd)) >= 9) {
@@ -7384,7 +7384,7 @@ int get_num_scalers(igt_display_t *display, enum pipe pipe)
 		 * as a rough approximation of the # of scalars.. it may
 		 * undercount on some hw, but it will not overcount
 		 */
-		for_each_plane_on_pipe(display, pipe, plane) {
+		for_each_plane_on_pipe(display, crtc->pipe, plane) {
 			for (unsigned i = 0; i < plane->format_mod_count; i++) {
 				if (igt_format_is_yuv(plane->formats[i])) {
 					num_scalers++;

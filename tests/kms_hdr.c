@@ -251,7 +251,7 @@ static void test_bpc_switch_on_output(data_t *data, igt_crtc_t *crtc,
 	 * smaller plane size in following tests.
 	 */
 	igt_plane_set_fb(data->primary, &afb);
-	if (get_num_scalers(display, crtc->pipe) >= 1)
+	if (igt_crtc_num_scalers(crtc) >= 1)
 		igt_plane_set_size(data->primary, data->w, data->h);
 	else
 		igt_plane_set_size(data->primary, 512, 512);

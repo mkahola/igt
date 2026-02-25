@@ -1283,7 +1283,7 @@ bool igt_parse_mode_string(const char *mode_string, drmModeModeInfo *mode);
 bool intel_pipe_output_combo_valid(igt_display_t *display);
 bool igt_check_output_is_dp_mst(igt_output_t *output);
 int igt_get_dp_mst_connector_id(igt_output_t *output);
-int get_num_scalers(igt_display_t *display, enum pipe pipe);
+int igt_crtc_num_scalers(igt_crtc_t *crtc);
 int igt_get_current_lane_count(int drm_fd, igt_output_t *output);
 int igt_get_current_link_rate(int drm_fd, igt_output_t *output);
 int igt_get_max_link_rate(int drm_fd, igt_output_t *output);
