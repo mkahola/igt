@@ -2472,6 +2472,21 @@ unsigned int kmstest_get_vblank(int fd, int crtc_index, unsigned int flags)
 }
 
 /**
+ * igt_crtc_get_vblank:
+ * @crtc: CRTC
+ * @flags: Flags passed to drm_ioctl_wait_vblank
+ *
+ * Blocks or request a signal when a specified vblank event occurs
+ *
+ * Returns 0 on failure or the reply vblank sequence number otherwise
+ */
+unsigned int igt_crtc_get_vblank(igt_crtc_t *crtc, unsigned int flags)
+{
+	return kmstest_get_vblank(crtc->display->drm_fd, crtc->crtc_index,
+				  flags);
+}
+
+/**
  * kmstest_wait_for_pageflip_timeout:
  * @fd: Opened drm file descriptor
  * @timeout_us: timeout used for waiting

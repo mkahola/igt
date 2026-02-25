@@ -587,6 +587,7 @@ igt_crtc_t *igt_first_crtc(igt_display_t *display);
 igt_crtc_t *igt_first_crtc_with_single_output(igt_display_t *display, igt_output_t **ret_output);
 
 uint32_t igt_crtc_get_vbl_flag(igt_crtc_t *crtc);
+unsigned int igt_crtc_get_vblank(igt_crtc_t *crtc, unsigned int flags);
 
 typedef struct _igt_pipe_crc igt_pipe_crc_t;
 igt_pipe_crc_t *igt_crtc_crc_new(igt_crtc_t *crtc, const char *source);

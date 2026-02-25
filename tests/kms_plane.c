@@ -833,9 +833,8 @@ restart_round:
 			 * is when the next flip latches.
 			 */
 			if (i >= 1)
-				vblank[i - 1] = kmstest_get_vblank(data->drm_fd,
-								   crtc->crtc_index,
-								   0) + 1;
+				vblank[i - 1] = igt_crtc_get_vblank(crtc,
+								    0) + 1;
 
 			/*
 			 * Can't use drmModePageFlip() since we need to
@@ -871,9 +870,8 @@ restart_round:
 		 * The last crc is available earliest one
 		 * frame after the last flip latched.
 		 */
-		vblank[i - 1] = kmstest_get_vblank(data->drm_fd,
-						   crtc->crtc_index,
-						   0) + 1;
+		vblank[i - 1] = igt_crtc_get_vblank(crtc,
+						    0) + 1;
 	}
 
 	/*
