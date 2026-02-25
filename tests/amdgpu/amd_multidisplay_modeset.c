@@ -159,7 +159,7 @@ static void test_init(struct data_t *data)
 		 * This will let displays connected to MST hub be
 		 * tested
 		 */
-		output = igt_get_single_output_for_pipe(display, crtc->pipe);
+		output = igt_get_single_output_for_crtc(crtc);
 		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
 							   DRM_PLANE_TYPE_PRIMARY);
 		data->output[crtc->pipe] = output;

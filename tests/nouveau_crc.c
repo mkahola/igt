@@ -351,8 +351,7 @@ int igt_main()
 				igt_display_commit(&data.display);
 			}
 
-			data.output = igt_get_single_output_for_pipe(&data.display,
-								     data.crtc->pipe);
+			data.output = igt_get_single_output_for_crtc(data.crtc);
 			data.mode = igt_output_get_mode(data.output);
 
 			/* None of these tests need to perform modesets, just page flips. So running

@@ -67,8 +67,7 @@ static void test_init(data_t *data)
 
 	igt_display_reset(display);
 
-	data->output = igt_get_single_output_for_pipe(display,
-						      data->crtc->pipe);
+	data->output = igt_get_single_output_for_crtc(data->crtc);
 	igt_assert(data->output);
 
 	if (data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_eDP) {

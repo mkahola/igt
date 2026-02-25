@@ -2814,13 +2814,6 @@ void igt_display_reset(igt_display_t *display)
 static void igt_fill_plane_format_mod(igt_display_t *display, igt_plane_t *plane);
 static void igt_fill_display_format_mod(igt_display_t *display);
 
-static void igt_require_pipe(igt_display_t *display, enum pipe pipe)
-{
-	igt_skip_on_f(pipe >= igt_display_n_crtcs(display) || !igt_crtc_for_pipe(display, pipe)->valid,
-			"Pipe %s does not exist\n",
-			kmstest_pipe_name(pipe));
-}
-
 static bool igt_crtc_has_valid_output(igt_crtc_t *crtc)
 {
 	igt_display_t *display = crtc->display;
@@ -2949,7 +2942,7 @@ void igt_display_reset_outputs(igt_display_t *display)
 		if (!igt_crtc_has_valid_output(crtc))
 			continue;
 
-		output = igt_get_single_output_for_pipe(display, crtc->pipe);
+		output = igt_get_single_output_for_crtc(crtc);
 
 		if (crtc->num_primary_planes > 1) {
 			igt_plane_t *old_primary = &crtc->planes[0];
@@ -3655,24 +3648,21 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 }
 
 /**
- * igt_get_single_output_for_pipe:
- * @display: a pointer to an #igt_display_t structure
- * @pipe: The pipe for which an #igt_output_t must be returned.
+ * igt_get_single_output_for_crtc:
+ * @crtc: The CRTC for which an #igt_output_t must be returned.
  *
- * Get a compatible output for a pipe.
+ * Get a compatible output for a CRTC.
  *
- * Returns: A compatible output for a given pipe, or NULL.
+ * Returns: A compatible output for a given CRTC, or NULL.
  */
-igt_output_t *igt_get_single_output_for_pipe(igt_display_t *display, enum pipe pipe)
+igt_output_t *igt_get_single_output_for_crtc(igt_crtc_t *crtc)
 {
+	igt_display_t *display = crtc->display;
 	igt_output_t *chosen_outputs[igt_display_n_crtcs(display)];
-
-	igt_assert(pipe != PIPE_NONE);
-	igt_require_pipe(display, pipe);
 
 	__igt_pipe_populate_outputs(display, chosen_outputs);
 
-	return chosen_outputs[pipe];
+	return chosen_outputs[crtc->pipe];
 }
 
 static igt_output_t *igt_crtc_get_output(igt_crtc_t *crtc)

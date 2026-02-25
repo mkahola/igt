@@ -1041,7 +1041,7 @@ static void display_helper(igt_display_t *dpy, int *done)
 		if (!crtc || !crtc->valid)
 			continue;
 
-		output = igt_get_single_output_for_pipe(dpy, crtc->pipe);
+		output = igt_get_single_output_for_crtc(crtc);
 		if (!output)
 			continue;
 

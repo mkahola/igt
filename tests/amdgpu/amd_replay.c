@@ -64,8 +64,7 @@ static void test_init(struct test_data *data)
 
 	igt_display_reset(display);
 
-	data->output = igt_get_single_output_for_pipe(display,
-						      data->crtc->pipe);
+	data->output = igt_get_single_output_for_crtc(data->crtc);
 	igt_require(data->output);
 	igt_info("output %s\n", data->output->name);
 

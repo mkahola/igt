@@ -616,7 +616,7 @@ int igt_crtc_count_plane_type(igt_crtc_t *crtc, int plane_type);
 igt_plane_t *igt_crtc_get_plane_type_index(igt_crtc_t *crtc, int plane_type,
 					   int index);
 bool output_is_internal_panel(igt_output_t *output);
-igt_output_t *igt_get_single_output_for_pipe(igt_display_t *display, enum pipe pipe);
+igt_output_t *igt_get_single_output_for_crtc(igt_crtc_t *crtc);
 
 void igt_crtc_request_out_fence(igt_crtc_t *crtc);
 
