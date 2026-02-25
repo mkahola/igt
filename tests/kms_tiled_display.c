@@ -237,7 +237,7 @@ static void setup_mode(data_t *data)
 
 			if (count > 0) {
 				for (prev = count - 1; prev >= 0; prev--) {
-					if (crtc->pipe == conns[prev].crtc->pipe) {
+					if (crtc == conns[prev].crtc) {
 						pipe_in_use = true;
 						break;
 					}

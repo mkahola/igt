@@ -548,7 +548,7 @@ static void run_2_display_test(data_t *data, uint64_t modifier, const char *name
 					      crtc,
 					      output1) {
 			for_each_crtc(display, crtc2) {
-				if (crtc->pipe == crtc2->pipe)
+				if (crtc == crtc2)
 					continue;
 
 				for_each_valid_output_on_crtc_local(display, crtc2,

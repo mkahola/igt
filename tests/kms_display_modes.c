@@ -201,7 +201,7 @@ static void run_extendedmode_test(data_t *data) {
 					      output1) {
 
 			for_each_crtc(display, crtc2) {
-				if (crtc->pipe == crtc2->pipe)
+				if (crtc == crtc2)
 					continue;
 
 				for_each_valid_output_on_crtc_local(display, crtc2,
