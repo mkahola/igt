@@ -659,7 +659,7 @@ static bool pipe_check(data_t *data, igt_crtc_t *crtc,
 	igt_plane_t *plane;
 	bool plane_alpha = false, plane_blend = false, multiply = false;
 
-	igt_display_require_output_on_pipe(display, crtc->pipe);
+	igt_display_require_output_on_crtc(crtc);
 	for_each_plane_on_crtc(crtc, plane) {
 		if (!igt_plane_has_prop(plane, IGT_PLANE_ALPHA))
 			continue;

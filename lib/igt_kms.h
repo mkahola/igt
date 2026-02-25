@@ -570,7 +570,7 @@ void igt_display_commit_atomic(igt_display_t *display, uint32_t flags, void *use
 int  igt_display_try_commit2(igt_display_t *display, enum igt_commit_style s);
 int  igt_display_drop_events(igt_display_t *display);
 void igt_display_require_output(igt_display_t *display);
-void igt_display_require_output_on_pipe(igt_display_t *display, enum pipe pipe);
+void igt_display_require_output_on_crtc(igt_crtc_t *crtc);
 int igt_display_n_crtcs(igt_display_t *display);
 
 const char *igt_crtc_name(igt_crtc_t *crtc);

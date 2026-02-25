@@ -340,8 +340,8 @@ int igt_main()
 			int dir;
 
 			data.crtc = igt_crtc_for_pipe(&data.display, pipe);
-			igt_display_require_output_on_pipe(&data.display,
-							   data.crtc->pipe);
+			igt_require(data.crtc->valid);
+			igt_display_require_output_on_crtc(data.crtc);
 
 			/* Disable the output from the previous iteration of pipe tests, if there is
 			 * one

@@ -3254,19 +3254,16 @@ void igt_display_require_output(igt_display_t *display)
 }
 
 /**
- * igt_display_require_output_on_pipe:
- * @display: A pointer to an #igt_display_t structure
- * @pipe: Display pipe
+ * igt_display_require_output_on_crtc:
+ * @crtc: CRTC
  *
- * Checks whether there's a valid @pipe/@output combination for the given @display and @pipe
- * Skips test if a valid @pipe is not found
+ * Checks whether there's a valid @crtc/@output combination for the given @crtc
  */
-void igt_display_require_output_on_pipe(igt_display_t *display, enum pipe pipe)
+void igt_display_require_output_on_crtc(igt_crtc_t *crtc)
 {
-	igt_require_pipe(display, pipe);
-
-	if (!igt_crtc_has_valid_output(igt_crtc_for_pipe(display, pipe)))
-		igt_skip("No valid connector found on pipe %s\n", kmstest_pipe_name(pipe));
+	if (!igt_crtc_has_valid_output(crtc))
+		igt_skip("No valid connector found on CRTC %s\n",
+			 igt_crtc_name(crtc));
 }
 
 /**
