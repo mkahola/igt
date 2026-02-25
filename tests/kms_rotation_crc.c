@@ -1023,7 +1023,7 @@ static void test_multi_plane_rotation(data_t *data, igt_crtc_t *crtc)
 
 							igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 							flipsw = kmstest_get_vblank(data->gfx_fd,
-										    crtc->pipe,
+										    crtc->crtc_index,
 										    0) + 1;
 							have_crc = false;
 						}
@@ -1038,7 +1038,7 @@ static void test_multi_plane_rotation(data_t *data, igt_crtc_t *crtc)
 
 						igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 						fliphw = kmstest_get_vblank(data->gfx_fd,
-									    crtc->pipe,
+									    crtc->crtc_index,
 									    0) + 1;
 
 						if (!have_crc) {

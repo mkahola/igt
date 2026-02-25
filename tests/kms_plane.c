@@ -834,7 +834,7 @@ restart_round:
 			 */
 			if (i >= 1)
 				vblank[i - 1] = kmstest_get_vblank(data->drm_fd,
-								   crtc->pipe,
+								   crtc->crtc_index,
 								   0) + 1;
 
 			/*
@@ -871,7 +871,8 @@ restart_round:
 		 * The last crc is available earliest one
 		 * frame after the last flip latched.
 		 */
-		vblank[i - 1] = kmstest_get_vblank(data->drm_fd, crtc->pipe,
+		vblank[i - 1] = kmstest_get_vblank(data->drm_fd,
+						   crtc->crtc_index,
 						   0) + 1;
 	}
 

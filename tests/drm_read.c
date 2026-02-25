@@ -79,7 +79,7 @@ static void assert_empty(int fd)
 
 static void generate_event(int fd, igt_crtc_t *crtc)
 {
-	igt_assert(kmstest_get_vblank(fd, crtc->pipe, DRM_VBLANK_EVENT));
+	igt_assert(kmstest_get_vblank(fd, crtc->crtc_index, DRM_VBLANK_EVENT));
 }
 
 static void wait_for_event(int fd)
@@ -305,7 +305,7 @@ int igt_main()
 		}
 
 		igt_display_commit2(&display, display.is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
-		igt_require(kmstest_get_vblank(fd, crtc->pipe, 0));
+		igt_require(kmstest_get_vblank(fd, crtc->crtc_index, 0));
 	}
 
 	igt_subtest("invalid-buffer")
