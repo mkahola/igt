@@ -47,7 +47,7 @@ static void test_init(struct data *data)
 	igt_display_t *display = &data->display;
 
 	/* It doesn't matter which pipe we choose on amdpgu. */
-	data->crtc = igt_crtc_for_pipe(&data->display, PIPE_A);
+	data->crtc = igt_first_crtc(&data->display);
 
 	igt_display_reset(display);
 

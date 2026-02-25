@@ -872,7 +872,7 @@ static void invalid_create_leases(data_t *data)
 	igt_crtc_t *crtc;
 	int tmp_fd, ret;
 
-	crtc = igt_crtc_for_pipe(&data->master.display, 0);
+	crtc = igt_first_crtc(&data->master.display);
 
 	/* NULL array pointer */
 	mcl.object_count = 1;
@@ -1070,7 +1070,7 @@ static int _create_simple_lease(int master_fd, data_t *data, int expected_ret)
 	struct drm_mode_create_lease mcl;
 	igt_crtc_t *crtc;
 
-	crtc = igt_crtc_for_pipe(&data->master.display, 0);
+	crtc = igt_first_crtc(&data->master.display);
 
 	object_ids[0] = crtc->crtc_id;
 	object_ids[1] = data->master.display.outputs[0].id;
@@ -1164,7 +1164,7 @@ static void implicit_plane_lease(data_t *data)
 	uint32_t cursor_id;
 	igt_crtc_t *crtc;
 
-	crtc = igt_crtc_for_pipe(&data->master.display, 0);
+	crtc = igt_first_crtc(&data->master.display);
 
 	cursor_id = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_CURSOR)->drm_plane->plane_id;
 

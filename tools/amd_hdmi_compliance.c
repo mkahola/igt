@@ -383,7 +383,7 @@ static void test_init(data_t *data, int conn_id)
 {
 	igt_display_t *display = &data->display;
 
-	data->crtc = igt_crtc_for_pipe(&data->display, PIPE_A);
+	data->crtc = igt_first_crtc(&data->display);
 
 	igt_display_reset(display);
 

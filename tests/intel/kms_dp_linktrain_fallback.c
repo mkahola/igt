@@ -468,7 +468,7 @@ static void test_dsc_sst_fallback(data_t *data)
 	int output_count = 0;
 
 	igt_info("Checking DSC fallback on %s\n", igt_output_name(data->output));
-	data->crtc = igt_crtc_for_pipe(&data->display, PIPE_A);
+	data->crtc = igt_first_crtc(&data->display);
 
 	igt_display_reset(&data->display);
 	igt_reset_link_params(data->drm_fd, data->output);

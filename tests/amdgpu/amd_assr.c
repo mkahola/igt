@@ -161,7 +161,7 @@ static void present_visual_pattern(data_t *data, igt_output_t *output)
 {
 	igt_display_t *display = &data->display;
 	igt_plane_t *primary;
-	igt_crtc_t *crtc = igt_crtc_for_pipe(display, PIPE_A);
+	igt_crtc_t *crtc = igt_first_crtc(display);
 	drmModeModeInfo *mode;
 	igt_fb_t fb;
 

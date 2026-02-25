@@ -7965,6 +7965,22 @@ igt_crtc_t *igt_crtc_for_crtc_id(igt_display_t *display, uint32_t crtc_id)
 	return NULL;
 }
 
+/*
+ * igt_first_crtc:
+ * @display: pointer to igt_display_t
+ *
+ * Returns: The first CRTC on the device
+ */
+igt_crtc_t *igt_first_crtc(igt_display_t *display)
+{
+	igt_crtc_t *crtc;
+
+	for_each_crtc(display, crtc)
+		return crtc;
+
+	return NULL;
+}
+
 /**
  * igt_first_crtc_with_single_output:
  * @display: a pointer to an #igt_display_t structure
