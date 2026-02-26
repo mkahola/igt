@@ -70,6 +70,7 @@ static const char STOP_REASON_SKIP[]  = "SKIP";
 
 static int g_wait_flr_ms = 200;
 static bool g_use_xe_vfio_pci = true;
+static bool g_extended_scope;
 
 static struct g_mmio {
 	struct xe_mmio *mmio;
@@ -1160,6 +1161,9 @@ static int opt_handler(int opt, int opt_index, void *data)
 	long val;
 
 	switch (opt) {
+	case 'e':
+		g_extended_scope = true;
+		break;
 	case 'v':
 		g_use_xe_vfio_pci = false;
 		igt_info("xe-vfio-pci binding: disabled\n");
@@ -1180,16 +1184,18 @@ static int opt_handler(int opt, int opt_index, void *data)
 }
 
 static const struct option long_options[] = {
+	{ .name = "extended", .has_arg = false, .val = 'e', },
 	{ .name = "no-xe-vfio-pci", .has_arg = false, .val = 'v', },
 	{ .name = "wait-flr-ms", .has_arg = true, .val = 'w', },
 	{},
 };
 
 static const char help_str[] =
+	"  --extended\t\tRun extended scope\n"
 	"  --no-xe-vfio-pci\tDo not load/bind xe-vfio-pci for VFs\n"
 	"  --wait-flr-ms=MS\tSleep MS milliseconds after VF reset sysfs write (default: 200)\n";
 
-int igt_main_args("vw:", long_options, help_str, opt_handler, NULL)
+int igt_main_args("evw:", long_options, help_str, opt_handler, NULL)
 {
 	int pf_fd;
 	bool autoprobe;
@@ -1202,8 +1208,14 @@ int igt_main_args("vw:", long_options, help_str, opt_handler, NULL)
 	}
 
 	igt_describe("Initiate FLR without any additional state checks.");
-	igt_subtest("flr-basic") {
-		reset_only_test(pf_fd, 1, execute_sequential_flr);
+	igt_subtest_with_dynamic("flr-basic") {
+		for_each_sriov_num_vfs(pf_fd, vf_num) {
+			if (!g_extended_scope && vf_num > 1)
+				break;
+
+			igt_dynamic_f("numvfs-%u", vf_num)
+				reset_only_test(pf_fd, vf_num, execute_sequential_flr);
+		}
 	}
 
 	igt_describe("Verify LMEM, GGTT, and SCRATCH_REGS are properly cleared after VF1 FLR");
