@@ -29,6 +29,12 @@
  * Functionality: FLR
  * Description: Examine behavior of SR-IOV VF FLR
  *
+ * SUBTEST: flr-basic
+ * Run type: BAT
+ * Description:
+ *   Initiates FLR without any additional state checks.
+ *   Useful as a basic smoke test of the reset sysfs write path.
+ *
  * SUBTEST: flr-vf1-clear
  * Run type: BAT
  * Description:
@@ -1016,6 +1022,60 @@ static void regs_subcheck_cleanup(struct subcheck_data *data)
 {
 }
 
+static void reset_only_subcheck_init(struct subcheck_data *data)
+{
+	if (!g_use_xe_vfio_pci) {
+		set_skip_reason(data, "xe-vfio-pci binding is disabled\n");
+		return;
+	}
+
+	if (!igt_kmod_is_loaded("xe_vfio_pci"))
+		set_skip_reason(data, "xe_vfio_pci is not loaded\n");
+}
+
+static void reset_only_subcheck_prepare_vf(int vf_id, struct subcheck_data *data)
+{
+	char *slot = igt_sriov_get_vf_pci_slot_alloc(data->pf_fd, vf_id);
+	char bound[64];
+	int bound_ret;
+
+	igt_assert(slot);
+
+	bound_ret = igt_pci_get_bound_driver_name(slot, bound, sizeof(bound));
+	if (bound_ret <= 0 || strcmp(bound, "xe-vfio-pci") != 0)
+		set_skip_reason(data, "VF%u not bound to xe-vfio-pci\n", vf_id);
+
+	free(slot);
+}
+
+static void noop_subcheck_verify_vf(int vf_id, int flr_vf_id, struct subcheck_data *data)
+{
+}
+
+static void noop_subcheck_cleanup(struct subcheck_data *data)
+{
+}
+
+static void reset_only_test(int pf_fd, int num_vfs, flr_exec_strategy exec_strategy)
+{
+	struct subcheck_data base = {
+		.pf_fd = pf_fd,
+		.num_vfs = num_vfs,
+		.tile = 0,
+		.stop_reason = NULL,
+	};
+	struct subcheck check = {
+		.data = &base,
+		.name = "reset-only",
+		.init = reset_only_subcheck_init,
+		.prepare_vf = reset_only_subcheck_prepare_vf,
+		.verify_vf = noop_subcheck_verify_vf,
+		.cleanup = noop_subcheck_cleanup,
+	};
+
+	verify_flr(pf_fd, num_vfs, &check, 1, exec_strategy);
+}
+
 static void clear_tests(int pf_fd, int num_vfs, flr_exec_strategy exec_strategy)
 {
 	const uint8_t num_tiles = xe_tiles_count(pf_fd);
@@ -1139,6 +1199,11 @@ int igt_main_args("vw:", long_options, help_str, opt_handler, NULL)
 		igt_require(igt_sriov_is_pf(pf_fd));
 		igt_require(igt_sriov_get_enabled_vfs(pf_fd) == 0);
 		autoprobe = igt_sriov_is_driver_autoprobe_enabled(pf_fd);
+	}
+
+	igt_describe("Initiate FLR without any additional state checks.");
+	igt_subtest("flr-basic") {
+		reset_only_test(pf_fd, 1, execute_sequential_flr);
 	}
 
 	igt_describe("Verify LMEM, GGTT, and SCRATCH_REGS are properly cleared after VF1 FLR");
