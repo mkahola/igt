@@ -371,7 +371,6 @@ static void restore_fbcon(struct drm_info *drm)
 
 static void subtest(struct drm_info *drm, struct feature *feature, bool suspend)
 {
-	igt_device_set_master(drm->fd);
 	kmstest_set_vt_graphics_mode();
 
 	igt_require(feature->supported_on_chipset(drm->fd, drm->debugfs_fd));
