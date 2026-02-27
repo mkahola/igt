@@ -328,7 +328,7 @@ run_tests_for_plane(data_t *data)
 							 output) {
 				data->output = output;
 
-				if (!pipe_output_combo_valid(data, crtc))
+				if (!crtc_output_combo_valid(data, crtc))
 					continue;
 
 				test_setup(data,

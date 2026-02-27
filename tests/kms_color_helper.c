@@ -24,7 +24,7 @@
 
 #include "kms_color_helper.h"
 
-bool pipe_output_combo_valid(data_t *data, igt_crtc_t *crtc)
+bool crtc_output_combo_valid(data_t *data, igt_crtc_t *crtc)
 {
 	bool ret = true;
 
@@ -284,7 +284,7 @@ get_blob(data_t *data, igt_crtc_t *crtc, enum igt_atomic_crtc_properties prop)
 }
 
 int
-pipe_set_property_blob_id(igt_crtc_t *crtc,
+crtc_set_property_blob_id(igt_crtc_t *crtc,
 			  enum igt_atomic_crtc_properties prop,
 			  uint32_t blob_id)
 {
@@ -304,7 +304,7 @@ pipe_set_property_blob_id(igt_crtc_t *crtc,
 }
 
 int
-pipe_set_property_blob(igt_crtc_t *crtc,
+crtc_set_property_blob(igt_crtc_t *crtc,
 		       enum igt_atomic_crtc_properties prop,
 		       void *ptr, size_t length)
 {
@@ -331,17 +331,17 @@ invalid_lut_sizes(data_t *data, igt_crtc_t *crtc,
 			    display->is_atomic ?
 			    COMMIT_ATOMIC : COMMIT_LEGACY);
 
-	igt_assert_eq(pipe_set_property_blob(crtc, prop, lut,
+	igt_assert_eq(crtc_set_property_blob(crtc, prop, lut,
 					     1), -EINVAL);
-	igt_assert_eq(pipe_set_property_blob(crtc, prop, lut,
+	igt_assert_eq(crtc_set_property_blob(crtc, prop, lut,
 					     lut_size + 1), -EINVAL);
-	igt_assert_eq(pipe_set_property_blob(crtc, prop, lut,
+	igt_assert_eq(crtc_set_property_blob(crtc, prop, lut,
 					     lut_size - 1), -EINVAL);
-	igt_assert_eq(pipe_set_property_blob(crtc, prop, lut,
+	igt_assert_eq(crtc_set_property_blob(crtc, prop, lut,
 					     lut_size + sizeof(struct drm_color_lut)), -EINVAL);
-	igt_assert_eq(pipe_set_property_blob_id(crtc, prop,
+	igt_assert_eq(crtc_set_property_blob_id(crtc, prop,
 						crtc->crtc_id), -EINVAL);
-	igt_assert_eq(pipe_set_property_blob_id(crtc, prop,
+	igt_assert_eq(crtc_set_property_blob_id(crtc, prop,
 						4096 * 4096), -EINVAL);
 
 	free(lut);
@@ -371,20 +371,20 @@ void invalid_ctm_matrix_sizes(data_t *data, igt_crtc_t *crtc)
 
 	ptr = malloc(sizeof(struct drm_color_ctm) * 4);
 
-	igt_assert_eq(pipe_set_property_blob(crtc, IGT_CRTC_CTM, ptr, 1),
+	igt_assert_eq(crtc_set_property_blob(crtc, IGT_CRTC_CTM, ptr, 1),
 					     -EINVAL);
-	igt_assert_eq(pipe_set_property_blob(crtc, IGT_CRTC_CTM, ptr,
+	igt_assert_eq(crtc_set_property_blob(crtc, IGT_CRTC_CTM, ptr,
 					     sizeof(struct drm_color_ctm) + 1),
 					     -EINVAL);
-	igt_assert_eq(pipe_set_property_blob(crtc, IGT_CRTC_CTM, ptr,
+	igt_assert_eq(crtc_set_property_blob(crtc, IGT_CRTC_CTM, ptr,
 					     sizeof(struct drm_color_ctm) - 1),
 					     -EINVAL);
-	igt_assert_eq(pipe_set_property_blob(crtc, IGT_CRTC_CTM, ptr,
+	igt_assert_eq(crtc_set_property_blob(crtc, IGT_CRTC_CTM, ptr,
 					     sizeof(struct drm_color_ctm) * 2),
 					     -EINVAL);
-	igt_assert_eq(pipe_set_property_blob_id(crtc, IGT_CRTC_CTM,
+	igt_assert_eq(crtc_set_property_blob_id(crtc, IGT_CRTC_CTM,
 						crtc->crtc_id), -EINVAL);
-	igt_assert_eq(pipe_set_property_blob_id(crtc, IGT_CRTC_CTM,
+	igt_assert_eq(crtc_set_property_blob_id(crtc, IGT_CRTC_CTM,
 						4096 * 4096), -EINVAL);
 
 	free(ptr);
