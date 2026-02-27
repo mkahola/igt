@@ -2457,7 +2457,7 @@ int kmstest_get_crtc_idx(drmModeRes *res, uint32_t crtc_id)
  *
  * Blocks or request a signal when a specified vblank event occurs
  *
- * Returns 0 on success or non-zero unsigned integer otherwise
+ * Returns 0 on failure or the reply vblank sequence number otherwise
  */
 unsigned int kmstest_get_vblank(int fd, int crtc_index, unsigned int flags)
 {
