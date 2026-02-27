@@ -300,7 +300,7 @@ static void draw_triangle_3d(struct gpu_process_t *gpu, uint32_t draw_flags)
 		gpu->crtc = crtc;
 
 		prepare_crtc(gpu);
-		pipe_crc = igt_pipe_crc_new(gpu->mdevice.drm_fd, crtc->pipe,
+		pipe_crc = igt_crtc_crc_new(crtc,
 					    IGT_PIPE_CRC_SOURCE_AUTO);
 		igt_pipe_crc_collect_crc(pipe_crc, &blank_crc);
 
@@ -367,7 +367,7 @@ static void draw_dumb_buffer(struct gpu_process_t *gpu)
 		gpu->crtc = crtc;
 
 		prepare_crtc_surface(gpu);
-		pipe_crc = igt_pipe_crc_new(gpu->mdevice.drm_fd, crtc->pipe,
+		pipe_crc = igt_crtc_crc_new(crtc,
 					    IGT_PIPE_CRC_SOURCE_AUTO);
 		igt_pipe_crc_collect_crc(pipe_crc, &blank_crc);
 
