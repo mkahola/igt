@@ -67,7 +67,7 @@ static void pipe_crc_free(data_t *data)
 	data->pipe_crc = NULL;
 }
 
-static void pipe_crc_new(data_t *data, igt_crtc_t *crtc)
+static void crtc_crc_new(data_t *data, igt_crtc_t *crtc)
 {
 	if (data->pipe_crc)
 		return;
@@ -139,7 +139,7 @@ test_flip_tiling(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 	igt_require_f(try_commit(&data->display) == 0,
 		      "commit failed with " IGT_MODIFIER_FMT "\n",
 		      IGT_MODIFIER_ARGS(modifier[1]));
-	pipe_crc_new(data, crtc);
+	crtc_crc_new(data, crtc);
 	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, &reference_crc);
 
 	/* Commit the first fb. */

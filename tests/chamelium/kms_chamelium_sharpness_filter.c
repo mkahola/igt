@@ -38,7 +38,7 @@ typedef struct {
 	int port_count;
 } data_t;
 
-static bool pipe_output_combo_valid(data_t *data, igt_crtc_t *crtc)
+static bool crtc_output_combo_valid(data_t *data, igt_crtc_t *crtc)
 {
 	bool ret = true;
 
@@ -223,7 +223,7 @@ static void test_sharpness_filter(data_t *data, igt_crtc_t *crtc)
 	igt_require(port_idx >= 0);
 	igt_require(igt_crtc_has_prop(crtc, IGT_CRTC_SHARPNESS_STRENGTH));
 
-	if (!pipe_output_combo_valid(data, crtc))
+	if (!crtc_output_combo_valid(data, crtc))
 		return;
 
 	igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc), data->output->name)

@@ -380,7 +380,7 @@ static void set_fb_on_crtc(igt_display_t *display, igt_crtc_t *crtc,
 }
 
 static	igt_plane_t
-*set_cursor_on_pipe(igt_display_t *display, igt_crtc_t *crtc, struct igt_fb *fb)
+*set_cursor_on_crtc(igt_display_t *display, igt_crtc_t *crtc, struct igt_fb *fb)
 {
 	igt_plane_t *plane, *cursor = NULL;
 
@@ -656,7 +656,7 @@ static void flip(igt_display_t *display,
 
 	igt_create_color_fb(display->drm_fd, 64, 64, DRM_FORMAT_ARGB8888,
 			    DRM_FORMAT_MOD_LINEAR, 1., 1., 1., &cursor_fb);
-	cursor = set_cursor_on_pipe(display, cursor_crtc, &cursor_fb);
+	cursor = set_cursor_on_crtc(display, cursor_crtc, &cursor_fb);
 	populate_cursor_args(display, cursor_crtc, arg, &cursor_fb);
 
 	prepare_flip_test(display, mode, flip_crtc, arg, &fb_info, &argb_fb, &cursor_fb2);
@@ -770,7 +770,7 @@ static void basic_flip_cursor(igt_display_t *display,
 
 	igt_create_color_fb(display->drm_fd, 64, 64, DRM_FORMAT_ARGB8888,
 			    DRM_FORMAT_MOD_LINEAR, 1., 1., 1., &cursor_fb);
-	cursor = set_cursor_on_pipe(display, crtc, &cursor_fb);
+	cursor = set_cursor_on_crtc(display, crtc, &cursor_fb);
 	populate_cursor_args(display, crtc, arg, &cursor_fb);
 
 	prepare_flip_test(display, mode, crtc, arg, &fb_info, &argb_fb, &cursor_fb2);
@@ -941,7 +941,7 @@ static void flip_vs_cursor(igt_display_t *display, enum flip_test mode, int nloo
 
 	igt_create_color_fb(display->drm_fd, 64, 64, DRM_FORMAT_ARGB8888,
 			    DRM_FORMAT_MOD_LINEAR, 1., 1., 1., &cursor_fb);
-	cursor = set_cursor_on_pipe(display, crtc, &cursor_fb);
+	cursor = set_cursor_on_crtc(display, crtc, &cursor_fb);
 	populate_cursor_args(display, crtc, arg, &cursor_fb);
 
 	prepare_flip_test(display, mode, crtc, arg, &fb_info, &argb_fb, &cursor_fb2);
@@ -1072,7 +1072,7 @@ static void nonblocking_modeset_vs_cursor(igt_display_t *display, int loops)
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
 	igt_create_color_fb(display->drm_fd, 64, 64, DRM_FORMAT_ARGB8888,
 			    DRM_FORMAT_MOD_LINEAR, 1., 1., 1., &cursor_fb);
-	cursor = set_cursor_on_pipe(display, crtc, &cursor_fb);
+	cursor = set_cursor_on_crtc(display, crtc, &cursor_fb);
 	populate_cursor_args(display, crtc, arg, &cursor_fb);
 	arg[0].flags |= DRM_MODE_CURSOR_BO;
 
@@ -1199,12 +1199,12 @@ static void two_screens_flip_vs_cursor(igt_display_t *display, int nloops, bool 
 
 	igt_create_color_fb(display->drm_fd, 64, 64, DRM_FORMAT_ARGB8888,
 			    DRM_FORMAT_MOD_LINEAR, 1., 1., 1., &cursor_fb);
-	cursor = set_cursor_on_pipe(display, crtc, &cursor_fb);
+	cursor = set_cursor_on_crtc(display, crtc, &cursor_fb);
 	populate_cursor_args(display, crtc, arg1, &cursor_fb);
 
 	arg1[1].x = arg1[1].y = 192;
 
-	cursor2 = set_cursor_on_pipe(display, crtc2, &cursor_fb);
+	cursor2 = set_cursor_on_crtc(display, crtc2, &cursor_fb);
 	populate_cursor_args(display, crtc2, arg2, &cursor_fb);
 
 	arg2[1].x = arg2[1].y = 192;
@@ -1373,7 +1373,7 @@ static void cursor_vs_flip(igt_display_t *display, enum flip_test mode, int nloo
 
 	igt_create_color_fb(display->drm_fd, 64, 64, DRM_FORMAT_ARGB8888,
 			    DRM_FORMAT_MOD_LINEAR, 1., 1., 1., &cursor_fb);
-	cursor = set_cursor_on_pipe(display, crtc, &cursor_fb);
+	cursor = set_cursor_on_crtc(display, crtc, &cursor_fb);
 	populate_cursor_args(display, crtc, arg, &cursor_fb);
 
 	prepare_flip_test(display, mode, crtc, arg, &fb_info, &argb_fb, &cursor_fb2);
@@ -1492,11 +1492,11 @@ static void two_screens_cursor_vs_flip(igt_display_t *display, int nloops, bool 
 	igt_create_color_fb(display->drm_fd, 64, 64, DRM_FORMAT_ARGB8888,
 			    DRM_FORMAT_MOD_LINEAR, 1., 1., 1., &cursor_fb);
 
-	cursors[0] = set_cursor_on_pipe(display, crtc[0], &cursor_fb);
+	cursors[0] = set_cursor_on_crtc(display, crtc[0], &cursor_fb);
 	populate_cursor_args(display, crtc[0], arg[0], &cursor_fb);
 	arg[0][1].x = arg[0][1].y = 192;
 
-	cursors[1] = set_cursor_on_pipe(display, crtc[1], &cursor_fb);
+	cursors[1] = set_cursor_on_crtc(display, crtc[1], &cursor_fb);
 	populate_cursor_args(display, crtc[1], arg[1], &cursor_fb);
 	arg[1][1].x =  arg[1][1].y = 192;
 
@@ -1613,7 +1613,7 @@ static void flip_vs_cursor_crc(igt_display_t *display, bool atomic)
 	pipe_crc = igt_crtc_crc_new(crtc,
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
-	cursor = set_cursor_on_pipe(display, crtc, &cursor_fb);
+	cursor = set_cursor_on_crtc(display, crtc, &cursor_fb);
 	igt_display_commit2(display, COMMIT_UNIVERSAL);
 
 	/* Collect reference crcs, crcs[0] last. */
@@ -1694,7 +1694,7 @@ static void flip_vs_cursor_busy_crc(igt_display_t *display, bool atomic)
 	pipe_crc = igt_crtc_crc_new(crtc,
 				    IGT_PIPE_CRC_SOURCE_AUTO);
 
-	cursor = set_cursor_on_pipe(display, crtc, &cursor_fb);
+	cursor = set_cursor_on_crtc(display, crtc, &cursor_fb);
 	igt_display_commit2(display, COMMIT_UNIVERSAL);
 
 	/* Collect reference crcs, crc[0] last for the loop. */
@@ -1791,7 +1791,7 @@ static void modeset_atomic_cursor_hotspot(igt_display_t *display)
 
 	igt_display_commit2(display, COMMIT_ATOMIC);
 
-	cursor = set_cursor_on_pipe(display, crtc, &cursor_fb);
+	cursor = set_cursor_on_crtc(display, crtc, &cursor_fb);
 
 	has_hotspot_prop = cursor->props[IGT_PLANE_HOTSPOT_X] ||
 		cursor->props[IGT_PLANE_HOTSPOT_Y];

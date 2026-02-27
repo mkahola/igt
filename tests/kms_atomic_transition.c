@@ -1139,7 +1139,7 @@ static void run_modeset_transition(data_t *data, int requested_outputs, bool non
 		run_modeset_tests(data, requested_outputs, nonblocking, fencing);
 }
 
-static bool pipe_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
+static bool crtc_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
 				    igt_output_t *output)
 {
 	bool ret = true;
@@ -1257,7 +1257,7 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 			if (pipe_count == 2 * count && !data.extended)
 				break;
 
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 
 			pipe_count++;
@@ -1298,7 +1298,7 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 				if (pipe_count == 2 * count && !data.extended)
 					break;
 
-				if (!pipe_output_combo_valid(&data.display, crtc, output))
+				if (!crtc_output_combo_valid(&data.display, crtc, output))
 					continue;
 
 				pipe_count++;

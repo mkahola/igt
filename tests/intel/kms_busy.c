@@ -358,7 +358,7 @@ test_pageflip_modeset_hang(igt_display_t *dpy,
 }
 
 static bool
-pipe_output_combo_valid(igt_display_t *dpy,
+crtc_output_combo_valid(igt_display_t *dpy,
 			igt_output_t *output, igt_crtc_t *crtc)
 {
 	bool ret = true;
@@ -461,7 +461,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test for basic check of KMS ABI with busy framebuffers.");
 	igt_subtest_with_dynamic("basic") { /* just run on the first pipe */
 		for_each_crtc_with_single_output(&display, crtc, output) {
-			if (!pipe_output_combo_valid(&display, output, crtc))
+			if (!crtc_output_combo_valid(&display, output, crtc))
 				continue;
 
 			igt_dynamic("flip")
@@ -481,7 +481,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		errno = 0;
 
 		for_each_crtc_with_single_output(&display, crtc, output) {
-			if (!pipe_output_combo_valid(&display, output, crtc))
+			if (!crtc_output_combo_valid(&display, output, crtc))
 				continue;
 
 			if (!all_pipes && crtc->pipe != active_pipes[0] &&
@@ -506,7 +506,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		errno = 0;
 
 		for_each_crtc_with_single_output(&display, crtc, output) {
-			if (!pipe_output_combo_valid(&display, output, crtc))
+			if (!crtc_output_combo_valid(&display, output, crtc))
 				continue;
 
 			if (!all_pipes && crtc->pipe != active_pipes[0] &&
@@ -541,7 +541,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 			for_each_crtc_with_single_output(&display, crtc,
 							 output) {
-				if (!pipe_output_combo_valid(&display, output, crtc))
+				if (!crtc_output_combo_valid(&display, output, crtc))
 					continue;
 
 				if (!all_pipes && crtc->pipe != active_pipes[0] &&

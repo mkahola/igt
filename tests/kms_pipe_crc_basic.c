@@ -336,7 +336,7 @@ static void test_disable_crc_after_crtc(data_t *data, igt_crtc_t *crtc,
 	igt_remove_fb(data->drm_fd, &data->fb);
 }
 
-static bool pipe_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
+static bool crtc_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
 				    igt_output_t *output)
 {
 	bool ret = true;
@@ -425,7 +425,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 				if (simulation_constraint(crtc))
 					continue;
 
-				if(!pipe_output_combo_valid(&data.display, crtc, output))
+				if(!crtc_output_combo_valid(&data.display, crtc, output))
 					continue;
 
 				igt_dynamic_f("pipe-%s-%s",
@@ -478,7 +478,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 			if (simulation_constraint(crtc))
 				continue;
 
-			if(!pipe_output_combo_valid(&data.display, crtc, output))
+			if(!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
@@ -495,7 +495,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 			if (simulation_constraint(crtc))
 				continue;
 
-			if(!pipe_output_combo_valid(&data.display, crtc, output))
+			if(!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
@@ -513,7 +513,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 			if (simulation_constraint(crtc))
 				continue;
 
-			if(!pipe_output_combo_valid(&data.display, crtc, output))
+			if(!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),

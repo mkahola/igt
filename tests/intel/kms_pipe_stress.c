@@ -414,7 +414,7 @@ static void cleanup_plane_fbs(struct data *data, igt_crtc_t *crtc, int start,
 	}
 }
 
-static int pipe_stress(struct data *data, igt_output_t *output,
+static int crtc_stress(struct data *data, igt_output_t *output,
 		       igt_crtc_t *crtc, drmModeModeInfo *mode)
 {
 	igt_plane_t *plane;
@@ -606,7 +606,7 @@ static void stress_pipes(struct data *data, struct timespec *start,
 			     "Currently we don't support more than %d planes!",
 			     MAX_PLANES);
 
-		ret = pipe_stress(data, output, crtc,
+		ret = crtc_stress(data, output, crtc,
 				  data->highest_mode[pipe]);
 		if (ret)
 			break;

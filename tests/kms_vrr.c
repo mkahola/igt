@@ -306,7 +306,7 @@ static bool vrr_capable(igt_output_t *output)
 }
 
 /* Toggles variable refresh rate on the pipe. */
-static void set_vrr_on_pipe(data_t *data, igt_crtc_t *crtc,
+static void set_vrr_on_crtc(data_t *data, igt_crtc_t *crtc,
 			    bool need_modeset, bool enabled)
 {
 	igt_crtc_set_prop_value(crtc,
@@ -671,7 +671,7 @@ test_basic(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 	igt_info("Override Mode: ");
 	kmstest_dump_mode(&data->switch_modes[HIGH_RR_MODE]);
 
-	set_vrr_on_pipe(data, crtc,
+	set_vrr_on_crtc(data, crtc,
 			!(flags & TEST_FASTSET), true);
 
 	/*
@@ -754,7 +754,7 @@ test_basic(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 	 * modeset. And the expected behavior is the same as disabling VRR on
 	 * a VRR capable panel.
 	 */
-	set_vrr_on_pipe(data, crtc,
+	set_vrr_on_crtc(data, crtc,
 			!(flags & TEST_FASTSET),
 			(flags & TEST_NEGATIVE) ? true : false);
 	rate[0] = vtest_ns.rate_ns;
@@ -780,7 +780,7 @@ test_seamless_rr_basic(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 	vtest_ns = data->vtest_ns;
 
 	if (vrr)
-		set_vrr_on_pipe(data, crtc,
+		set_vrr_on_crtc(data, crtc,
 				false, true);
 	else {
 		/*

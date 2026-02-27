@@ -546,7 +546,7 @@ static bool has_vrr(igt_output_t *output)
 }
 
 /* Toggles variable refresh rate on the pipe. */
-static void set_vrr_on_pipe(data_t *data, igt_crtc_t *crtc, bool enabled)
+static void set_vrr_on_crtc(data_t *data, igt_crtc_t *crtc, bool enabled)
 {
 	igt_crtc_set_prop_value(crtc,
 				    IGT_CRTC_VRR_ENABLED,
@@ -814,7 +814,7 @@ mode_transition(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 	igt_info("stage-1: fps:%d\n", mode_start->vrefresh);
 	prepare_test(data, output, mode_start);
 	interval = nsec_per_frame(mode_start->vrefresh);
-	set_vrr_on_pipe(data, crtc, true);
+	set_vrr_on_crtc(data, crtc, true);
 	result = flip_and_measure(data, output, interval, TEST_DURATION_NS, ANIM_TYPE_SMPTE);
 
 	igt_info("stage-2: simple animation as video playback fps:%d\n", mode_playback->vrefresh);
@@ -824,7 +824,7 @@ mode_transition(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 	result = flip_and_measure(data, output, interval, 2 * NSECS_PER_SEC, ANIM_TYPE_CIRCLE_WAVE);
 	result = flip_and_measure(data, output, interval, TEST_DURATION_NS, ANIM_TYPE_CIRCLE_WAVE);
 	igt_assert_f(result > 75, "Target refresh rate not meet 75%% (result=%d%%\n", result);
-	set_vrr_on_pipe(data, crtc, false);
+	set_vrr_on_crtc(data, crtc, false);
 
 	finish_test(data, output);
 }

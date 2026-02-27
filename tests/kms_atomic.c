@@ -1425,7 +1425,7 @@ static bool has_mutable_zpos(igt_plane_t *plane)
 }
 
 static bool
-pipe_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
+crtc_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
 			igt_output_t *output)
 {
 	bool ret = true;
@@ -1479,7 +1479,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 							DRM_PLANE_TYPE_OVERLAY);
 			uint32_t format = plane_get_igt_format(overlay);
 
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 			if (!overlay || !format)
 				continue;
@@ -1502,7 +1502,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		     "the legacy and atomic interfaces.");
 	igt_subtest_with_dynamic("plane-primary-legacy") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
@@ -1527,7 +1527,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 				igt_crtc_get_plane_type(crtc,
 							DRM_PLANE_TYPE_OVERLAY);
 
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 
 			atomic_setup(&data,
@@ -1559,7 +1559,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
 			int n_planes = crtc->n_planes;
 
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 			if (n_planes < 2)
 				continue;
@@ -1586,7 +1586,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
 			uint32_t format;
 
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 
 			atomic_setup(&data,
@@ -1618,7 +1618,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 				igt_crtc_get_plane_type(crtc,
 							DRM_PLANE_TYPE_CURSOR);
 
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 			if (!cursor)
 				continue;
@@ -1640,7 +1640,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test error handling when invalid plane parameters are passed");
 	igt_subtest_with_dynamic("plane-invalid-params") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
@@ -1660,7 +1660,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test error handling when invalid plane fence parameters are passed");
 	igt_subtest_with_dynamic("plane-invalid-params-fence") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
@@ -1680,7 +1680,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test error handling when invalid crtc parameters are passed");
 	igt_subtest_with_dynamic("crtc-invalid-params") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
@@ -1700,7 +1700,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Test error handling when invalid crtc fence parameters are passed");
 	igt_subtest_with_dynamic("crtc-invalid-params-fence") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
@@ -1722,7 +1722,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		     "allow us to create.");
 	igt_subtest_with_dynamic("atomic-invalid-params") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
 				      igt_output_name(output)) {
@@ -1742,7 +1742,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_describe("Simple test cases to use FB_DAMAGE_CLIPS plane property");
 	igt_subtest_with_dynamic("atomic-plane-damage") {
 		for_each_crtc_with_single_output(&data.display, crtc, output) {
-			if (!pipe_output_combo_valid(&data.display, crtc, output))
+			if (!crtc_output_combo_valid(&data.display, crtc, output))
 				continue;
 
 			atomic_setup(&data,

@@ -690,7 +690,7 @@ static bool test_format(data_t *data,
 	return true;
 }
 
-static bool test_pipe_iteration(data_t *data, igt_crtc_t *crtc, int iteration)
+static bool test_crtc_iteration(data_t *data, igt_crtc_t *crtc, int iteration)
 {
 	if (!is_intel_device(data->drm_fd) ||
 	    data->extended)
@@ -711,7 +711,7 @@ static const uint64_t modifiers[] = {
 };
 
 static uint32_t
-test_scaler_with_modifier_pipe(data_t *d,
+test_scaler_with_modifier_crtc(data_t *d,
 			       double sf_plane,
 			       bool is_clip_clamp,
 			       bool is_upscale, igt_crtc_t *crtc,
@@ -748,7 +748,7 @@ test_scaler_with_modifier_pipe(data_t *d,
 }
 
 static uint32_t
-test_scaler_with_rotation_pipe(data_t *d,
+test_scaler_with_rotation_crtc(data_t *d,
 			       double sf_plane,
 			       bool is_clip_clamp,
 			       bool is_upscale, igt_crtc_t *crtc,
@@ -786,7 +786,7 @@ test_scaler_with_rotation_pipe(data_t *d,
 }
 
 static uint32_t
-test_scaler_with_pixel_format_pipe(data_t *d, double sf_plane,
+test_scaler_with_pixel_format_crtc(data_t *d, double sf_plane,
 				   bool is_clip_clamp,
 				   bool is_upscale, igt_crtc_t *crtc,
 				   igt_output_t *output)
@@ -810,7 +810,7 @@ test_scaler_with_pixel_format_pipe(data_t *d, double sf_plane,
 		for (int j = 0; j < plane->drm_plane->count_formats; j++) {
 			uint32_t format = plane->drm_plane->formats[j];
 
-			if (!test_pipe_iteration(d, crtc, j))
+			if (!test_crtc_iteration(d, crtc, j))
 				continue;
 
 			if (test_format(d, &tested_formats, format) &&
@@ -1316,7 +1316,7 @@ static void intel_max_source_size_test(data_t *d, igt_crtc_t *crtc,
 }
 
 static bool
-pipe_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
+crtc_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
 			igt_output_t *output)
 {
 	bool ret = true;
@@ -1379,12 +1379,12 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 									      crtc,
 									      output) {
 							igt_info("Trying on %s\n", igt_output_name(output));
-							if (!pipe_output_combo_valid(&data.display, crtc, output))
+							if (!crtc_output_combo_valid(&data.display, crtc, output))
 								continue;
 							if (igt_crtc_num_scalers(crtc) < 1)
 								continue;
 
-							ret = test_scaler_with_pixel_format_pipe(&data,
+							ret = test_scaler_with_pixel_format_crtc(&data,
 									scaler_with_pixel_format_tests[index].sf,
 									false,
 									scaler_with_pixel_format_tests[index].is_upscale,
@@ -1410,12 +1410,12 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 									      crtc,
 									      output) {
 							igt_info("Trying on %s\n", igt_output_name(output));
-							if (!pipe_output_combo_valid(&data.display, crtc, output))
+							if (!crtc_output_combo_valid(&data.display, crtc, output))
 								continue;
 							if (igt_crtc_num_scalers(crtc) < 1)
 								continue;
 
-							ret = test_scaler_with_rotation_pipe(&data,
+							ret = test_scaler_with_rotation_crtc(&data,
 									scaler_with_rotation_tests[index].sf,
 									false,
 									scaler_with_rotation_tests[index].is_upscale,
@@ -1441,12 +1441,12 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 									      crtc,
 									      output) {
 							igt_info("Trying on %s\n", igt_output_name(output));
-							if (!pipe_output_combo_valid(&data.display, crtc, output))
+							if (!crtc_output_combo_valid(&data.display, crtc, output))
 								continue;
 							if (igt_crtc_num_scalers(crtc) < 1)
 								continue;
 
-							ret = test_scaler_with_modifier_pipe(&data,
+							ret = test_scaler_with_modifier_crtc(&data,
 									scaler_with_modifiers_tests[index].sf,
 									false,
 									scaler_with_modifiers_tests[index].is_upscale,
@@ -1471,12 +1471,12 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 								      crtc,
 								      output) {
 						igt_info("Trying on %s\n", igt_output_name(output));
-						if (!pipe_output_combo_valid(&data.display, crtc, output))
+						if (!crtc_output_combo_valid(&data.display, crtc, output))
 							continue;
 						if (igt_crtc_num_scalers(crtc) < 1)
 							continue;
 
-						ret = test_scaler_with_pixel_format_pipe(&data, 0.0, true,
+						ret = test_scaler_with_pixel_format_crtc(&data, 0.0, true,
 											 false,
 											 crtc,
 											 output);
@@ -1499,12 +1499,12 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 								      crtc,
 								      output) {
 						igt_info("Trying on %s\n", igt_output_name(output));
-						if (!pipe_output_combo_valid(&data.display, crtc, output))
+						if (!crtc_output_combo_valid(&data.display, crtc, output))
 							continue;
 						if (igt_crtc_num_scalers(crtc) < 1)
 							continue;
 
-						ret = test_scaler_with_rotation_pipe(&data, 0.0, true,
+						ret = test_scaler_with_rotation_crtc(&data, 0.0, true,
 										     false,
 										     crtc,
 										     output);
@@ -1526,12 +1526,12 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 								      crtc,
 								      output) {
 						igt_info("Trying on %s\n", igt_output_name(output));
-						if (!pipe_output_combo_valid(&data.display, crtc, output))
+						if (!crtc_output_combo_valid(&data.display, crtc, output))
 							continue;
 						if (igt_crtc_num_scalers(crtc) < 1)
 							continue;
 
-						ret = test_scaler_with_modifier_pipe(&data, 0.0, true,
+						ret = test_scaler_with_modifier_crtc(&data, 0.0, true,
 										     false,
 										     crtc,
 										     output);
@@ -1555,7 +1555,7 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 									      output) {
 							igt_info("Trying on %s\n",
 								 igt_output_name(output));
-							if (!pipe_output_combo_valid(&data.display, crtc, output))
+							if (!crtc_output_combo_valid(&data.display, crtc, output))
 								continue;
 							if (igt_crtc_num_scalers(crtc) < 2)
 								continue;
@@ -1613,7 +1613,7 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		igt_describe("Negative test for number of scalers per pipe.");
 		igt_subtest_with_dynamic("invalid-num-scalers") {
 			for_each_crtc_with_valid_output(&data.display, crtc, output) {
-				if (!pipe_output_combo_valid(&data.display, crtc, output))
+				if (!crtc_output_combo_valid(&data.display, crtc, output))
 					continue;
 				if (igt_crtc_num_scalers(crtc) < 1)
 						continue;

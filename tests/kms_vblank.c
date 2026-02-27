@@ -225,7 +225,7 @@ static void run_test(data_t *data, void (*testfunc)(data_t *, int, int))
 }
 
 static bool
-pipe_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
+crtc_output_combo_valid(igt_display_t *display, igt_crtc_t *crtc,
 			igt_output_t *output)
 {
 	bool ret = true;
@@ -519,7 +519,7 @@ static void run_subtests(data_t *data)
 								crtc,
 								data->output) {
 					data->crtc = crtc;
-					if (!pipe_output_combo_valid(&data->display, crtc, data->output))
+					if (!crtc_output_combo_valid(&data->display, crtc, data->output))
 						continue;
 
 					if (!all_pipes && crtc->pipe != active_pipes[0] &&
@@ -551,7 +551,7 @@ static void run_subtests(data_t *data)
 								crtc,
 								data->output) {
 					data->crtc = crtc;
-					if (!pipe_output_combo_valid(&data->display, crtc, data->output))
+					if (!crtc_output_combo_valid(&data->display, crtc, data->output))
 						continue;
 
 					if (!all_pipes && crtc->pipe != active_pipes[0] &&
@@ -660,7 +660,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		for_each_crtc_with_valid_output(&data.display, crtc,
 						data.output) {
 			data.crtc = crtc;
-			if (!pipe_output_combo_valid(&data.display, crtc, data.output))
+			if (!crtc_output_combo_valid(&data.display, crtc, data.output))
 				continue;
 
 			igt_dynamic_f("pipe-%s-%s", igt_crtc_name(crtc),
@@ -676,7 +676,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		for_each_crtc_with_valid_output(&data.display, crtc,
 						data.output) {
 			data.crtc = crtc;
-			if (!pipe_output_combo_valid(&data.display, crtc, data.output))
+			if (!crtc_output_combo_valid(&data.display, crtc, data.output))
 				continue;
 
 			if (!all_pipes && crtc->pipe != active_pipes[0] &&
