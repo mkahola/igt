@@ -103,7 +103,7 @@ static dither_status_t get_dither_state(data_t *data, igt_crtc_t *crtc)
 	igt_assert_eq(sscanf(start_loc, ", dither=%s", tmp), 1);
 	status.dither = !strcmp(tmp, "yes,");
 
-	status.bpc = igt_get_pipe_current_bpc(crtc);
+	status.bpc = igt_get_crtc_current_bpc(crtc);
 
 	return status;
 }

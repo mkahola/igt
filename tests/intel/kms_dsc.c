@@ -226,7 +226,7 @@ static void update_display(data_t *data, uint32_t test_type)
 	restore_force_dsc_fractional_bpp_en();
 
 	if (test_type & TEST_DSC_BPC) {
-		current_bpc = igt_get_pipe_current_bpc(data->crtc);
+		current_bpc = igt_get_crtc_current_bpc(data->crtc);
 		igt_skip_on_f(data->input_bpc != current_bpc,
 			      "Input bpc = %d is not equal to current bpc = %d\n",
 			      data->input_bpc, current_bpc);

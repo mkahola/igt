@@ -6598,7 +6598,7 @@ unsigned int igt_get_output_max_bpc(igt_output_t *output)
  *
  * Returns: The current bpc from the crtc debugfs.
  */
-unsigned int igt_get_pipe_current_bpc(igt_crtc_t *crtc)
+unsigned int igt_get_crtc_current_bpc(igt_crtc_t *crtc)
 {
 	igt_display_t *display = crtc->display;
 	int drmfd = display->drm_fd;
@@ -6633,7 +6633,7 @@ static unsigned int get_current_bpc(igt_crtc_t *crtc, igt_output_t *output,
 				    unsigned int bpc)
 {
 	unsigned int maximum = igt_get_output_max_bpc(output);
-	unsigned int current = igt_get_pipe_current_bpc(crtc);
+	unsigned int current = igt_get_crtc_current_bpc(crtc);
 
 	igt_require_f(maximum >= bpc,
 		      "Monitor doesn't support %u bpc, max is %u\n", bpc,
