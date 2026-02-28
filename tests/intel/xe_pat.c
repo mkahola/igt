@@ -103,6 +103,55 @@ static void userptr_coh_none(int fd)
 #define COH_MODE_1WAY		2
 #define COH_MODE_2WAY		3
 
+/* Pre-Xe2 PAT bit fields (from kernel xe_pat.c) */
+#define XELP_MEM_TYPE_MASK	GENMASK(1, 0)
+
+static bool pat_entry_is_uc(unsigned int gfx_ver, uint32_t pat)
+{
+	if (gfx_ver >= IP_VER(20, 0))
+		return REG_FIELD_GET(XE2_L3_POLICY, pat) == L3_CACHE_POLICY_UC &&
+		       REG_FIELD_GET(XE2_L4_POLICY, pat) == L4_CACHE_POLICY_UC;
+
+	if (gfx_ver >= IP_VER(12, 70))
+		return REG_FIELD_GET(XE2_L4_POLICY, pat) == L4_CACHE_POLICY_UC;
+
+	return REG_FIELD_GET(XELP_MEM_TYPE_MASK, pat) == 0;
+}
+
+static bool pat_entry_is_wb(unsigned int gfx_ver, uint32_t pat)
+{
+	if (gfx_ver >= IP_VER(20, 0)) {
+		uint32_t l3 = REG_FIELD_GET(XE2_L3_POLICY, pat);
+
+		return l3 == L3_CACHE_POLICY_WB || l3 == L3_CACHE_POLICY_XD;
+	}
+
+	if (gfx_ver >= IP_VER(12, 70))
+		return REG_FIELD_GET(XE2_L4_POLICY, pat) == L4_CACHE_POLICY_WB;
+
+	return REG_FIELD_GET(XELP_MEM_TYPE_MASK, pat) == 3;
+}
+
+static bool pat_entry_is_wt(unsigned int gfx_ver, uint32_t pat)
+{
+	if (gfx_ver >= IP_VER(20, 0))
+		return REG_FIELD_GET(XE2_L3_POLICY, pat) == L3_CACHE_POLICY_XD &&
+		       REG_FIELD_GET(XE2_L4_POLICY, pat) == L4_CACHE_POLICY_WT;
+
+	if (gfx_ver >= IP_VER(12, 70))
+		return REG_FIELD_GET(XE2_L4_POLICY, pat) == L4_CACHE_POLICY_WT;
+
+	return REG_FIELD_GET(XELP_MEM_TYPE_MASK, pat) == 2;
+}
+
+static bool pat_entry_is_compressed(unsigned int gfx_ver, uint32_t pat)
+{
+	if (gfx_ver < IP_VER(20, 0))
+		return false;
+
+	return !!(pat & XE2_COMP_EN);
+}
+
 static int xe_fetch_pat_sw_config(int fd, struct intel_pat_cache *pat_sw_config)
 {
 	int32_t parsed = xe_get_pat_sw_config(fd, pat_sw_config);
@@ -120,13 +169,14 @@ static int xe_fetch_pat_sw_config(int fd, struct intel_pat_cache *pat_sw_config)
 static void pat_sanity(int fd)
 {
 	uint16_t dev_id = intel_get_drm_devid(fd);
+	unsigned int gfx_ver = intel_graphics_ver(dev_id);
 	struct intel_pat_cache pat_sw_config = {};
 	int32_t parsed;
 	bool has_uc_comp = false, has_wt = false;
 
 	parsed = xe_fetch_pat_sw_config(fd, &pat_sw_config);
 
-	if (intel_graphics_ver(dev_id) >= IP_VER(20, 0)) {
+	if (gfx_ver >= IP_VER(20, 0)) {
 		for (int i = 0; i < parsed; i++) {
 			uint32_t pat = pat_sw_config.entries[i].pat;
 			if (pat_sw_config.entries[i].rsvd)
@@ -144,13 +194,29 @@ static void pat_sanity(int fd)
 	} else {
 		has_wt = true;
 	}
-	igt_assert_eq(pat_sw_config.max_index, intel_get_max_pat_index(fd));
-	igt_assert_eq(pat_sw_config.uc, intel_get_pat_idx_uc(fd));
-	igt_assert_eq(pat_sw_config.wb, intel_get_pat_idx_wb(fd));
+
+	/*
+	 * Validate that the selected PAT indices actually have the expected
+	 * cache types rather than comparing against hardcoded values.
+	 */
+	igt_assert_f(pat_entry_is_uc(gfx_ver, pat_sw_config.entries[pat_sw_config.uc].pat),
+		     "UC index %d does not point to an uncached entry (pat=%#x)\n",
+		     pat_sw_config.uc, pat_sw_config.entries[pat_sw_config.uc].pat);
+	igt_assert_f(pat_entry_is_wb(gfx_ver, pat_sw_config.entries[pat_sw_config.wb].pat),
+		     "WB index %d does not point to a WB/XA/XD entry (pat=%#x)\n",
+		     pat_sw_config.wb, pat_sw_config.entries[pat_sw_config.wb].pat);
 	if (has_wt)
-		igt_assert_eq(pat_sw_config.wt, intel_get_pat_idx_wt(fd));
-	if (has_uc_comp)
-		igt_assert_eq(pat_sw_config.uc_comp, intel_get_pat_idx_uc_comp(fd));
+		igt_assert_f(pat_entry_is_wt(gfx_ver, pat_sw_config.entries[pat_sw_config.wt].pat),
+			     "WT index %d does not point to a WT entry (pat=%#x)\n",
+			     pat_sw_config.wt, pat_sw_config.entries[pat_sw_config.wt].pat);
+	if (has_uc_comp) {
+		uint32_t uc_comp_pat = pat_sw_config.entries[pat_sw_config.uc_comp].pat;
+
+		igt_assert_f(pat_entry_is_compressed(gfx_ver, uc_comp_pat) &&
+			     pat_entry_is_uc(gfx_ver, uc_comp_pat),
+			     "UC_COMP index %d does not point to a compressed UC entry (pat=%#x)\n",
+			     pat_sw_config.uc_comp, uc_comp_pat);
+	}
 }
 
 /**
