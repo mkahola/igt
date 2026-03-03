@@ -317,6 +317,52 @@ static void test_source_outp_inactive(data_t *data)
 	destroy_crc_colors(data, colors, n_colors);
 }
 
+static void setup_test(data_t *data)
+{
+	int dir;
+
+	igt_display_require_output_on_crtc(data->crtc);
+
+	/* Disable the output from the previous iteration of pipe tests, if there is
+	 * one
+	 */
+	if (data->output) {
+		igt_output_set_crtc(data->output, NULL);
+		igt_display_commit(&data->display);
+	}
+
+	data->output = igt_get_single_output_for_crtc(data->crtc);
+	data->mode = igt_output_get_mode(data->output);
+
+	/* None of these tests need to perform modesets, just page flips. So running
+	 * display setup here is fine
+	 */
+	igt_output_set_crtc(data->output,
+			    data->crtc);
+	data->primary = igt_output_get_plane(data->output, 0);
+	igt_create_color_fb(data->drm_fd,
+			    data->mode->hdisplay,
+			    data->mode->vdisplay,
+			    DRM_FORMAT_XRGB8888,
+			    DRM_FORMAT_MOD_LINEAR,
+			    0.0, 0.0, 0.0,
+			    &data->default_fb);
+	igt_plane_set_fb(data->primary, &data->default_fb);
+	igt_display_commit(&data->display);
+
+	dir = igt_crtc_debugfs_dir(data->crtc, O_DIRECTORY);
+	igt_require_fd(dir);
+	data->nv_crc_dir = openat(dir, "nv_crc", O_DIRECTORY);
+	close(dir);
+	igt_require_fd(data->nv_crc_dir);
+}
+
+static void cleanup_test(data_t *data)
+{
+	igt_remove_fb(data->drm_fd, &data->default_fb);
+	close(data->nv_crc_dir);
+}
+
 data_t data = {0};
 
 #define pipe_test(name) igt_subtest_f("pipe-%s-" name, kmstest_pipe_name(pipe))
@@ -337,44 +383,10 @@ int igt_main()
 
 	for_each_pipe_static(pipe) {
 		igt_fixture() {
-			int dir;
-
 			data.crtc = igt_crtc_for_pipe(&data.display, pipe);
 			igt_require(data.crtc->valid);
-			igt_display_require_output_on_crtc(data.crtc);
 
-			/* Disable the output from the previous iteration of pipe tests, if there is
-			 * one
-			 */
-			if (data.output) {
-				igt_output_set_crtc(data.output, NULL);
-				igt_display_commit(&data.display);
-			}
-
-			data.output = igt_get_single_output_for_crtc(data.crtc);
-			data.mode = igt_output_get_mode(data.output);
-
-			/* None of these tests need to perform modesets, just page flips. So running
-			 * display setup here is fine
-			 */
-			igt_output_set_crtc(data.output,
-					    data.crtc);
-			data.primary = igt_output_get_plane(data.output, 0);
-			igt_create_color_fb(data.drm_fd,
-					    data.mode->hdisplay,
-					    data.mode->vdisplay,
-					    DRM_FORMAT_XRGB8888,
-					    DRM_FORMAT_MOD_LINEAR,
-					    0.0, 0.0, 0.0,
-					    &data.default_fb);
-			igt_plane_set_fb(data.primary, &data.default_fb);
-			igt_display_commit(&data.display);
-
-			dir = igt_crtc_debugfs_dir(data.crtc, O_DIRECTORY);
-			igt_require_fd(dir);
-			data.nv_crc_dir = openat(dir, "nv_crc", O_DIRECTORY);
-			close(dir);
-			igt_require_fd(data.nv_crc_dir);
+			setup_test(&data);
 		}
 
 		/* We don't need to test this on every pipe, but the setup is the same */
@@ -412,8 +424,7 @@ int igt_main()
 			test_source_outp_inactive(&data);
 
 		igt_fixture() {
-			igt_remove_fb(data.drm_fd, &data.default_fb);
-			close(data.nv_crc_dir);
+			cleanup_test(&data);
 		}
 	}
 
