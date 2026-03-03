@@ -83,6 +83,8 @@ void gpgpu_shader_set_vrt(struct gpgpu_shader *shdr, enum gpgpu_shader_vrt_modes
 
 uint32_t gpgpu_shader__get_max_threads_in_tg(struct gpgpu_shader *shdr);
 
+void fill_inline_data(uint32_t *inline_data, uint64_t target_offset,
+		      struct intel_buf *target, uint32_t x_dim);
 void gpgpu_shader__wait(struct gpgpu_shader *shdr);
 void gpgpu_shader__breakpoint_on(struct gpgpu_shader *shdr, uint32_t cmd_no);
 void gpgpu_shader__breakpoint(struct gpgpu_shader *shdr);

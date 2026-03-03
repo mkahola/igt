@@ -1272,7 +1272,8 @@ xe3p_emit_compute_walk2(struct intel_bb *ibb,
 			unsigned int x, unsigned int y,
 			unsigned int width, unsigned int height,
 			struct xe3p_interface_descriptor_data *pidd,
-			uint32_t max_threads)
+			uint32_t max_threads,
+			struct xe3p_cw2_interrupt_data *intdata)
 {
 	/*
 	 * Max Threads represent range: [1, 2^16-1],
@@ -1353,8 +1354,16 @@ xe3p_emit_compute_walk2(struct intel_bb *ibb,
 	}
 
 	/* Post Sync command payload 0 */
-	for (int i = 0; i < 5; i++) {					//dw26-30
-		intel_bb_out(ibb, 0);
+	if (intdata != NULL) {
+		intel_bb_out(ibb, intdata->post_sync_op);
+		intel_bb_out(ibb, intdata->post_sync_addr);
+		intel_bb_out(ibb, intdata->post_sync_addr >> 32);
+		intel_bb_out(ibb, intdata->post_sync_val);
+		intel_bb_out(ibb, intdata->post_sync_val >> 32);
+	} else {
+		for (int i = 0; i < 5; i++) {					//dw26-30
+			intel_bb_out(ibb, 0);
+		}
 	}
 
 	/* Inline data */

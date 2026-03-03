@@ -39,6 +39,12 @@
 #include "intel_bufops.h"
 #include <assert.h>
 
+struct xe3p_cw2_interrupt_data {
+	uint32_t post_sync_op;
+	uint64_t post_sync_addr;
+	uint64_t post_sync_val;
+};
+
 uint32_t
 gen7_fill_curbe_buffer_data(struct intel_bb *ibb, uint8_t color);
 
@@ -159,6 +165,7 @@ xe3p_emit_compute_walk2(struct intel_bb *ibb,
 			unsigned int x, unsigned int y,
 			unsigned int width, unsigned int height,
 			struct xe3p_interface_descriptor_data *pidd,
-			uint32_t max_threads);
+			uint32_t max_threads,
+			struct xe3p_cw2_interrupt_data *intdata);
 
 #endif /* GPU_CMDS_H */
