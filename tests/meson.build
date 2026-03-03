@@ -319,6 +319,7 @@ intel_xe_progs = [
         'xe_module_load',
         'xe_multigpu_svm',
 	'xe_noexec_ping_pong',
+        'xe_non_msix',
 	'xe_oa',
 	'xe_pat',
 	'xe_peer2peer',
