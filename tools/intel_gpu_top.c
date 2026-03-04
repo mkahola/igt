@@ -2732,11 +2732,27 @@ int main(int argc, char **argv)
 		ret = igt_device_find_first_i915_discrete_card(&card);
 		if (!ret)
 			ret = igt_device_find_integrated_card(&card);
-		if (!ret)
+		if (!ret) {
+			struct igt_device_card xe_card;
+
 			fprintf(stderr, "No device filter specified and no discrete/integrated i915 devices found\n");
+
+			if (igt_device_find_first_xe_discrete_card(&xe_card) ||
+			    igt_device_find_xe_integrated_card(&xe_card)) {
+				fprintf(stderr, "Detected Xe device which is not supported by intel_gpu_top.\n");
+				fprintf(stderr, "Please use 'gputop' tool instead.\n");
+			}
+		}
 	}
 
 	if (!ret) {
+		ret = EXIT_FAILURE;
+		goto exit;
+	}
+
+	if (!strcmp(card.driver, "xe")) {
+		fprintf(stderr, "Xe devices are not supported by intel_gpu_top.\n");
+		fprintf(stderr, "Please use 'gputop' tool instead.\n");
 		ret = EXIT_FAILURE;
 		goto exit;
 	}

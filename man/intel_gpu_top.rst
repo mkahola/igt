@@ -102,6 +102,8 @@ JSON output will be correctly terminated when the tool cleanly exits, otherwise 
 LIMITATIONS
 ===========
 
+* Xe driver devices are not supported, please use the **gputop** tool instead.
+
 * Not all metrics are supported on all platforms. Where a metric is unsupported it's value will be replaced by a dashed line.
 
 * Non-root access to perf counters is controlled by the *perf_event_paranoid* sysctl.
