@@ -7013,6 +7013,37 @@ bool ultrajoiner_mode_found(int drm_fd, drmModeConnector *connector,
 }
 
 /**
+ * igt_get_non_joiner_mode:
+ * @drm_fd: drm file descriptor
+ * @output: pointer to the output structure
+ *
+ * Finds the display mode from the output that does not require
+ * Big Joiner or Ultra Joiner.
+ *
+ * Returns: Pointer to non-joiner mode, or NULL if not found.
+ */
+drmModeModeInfo *igt_get_non_joiner_mode(int drm_fd, igt_output_t *output)
+{
+	drmModeConnector *connector;
+	int max_dotclock;
+
+	connector = output->config.connector;
+	max_dotclock = igt_get_max_dotclock(drm_fd);
+
+	for (int i = 0; i < connector->count_modes; i++) {
+		drmModeModeInfo *current_mode = &connector->modes[i];
+
+		/* Check if mode requires joiner */
+		if (!igt_bigjoiner_possible(drm_fd, current_mode, max_dotclock) &&
+		    !igt_ultrajoiner_possible(drm_fd, current_mode, max_dotclock)) {
+			return current_mode;
+		}
+	}
+
+	return NULL;
+}
+
+/**
  * is_joiner_mode:
  * @drm_fd: drm file descriptor
  * @output: pointer to the output structure

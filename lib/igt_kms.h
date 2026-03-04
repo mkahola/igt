@@ -1267,6 +1267,7 @@ bool igt_ultrajoiner_possible(int drmfd, drmModeModeInfo *mode, int max_dotclock
 bool ultrajoiner_mode_found(int drm_fd, drmModeConnector *connector,
 			  int max_dotclock, drmModeModeInfo *mode);
 bool igt_has_force_joiner_debugfs(int drmfd, char *conn_name);
+drmModeModeInfo *igt_get_non_joiner_mode(int drm_fd, igt_output_t *output);
 bool is_joiner_mode(int drm_fd, igt_output_t *output);
 bool igt_check_force_joiner_status(int drmfd, char *connector_name);
 bool igt_check_bigjoiner_support(igt_display_t *display);
