@@ -440,6 +440,21 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 			data->crtc = crtc;
 			data->mode = igt_output_get_mode(data->output);
 
+			/*
+			 * FIXME: Joiner + CASF currently unsupported.
+			 * Remove this check once support is implemented.
+			 * Until then, run on non-joiner mode in joiner configuration.
+			 */
+			if (is_joiner_mode(data->drm_fd, data->output)) {
+				data->mode = igt_get_non_joiner_mode(data->drm_fd, data->output);
+				igt_info("Executing on mode %dx%d@%d\n",
+					 data->mode->hdisplay,
+					 data->mode->vdisplay,
+					 data->mode->vrefresh);
+			} else {
+				data->mode = igt_output_get_mode(data->output);
+			}
+
 			if (!has_sharpness_filter(data->crtc)) {
 				igt_info("%s: Doesn't support IGT_CRTC_SHARPNESS_STRENGTH.\n",
 				igt_crtc_name(data->crtc));
