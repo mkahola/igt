@@ -400,6 +400,7 @@
 #define MI_CONDITIONAL_BATCH_BUFFER_END MI_INSTR(0x36, 0)
 #define  MI_DO_COMPARE		REG_BIT(21)
 
+#define BASEADDR_DIS (1 << 30)
 #define STATE_BASE_ADDRESS \
 	((0x3 << 29) | (0x0 << 27) | (0x1 << 24) | (0x1 << 16))
 #define BASE_ADDRESS_MODIFY		REG_BIT(0)

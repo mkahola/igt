@@ -83,6 +83,71 @@ struct xehp_interface_descriptor_data {
 	} desc7;
 };
 
+struct xe3p_interface_descriptor_data {
+	struct {
+		uint32_t rsvd0:					BITRANGE(0, 5);
+		uint32_t kernel_start_pointer:			BITRANGE(6, 31);
+	} dw00;
+
+	struct {
+		uint32_t kernel_start_pointer_high:		BITRANGE(0, 31);
+	} dw01;
+
+	struct {
+		uint32_t eu_thread_scheduling_mode_override:	BITRANGE(0, 1);
+		uint32_t rsvd5:					BITRANGE(2, 6);
+		uint32_t software_exception_enable:		BITRANGE(7, 7);
+		uint32_t rsvd4:					BITRANGE(8, 12);
+		uint32_t illegal_opcode_exception_enable:	BITRANGE(13, 13);
+		uint32_t rsvd3:					BITRANGE(14, 15);
+		uint32_t floating_point_mode:			BITRANGE(16, 16);
+		uint32_t rsvd2:					BITRANGE(17, 17);
+		uint32_t single_program_flow:			BITRANGE(18, 18);
+		uint32_t denorm_mode:				BITRANGE(19, 19);
+		uint32_t thread_preemption:			BITRANGE(20, 20);
+		uint32_t rsvd1:					BITRANGE(21, 25);
+		uint32_t registers_per_thread:			BITRANGE(26, 30);
+		uint32_t rsvd0:					BITRANGE(31, 31);
+	} dw02;
+
+	struct {
+		uint32_t rsvd0:					BITRANGE(0, 31);
+	} dw03;
+
+	struct {
+		uint32_t rsvd0:					BITRANGE(0, 31);
+	} dw04;
+
+	struct {
+		uint32_t number_of_threads_in_gpgpu_thread_group: BITRANGE(0, 7);
+		uint32_t rsvd3:					BITRANGE(8, 12);
+		uint32_t thread_group_forward_progress_guarantee: BITRANGE(13, 13);
+		uint32_t rsvd2:					BITRANGE(14, 14);
+		uint32_t btd_mode:				BITRANGE(15, 15);
+		uint32_t shared_local_memory_size:		BITRANGE(16, 20);
+		uint32_t rsvd1:					BITRANGE(21, 21);
+		uint32_t rounding_mode:				BITRANGE(22, 23);
+		uint32_t rsvd0:					BITRANGE(24, 24);
+		uint32_t thread_group_dispatch_size:		BITRANGE(25, 27);
+		uint32_t number_of_barriers:			BITRANGE(28, 31);
+	} dw05;
+
+	struct {
+		uint32_t rsvd3:					BITRANGE(0, 7);
+		uint32_t z_pass_async_compute_thread_limit:	BITRANGE(8, 10);
+		uint32_t rsvd2:					BITRANGE(11, 11);
+		uint32_t np_z_async_throttle_settings:		BITRANGE(12, 13);
+		uint32_t rsvd1:					BITRANGE(14, 15);
+		uint32_t ps_async_thread_limit:			BITRANGE(16, 18);
+		uint32_t rsvd0:					BITRANGE(19, 31);
+	} dw06;
+
+	struct {
+		uint32_t preferred_slm_allocation_size:		BITRANGE(0, 3);
+		uint32_t rsvd0:					BITRANGE(4, 31);
+	} dw07;
+};
+
 struct xehp_surface_state {
 	struct {
 		uint32_t cube_pos_z: BITRANGE(0, 0);
