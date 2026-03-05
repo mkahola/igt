@@ -324,6 +324,7 @@ intel_xe_progs = [
 	'xe_pm',
 	'xe_pm_residency',
 	'xe_pmu',
+	'xe_prefetch_fault',
 	'xe_prime_self_import',
 	'xe_pxp',
 	'xe_query',
