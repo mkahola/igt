@@ -20,6 +20,8 @@
 #define XE_DEFAULT_ALIGNMENT           SZ_4K
 #define XE_DEFAULT_ALIGNMENT_64K       SZ_64K
 
+struct intel_pat_cache;
+
 struct xe_device {
 	/** @fd: xe fd */
 	int fd;
@@ -74,6 +76,9 @@ struct xe_device {
 
 	/** @dev_id: Device id of xe device */
 	uint16_t dev_id;
+
+	/** @pat_cache: cached PAT index configuration, NULL if not yet populated */
+	struct intel_pat_cache *pat_cache;
 };
 
 #define xe_for_each_engine(__fd, __hwe) \

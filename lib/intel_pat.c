@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include "igt.h"
 #include "intel_pat.h"
+#include "xe/xe_query.h"
 
 /**
  * xe_get_pat_sw_config - Helper to read PAT (Page Attribute Table) software configuration
@@ -99,17 +100,17 @@ static void intel_get_pat_idx(int fd, struct intel_pat_cache *pat)
 	uint16_t dev_id;
 
 	/*
-	 * For Xe driver, query the kernel's PAT software configuration
-	 * via debugfs. The kernel is the authoritative source for PAT
-	 * indices, accounting for platform-specific workarounds
-	 * (e.g. Wa_16023588340) at runtime.
+	 * For Xe, use the PAT cache stored in struct xe_device.
+	 * xe_device_get() populates the cache while still root; forked
+	 * children that inherit the xe_device can use it post-drop_root().
 	 */
 	if (is_xe_device(fd)) {
-		int32_t parsed = xe_get_pat_sw_config(fd, pat);
+		struct xe_device *xe_dev = xe_device_get(fd);
 
-		igt_assert_f(parsed > 0,
-			     "Failed to get PAT sw_config from debugfs (parsed=%d)\n",
-			     parsed);
+		igt_assert_f(xe_dev->pat_cache,
+			     "PAT sw_config not available -- "
+			     "debugfs not accessible (missing root or not mounted?)\n");
+		*pat = *xe_dev->pat_cache;
 		return;
 	}
 
