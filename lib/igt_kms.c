@@ -8078,6 +8078,8 @@ igt_crtc_t *igt_first_crtc(igt_display_t *display)
 	for_each_crtc(display, crtc)
 		return crtc;
 
+	igt_skip("No CRTCs on device\n");
+
 	return NULL;
 }
 

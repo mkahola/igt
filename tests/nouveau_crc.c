@@ -400,7 +400,6 @@ int igt_main()
 		     "is reset to its default value after a single capture.");
 	igt_subtest("ctx-flip-threshold-reset-after-capture") {
 		data.crtc = igt_first_crtc(&data.display);
-		igt_require(data.crtc);
 
 		run_test(&data, test_ctx_flip_threshold_reset_after_capture);
 	}
