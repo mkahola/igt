@@ -7,7 +7,7 @@
 # to minimal GPU generation supported by platform multiplied by 100 and platform
 # is one of platforms supported by -p switch of iga64.
 # Must be in decreasing order, the last one must have gen100 equal 0.
-GEN_VERSIONS="2000:2 1270:12p71 1260:12p72 1250:12p5 0:12p1"
+GEN_VERSIONS="3500:3pxpc 3000:3 2000:2 1270:12p71 1260:12p72 1250:12p5 0:12p1"
 
 # Magic values to encode asm template args, must be the the same as in gpgpu_shader.c.
 IGA64_ARG0=0xc0ded000
