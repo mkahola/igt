@@ -8101,6 +8101,8 @@ igt_crtc_t *igt_first_crtc_with_single_output(igt_display_t *display, igt_output
 		return crtc;
 	}
 
+	igt_skip("No valid CRTC/output combinations\n");
+
 	*ret_output = NULL;
 
 	return NULL;

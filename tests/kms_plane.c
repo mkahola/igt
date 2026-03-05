@@ -1380,7 +1380,6 @@ static void test_planar_settings(data_t *data)
 	}
 
 	crtc = igt_first_crtc_with_single_output(display, &output);
-	igt_require(crtc);
 
 	igt_output_set_crtc(output, crtc);
 	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);

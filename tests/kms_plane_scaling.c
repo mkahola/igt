@@ -1181,7 +1181,6 @@ static void invalid_parameter_tests(data_t *d)
 
 	igt_fixture() {
 		crtc = igt_first_crtc_with_single_output(display, &output);
-		igt_require(crtc);
 
 		igt_output_set_crtc(output, crtc);
 		plane = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);

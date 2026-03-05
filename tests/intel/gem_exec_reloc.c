@@ -1517,7 +1517,6 @@ static void scanout(int i915,
 	igt_display_reset(dpy);
 
 	crtc = igt_first_crtc_with_single_output(dpy, &output);
-	igt_require(crtc);
 
 	igt_output_set_crtc(output, crtc);
 
