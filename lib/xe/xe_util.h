@@ -7,6 +7,7 @@
 #ifndef XE_UTIL_H
 #define XE_UTIL_H
 
+#include <linux_scaffold.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -53,5 +54,9 @@ void xe_fast_copy(int fd,
 		  uint32_t src_bo, uint32_t src_region, uint8_t src_pat_index,
 		  uint32_t dst_bo, uint32_t dst_region, uint8_t dst_pat_index,
 		  uint64_t size);
+
+static inline uint64_t xe_canonical_va(int fd, uint64_t offset) {
+	return sign_extend64(offset, xe_va_bits(fd) - 1);
+}
 
 #endif /* XE_UTIL_H */
