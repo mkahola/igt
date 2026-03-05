@@ -12,6 +12,7 @@
 #include "gpgpu_shader.h"
 #include "gpu_cmds.h"
 #include "xe/xe_query.h"
+#include "xe/xe_util.h"
 
 struct label_entry {
 	uint32_t id;
@@ -218,6 +219,63 @@ __xehp_gpgpu_execfunc(struct intel_bb *ibb,
 		      engine | I915_EXEC_NO_RELOC, false);
 }
 
+static void
+__xe3p_gpgpu_execfunc(struct intel_bb *ibb,
+		      struct intel_buf *target,
+		      unsigned int x_dim, unsigned int y_dim,
+		      struct gpgpu_shader *shdr,
+		      struct gpgpu_shader *sip,
+		      uint64_t ring, bool explicit_engine)
+{
+	struct xe3p_interface_descriptor_data idd;
+	uint32_t sip_offset, *inline_data;
+	uint64_t engine;
+
+	intel_bb_add_intel_buf(ibb, target, true);
+	intel_bb_ptr_set(ibb, BATCH_STATE_SPLIT);
+	xe3p_fill_interface_descriptor(ibb, target, shdr->instr,
+				       4 * shdr->size, &idd);
+	idd.dw02.illegal_opcode_exception_enable = shdr->illegal_opcode_exception_enable;
+	if (sip && sip->size)
+		sip_offset = fill_sip(ibb, sip->instr, 4 * sip->size);
+	else
+		sip_offset = 0;
+
+	intel_bb_ptr_set(ibb, 0);
+
+	intel_bb_out(ibb, GEN7_PIPELINE_SELECT | GEN9_PIPELINE_SELECTION_MASK |
+		     PIPELINE_SELECT_GPGPU);
+	xe3p_emit_state_base_address(ibb);
+	xehp_emit_state_compute_mode(ibb, shdr->vrt != VRT_DISABLED);
+
+	if (sip_offset) {
+		struct drm_i915_gem_exec_object2 *object =
+			intel_bb_find_object(ibb, ibb->handle);
+		uint64_t ppgtt_bb_addr, sip_addr;
+
+		igt_assert(object);
+
+		/* get base batch buffer address. */
+		ppgtt_bb_addr = object->offset;
+
+		sip_addr = xe_canonical_va(ibb->fd, ppgtt_bb_addr + sip_offset);
+		emit_sip(ibb, sip_addr);
+	}
+
+	/* Inline data is at 32th dword of COMPUTE_WALKER_2 */
+	inline_data = intel_bb_ptr(ibb) + 4 * 32;
+	/* Pass a value of "SIMD_SIZE(16) * x_dim" as the argument for width */
+	xe3p_emit_compute_walk2(ibb, 0, 0, x_dim * 16, y_dim, &idd, x_dim * y_dim);
+	fill_inline_data(inline_data, xe_canonical_va(ibb->fd, target->addr.offset), target, x_dim);
+
+	intel_bb_out(ibb, MI_BATCH_BUFFER_END);
+	intel_bb_ptr_align(ibb, 32);
+
+	engine = explicit_engine ? ring : I915_EXEC_DEFAULT;
+
+	intel_bb_exec(ibb, engine | I915_EXEC_NO_RELOC, false, true);
+}
+
 static void gpgpu_alloc_gpu_addr(struct intel_bb *ibb, struct intel_buf *target)
 {
 	uint64_t ahnd;
@@ -257,7 +315,10 @@ void gpgpu_shader_exec(struct intel_bb *ibb,
 	if (target->addr.offset == INTEL_BUF_INVALID_ADDRESS)
 		gpgpu_alloc_gpu_addr(ibb, target);
 
-	if (shdr->gen_ver >= 1250)
+	if (shdr->gen_ver >= 3500)
+		__xe3p_gpgpu_execfunc(ibb, target, x_dim, y_dim, shdr, sip,
+				      ring, explicit_engine);
+	else if (shdr->gen_ver >= 1250)
 		__xehp_gpgpu_execfunc(ibb, target, x_dim, y_dim, shdr, sip,
 				      ring, explicit_engine);
 	else
