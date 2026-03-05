@@ -14,8 +14,8 @@ const char * const kms_colorop_lut1d_tf_names[KMS_COLOROP_LUT1D_NUM_ENUMS] = {
 	[KMS_COLOROP_LUT1D_PQ_INV_EOTF] = "PQ Inverse EOTF",
 	[KMS_COLOROP_LUT1D_PQ_125_EOTF] = "PQ 125 EOTF",
 	[KMS_COLOROP_LUT1D_PQ_125_INV_EOTF] = "PQ 125 Inverse EOTF",
-	[KMS_COLOROP_LUT1D_GAMMA_2_2_OETF] = "Gamma 2.2 OETF",
-	[KMS_COLOROP_LUT1D_GAMMA_2_2_INV_OETF] = "Gamma 2.2 Inverse OETF",
+	[KMS_COLOROP_LUT1D_GAMMA_2_2_OETF] = "Gamma 2.2",
+	[KMS_COLOROP_LUT1D_GAMMA_2_2_INV_OETF] = "Gamma 2.2 Inverse",
 };
 
 kms_colorop_t kms_colorop_srgb_eotf = {
