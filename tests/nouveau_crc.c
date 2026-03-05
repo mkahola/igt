@@ -399,8 +399,8 @@ int igt_main()
 	igt_describe("Make sure that the CRC notifier context flip threshold "
 		     "is reset to its default value after a single capture.");
 	igt_subtest("ctx-flip-threshold-reset-after-capture") {
-		data.crtc = igt_crtc_for_pipe(&data.display, PIPE_A);
-		igt_require(data.crtc->valid);
+		data.crtc = igt_first_crtc(&data.display);
+		igt_require(data.crtc);
 
 		run_test(&data, test_ctx_flip_threshold_reset_after_capture);
 	}
