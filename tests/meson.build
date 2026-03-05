@@ -36,6 +36,7 @@ test_progs = [
 	'kms_dither',
 	'kms_display_modes',
 	'kms_dp_aux_dev',
+	'kms_explicit_fence',
 	'kms_feature_discovery',
 	'kms_flip',
 	'kms_flip_event_leak',
