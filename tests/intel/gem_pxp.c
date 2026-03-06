@@ -1204,10 +1204,10 @@ static void test_display_protected_crc(int i915, igt_display_t *display)
 	drmModeModeInfo *mode;
 	igt_fb_t ref_fb, protected_fb;
 	igt_plane_t *plane;
-	igt_crtc_t *crtc;
+	igt_crtc_t *crtc = NULL;
 	igt_pipe_crc_t *pipe_crc;
 	igt_crc_t ref_crc, new_crc;
-	int width = 0, height = 0, i = 0, ret;
+	int width = 0, height = 0, ret;
 	uint32_t ctx;
 
 	ret = create_ctx_with_params(i915, true, true, true, false, &ctx);
@@ -1226,7 +1226,7 @@ static void test_display_protected_crc(int i915, igt_display_t *display)
 	/* Do a modeset on all outputs */
 	for_each_connected_output(display, output) {
 		mode = igt_output_get_mode(output);
-		crtc = igt_crtc_for_pipe(display, i);
+		crtc = igt_next_crtc(display, crtc);
 		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 		igt_require(igt_crtc_connector_valid(crtc, output));
 		igt_output_set_crtc(output,
@@ -1237,7 +1237,6 @@ static void test_display_protected_crc(int i915, igt_display_t *display)
 		igt_plane_set_size(plane, mode->hdisplay, mode->vdisplay);
 
 		igt_display_commit2(display, COMMIT_ATOMIC);
-		i++;
 	}
 
 	setup_protected_fb(i915, width, height, &protected_fb, ctx);
