@@ -89,6 +89,7 @@ struct bo_dict_entry {
 	const char *name;
 	uint32_t handle;
 	enum bo_dict_type bo_type;
+	bool is_owner;
 };
 
 struct bo_sync {
@@ -171,14 +172,17 @@ static float *get_input_data(const struct bo_execenv *execenv,
 	const struct user_execenv *user = execenv->user;
 	float *input_data;
 
-	if (user && user->input_addr) {
+	if (user && user->input_addr && !user->input_bo) {
 		input_data = from_user_pointer(user->input_addr);
 	} else {
 		struct bo_dict_entry *entry;
 
 		entry = bo_dict_find_by_type(bo_dict, entries, BO_TYPE_INPUT);
 		input_data = (float *) entry->data;
-		bo_randomize(input_data, execenv->loop_count);
+
+		/* Don't randomize on user passed bo */
+		if ((!user) || (user && !user->input_bo))
+			bo_randomize(input_data, execenv->loop_count);
 	}
 
 	return input_data;
@@ -191,7 +195,7 @@ static float *get_output_data(const struct bo_execenv *execenv,
 	const struct user_execenv *user = execenv->user;
 	float *output_data;
 
-	if (user && user->output_addr)
+	if (user && user->output_addr && !user->output_bo)
 		output_data = from_user_pointer(user->output_addr);
 	else {
 		struct bo_dict_entry *entry;
@@ -299,6 +303,7 @@ static void bo_execenv_bind(struct bo_execenv *execenv,
 			uint32_t placement, flags = 0;
 
 			bo_sync->sync = 0;
+			bo_dict[i].is_owner = true;
 
 			switch (alloc_prefs) {
 			case EXECENV_PREF_SYSTEM:
@@ -314,14 +319,38 @@ static void bo_execenv_bind(struct bo_execenv *execenv,
 				break;
 			}
 
-			bo_dict[i].handle = xe_bo_create(fd, execenv->vm, bo_dict[i].size,
-							 placement, flags);
-			bo_dict[i].data = xe_bo_map(fd, bo_dict[i].handle, bo_dict[i].size);
-			xe_vm_bind_async(fd, vm, 0, bo_dict[i].handle, 0, bo_dict[i].addr,
-					 bo_dict[i].size, &sync, 1);
-			xe_wait_ufence(fd, &bo_sync->sync, USER_FENCE_VALUE, exec_queue,
-				       INT64_MAX);
-			memset(bo_dict[i].data, 0, bo_dict[i].size);
+			/*
+			 * For input/output buffers skip their creation if
+			 * were passed from the user
+			 */
+			if (execenv->user && bo_dict[i].bo_type == BO_TYPE_INPUT &&
+			    execenv->user->input_addr) {
+				bo_dict[i].handle = execenv->user->input_bo;
+				bo_dict[i].addr = execenv->user->input_addr;
+				bo_dict[i].size = execenv->array_size * sizeof(float);
+				bo_dict[i].is_owner = false;
+			} else if (execenv->user && bo_dict[i].bo_type == BO_TYPE_OUTPUT &&
+				   execenv->user->output_addr) {
+				bo_dict[i].handle = execenv->user->output_bo;
+				bo_dict[i].addr = execenv->user->output_addr;
+				bo_dict[i].size = execenv->array_size * sizeof(float);
+				bo_dict[i].is_owner = false;
+			} else {
+				bo_dict[i].handle = xe_bo_create(fd, execenv->vm, bo_dict[i].size,
+								 placement, flags);
+			}
+
+			if (bo_dict[i].handle) {
+				xe_vm_bind_async(fd, vm, 0, bo_dict[i].handle, 0, bo_dict[i].addr,
+						 bo_dict[i].size, &sync, 1);
+				xe_wait_ufence(fd, &bo_sync->sync, USER_FENCE_VALUE, exec_queue,
+					       INT64_MAX);
+			}
+
+			if (bo_dict[i].is_owner) {
+				bo_dict[i].data = xe_bo_map(fd, bo_dict[i].handle, bo_dict[i].size);
+				memset(bo_dict[i].data, 0, bo_dict[i].size);
+			}
 
 			igt_debug("[i: %2d name: %20s] data: %p, addr: %16llx, size: %llx\n",
 				  i, bo_dict[i].name, bo_dict[i].data,
@@ -387,11 +416,20 @@ static void bo_execenv_unbind(struct bo_execenv *execenv,
 
 		for (int i = 0; i < entries; i++) {
 			bo_sync->sync = 0;
-			xe_vm_unbind_async(fd, vm, 0, 0, bo_dict[i].addr, bo_dict[i].size, &sync, 1);
-			xe_wait_ufence(fd, &bo_sync->sync, USER_FENCE_VALUE, exec_queue,
-				       INT64_MAX);
-			munmap(bo_dict[i].data, bo_dict[i].size);
-			gem_close(fd, bo_dict[i].handle);
+			if (bo_dict[i].is_owner) {
+				xe_vm_unbind_async(fd, vm, 0, 0, bo_dict[i].addr, bo_dict[i].size, &sync, 1);
+				xe_wait_ufence(fd, &bo_sync->sync, USER_FENCE_VALUE, exec_queue,
+					       INT64_MAX);
+				munmap(bo_dict[i].data, bo_dict[i].size);
+			}
+			/* Keep user buffers intact */
+			if (execenv->user)
+				if ((execenv->user->input_bo && bo_dict[i].bo_type == BO_TYPE_INPUT) ||
+				    (execenv->user->output_bo && bo_dict[i].bo_type == BO_TYPE_OUTPUT))
+					continue;
+
+			if (bo_dict[i].handle)
+				gem_close(fd, bo_dict[i].handle);
 		}
 
 		munmap(bo_sync, bo_size);
