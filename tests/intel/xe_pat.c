@@ -1373,6 +1373,12 @@ const struct fs_pat_entry fs_xe3p_xpc[] = {
 	{ 4, "cpu-wb-gpu-uc-1way", DRM_XE_GEM_CPU_CACHING_WB, true },
 };
 
+const struct fs_pat_entry fs_xe3p_lpg[] = {
+	{ 2, "cpu-wb-gpu-l3-2way", DRM_XE_GEM_CPU_CACHING_WB, true },
+	{ 18, "cpu-wc-gpu-xa-non-coh", DRM_XE_GEM_CPU_CACHING_WC, true },
+	{ 19, "cpu-wb-gpu-xa-1way", DRM_XE_GEM_CPU_CACHING_WB, true },
+};
+
 #define CPUDW_INC   0x0
 #define GPUDW_WRITE 0x4
 #define GPUDW_READY 0x40
@@ -1517,6 +1523,9 @@ static void false_sharing(int fd)
 	if (intel_graphics_ver(dev_id) == IP_VER(35, 11)) {
 		num_entries = ARRAY_SIZE(fs_xe3p_xpc);
 		fs_entries = fs_xe3p_xpc;
+	} else if (intel_graphics_ver(dev_id) == IP_VER(35, 10)) {
+		num_entries = ARRAY_SIZE(fs_xe3p_lpg);
+		fs_entries = fs_xe3p_lpg;
 	} else if (graphics_ver == 20) {
 		if (is_dgfx) {
 			num_entries = ARRAY_SIZE(fs_xe2_discrete);
