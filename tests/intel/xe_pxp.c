@@ -881,8 +881,8 @@ static void test_display_pxp_fb(int fd, igt_display_t *display)
 	drmModeModeInfo *mode;
 	igt_fb_t ref_fb, pxp_fb;
 	igt_plane_t *plane;
-	igt_crtc_t *crtc;
-	int width = 0, height = 0, i = 0;
+	igt_crtc_t *crtc = NULL;
+	int width = 0, height = 0;
 	uint32_t q;
 	uint32_t vm;
 
@@ -902,15 +902,13 @@ static void test_display_pxp_fb(int fd, igt_display_t *display)
 	/* Do a modeset on all outputs */
 	for_each_connected_output(display, output) {
 		mode = igt_output_get_mode(output);
-		crtc = igt_crtc_for_pipe(display, i);
+		crtc = igt_next_crtc(display, crtc);
 		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 		igt_require(igt_crtc_connector_valid(crtc, output));
 		igt_output_set_crtc(output,
 				    crtc);
 
 		commit_fb(display, plane, &ref_fb, mode);
-
-		i++;
 	}
 
 	/* Create an encrypted FB with the same contents as ref_fb */
@@ -938,8 +936,8 @@ static void test_display_black_pxp_fb(int fd, igt_display_t *display)
 	drmModeModeInfo *mode;
 	igt_fb_t ref_fb, pxp_fb;
 	igt_plane_t *plane;
-	igt_crtc_t *crtc;
-	int width = 0, height = 0, i = 0;
+	igt_crtc_t *crtc = NULL;
+	int width = 0, height = 0;
 	uint32_t q;
 	uint32_t vm;
 
@@ -960,7 +958,7 @@ static void test_display_black_pxp_fb(int fd, igt_display_t *display)
 	/* Do a modeset on all outputs */
 	for_each_connected_output(display, output) {
 		mode = igt_output_get_mode(output);
-		crtc = igt_crtc_for_pipe(display, i);
+		crtc = igt_next_crtc(display, crtc);
 		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 		igt_require(igt_crtc_connector_valid(crtc, output));
 		igt_output_set_crtc(output,
@@ -971,7 +969,6 @@ static void test_display_black_pxp_fb(int fd, igt_display_t *display)
 		igt_plane_set_size(plane, mode->hdisplay, mode->vdisplay);
 
 		igt_display_commit2(display, COMMIT_ATOMIC);
-		i++;
 	}
 
 	/* Create an fb filled with a non-black color */
