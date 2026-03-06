@@ -1033,13 +1033,8 @@ static void display_helper(igt_display_t *dpy, int *done)
 		igt_plane_t *primary;
 		igt_output_t *output;
 		igt_crtc_t *crtc;
-		int pipe;
 
-		pipe = rand() % igt_display_n_crtcs(dpy);
-
-		crtc = igt_crtc_for_pipe(dpy, pipe);
-		if (!crtc || !crtc->valid)
-			continue;
+		crtc = igt_random_crtc(dpy);
 
 		output = igt_get_single_output_for_crtc(crtc);
 		if (!output)

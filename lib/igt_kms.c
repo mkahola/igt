@@ -8038,3 +8038,23 @@ igt_crtc_t *igt_next_crtc(igt_display_t *display, igt_crtc_t *crtc)
 
 	return NULL;
 }
+
+/*
+ * igt_random_crtc:
+ * @display: pointer to igt_display_t
+ *
+ * Returns: A random CRTC on the device
+ */
+igt_crtc_t *igt_random_crtc(igt_display_t *display)
+{
+	igt_crtc_t *crtcs[IGT_MAX_PIPES];
+	igt_crtc_t *crtc;
+	int n = 0;
+
+	for_each_crtc(display, crtc)
+		crtcs[n++] = crtc;
+
+	igt_skip_on_f(!n, "No CRTCs on device\n");
+
+	return crtcs[rand() % n];
+}

@@ -586,6 +586,7 @@ igt_crtc_t *igt_crtc_for_crtc_id(igt_display_t *display, uint32_t crtc_id);
 igt_crtc_t *igt_first_crtc(igt_display_t *display);
 igt_crtc_t *igt_first_crtc_with_single_output(igt_display_t *display, igt_output_t **ret_output);
 igt_crtc_t *igt_next_crtc(igt_display_t *display, igt_crtc_t *crtc);
+igt_crtc_t *igt_random_crtc(igt_display_t *display);
 
 uint32_t igt_crtc_get_vbl_flag(igt_crtc_t *crtc);
 unsigned int igt_crtc_get_vblank(igt_crtc_t *crtc, unsigned int flags);
