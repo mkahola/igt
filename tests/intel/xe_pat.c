@@ -1361,6 +1361,18 @@ const struct fs_pat_entry fs_xe2_discrete[] = {
 	{ 5, "cpu-wb-gpu-uc-1way", DRM_XE_GEM_CPU_CACHING_WB, true },
 };
 
+const struct fs_pat_entry fs_xe3[] = {
+	{ 2, "cpu-wb-gpu-l3-2way", DRM_XE_GEM_CPU_CACHING_WB, true },
+	{ 3, "cpu-wc-gpu-uc-non-coh", DRM_XE_GEM_CPU_CACHING_WC, true },
+	{ 5, "cpu-wb-gpu-uc-1way", DRM_XE_GEM_CPU_CACHING_WB, true },
+};
+
+const struct fs_pat_entry fs_xe3p_xpc[] = {
+	{ 2, "cpu-wb-gpu-l3-2way", DRM_XE_GEM_CPU_CACHING_WB, true },
+	{ 3, "cpu-wc-gpu-uc-non-coh", DRM_XE_GEM_CPU_CACHING_WC, true },
+	{ 4, "cpu-wb-gpu-uc-1way", DRM_XE_GEM_CPU_CACHING_WB, true },
+};
+
 #define CPUDW_INC   0x0
 #define GPUDW_WRITE 0x4
 #define GPUDW_READY 0x40
@@ -1495,17 +1507,27 @@ static void __false_sharing(int fd, const struct fs_pat_entry *fs_entry)
 
 static void false_sharing(int fd)
 {
+	uint16_t dev_id = intel_get_drm_devid(fd);
+	uint32_t graphics_ver = intel_get_device_info(dev_id)->graphics_ver;
 	bool is_dgfx = xe_has_vram(fd);
 
 	const struct fs_pat_entry *fs_entries;
 	int num_entries;
 
-	if (is_dgfx) {
-		num_entries = ARRAY_SIZE(fs_xe2_discrete);
-		fs_entries = fs_xe2_discrete;
+	if (intel_graphics_ver(dev_id) == IP_VER(35, 11)) {
+		num_entries = ARRAY_SIZE(fs_xe3p_xpc);
+		fs_entries = fs_xe3p_xpc;
+	} else if (graphics_ver == 20) {
+		if (is_dgfx) {
+			num_entries = ARRAY_SIZE(fs_xe2_discrete);
+			fs_entries = fs_xe2_discrete;
+		} else {
+			num_entries = ARRAY_SIZE(fs_xe2_integrated);
+			fs_entries = fs_xe2_integrated;
+		}
 	} else {
-		num_entries = ARRAY_SIZE(fs_xe2_integrated);
-		fs_entries = fs_xe2_integrated;
+		num_entries = ARRAY_SIZE(fs_xe3);
+		fs_entries = fs_xe3;
 	}
 
 	for (int i = 0; i < num_entries; i++) {
@@ -1601,7 +1623,7 @@ int igt_main_args("V", NULL, help_str, opt_handler, NULL)
 		display_vs_wb_transient(fd);
 
 	igt_subtest_with_dynamic("false-sharing") {
-		igt_require(intel_get_device_info(dev_id)->graphics_ver == 20);
+		igt_require(intel_get_device_info(dev_id)->graphics_ver >= 20);
 
 		false_sharing(fd);
 	}
