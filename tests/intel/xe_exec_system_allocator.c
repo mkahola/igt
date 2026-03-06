@@ -2258,7 +2258,6 @@ test_compute(int fd, size_t size, unsigned int flags)
 		.array_size = size / sizeof(float),
 	};
 	float *compute_input;
-	int i;
 
 	vm = xe_vm_create(fd, DRM_XE_VM_CREATE_FLAG_LR_MODE | DRM_XE_VM_CREATE_FLAG_FAULT_MODE, 0);
 	bo_sync = aligned_alloc(xe_get_default_alignment(fd), sizeof(*bo_sync));
@@ -2266,7 +2265,7 @@ test_compute(int fd, size_t size, unsigned int flags)
 	bind_system_allocator(&sync, 1);
 	xe_wait_ufence(fd, &bo_sync->sync, USER_FENCE_VALUE, 0, FIVE_SEC);
 
-	compute_input = aligned_alloc(SZ_2M, size);
+	compute_input = aligned_alloc(size, size);
 	igt_assert(compute_input);
 
 	env.loop_count = (flags & TOUCH_ONCE) ? 1 : env.array_size;
@@ -2274,8 +2273,7 @@ test_compute(int fd, size_t size, unsigned int flags)
 	env.input_addr = to_user_pointer(compute_input);
 	env.vm = vm;
 
-	for (i = 0; i < env.loop_count; i++)
-		compute_input[i] = rand() / (float)RAND_MAX;
+	memset(compute_input, rand() % 255 + 1, size);
 
 	run_intel_compute_kernel(fd, &env, EXECENV_PREF_SYSTEM);
 
