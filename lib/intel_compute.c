@@ -1291,16 +1291,11 @@ static void xehpc_create_indirect_data(uint32_t *addr_bo_buffer_batch,
 	addr_bo_buffer_batch[b++] = ENQUEUED_LOCAL_SIZE_X;
 	addr_bo_buffer_batch[b++] = ENQUEUED_LOCAL_SIZE_Y;
 	addr_bo_buffer_batch[b++] = ENQUEUED_LOCAL_SIZE_Z;
-	addr_bo_buffer_batch[b++] = 0x00000000;
-	addr_bo_buffer_batch[b++] = 0x00000000;
 	addr_bo_buffer_batch[b++] = addr_input & 0xffffffff;
 	addr_bo_buffer_batch[b++] = addr_input >> 32;
 	addr_bo_buffer_batch[b++] = addr_output & 0xffffffff;
 	addr_bo_buffer_batch[b++] = addr_output >> 32;
 	addr_bo_buffer_batch[b++] = loop_count;
-	addr_bo_buffer_batch[b++] = ENQUEUED_LOCAL_SIZE_X;
-	addr_bo_buffer_batch[b++] = ENQUEUED_LOCAL_SIZE_Y;
-	addr_bo_buffer_batch[b++] = ENQUEUED_LOCAL_SIZE_Z;
 }
 
 static void xehpc_compute_exec_compute(int fd,
@@ -1374,7 +1369,7 @@ static void xehpc_compute_exec_compute(int fd,
 	addr_bo_buffer_batch[b++] = offset_indirect_data_start;
 	addr_bo_buffer_batch[b++] = 0xbe040000;
 	addr_bo_buffer_batch[b++] = 0xffffffff;
-	addr_bo_buffer_batch[b++] = 0x0000003f;
+	addr_bo_buffer_batch[b++] = 0x000003ff;
 	addr_bo_buffer_batch[b++] = 0x00000010;
 
 	addr_bo_buffer_batch[b++] = 0x00000001;
