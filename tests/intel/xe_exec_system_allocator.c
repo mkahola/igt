@@ -2240,7 +2240,7 @@ processes(int fd, int n_exec_queues, int n_execs, size_t bo_size,
  * @range-device-host:				touch the whole buffer, from the device then from the host
  */
 static void
-test_compute(int fd, size_t size, unsigned int flags)
+test_compute(int fd, size_t size, unsigned int flags, int loops)
 {
 	struct drm_xe_sync sync = {
 		.type = DRM_XE_SYNC_TYPE_USER_FENCE,
@@ -2265,19 +2265,22 @@ test_compute(int fd, size_t size, unsigned int flags)
 	bind_system_allocator(&sync, 1);
 	xe_wait_ufence(fd, &bo_sync->sync, USER_FENCE_VALUE, 0, FIVE_SEC);
 
-	compute_input = aligned_alloc(size, size);
-	igt_assert(compute_input);
-
 	env.loop_count = (flags & TOUCH_ONCE) ? 1 : env.array_size;
 	env.skip_results_check = !(flags & ACCESS_DEVICE_HOST);
-	env.input_addr = to_user_pointer(compute_input);
 	env.vm = vm;
 
-	memset(compute_input, rand() % 255 + 1, size);
+	for (int i = 0; i < loops; i++) {
+		compute_input = aligned_alloc(size, size);
+		igt_assert(compute_input);
+		env.input_addr = to_user_pointer(compute_input);
 
-	run_intel_compute_kernel(fd, &env, EXECENV_PREF_SYSTEM);
+		memset(compute_input, rand() % 255 + 1, size);
 
-	free(compute_input);
+		run_intel_compute_kernel(fd, &env, EXECENV_PREF_SYSTEM);
+
+		free(compute_input);
+	}
+
 	unbind_system_allocator();
 	xe_vm_destroy(fd, vm);
 }
@@ -2287,6 +2290,13 @@ struct section {
 	unsigned long long flags;
 	uint8_t (*fn)(int pat);
 };
+
+static int getenv_int(const char *var, int def_val)
+{
+	char *env = getenv(var);
+
+	return env ? atoi(env) : def_val;
+}
 
 int igt_main()
 {
@@ -2458,7 +2468,7 @@ int igt_main()
 		{ NULL },
 	};
 
-	int fd;
+	int fd, svm_compute_loops = getenv_int("IGT_SVM_COMPUTE_LOOPS", 1);
 
 	igt_fixture() {
 		struct xe_device *xe;
@@ -2675,15 +2685,15 @@ int igt_main()
 	}
 
 	igt_subtest("compute")
-		test_compute(fd, SZ_2M, 0);
+		test_compute(fd, SZ_2M, 0, svm_compute_loops);
 
 	for (const struct section *s = csections; s->name; s++) {
 		igt_subtest_f("eu-fault-4k-%s", s->name)
-			test_compute(fd, SZ_4K, s->flags);
+			test_compute(fd, SZ_4K, s->flags, svm_compute_loops);
 		igt_subtest_f("eu-fault-64k-%s", s->name)
-			test_compute(fd, SZ_64K, s->flags);
+			test_compute(fd, SZ_64K, s->flags, svm_compute_loops);
 		igt_subtest_f("eu-fault-2m-%s", s->name)
-			test_compute(fd, SZ_2M, s->flags);
+			test_compute(fd, SZ_2M, s->flags, svm_compute_loops);
 	}
 
 	igt_fixture() {
