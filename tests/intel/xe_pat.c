@@ -14,6 +14,7 @@
 #include <fcntl.h>
 
 #include "igt.h"
+#include "igt_syncobj.h"
 #include "igt_vgem.h"
 #include "intel_blt.h"
 #include "intel_mocs.h"
@@ -1341,6 +1342,179 @@ static void subtest_pat_index_modes_with_regions(int fd,
 	}
 }
 
+struct fs_pat_entry {
+	uint8_t pat_index;
+	const char *name;
+	uint16_t cpu_caching;
+	bool exp_result;
+};
+
+const struct fs_pat_entry fs_xe2_integrated[] = {
+	{ 2, "cpu-wb-gpu-l3-2way", DRM_XE_GEM_CPU_CACHING_WB, true },
+	{ 3, "cpu-wc-gpu-uc-non-coh", DRM_XE_GEM_CPU_CACHING_WC, false },
+	{ 5, "cpu-wb-gpu-uc-1way", DRM_XE_GEM_CPU_CACHING_WB, false },
+};
+
+const struct fs_pat_entry fs_xe2_discrete[] = {
+	{ 2, "cpu-wb-gpu-l3-2way", DRM_XE_GEM_CPU_CACHING_WB, true },
+	{ 3, "cpu-wc-gpu-uc-non-coh", DRM_XE_GEM_CPU_CACHING_WC, true },
+	{ 5, "cpu-wb-gpu-uc-1way", DRM_XE_GEM_CPU_CACHING_WB, true },
+};
+
+#define CPUDW_INC   0x0
+#define GPUDW_WRITE 0x4
+#define GPUDW_READY 0x40
+#define READY_VAL   0xabcd
+#define FINISH_VAL  0x0bae
+
+static void __false_sharing(int fd, const struct fs_pat_entry *fs_entry)
+{
+	size_t size = xe_get_default_alignment(fd), bb_size;
+	uint32_t vm, exec_queue, bo, bb, *map, *batch;
+	struct drm_xe_engine_class_instance *hwe;
+	struct drm_xe_sync sync = {
+	    .type = DRM_XE_SYNC_TYPE_SYNCOBJ, .flags = DRM_XE_SYNC_FLAG_SIGNAL,
+	};
+	struct drm_xe_exec exec = {
+		.num_batch_buffer = 1,
+		.num_syncs = 1,
+		.syncs = to_user_pointer(&sync),
+	};
+	uint64_t addr = 0x40000;
+	uint64_t bb_addr = 0x100000;
+	uint32_t loops = 0x0, gpu_exp_value;
+	uint32_t region = system_memory(fd);
+	int loop_addr, i = 0;
+	int pat_index = fs_entry->pat_index;
+	int inc_idx, write_idx, ready_idx;
+	bool result;
+
+	inc_idx = CPUDW_INC / sizeof(*map);
+	write_idx = GPUDW_WRITE / sizeof(*map);
+	ready_idx = GPUDW_READY / sizeof(*map);
+
+	vm = xe_vm_create(fd, 0, 0);
+
+	bo = xe_bo_create_caching(fd, 0, size, region, 0, fs_entry->cpu_caching);
+	map = xe_bo_map(fd, bo, size);
+
+	bb_size = xe_bb_size(fd, SZ_4K);
+	bb = xe_bo_create(fd, 0, bb_size, region, 0);
+	batch = xe_bo_map(fd, bb, bb_size);
+
+	sync.handle = syncobj_create(fd, 0);
+	igt_assert_eq(__xe_vm_bind(fd, vm, 0, bo, 0, addr,
+				   size, DRM_XE_VM_BIND_OP_MAP, 0, &sync, 1, 0,
+				   pat_index, 0),
+			0);
+	igt_assert_eq(syncobj_wait_err(fd, &sync.handle, 1, INT64_MAX, 0), 0);
+
+	syncobj_reset(fd, &sync.handle, 1);
+	igt_assert_eq(__xe_vm_bind(fd, vm, 0, bb, 0, bb_addr,
+				   bb_size, DRM_XE_VM_BIND_OP_MAP, 0, &sync, 1, 0,
+				   DEFAULT_PAT_INDEX, 0),
+			0);
+	igt_assert_eq(syncobj_wait_err(fd, &sync.handle, 1, INT64_MAX, 0), 0);
+
+	/* Unblock cpu wait */
+	batch[i++] = MI_STORE_DWORD_IMM_GEN4;
+	batch[i++] = addr + GPUDW_READY;
+	batch[i++] = addr >> 32;
+	batch[i++] = READY_VAL;
+
+	/* Unblock after cpu started to spin */
+	batch[i++] = MI_SEMAPHORE_WAIT_CMD | MI_SEMAPHORE_POLL |
+		     MI_SEMAPHORE_SAD_NEQ_SDD | (4 - 2);
+	batch[i++] = 0;
+	batch[i++] = addr + CPUDW_INC;
+	batch[i++] = addr >> 32;
+
+	loop_addr = i;
+	batch[i++] = MI_STORE_DWORD_IMM_GEN4;
+	batch[i++] = addr + GPUDW_WRITE;
+	batch[i++] = addr >> 32;
+	batch[i++] = READY_VAL;
+
+	batch[i++] = MI_COND_BATCH_BUFFER_END | MI_DO_COMPARE | MAD_EQ_IDD | 2;
+	batch[i++] = READY_VAL;
+	batch[i++] = addr + GPUDW_READY;
+	batch[i++] = addr >> 32;
+
+	batch[i++] = MI_BATCH_BUFFER_START | 1 << 8 | 1;
+	batch[i++] = bb_addr + loop_addr * sizeof(uint32_t);
+	batch[i++] = bb_addr >> 32;
+
+	batch[i++] = MI_BATCH_BUFFER_END;
+
+	xe_for_each_engine(fd, hwe)
+		break;
+
+	exec_queue = xe_exec_queue_create(fd, vm, hwe, 0);
+	exec.exec_queue_id = exec_queue;
+	exec.address = bb_addr;
+	syncobj_reset(fd, &sync.handle, 1);
+	xe_exec(fd, &exec);
+
+	while(READ_ONCE(map[ready_idx]) != READY_VAL);
+
+	igt_until_timeout(2) {
+		WRITE_ONCE(map[inc_idx], map[inc_idx] + 1);
+		loops++;
+	}
+
+	WRITE_ONCE(map[ready_idx], FINISH_VAL);
+
+	igt_assert_eq(syncobj_wait_err(fd, &sync.handle, 1, INT64_MAX, 0), 0);
+
+	igt_debug("[%d]: %08x (cpu) [loops: %08x] | [%d]: %08x (gpu) | [%d]: %08x (ready)\n",
+		  inc_idx, map[inc_idx], loops, write_idx, map[write_idx],
+		  ready_idx, map[ready_idx]);
+
+	result = map[inc_idx] == loops;
+	gpu_exp_value = map[ready_idx];
+	igt_debug("got: %d, expected: %d\n", result, fs_entry->exp_result);
+
+	xe_vm_unbind_sync(fd, vm, 0, addr, size);
+	xe_vm_unbind_sync(fd, vm, 0, bb_addr, bb_size);
+	gem_munmap(batch, bb_size);
+	gem_munmap(map, size);
+	gem_close(fd, bo);
+	gem_close(fd, bb);
+
+	xe_vm_destroy(fd, vm);
+
+	igt_assert_eq(result, fs_entry->exp_result);
+	igt_assert_eq(gpu_exp_value, FINISH_VAL);
+}
+
+/**
+ * SUBTEST: false-sharing
+ * Test category: functionality test
+ * Description: Check cache line coherency on 1way/coh_none
+ */
+
+static void false_sharing(int fd)
+{
+	bool is_dgfx = xe_has_vram(fd);
+
+	const struct fs_pat_entry *fs_entries;
+	int num_entries;
+
+	if (is_dgfx) {
+		num_entries = ARRAY_SIZE(fs_xe2_discrete);
+		fs_entries = fs_xe2_discrete;
+	} else {
+		num_entries = ARRAY_SIZE(fs_xe2_integrated);
+		fs_entries = fs_xe2_integrated;
+	}
+
+	for (int i = 0; i < num_entries; i++) {
+		igt_dynamic_f("%s", fs_entries[i].name) {
+			__false_sharing(fd, &fs_entries[i]);
+		}
+	}
+}
+
 static int opt_handler(int opt, int opt_index, void *data)
 {
 	switch (opt) {
@@ -1425,6 +1599,12 @@ int igt_main_args("V", NULL, help_str, opt_handler, NULL)
 
 	igt_subtest("display-vs-wb-transient")
 		display_vs_wb_transient(fd);
+
+	igt_subtest_with_dynamic("false-sharing") {
+		igt_require(intel_get_device_info(dev_id)->graphics_ver == 20);
+
+		false_sharing(fd);
+	}
 
 	igt_fixture()
 		drm_close_driver(fd);
