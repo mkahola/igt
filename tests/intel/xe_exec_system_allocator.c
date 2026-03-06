@@ -2240,7 +2240,8 @@ processes(int fd, int n_exec_queues, int n_execs, size_t bo_size,
  * @range-device-host:				touch the whole buffer, from the device then from the host
  */
 static void
-test_compute(int fd, size_t size, unsigned int flags, int loops)
+test_compute(int fd, struct drm_xe_engine_class_instance *eci, size_t size,
+	     unsigned int flags, int loops)
 {
 	struct drm_xe_sync sync = {
 		.type = DRM_XE_SYNC_TYPE_USER_FENCE,
@@ -2276,7 +2277,7 @@ test_compute(int fd, size_t size, unsigned int flags, int loops)
 
 		memset(compute_input, rand() % 255 + 1, size);
 
-		run_intel_compute_kernel(fd, &env, EXECENV_PREF_SYSTEM);
+		xe_run_intel_compute_kernel_on_engine(fd, eci, &env, EXECENV_PREF_SYSTEM);
 
 		free(compute_input);
 	}
@@ -2685,15 +2686,23 @@ int igt_main()
 	}
 
 	igt_subtest("compute")
-		test_compute(fd, SZ_2M, 0, svm_compute_loops);
+		xe_for_each_engine(fd, hwe)
+			if (hwe->engine_class == DRM_XE_ENGINE_CLASS_COMPUTE)
+				test_compute(fd, hwe, SZ_2M, 0, svm_compute_loops);
 
 	for (const struct section *s = csections; s->name; s++) {
 		igt_subtest_f("eu-fault-4k-%s", s->name)
-			test_compute(fd, SZ_4K, s->flags, svm_compute_loops);
+			xe_for_each_engine(fd, hwe)
+				if (hwe->engine_class == DRM_XE_ENGINE_CLASS_COMPUTE)
+					test_compute(fd, hwe, SZ_4K, s->flags, svm_compute_loops);
 		igt_subtest_f("eu-fault-64k-%s", s->name)
-			test_compute(fd, SZ_64K, s->flags, svm_compute_loops);
+			xe_for_each_engine(fd, hwe)
+				if (hwe->engine_class == DRM_XE_ENGINE_CLASS_COMPUTE)
+					test_compute(fd, hwe, SZ_64K, s->flags, svm_compute_loops);
 		igt_subtest_f("eu-fault-2m-%s", s->name)
-			test_compute(fd, SZ_2M, s->flags, svm_compute_loops);
+			xe_for_each_engine(fd, hwe)
+				if (hwe->engine_class == DRM_XE_ENGINE_CLASS_COMPUTE)
+					test_compute(fd, hwe, SZ_2M, s->flags, svm_compute_loops);
 	}
 
 	igt_fixture() {
