@@ -14,13 +14,19 @@
 #include <fcntl.h>
 
 #include "igt.h"
+#include "igt_configfs.h"
+#include "igt_device.h"
+#include "igt_fs.h"
+#include "igt_kmod.h"
 #include "igt_syncobj.h"
+#include "igt_sysfs.h"
 #include "igt_vgem.h"
 #include "intel_blt.h"
 #include "intel_mocs.h"
 #include "intel_pat.h"
 #include "linux_scaffold.h"
 
+#include "xe/xe_gt.h"
 #include "xe/xe_ioctl.h"
 #include "xe/xe_query.h"
 #include "xe/xe_util.h"
@@ -29,6 +35,8 @@
 #define XE_COH_AT_LEAST_1WAY 2
 
 static bool do_slow_check;
+static char bus_addr[NAME_MAX];
+static struct pci_device *pci_dev;
 
 static uint32_t create_object(int fd, int r, int size, uint16_t coh_mode,
 			      bool force_cpu_wc);
@@ -1184,6 +1192,11 @@ const struct pat_index_entry bmg_g21_pat_index_modes[] = {
 	{ NULL, 27, false, "c2-2way",     XE_COH_AT_LEAST_1WAY       },
 };
 
+const struct pat_index_entry xe3p_lpg_coherency_pat_index_modes[] = {
+	{ NULL, 18, false, "xa-l3-uc",	 XE_COH_NONE          },
+	{ NULL, 19, false, "xa-l3-1way", XE_COH_AT_LEAST_1WAY },
+};
+
 /*
  * Depending on 2M/1G GTT pages we might trigger different PTE layouts for the
  * PAT bits, so make sure we test with and without huge-pages. Also ensure we
@@ -1246,6 +1259,18 @@ static uint32_t create_object(int fd, int r, int size, uint16_t coh_mode,
  * SUBTEST: pat-index-xe2
  * Test category: functionality test
  * Description: Check some of the xe2 pat_index modes.
+ */
+
+/**
+ * SUBTEST: xa-app-transient-media-off
+ * Test category: functionality test
+ * Description: Check some of the xe4-lpg pat_index modes with media off.
+ */
+
+/**
+ * SUBTEST:  xa-app-transient-media-on
+ * Test category: functionality test
+ * Description: Check some of the xe3p-lpg pat_index modes with media on.
  */
 
 static void subtest_pat_index_modes_with_regions(int fd,
@@ -1561,6 +1586,56 @@ static void false_sharing(int fd)
 	}
 }
 
+static void reset(int sig)
+{
+	int configfs_fd;
+
+	igt_kmod_unbind("xe", bus_addr);
+
+	/* Drop all custom configfs settings from subtests */
+	configfs_fd = igt_configfs_open("xe");
+	if (configfs_fd >= 0)
+		igt_fs_remove_dir(configfs_fd, bus_addr);
+	close(configfs_fd);
+
+	/* Bind again a clean driver with no custom settings */
+	igt_kmod_bind("xe", bus_addr);
+}
+
+static void xa_app_transient_test(int configfs_device_fd, bool media_on)
+{
+	int fd, fw_handle, gt;
+
+	igt_kmod_unbind("xe", bus_addr);
+
+	if (media_on)
+		igt_assert(igt_sysfs_set(configfs_device_fd,
+					 "gt_types_allowed", "primary,media"));
+	else
+		igt_assert(igt_sysfs_set(configfs_device_fd,
+					 "gt_types_allowed", "primary"));
+
+	igt_kmod_bind("xe", bus_addr);
+
+	fd = drm_open_driver(DRIVER_XE);
+
+	/* Prevent entering C6 for the duration of the test, since this can result
+	 * in randomly flushing the entire device side caches, invalidating our XA
+	 * testing.
+	 */
+	fw_handle = igt_debugfs_open(fd, "forcewake_all", O_RDONLY);
+	igt_require(fw_handle >= 0);
+
+	subtest_pat_index_modes_with_regions(fd, xe3p_lpg_coherency_pat_index_modes,
+					     ARRAY_SIZE(xe3p_lpg_coherency_pat_index_modes));
+
+	/* check status of c state, it should not be in c6 due to forcewake. */
+	xe_for_each_gt(fd, gt)
+		igt_assert(!xe_gt_is_in_c6(fd, gt));
+
+	close(fw_handle);
+}
+
 static int opt_handler(int opt, int opt_index, void *data)
 {
 	switch (opt) {
@@ -1650,6 +1725,36 @@ int igt_main_args("V", NULL, help_str, opt_handler, NULL)
 		igt_require(intel_get_device_info(dev_id)->graphics_ver >= 20);
 
 		false_sharing(fd);
+	}
+
+	igt_subtest_group() {
+		int configfs_fd, configfs_device_fd;
+
+		igt_fixture() {
+			igt_require(intel_graphics_ver(dev_id) == IP_VER(35, 10));
+
+			pci_dev = igt_device_get_pci_device(fd);
+			snprintf(bus_addr, sizeof(bus_addr), "%04x:%02x:%02x.%01x",
+				 pci_dev->domain, pci_dev->bus, pci_dev->dev, pci_dev->func);
+
+			configfs_fd = igt_configfs_open("xe");
+			igt_require(configfs_fd != -1);
+			configfs_device_fd = igt_fs_create_dir(configfs_fd, bus_addr,
+							       S_IRWXU | S_IRGRP | S_IXGRP |
+							       S_IROTH | S_IXOTH);
+			igt_install_exit_handler(reset);
+		}
+
+		igt_subtest_with_dynamic("xa-app-transient-media-off")
+			xa_app_transient_test(configfs_device_fd, false);
+
+		igt_subtest_with_dynamic("xa-app-transient-media-on")
+			xa_app_transient_test(configfs_device_fd, true);
+
+		igt_fixture() {
+			close(configfs_device_fd);
+			close(configfs_fd);
+		}
 	}
 
 	igt_fixture()
