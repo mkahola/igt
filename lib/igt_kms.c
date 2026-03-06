@@ -8019,3 +8019,22 @@ igt_crtc_t *igt_first_crtc_with_single_output(igt_display_t *display, igt_output
 
 	return NULL;
 }
+
+/*
+ * igt_next_crtc:
+ * @display: pointer to igt_display_t
+ * @crtc: pointer to igt_crtc_t, or NULL for first
+ *
+ * Returns: The next CRTC on the device
+ */
+igt_crtc_t *igt_next_crtc(igt_display_t *display, igt_crtc_t *crtc)
+{
+	igt_crtc_t *next;
+
+	for_each_crtc(display, next) {
+		if (!crtc || next->pipe > crtc->pipe)
+			return next;
+	}
+
+	return NULL;
+}
