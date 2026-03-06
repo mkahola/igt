@@ -2211,6 +2211,24 @@ processes(int fd, int n_exec_queues, int n_execs, size_t bo_size,
 		reset_nr_hugepages();
 }
 
+struct xe_gt_stats_snapshot {
+	int svm_4K_pagefault_us;
+	int svm_64K_pagefault_us;
+	int svm_2M_pagefault_us;
+};
+
+static void read_gt_stats_snapshot(int fd,
+				   struct drm_xe_engine_class_instance *eci,
+				   struct xe_gt_stats_snapshot *snapshot)
+{
+	snapshot->svm_4K_pagefault_us =
+		xe_gt_stats_get_count(fd, eci->gt_id, "svm_4K_pagefault_us");
+	snapshot->svm_64K_pagefault_us =
+		xe_gt_stats_get_count(fd, eci->gt_id, "svm_64K_pagefault_us");
+	snapshot->svm_2M_pagefault_us =
+		xe_gt_stats_get_count(fd, eci->gt_id, "svm_2M_pagefault_us");
+}
+
 /* compute flags */
 #define TOUCH_ONCE		(0x1 << 0)
 #define ACCESS_DEVICE_HOST	(0x1 << 1)
@@ -2259,6 +2277,7 @@ test_compute(int fd, struct drm_xe_engine_class_instance *eci, size_t size,
 		.array_size = size / sizeof(float),
 	};
 	float *compute_input;
+	struct xe_gt_stats_snapshot stats_before, stats_after;
 
 	vm = xe_vm_create(fd, DRM_XE_VM_CREATE_FLAG_LR_MODE | DRM_XE_VM_CREATE_FLAG_FAULT_MODE, 0);
 	bo_sync = aligned_alloc(xe_get_default_alignment(fd), sizeof(*bo_sync));
@@ -2270,6 +2289,8 @@ test_compute(int fd, struct drm_xe_engine_class_instance *eci, size_t size,
 	env.skip_results_check = !(flags & ACCESS_DEVICE_HOST);
 	env.vm = vm;
 
+	read_gt_stats_snapshot(fd, eci, &stats_before);
+
 	for (int i = 0; i < loops; i++) {
 		compute_input = aligned_alloc(size, size);
 		igt_assert(compute_input);
@@ -2280,6 +2301,24 @@ test_compute(int fd, struct drm_xe_engine_class_instance *eci, size_t size,
 		xe_run_intel_compute_kernel_on_engine(fd, eci, &env, EXECENV_PREF_SYSTEM);
 
 		free(compute_input);
+	}
+
+	read_gt_stats_snapshot(fd, eci, &stats_after);
+
+	if (flags & TOUCH_ONCE) {
+		if (size == SZ_4K) {
+			igt_info("  svm_4K_pagefault_us=%d\n",
+				 (stats_after.svm_4K_pagefault_us -
+				  stats_before.svm_4K_pagefault_us) / loops);
+		} else if (size == SZ_64K) {
+			igt_info("  svm_64K_pagefault_us=%d\n",
+				 (stats_after.svm_64K_pagefault_us -
+				  stats_before.svm_64K_pagefault_us) / loops);
+		} else if (size == SZ_2M) {
+			igt_info("  svm_2M_pagefault_us=%d\n",
+				 (stats_after.svm_2M_pagefault_us -
+				  stats_before.svm_2M_pagefault_us) / loops);
+		}
 	}
 
 	unbind_system_allocator();
