@@ -39,12 +39,12 @@ static void test_init(data_t *data)
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc) {
-		igt_output_t *output = &display->outputs[crtc->pipe];
+		igt_output_t *output = &display->outputs[crtc->crtc_index];
 
-		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
-								    DRM_PLANE_TYPE_PRIMARY);
+		data->primary[crtc->crtc_index] = igt_crtc_get_plane_type(crtc,
+									  DRM_PLANE_TYPE_PRIMARY);
 
-		data->output[crtc->pipe] = output;
+		data->output[crtc->crtc_index] = output;
 	}
 
 	igt_require(data->output[0]);
@@ -79,13 +79,12 @@ static void run_mode_switch_first_last(data_t *data, int num_pipes)
 {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
+	igt_crtc_t *crtc;
 	struct igt_fb *buffer1[MAX_PIPES] = { NULL };
 	struct igt_fb *buffer2[MAX_PIPES] = { NULL };
 	drmModeConnectorPtr conn;
 	drmModeModeInfoPtr kmode;
 	void *user_data = NULL;
-	int i = 0;
-	int j = 0;
 
 	test_init(data);
 
@@ -94,11 +93,11 @@ static void run_mode_switch_first_last(data_t *data, int num_pipes)
 		      "ASIC does not have %d outputs/pipes\n", num_pipes);
 
 	/* First supported mode */
+	for_each_crtc(display, crtc) {
+		if (crtc->crtc_index >= num_pipes)
+			break;
 
-	for (j = 0; j < num_pipes; j++) {
-		igt_crtc_t *crtc = igt_crtc_for_pipe(display, j);
-
-		output = data->output[j];
+		output = data->output[crtc->crtc_index];
 		if (!igt_output_is_connected(output))
 			continue;
 
@@ -106,18 +105,18 @@ static void run_mode_switch_first_last(data_t *data, int num_pipes)
 			data->fd, output->config.connector->connector_id);
 
 		kmode = &conn->modes[0];
-		if (buffer1[j] == NULL) {
+		if (buffer1[crtc->crtc_index] == NULL) {
 			igt_fb_t fb;
-			buffer1[j] = &fb;
+			buffer1[crtc->crtc_index] = &fb;
 			igt_create_color_fb(data->fd, kmode->hdisplay,
 					    kmode->vdisplay,
 					    DRM_FORMAT_XRGB8888,
 					    DRM_FORMAT_MOD_NONE, 1.f, 0.f,
-					    0.f, buffer1[j]);
+					    0.f, buffer1[crtc->crtc_index]);
 		}
 		igt_output_set_crtc(output, crtc);
 		force_output_mode(data, output, kmode);
-		igt_plane_set_fb(data->primary[j], buffer1[j]);
+		igt_plane_set_fb(data->primary[crtc->crtc_index], buffer1[crtc->crtc_index]);
 		drmModeFreeConnector(conn);
 	}
 
@@ -126,8 +125,11 @@ static void run_mode_switch_first_last(data_t *data, int num_pipes)
 
 	/* Last supported mode */
 
-	for (j = 0; j < num_pipes; j++) {
-		output = data->output[j];
+	for_each_crtc(display, crtc) {
+		if (crtc->crtc_index >= num_pipes)
+			break;
+
+		output = data->output[crtc->crtc_index];
 		if (!igt_output_is_connected(output))
 			continue;
 
@@ -135,17 +137,17 @@ static void run_mode_switch_first_last(data_t *data, int num_pipes)
 			data->fd, output->config.connector->connector_id);
 
 		kmode = &conn->modes[conn->count_modes - 1];
-		if (buffer2[j] == NULL) {
+		if (buffer2[crtc->crtc_index] == NULL) {
 			igt_fb_t fb;
-			buffer2[j] = &fb;
+			buffer2[crtc->crtc_index] = &fb;
 			igt_create_color_fb(data->fd, kmode->hdisplay,
 					    kmode->vdisplay,
 					    DRM_FORMAT_XRGB8888,
 					    DRM_FORMAT_MOD_NONE, 1.f, 0.f,
-					    0.f, buffer2[j]);
+					    0.f, buffer2[crtc->crtc_index]);
 		}
 		force_output_mode(data, output, kmode);
-		igt_plane_set_fb(data->primary[j], buffer2[j]);
+		igt_plane_set_fb(data->primary[crtc->crtc_index], buffer2[crtc->crtc_index]);
 		drmModeFreeConnector(conn);
 	}
 
@@ -153,8 +155,11 @@ static void run_mode_switch_first_last(data_t *data, int num_pipes)
 				  user_data);
 
 	/* First supported again */
-	for (j = 0; j < num_pipes; j++) {
-		output = data->output[j];
+	for_each_crtc(display, crtc) {
+		if (crtc->crtc_index >= num_pipes)
+			break;
+
+		output = data->output[crtc->crtc_index];
 		if (!igt_output_is_connected(output))
 			continue;
 
@@ -163,7 +168,7 @@ static void run_mode_switch_first_last(data_t *data, int num_pipes)
 
 		kmode = &conn->modes[0];
 		force_output_mode(data, output, kmode);
-		igt_plane_set_fb(data->primary[j], buffer1[j]);
+		igt_plane_set_fb(data->primary[crtc->crtc_index], buffer1[crtc->crtc_index]);
 		drmModeFreeConnector(conn);
 	}
 
@@ -172,9 +177,12 @@ static void run_mode_switch_first_last(data_t *data, int num_pipes)
 
 	test_fini(data);
 
-	for (i = 0; i <= num_pipes; i++) {
-		igt_remove_fb(data->fd, buffer1[i]);
-		igt_remove_fb(data->fd, buffer2[i]);
+	for_each_crtc(display, crtc) {
+		if (crtc->crtc_index >= num_pipes)
+			break;
+
+		igt_remove_fb(data->fd, buffer1[crtc->crtc_index]);
+		igt_remove_fb(data->fd, buffer2[crtc->crtc_index]);
 	}
 }
 
