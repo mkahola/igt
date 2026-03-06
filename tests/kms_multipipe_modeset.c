@@ -48,17 +48,16 @@ typedef struct {
 	struct igt_fb fb;
 } data_t;
 
-static void run_test(data_t *data, int valid_outputs)
+static void run_test(data_t *data)
 {
 	igt_output_t *output;
 	igt_pipe_crc_t *pipe_crcs[IGT_MAX_PIPES] = { 0 };
 	igt_crc_t ref_crcs[IGT_MAX_PIPES], new_crcs[IGT_MAX_PIPES];
 	igt_display_t *display = &data->display;
 	uint16_t width = 0, height = 0;
-	igt_crtc_t *crtc;
+	igt_crtc_t *crtc = NULL;
 	igt_plane_t *plane;
 	drmModeModeInfo *mode;
-	int i = 0;
 
 	for_each_connected_output(display, output) {
 		mode = igt_output_get_mode(output);
@@ -75,13 +74,12 @@ static void run_test(data_t *data, int valid_outputs)
 
 	/* Collect reference CRC by Committing individually on all outputs*/
 	for_each_connected_output(display, output) {
-		crtc = igt_crtc_for_pipe(display, i);
+		crtc = igt_next_crtc(display, crtc);
 		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 
 		mode = NULL;
 
-		pipe_crcs[i] = igt_crtc_crc_new(crtc,
-						IGT_PIPE_CRC_SOURCE_AUTO);
+		pipe_crcs[crtc->crtc_index] = igt_crtc_crc_new(crtc, IGT_PIPE_CRC_SOURCE_AUTO);
 
 		igt_output_set_crtc(output,
 				    crtc);
@@ -93,15 +91,14 @@ static void run_test(data_t *data, int valid_outputs)
 		igt_plane_set_size(plane, mode->hdisplay, mode->vdisplay);
 
 		igt_display_commit2(display, COMMIT_ATOMIC);
-		igt_pipe_crc_collect_crc(pipe_crcs[i], &ref_crcs[i]);
+		igt_pipe_crc_collect_crc(pipe_crcs[crtc->crtc_index], &ref_crcs[crtc->crtc_index]);
 		igt_output_set_crtc(output, NULL);
-		i++;
 	}
 
-	i = 0;
 	/* Simultaneously commit on all outputs */
+	crtc = NULL;
 	for_each_connected_output(display, output) {
-		crtc = igt_crtc_for_pipe(display, i);
+		crtc = igt_next_crtc(display, crtc);
 		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 
 		mode = NULL;
@@ -114,22 +111,21 @@ static void run_test(data_t *data, int valid_outputs)
 		igt_plane_set_fb(plane, &data->fb);
 		igt_fb_set_size(&data->fb, plane, mode->hdisplay, mode->vdisplay);
 		igt_plane_set_size(plane, mode->hdisplay, mode->vdisplay);
-		i++;
 	}
 
 	igt_display_commit2(display, COMMIT_ATOMIC);
 
 	/* CRC Verification */
-	for (i = 0; i < valid_outputs; i++) {
-		igt_pipe_crc_collect_crc(pipe_crcs[i], &new_crcs[i]);
-		igt_assert_crc_equal(&ref_crcs[i], &new_crcs[i]);
+	for_each_crtc(display, crtc) {
+		igt_pipe_crc_collect_crc(pipe_crcs[crtc->crtc_index], &new_crcs[crtc->crtc_index]);
+		igt_assert_crc_equal(&ref_crcs[crtc->crtc_index], &new_crcs[crtc->crtc_index]);
 	}
 
 	igt_plane_set_fb(plane, NULL);
 	igt_remove_fb(data->drm_fd, &data->fb);
 }
 
-static void test_multipipe(data_t *data, int num_pipes)
+static void test_multipipe(data_t *data, int num_crtcs)
 {
 	igt_output_t *output;
 	int valid_outputs = 0;
@@ -137,11 +133,11 @@ static void test_multipipe(data_t *data, int num_pipes)
 	for_each_connected_output(&data->display, output)
 		valid_outputs++;
 
-	igt_require_f(valid_outputs == num_pipes,
+	igt_require_f(valid_outputs == num_crtcs,
 		      "Number of connected outputs(%d) not equal to the "
-		      "number of pipes supported(%d)\n", valid_outputs, num_pipes);
+		      "number of CRTCs supported(%d)\n", valid_outputs, num_crtcs);
 
-	run_test(data, valid_outputs);
+	run_test(data);
 }
 
 int igt_main()
