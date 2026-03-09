@@ -415,9 +415,10 @@ struct vmw_surface *vmw_ioctl_buffer_create(int fd, SVGA3dSurfaceAllFlags flags,
 					    uint32_t size, struct vmw_mob *mob)
 {
 	SVGA3dSize surface_size = { .width = size, .height = 1, .depth = 1 };
+	const uint32_t buffer_handle = mob ? mob->handle : SVGA3D_INVALID_ID;
 
 	return vmw_create_surface_simple(fd, flags, SVGA3D_BUFFER, surface_size,
-					 mob->handle);
+					 buffer_handle);
 }
 
 /**
