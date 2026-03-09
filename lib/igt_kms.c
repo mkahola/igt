@@ -3619,8 +3619,9 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 
 				if (i)
 					continue;
-			} else if (__builtin_popcount(pipe_mask) != i)
+			} else if (__builtin_popcount(pipe_mask) != i) {
 				continue;
+			}
 
 			for (j = 0; j < igt_display_n_crtcs(display); j++) {
 				bool pipe_assigned = assigned_pipes & (1 << j);
@@ -3634,12 +3635,14 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 					assigned_pipes |= 1 << j;
 					chosen_outputs[j] = output;
 				} else if (!chosen_outputs[j] ||
-					   /*
-					    * Overwrite internal panel if not assigned,
-					    * external outputs are faster to do modesets
-					    */
-					   output_is_internal_panel(chosen_outputs[j]))
+					   output_is_internal_panel(chosen_outputs[j])) {
+					/*
+					 * Overwrite internal panel if not
+					 * assigned, external outputs are faster
+					 * to do modesets
+					 */
 					chosen_outputs[j] = output;
+				}
 			}
 
 			if (!found)
