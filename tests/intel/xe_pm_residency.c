@@ -391,6 +391,10 @@ static void cpg_gt_toggle(int fd)
 {
 	int gt;
 
+	xe_for_each_gt(fd, gt)
+		igt_assert_f(igt_wait(xe_gt_is_in_c6(fd, gt), 1000, 10),
+			     "GT %d should be in C6\n", gt);
+
 	fw_handle = igt_debugfs_open(fd, "forcewake_all", O_RDONLY);
 	igt_assert_lte(0, fw_handle);
 
