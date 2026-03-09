@@ -68,8 +68,8 @@
 IGT_TEST_DESCRIPTION("Test plane alpha and blending mode properties");
 
 static bool extended;
-static enum pipe active_pipes[IGT_MAX_PIPES];
-static uint32_t last_pipe;
+static int active_crtcs[IGT_MAX_PIPES];
+static uint32_t last_crtc_index;
 
 typedef struct {
 	int gfx_fd;
@@ -705,8 +705,8 @@ static void run_subtests(data_t *data)
 			for_each_crtc_with_single_output(&data->display, crtc,
 							 output) {
 				if (!extended &&
-				    crtc->pipe != active_pipes[0] &&
-				    crtc->pipe != active_pipes[last_pipe])
+				    crtc->crtc_index != active_crtcs[0] &&
+				    crtc->crtc_index != active_crtcs[last_crtc_index])
 					continue;
 
 				igt_display_reset(&data->display);
@@ -757,7 +757,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 	igt_fixture() {
 		igt_crtc_t *crtc;
 
-		last_pipe = 0;
+		last_crtc_index = 0;
 
 		data.gfx_fd = drm_open_driver_master(DRIVER_ANY);
 		igt_require_pipe_crc(data.gfx_fd);
@@ -766,8 +766,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 		/* Get active pipes. */
 		for_each_crtc(&data.display, crtc)
-			active_pipes[last_pipe++] = crtc->pipe;
-		last_pipe--;
+			active_crtcs[last_crtc_index++] = crtc->crtc_index;
+		last_crtc_index--;
 
 		in_simulation = igt_run_in_simulation();
 	}
