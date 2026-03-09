@@ -2152,7 +2152,7 @@ static void teardown_crcs(void)
 
 static void setup_fbc(void)
 {
-	if (!intel_fbc_supported_on_chipset(drm.fd, prim_mode_params.crtc->pipe)) {
+	if (!intel_fbc_supported(prim_mode_params.crtc)) {
 		igt_info("Can't test FBC: not supported on this chipset\n");
 		return;
 	}
@@ -2360,18 +2360,15 @@ static void do_status_assertions(int flags)
 		igt_require(!fbc_stride_not_supported());
 		igt_require(!fbc_mode_too_large());
 		igt_require(!fbc_psr_not_possible());
-		if (!intel_fbc_wait_until_enabled(drm.fd, prim_mode_params.crtc->pipe)) {
-			igt_assert_f(intel_fbc_is_enabled(drm.fd,
-						    prim_mode_params.crtc->pipe,
-						    IGT_LOG_WARN),
+		if (!intel_fbc_wait_until_enabled(prim_mode_params.crtc)) {
+			igt_assert_f(intel_fbc_is_enabled(prim_mode_params.crtc, IGT_LOG_WARN),
 				     "FBC disabled\n");
 		}
 
 		if (opt.fbc_check_compression)
 			igt_assert(fbc_wait_for_compression());
 	} else if (flags & ASSERT_FBC_DISABLED) {
-		igt_assert(!intel_fbc_wait_until_enabled(drm.fd,
-						   prim_mode_params.crtc->pipe));
+		igt_assert(!intel_fbc_wait_until_enabled(prim_mode_params.crtc));
 	}
 
 	if (flags & ASSERT_PSR_ENABLED) {
@@ -4225,7 +4222,7 @@ int igt_main_args("", long_options, help_str, opt_handler, NULL)
 					continue;
 				}
 
-				if (!intel_fbc_supported_on_chipset(drm.fd, crtc->pipe)) {
+				if (!intel_fbc_supported(crtc)) {
 					igt_info("Can't test FBC: not supported on pipe-%s\n", igt_crtc_name(crtc));
 					continue;
 				}

@@ -957,9 +957,8 @@ static void run(data_t *data)
 	igt_assert(psr_wait_entry(data->debugfs_fd, data->psr_mode, data->output));
 
 	if (data->fbc_flag == true && data->op_fbc_mode == FBC_ENABLED)
-		igt_assert_f(intel_fbc_wait_until_enabled(data->drm_fd,
-							  data->crtc->pipe),
-							  "FBC still disabled\n");
+		igt_assert_f(intel_fbc_wait_until_enabled(data->crtc),
+			     "FBC still disabled\n");
 
 	if (is_et_check_needed(data))
 		igt_assert_f(early_transport_check(data->debugfs_fd),
@@ -1197,7 +1196,7 @@ int igt_main()
 						data.output) {
 			data.crtc = crtc;
 
-			if (intel_fbc_supported_on_chipset(data.drm_fd, data.crtc->pipe))
+			if (intel_fbc_supported(data.crtc))
 				fbc_chipset_support = true;
 
 			for (i = 0; i < ARRAY_SIZE(psr_status); i++) {

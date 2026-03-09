@@ -749,9 +749,8 @@ static void test_setup(data_t *data)
 		setup_test_plane(data, data->test_plane_id);
 		if (psr_wait_entry_if_enabled(data)) {
 			if (data->fbc_flag == true && data->op_fbc_mode == FBC_ENABLED)
-				igt_assert_f(intel_fbc_wait_until_enabled(data->drm_fd,
-									  crtc->pipe),
-									  "FBC still disabled\n");
+				igt_assert_f(intel_fbc_wait_until_enabled(crtc),
+					     "FBC still disabled\n");
 			psr_entered = true;
 			break;
 		}
@@ -802,7 +801,7 @@ int igt_main()
 		disp_ver = intel_display_ver(data.devid);
 
 		for_each_crtc(&data.display, crtc) {
-			if (intel_fbc_supported_on_chipset(data.drm_fd, crtc->pipe))
+			if (intel_fbc_supported(crtc))
 				fbc_chipset_support = true;
 		}
 	}

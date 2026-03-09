@@ -14,21 +14,20 @@
 #define FBC_STATUS_BUF_LEN 128
 
 /**
- * intel_fbc_supported_on_chipset:
- * @device: fd of the device
- * @pipe: Display pipe
+ * intel_fbc_supported:
+ * @crtc: CRTC
  *
- * Check if FBC is supported by chipset on given pipe.
+ * Check if FBC is supported by chipset on given CRTC.
  *
  * Returns:
  * true if FBC is supported and false otherwise.
  */
-bool intel_fbc_supported_on_chipset(int device, enum pipe pipe)
+bool intel_fbc_supported(igt_crtc_t *crtc)
 {
 	char buf[FBC_STATUS_BUF_LEN];
 	int dir;
 
-	dir = igt_debugfs_crtc_dir(device, pipe, O_DIRECTORY);
+	dir = igt_debugfs_crtc_dir(crtc->display->drm_fd, crtc->crtc_index, O_DIRECTORY);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, "i915_fbc_status", buf, sizeof(buf));
 	close(dir);
@@ -39,13 +38,13 @@ bool intel_fbc_supported_on_chipset(int device, enum pipe pipe)
 		!strstr(buf, "stolen memory not initialised\n");
 }
 
-static bool _intel_fbc_is_enabled(int device, enum pipe pipe, int log_level, char *last_fbc_buf)
+static bool _intel_fbc_is_enabled(igt_crtc_t *crtc, int log_level, char *last_fbc_buf)
 {
 	char buf[FBC_STATUS_BUF_LEN];
 	bool print = true;
 	int dir;
 
-	dir = igt_debugfs_crtc_dir(device, pipe, O_DIRECTORY);
+	dir = igt_debugfs_crtc_dir(crtc->display->drm_fd, crtc->crtc_index, O_DIRECTORY);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, "i915_fbc_status", buf, sizeof(buf));
 	close(dir);
@@ -64,37 +63,35 @@ static bool _intel_fbc_is_enabled(int device, enum pipe pipe, int log_level, cha
 
 /**
  * intel_fbc_is_enabled:
- * @device: fd of the device
- * @pipe: Display pipe
+ * @crtc: CRTC
  * @log_level: Wanted loglevel
  *
- * Check if FBC is enabled on given pipe. Loglevel can be used to
- * control at which loglevel current state is printed out.
+ * Check if FBC is enabled on given CRTC. Loglevel can be used to control
+ * at which loglevel current state is printed out.
  *
  * Returns:
  * true if FBC is enabled.
  */
-bool intel_fbc_is_enabled(int device, enum pipe pipe, int log_level)
+bool intel_fbc_is_enabled(igt_crtc_t *crtc, int log_level)
 {
 	char last_fbc_buf[FBC_STATUS_BUF_LEN] = {'\0'};
 
-	return _intel_fbc_is_enabled(device, pipe, log_level, last_fbc_buf);
+	return _intel_fbc_is_enabled(crtc, log_level, last_fbc_buf);
 }
 
 /**
  * intel_fbc_wait_until_enabled:
- * @device: fd of the device
- * @pipe: Display pipe
+ * @crtc: CRTC
  *
  * Wait until fbc is enabled. Used timeout is constant 2 seconds.
  *
  * Returns:
  * true if FBC got enabled.
  */
-bool intel_fbc_wait_until_enabled(int device, enum pipe pipe)
+bool intel_fbc_wait_until_enabled(igt_crtc_t *crtc)
 {
 	char last_fbc_buf[FBC_STATUS_BUF_LEN] = {'\0'};
-	bool enabled = igt_wait(_intel_fbc_is_enabled(device, pipe, IGT_LOG_DEBUG, last_fbc_buf), 2000, 1);
+	bool enabled = igt_wait(_intel_fbc_is_enabled(crtc, IGT_LOG_DEBUG, last_fbc_buf), 2000, 1);
 
 	if (!enabled)
 		igt_info("FBC is not enabled: \n%s\n", last_fbc_buf);
