@@ -2292,6 +2292,14 @@ test_compute(int fd, struct drm_xe_engine_class_instance *eci, size_t size,
 	read_gt_stats_snapshot(fd, eci, &stats_before);
 
 	for (int i = 0; i < loops; i++) {
+		/*
+		 * What is done below for the input buffer could also be done for the output
+		 * buffer, that is system allocation with aligned_alloc() then setting it into
+		 * user_execenv. However the current focus of this test is to provide fine
+		 * control on triggering GPU page faults from the context of a compute kernel
+		 * (execution units) unlike test_exec(), so using SVM for the input buffer only
+		 * is sufficient and simpler.
+		 */
 		compute_input = aligned_alloc(size, size);
 		igt_assert(compute_input);
 		env.input_addr = to_user_pointer(compute_input);
