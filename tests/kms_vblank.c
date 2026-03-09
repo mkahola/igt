@@ -110,8 +110,8 @@ typedef struct {
 } data_t;
 
 static bool all_pipes;
-static enum pipe active_pipes[IGT_MAX_PIPES];
-static uint32_t last_pipe;
+static int active_crtcs[IGT_MAX_PIPES];
+static uint32_t last_crtc_index;
 
 static double elapsed(const struct timespec *start,
 		      const struct timespec *end,
@@ -522,8 +522,8 @@ static void run_subtests(data_t *data)
 					if (!crtc_output_combo_valid(&data->display, crtc, data->output))
 						continue;
 
-					if (!all_pipes && crtc->pipe != active_pipes[0] &&
-					    crtc->pipe != active_pipes[last_pipe]) {
+					if (!all_pipes && crtc->crtc_index != active_crtcs[0] &&
+					    crtc->crtc_index != active_crtcs[last_crtc_index]) {
 						igt_info("Skipping pipe %s\n",
 							 igt_crtc_name(crtc));
 						continue;
@@ -554,8 +554,8 @@ static void run_subtests(data_t *data)
 					if (!crtc_output_combo_valid(&data->display, crtc, data->output))
 						continue;
 
-					if (!all_pipes && crtc->pipe != active_pipes[0] &&
-					    crtc->pipe != active_pipes[last_pipe]) {
+					if (!all_pipes && crtc->crtc_index != active_crtcs[0] &&
+					    crtc->crtc_index != active_crtcs[last_crtc_index]) {
 						igt_info("Skipping pipe %s\n",
 							 igt_crtc_name(crtc));
 						continue;
@@ -650,9 +650,9 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 		/* Get active pipes. */
 		for_each_crtc(&data.display, crtc) {
 			data.crtc = crtc;
-			active_pipes[last_pipe++] = crtc->pipe;
+			active_crtcs[last_crtc_index++] = crtc->crtc_index;
 		}
-		last_pipe--;
+		last_crtc_index--;
 	}
 
 	igt_describe("Negative test for vblank request.");
@@ -679,8 +679,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 			if (!crtc_output_combo_valid(&data.display, crtc, data.output))
 				continue;
 
-			if (!all_pipes && crtc->pipe != active_pipes[0] &&
-					  crtc->pipe != active_pipes[last_pipe]) {
+			if (!all_pipes && crtc->crtc_index != active_crtcs[0] &&
+					  crtc->crtc_index != active_crtcs[last_crtc_index]) {
 				igt_info("Skipping pipe %s\n",
 					 igt_crtc_name(crtc));
 				continue;
