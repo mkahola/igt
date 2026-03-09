@@ -240,10 +240,13 @@ static void set_mode(data_t *data, int count, drmModeModeInfo *mode,
 		     igt_output_t **valid_outputs, struct igt_fb fb)
 {
 	igt_display_t *display = &data->display;
+	igt_crtc_t *crtc = NULL;
 
 	for (int i = 0; i < count; i++) {
-		igt_crtc_t *crtc = igt_crtc_for_pipe(display, i);
-		igt_plane_t *plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
+		igt_plane_t *plane;
+
+		crtc = igt_next_crtc(display, crtc);
+		plane = igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
 
 		igt_output_override_mode(valid_outputs[i], &mode[i]);
 
@@ -259,6 +262,7 @@ static void test_mode_transition_on_all_outputs(data_t *data)
 	drmModeModeInfo *mode, mode_highres[IGT_MAX_PIPES] = {0}, mode_lowres[IGT_MAX_PIPES] = {0};
 	igt_output_t *valid_outputs[IGT_MAX_PIPES] = {NULL};
 	igt_output_t *output;
+	igt_crtc_t *crtc = NULL;
 	int count = 0;
 	int cdclk_ref, cdclk_new;
 	uint16_t width = 0, height = 0;
@@ -288,7 +292,7 @@ static void test_mode_transition_on_all_outputs(data_t *data)
 		      "Number of valid outputs (%d) must be greater than or equal to 2\n", count);
 
 	for (int i = 0; i < count; i++) {
-		igt_crtc_t *crtc = igt_crtc_for_pipe(display, i);
+		crtc = igt_next_crtc(display, crtc);
 
 		mode = igt_output_get_mode(valid_outputs[i]);
 		igt_assert(mode);
