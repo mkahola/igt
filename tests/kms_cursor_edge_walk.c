@@ -87,8 +87,8 @@ enum {
 };
 
 static bool extended;
-static enum pipe active_pipes[IGT_MAX_PIPES];
-static uint32_t last_pipe;
+static int active_crtcs[IGT_MAX_PIPES];
+static uint32_t last_crtc_index;
 
 static void create_cursor_fb(data_t *data, int cur_w, int cur_h)
 {
@@ -377,10 +377,10 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 		kmstest_set_vt_graphics_mode();
 
 		/* Get active pipes. */
-		last_pipe = 0;
+		last_crtc_index = 0;
 		for_each_crtc(&data.display, crtc)
-			active_pipes[last_pipe++] = crtc->pipe;
-		last_pipe--;
+			active_crtcs[last_crtc_index++] = crtc->crtc_index;
+		last_crtc_index--;
 	}
 
 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
@@ -397,8 +397,8 @@ int igt_main_args("", long_opts, help_str, opt_handler, &data)
 								 crtc,
 								 data.output) {
 					data.crtc = crtc;
-					if (!extended && crtc->pipe != active_pipes[0] &&
-					    crtc->pipe != active_pipes[last_pipe])
+					if (!extended && crtc->crtc_index != active_crtcs[0] &&
+					    crtc->crtc_index != active_crtcs[last_crtc_index])
 						continue;
 
 					igt_display_reset(&data.display);
