@@ -3589,7 +3589,7 @@ bool output_is_internal_panel(igt_output_t *output)
 
 igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t **chosen_outputs)
 {
-	unsigned full_pipe_mask = 0, assigned_pipes = 0;
+	unsigned int full_crtc_index_mask = 0, assigned_crtc_index_mask = 0;
 	igt_output_t *output;
 	igt_crtc_t *crtc;
 	int i;
@@ -3598,7 +3598,7 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 	       sizeof(*chosen_outputs) * igt_display_n_crtcs(display));
 
 	for_each_crtc(display, crtc)
-		full_pipe_mask |= 1 << crtc->pipe;
+		full_crtc_index_mask |= 1 << crtc->crtc_index;
 
 	/*
 	 * Try to assign all outputs to the first available CRTC for
@@ -3607,7 +3607,7 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 	 */
 	for (i = 0; i <= igt_display_n_crtcs(display); i++) {
 		for_each_connected_output(display, output) {
-			uint32_t pipe_mask = output->config.valid_crtc_index_mask & full_pipe_mask;
+			uint32_t crtc_index_mask = output->config.valid_crtc_index_mask & full_crtc_index_mask;
 			bool found = false;
 
 			if (output_is_internal_panel(output)) {
@@ -3619,20 +3619,20 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 
 				if (i)
 					continue;
-			} else if (__builtin_popcount(pipe_mask) != i) {
+			} else if (__builtin_popcount(crtc_index_mask) != i) {
 				continue;
 			}
 
 			for_each_crtc(display, crtc) {
-				bool pipe_assigned = assigned_pipes & (1 << crtc->pipe);
+				bool crtc_assigned = assigned_crtc_index_mask & (1 << crtc->crtc_index);
 
-				if (pipe_assigned || !(pipe_mask & (1 << crtc->pipe)))
+				if (crtc_assigned || !(crtc_index_mask & (1 << crtc->crtc_index)))
 					continue;
 
 				if (!found) {
-					/* We found an unassigned pipe, use it! */
+					/* We found an unassigned CRTC, use it! */
 					found = true;
-					assigned_pipes |= 1 << crtc->pipe;
+					assigned_crtc_index_mask |= 1 << crtc->crtc_index;
 					chosen_outputs[crtc->pipe] = output;
 				} else if (!chosen_outputs[crtc->pipe] ||
 					   output_is_internal_panel(chosen_outputs[crtc->pipe])) {
