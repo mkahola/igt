@@ -3592,7 +3592,7 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 	unsigned full_pipe_mask = 0, assigned_pipes = 0;
 	igt_output_t *output;
 	igt_crtc_t *crtc;
-	int i, j;
+	int i;
 
 	memset(chosen_outputs, 0,
 	       sizeof(*chosen_outputs) * igt_display_n_crtcs(display));
@@ -3623,25 +3623,25 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 				continue;
 			}
 
-			for (j = 0; j < igt_display_n_crtcs(display); j++) {
-				bool pipe_assigned = assigned_pipes & (1 << j);
+			for_each_crtc(display, crtc) {
+				bool pipe_assigned = assigned_pipes & (1 << crtc->pipe);
 
-				if (pipe_assigned || !(pipe_mask & (1 << j)))
+				if (pipe_assigned || !(pipe_mask & (1 << crtc->pipe)))
 					continue;
 
 				if (!found) {
 					/* We found an unassigned pipe, use it! */
 					found = true;
-					assigned_pipes |= 1 << j;
-					chosen_outputs[j] = output;
-				} else if (!chosen_outputs[j] ||
-					   output_is_internal_panel(chosen_outputs[j])) {
+					assigned_pipes |= 1 << crtc->pipe;
+					chosen_outputs[crtc->pipe] = output;
+				} else if (!chosen_outputs[crtc->pipe] ||
+					   output_is_internal_panel(chosen_outputs[crtc->pipe])) {
 					/*
 					 * Overwrite internal panel if not
 					 * assigned, external outputs are faster
 					 * to do modesets
 					 */
-					chosen_outputs[j] = output;
+					chosen_outputs[crtc->pipe] = output;
 				}
 			}
 
