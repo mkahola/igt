@@ -288,7 +288,7 @@ static void stress(igt_display_t *display,
 	if (!crtc) {
 		num_crtcs = igt_display_n_crtcs(display);
 		for_each_crtc(display, crtc) {
-			arg.crtc_id = crtc_id[crtc->pipe] = crtc->crtc_id;
+			arg.crtc_id = crtc_id[crtc->crtc_index] = crtc->crtc_id;
 			do_ioctl(display->drm_fd, DRM_IOCTL_MODE_CURSOR, &arg);
 		}
 	} else {
