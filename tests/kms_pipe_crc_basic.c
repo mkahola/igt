@@ -78,8 +78,8 @@
  */
 
 static bool extended;
-static enum pipe active_pipes[IGT_MAX_PIPES];
-static uint32_t last_pipe;
+static int active_crtcs[IGT_MAX_PIPES];
+static uint32_t last_crtc_index;
 
 typedef struct {
 	int drm_fd;
@@ -99,8 +99,8 @@ static struct {
 static bool simulation_constraint(igt_crtc_t *crtc)
 {
 	if (igt_run_in_simulation() && !extended &&
-	    crtc->pipe != active_pipes[0] &&
-	    crtc->pipe != active_pipes[last_pipe])
+	    crtc->crtc_index != active_crtcs[0] &&
+	    crtc->crtc_index != active_crtcs[last_crtc_index])
 		return true;
 
 	return false;
@@ -392,7 +392,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 			"Hang test for pipe CRC read." },
 	};
 	int i;
-	last_pipe = 0;
+	last_crtc_index = 0;
 
 	igt_fixture() {
 		data.drm_fd = drm_open_driver_master(DRIVER_ANY);
@@ -409,8 +409,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 		/* Get active pipes. */
 		for_each_crtc(&data.display, crtc)
-			active_pipes[last_pipe++] = crtc->pipe;
-		last_pipe--;
+			active_crtcs[last_crtc_index++] = crtc->crtc_index;
+		last_crtc_index--;
 	}
 
 	igt_describe("Tests error handling when the bad source is set.");
