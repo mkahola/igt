@@ -58,12 +58,12 @@ static void igt_display_all_on(igt_display_t *display)
 					      mode->hdisplay, mode->vdisplay,
 					      DRM_FORMAT_XRGB8888,
 					      DRM_FORMAT_MOD_LINEAR,
-					      &fb[crtc->pipe]);
+					      &fb[crtc->crtc_index]);
 
 			/* Set a valid fb as some debugfs like to
 			 * inspect it on a active pipe
 			 */
-			igt_plane_set_fb(primary, &fb[crtc->pipe]);
+			igt_plane_set_fb(primary, &fb[crtc->crtc_index]);
 			break;
 		}
 	}
