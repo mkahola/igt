@@ -908,6 +908,10 @@ test_lobf(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 			igt_skip("i915_edp_lobf_status not present for %s\n",
 				 igt_output_name(output));
 
+		if (!igt_is_aux_less_alpm_enabled(data->drm_fd, output->name))
+			igt_skip("%s: Aux-less ALPM not enabled, LOBF not supported.\n",
+				 igt_output_name(output));
+
 		if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL) ||
 		    psr_sink_support(data->drm_fd, data->debugfs_fd, PR_MODE, NULL))
 			psr_disable(data->drm_fd, data->debugfs_fd, NULL);

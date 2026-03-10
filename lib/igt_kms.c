@@ -6597,6 +6597,38 @@ bool igt_get_i915_edp_lobf_status(int drmfd, char *connector_name)
 }
 
 /**
+ * igt_is_aux_less_alpm_enabled
+ * @drmfd: A drm file descriptor
+ * @connector_name: Name of the libdrm connector we're going to use
+ *
+ * Check if Aux-less ALPM (Advanced Link Power Management) mode is enabled by reading
+ * the i915_edp_lobf_info debugfs.
+ *
+ * Return: True if aux-less ALPM is enabled.
+ */
+bool igt_is_aux_less_alpm_enabled(int drmfd, char *connector_name)
+{
+	char buf[256];
+	int fd, res;
+
+	fd = igt_debugfs_connector_dir(drmfd, connector_name, O_RDONLY);
+	if (fd < 0)
+		return false;
+
+	res = igt_debugfs_simple_read(fd, "i915_edp_lobf_info", buf, sizeof(buf));
+	close(fd);
+
+	if (res <= 0) {
+		igt_info("Failed to read i915_edp_lobf_info for %s\n", connector_name);
+		return false;
+	}
+
+	buf[res < sizeof(buf) ? res : sizeof(buf) - 1] = '\0';
+
+	return strstr(buf, "Aux-less alpm status: enabled");
+}
+
+/**
  * igt_get_output_max_bpc:
  * @drmfd: A drm file descriptor
  * @connector_name: Name of the libdrm connector we're going to use
