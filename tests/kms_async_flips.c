@@ -35,7 +35,6 @@
 
 #include "igt.h"
 #include "igt_aux.h"
-#include "igt_psr.h"
 #include "igt_vec.h"
 #include <sys/ioctl.h>
 #include <sys/time.h>
@@ -612,26 +611,12 @@ static void test_timestamp(data_t *data)
 static void test_cursor(data_t *data)
 {
 	int flags = DRM_MODE_PAGE_FLIP_ASYNC | DRM_MODE_PAGE_FLIP_EVENT;
-	int ret, debugfs_fd;
+	int ret;
 	uint64_t width, height;
 	struct igt_fb cursor_fb;
 	struct drm_mode_cursor cur;
 
 	igt_display_commit2(&data->display, data->display.is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
-
-	/*
-	 * Intel's PSR2 selective fetch adds other planes to state when
-	 * necessary, causing the async flip to fail because async flip is not
-	 * supported in cursor plane.
-	 */
-	if (is_intel_device(data->drm_fd)) {
-		debugfs_fd = igt_debugfs_dir(data->drm_fd);
-		igt_skip_on_f(psr_sink_support(data->drm_fd, debugfs_fd,
-					       PSR_MODE_2_SEL_FETCH, data->output),
-			      "PSR2 selective fetch adds cursor to primary plane flips,"
-			      "breaking async flip support\n");
-		close(debugfs_fd);
-	}
 
 	do_or_die(drmGetCap(data->drm_fd, DRM_CAP_CURSOR_WIDTH, &width));
 	do_or_die(drmGetCap(data->drm_fd, DRM_CAP_CURSOR_WIDTH, &height));
