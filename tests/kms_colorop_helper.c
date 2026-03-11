@@ -127,8 +127,8 @@ kms_colorop_t kms_colorop_gamma_22_oetf = {
 	.enumerated_lut1d_info = {
 		.tf = KMS_COLOROP_LUT1D_GAMMA_2_2_OETF
 	},
-	.name = "gamma_2_2_oetf",
-	.transform = &igt_color_gamma_2_2_oetf
+	.name = "gamma_2_2",
+	.transform = &igt_color_gamma_2_2
 };
 
 kms_colorop_t kms_colorop_gamma_22_inv_oetf = {
@@ -136,8 +136,8 @@ kms_colorop_t kms_colorop_gamma_22_inv_oetf = {
 	.enumerated_lut1d_info = {
 		.tf = KMS_COLOROP_LUT1D_GAMMA_2_2_INV_OETF
 	},
-	.name = "gamma_2_2_inv_oetf",
-	.transform = &igt_color_gamma_2_2_inv_oetf
+	.name = "gamma_2_2_inv",
+	.transform = &igt_color_gamma_2_2_inv
 };
 
 kms_colorop_t kms_colorop_ctm_3x4_50_desat = {

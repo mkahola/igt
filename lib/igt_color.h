@@ -108,8 +108,8 @@ void igt_color_pq_125_eotf(igt_pixel_t *pixel);
 void igt_color_bt2020_inv_oetf(igt_pixel_t *pixel);
 void igt_color_bt2020_oetf(igt_pixel_t *pixel);
 
-void igt_color_gamma_2_2_oetf(igt_pixel_t *pixel);
-void igt_color_gamma_2_2_inv_oetf(igt_pixel_t *pixel);
+void igt_color_gamma_2_2(igt_pixel_t *pixel);
+void igt_color_gamma_2_2_inv(igt_pixel_t *pixel);
 
 void igt_color_ctm_3x4_50_desat(igt_pixel_t *pixel);
 void igt_color_ctm_3x4_overdrive(igt_pixel_t *pixel);
