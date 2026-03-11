@@ -123,3 +123,8 @@ igt@kms_chamelium_edid@hdmi-edid-stress-resolution-4k
 # Exclude one compute mode test
 ##################################################################
 igt@xe_exec_compute_mode@non-blocking
+##################################################################
+# Async flips with linear modifier are slower
+##################################################################
+igt@kms_async_flips@async-flip-with-page-flip-events-linear.*
+##################################################################
