@@ -579,6 +579,52 @@ void *xe_bo_map_fixed(int fd, uint32_t bo, size_t size, uint64_t addr)
 	return map;
 }
 
+/**
+ * xe_bo_map_aligned: Maps a buffer object (bo) into CPU address space with a specified alignment
+ * @fd: The device file-descriptor
+ * @bo: The buffer object
+ * @size: The size of the map
+ * @alignment: The requested map alignment
+ *
+ * This function reserves a virtual memory range, computes the first aligned address,
+ * maps the buffer object at that address, and asserts on errors. It unmaps any unused
+ * regions before and after the mapped buffer, freeing up memory and leaving only the
+ * aligned mapping.
+ *
+ * Return: Pointer to CPU-Mapped BO with requested alignment
+ */
+void *xe_bo_map_aligned(int fd, uint32_t bo, size_t size, size_t alignment)
+{
+	size_t anon_size = size + alignment;
+	uint64_t anon_addr;
+	void *anon_map, *map;
+	uint64_t map_addr;
+	size_t hole_size;
+
+	/* Reserve a range of virtual space where we can fit an aligned map */
+	anon_map = mmap(NULL, anon_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	igt_assert(anon_map != MAP_FAILED);
+	anon_addr = to_user_pointer(anon_map);
+
+	/* Compute the first aligned address within the virtual space. */
+	map_addr = ALIGN(anon_addr, alignment);
+	/* Map the bo there, replacing part of the reserved virtual range. */
+	map = xe_bo_map_fixed(fd, bo, size, map_addr);
+	igt_assert_eq((uintptr_t)map % alignment, 0);
+
+	/* Unreserve part of the virtual range (if any) *before* the bo map */
+	hole_size = map_addr - anon_addr;
+	if (hole_size)
+		igt_assert_eq(munmap(anon_map, hole_size), 0);
+
+	/* Unreserve part of the virtual range (if any) *after* the bo map */
+	hole_size = anon_size - hole_size - size;
+	if (hole_size)
+		igt_assert_eq(munmap(map + size, hole_size), 0);
+
+	return map;
+}
+
 void *xe_bo_mmap_ext(int fd, uint32_t bo, size_t size, int prot)
 {
 	return __xe_bo_map(fd, bo, size, prot);
