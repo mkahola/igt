@@ -351,6 +351,14 @@ test_plane_position_with_output(data_t *data, igt_crtc_t *crtc,
 
 	igt_display_commit(&data->display);
 
+	/*
+	 * On MediaTek hardware, cursor plane updates are non-blocking and
+	 * CRC needs time to reflect the new plane configuration. Wait for
+	 * a vblank to ensure the update has taken effect.
+	 */
+	if (is_mtk_device(data->drm_fd) && sprite->type == DRM_PLANE_TYPE_CURSOR)
+		igt_wait_for_vblank(crtc);
+
 	igt_pipe_crc_collect_crc(data->pipe_crc, &crc);
 	igt_assert_crc_equal(reference_crc, &crc);
 
@@ -759,6 +767,14 @@ static void capture_format_crcs_single(data_t *data, igt_crtc_t *crtc,
 			    COMMIT_ATOMIC : COMMIT_UNIVERSAL);
 
 	igt_remove_fb(data->drm_fd, &old_fb);
+
+	/*
+	 * On MediaTek hardware, CRC generation needs time to stabilize after
+	 * a pixel format change. Wait for at least one vblank to ensure the
+	 * CRC hardware has updated for the new format.
+	 */
+	if (is_mtk_device(data->drm_fd))
+		igt_wait_for_vblank(crtc);
 
 	igt_pipe_crc_get_current(data->drm_fd, data->pipe_crc, &crc[0]);
 }
