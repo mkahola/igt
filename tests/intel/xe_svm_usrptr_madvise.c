@@ -98,7 +98,8 @@ gpu_batch_init(int fd, uint32_t vm, uint64_t src_addr,
 {
 	uint32_t width = copy_size / 256;
 	uint32_t height = 1;
-	uint32_t batch_bo_size = BATCH_SIZE(fd);
+	uint64_t alignment = xe_get_default_alignment(fd);
+	uint32_t batch_bo_size = ALIGN(BATCH_SIZE(fd), alignment);
 	uint32_t batch_bo;
 	uint64_t batch_addr;
 	void *batch;
@@ -108,7 +109,7 @@ gpu_batch_init(int fd, uint32_t vm, uint64_t src_addr,
 	int i = 0;
 
 	batch_bo = xe_bo_create(fd, vm, batch_bo_size, vram_if_possible(fd, 0), 0);
-	batch = xe_bo_map(fd, batch_bo, batch_bo_size);
+	batch = xe_bo_map_aligned(fd, batch_bo, batch_bo_size, alignment);
 	cmd = (uint32_t *)batch;
 	cmd[i++] = MEM_COPY_CMD | (1 << 19);
 	cmd[i++] = width - 1;
@@ -140,7 +141,7 @@ gpu_copy_batch_create(int fd, uint32_t vm, uint32_t exec_queue,
 		      uint64_t src_addr, uint64_t dst_addr,
 		      uint32_t *batch_bo, uint64_t *batch_addr)
 {
-	gpu_batch_init(fd, vm, src_addr, dst_addr, SZ_4K, batch_bo, batch_addr);
+	gpu_batch_init(fd, vm, src_addr, dst_addr, SZ_16K, batch_bo, batch_addr);
 }
 
 static void
@@ -209,10 +210,10 @@ static void test_svm_userptr_copy(int fd)
 			      &batch_bo, &batch_addr);
 	gpu_exec_sync(fd, vm, exec_queue, &batch_addr);
 
-	igt_assert(memcmp(svm_ptr, userptr_ptr, SZ_4K) == 0);
+	igt_assert(memcmp(svm_ptr, userptr_ptr, 64) == 0);
 
 	bo_map = xe_bo_map(fd, bo, size);
-	igt_assert(memcmp(bo_map, svm_ptr, SZ_4K) == 0);
+	igt_assert(memcmp(bo_map, svm_ptr, 64) == 0);
 
 	xe_vm_bind_lr_sync(fd, vm, 0, 0, batch_addr, BATCH_SIZE(fd),
 			   DRM_XE_VM_BIND_FLAG_CPU_ADDR_MIRROR);
