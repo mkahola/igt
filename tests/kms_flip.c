@@ -2095,6 +2095,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 		igt_display_require(&display, drm_fd);
 
+		igt_skip_on(is_mtk_device(drm_fd));
+
 		kmstest_set_vt_graphics_mode();
 		igt_install_exit_handler(kms_flip_exit_handler);
 		get_timestamp_format();
