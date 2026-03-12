@@ -7157,9 +7157,9 @@ bool igt_has_force_joiner_debugfs(int drmfd, char *conn_name)
  * @drmfd: file descriptor of the DRM device.
  * @connector_name: connector to check.
  *
- * Checks if the force big joiner is enabled.
+ * Checks if the force joiner is enabled.
  *
- * Returns: True if the force big joiner is enabled, False otherwise.
+ * Returns: True if the force joiner is enabled, False otherwise.
  */
 bool igt_check_force_joiner_status(int drmfd, char *connector_name)
 {
@@ -7175,15 +7175,15 @@ bool igt_check_force_joiner_status(int drmfd, char *connector_name)
 		return false;
 	}
 
-	ret = igt_debugfs_simple_read(debugfs_fd, "i915_bigjoiner_force_enable", buf, sizeof(buf));
+	ret = igt_debugfs_simple_read(debugfs_fd, "i915_joiner_force_enable", buf, sizeof(buf));
 	close(debugfs_fd);
 
 	if (ret < 0) {
-		igt_debug("Could not read i915_bigjoiner_force_enable for connector: %s\n", connector_name);
+		igt_debug("Could not read i915_joiner_force_enable for connector: %s\n", connector_name);
 		return false;
 	}
 
-	return strstr(buf, "Y");
+	return (atoi(buf) > 1);
 }
 
 /**
