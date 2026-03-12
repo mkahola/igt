@@ -737,7 +737,9 @@ static void test_smem_oom(int i915,
 	/* smem memory hog processes, respawn till the lmem process completes */
 	igt_fork_helper(&smem_loop[0]) {
 		while (!READ_ONCE(*lmem_done)) {
-			igt_fork(child, 1) {
+			struct igt_helper_process smem_proc = {};
+
+			igt_fork_helper(&smem_proc) {
 				for (int pass = 0; pass < num_alloc; pass++) {
 					if (READ_ONCE(*lmem_done))
 						break;
@@ -749,12 +751,14 @@ static void test_smem_oom(int i915,
 			 * killed by the oom killer, don't call
 			 * igt_waitchildren because of the noise
 			 */
-			wait(NULL);
+			igt_wait_helper(&smem_proc);
 		}
 	}
 	igt_fork_helper(&smem_loop[1]) {
 		while (!READ_ONCE(*lmem_done)) {
-			igt_fork(child, 1) {
+			struct igt_helper_process smem_proc = {};
+
+			igt_fork_helper(&smem_proc) {
 				int fd = drm_reopen_driver(i915);
 
 				for (int pass = 0; pass < num_alloc; pass++) {
@@ -764,7 +768,7 @@ static void test_smem_oom(int i915,
 				}
 				drm_close_driver(fd);
 			}
-			wait(NULL);
+			igt_wait_helper(&smem_proc);
 		}
 	}
 
