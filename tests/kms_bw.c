@@ -187,6 +187,35 @@ static void force_output_mode(data_t *d, igt_output_t *output,
 	igt_output_override_mode(output, mode);
 }
 
+static bool output_mode_supported(igt_output_t *output, const drmModeModeInfo *mode)
+{
+	drmModeConnector *connector = output->config.connector;
+	int i;
+
+	/* Virtual/forced sinks support all modes */
+	if (!igt_output_is_connected(output))
+		return true;
+
+	for (i = 0; i < connector->count_modes; i++) {
+		drmModeModeInfo *conn_mode = &connector->modes[i];
+
+		if (conn_mode->hdisplay == mode->hdisplay &&
+		    conn_mode->vdisplay == mode->vdisplay &&
+		    conn_mode->vrefresh == mode->vrefresh) {
+			igt_debug("Found matching mode for %dx%d@%dHz on %s\n",
+				  mode->hdisplay, mode->vdisplay, mode->vrefresh,
+				  igt_output_name(output));
+			return true;
+		}
+	}
+
+	igt_info("Mode %dx%d@%dHz not supported by %s (has %d modes)\n",
+		 mode->hdisplay, mode->vdisplay, mode->vrefresh,
+		 igt_output_name(output), connector->count_modes);
+
+	return false;
+}
+
 static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo *mode, bool physical) {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
@@ -195,6 +224,7 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 	int i = 0, num_pipes = 0;
 	igt_crtc_t *crtc;
 	int ret;
+	bool has_supported_mode = false;
 
 	/* Cannot use igt_display_n_crtcs() due to fused pipes on i915 where they do
 	 * not give the numver of valid crtcs and always return IGT_MAX_PIPES */
@@ -213,7 +243,7 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 		crtc = igt_crtc_for_pipe(display, i);
 
 		output = physical ? data->connected_output[i] : data->output[i];
-		if (!output) {
+		if (!output || !output_mode_supported(output, mode)) {
 			continue;
 		}
 
@@ -230,7 +260,9 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 		igt_info("Assigning pipe %s to output %s with mode %s\n",
 			 igt_crtc_name(crtc), igt_output_name(output),
 			 mode->name);
+		has_supported_mode = true;
 	}
+	igt_skip_on_f(!has_supported_mode, "Unsupported mode for all pipes\n");
 
 	ret = igt_display_try_commit_atomic(display,
 					    DRM_MODE_ATOMIC_ALLOW_MODESET |
@@ -242,7 +274,7 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 
 	for (i = 0; i <= pipe; i++) {
 		output = physical ? data->connected_output[i] : data->output[i];
-		if (!output) {
+		if (!output || !output_mode_supported(output, mode)) {
 			continue;
 		}
 
@@ -253,7 +285,7 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 
 	for (i = pipe; i >= 0; i--) {
 		output = physical ? data->connected_output[i] : data->output[i];
-		if (!output)
+		if (!output || !output_mode_supported(output, mode))
 			continue;
 
 		igt_remove_fb(display->drm_fd, &buffer[i]);
