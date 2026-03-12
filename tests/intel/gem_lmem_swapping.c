@@ -11,6 +11,8 @@
 #include "igt_kmod.h"
 #include "runnercomms.h"
 #include <unistd.h>
+#include <setjmp.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -651,13 +653,21 @@ static void leak(uint64_t alloc)
 	}
 }
 
+static sigjmp_buf sigbus_jmp;
+
+static void sigbus_handler(int sig, siginfo_t *si, void *ctx)
+{
+	siglongjmp(sigbus_jmp, 1);
+}
+
 static void gem_leak(int fd, uint64_t alloc)
 {
 	uint32_t handle = gem_create(fd, alloc);
 	void *buf;
 
 	buf = gem_mmap_offset__fixed(fd, handle, 0, PAGE_SIZE, PROT_WRITE);
-	memset(buf, 0, PAGE_SIZE);
+	if (!igt_debug_on_f(sigsetjmp(sigbus_jmp, 1), "PID %d: SIGBUS caught\n", getpid()))
+		memset(buf, 0, PAGE_SIZE);
 	munmap(buf, PAGE_SIZE);
 
 	gem_madvise(fd, handle, I915_MADV_DONTNEED);
@@ -759,7 +769,20 @@ static void test_smem_oom(int i915,
 			struct igt_helper_process smem_proc = {};
 
 			igt_fork_helper(&smem_proc) {
+				struct sigaction sa = {
+					.sa_sigaction = sigbus_handler,
+					.sa_flags = SA_SIGINFO | SA_NODEFER,
+				};
 				int fd = drm_reopen_driver(i915);
+
+				sigemptyset(&sa.sa_mask);
+
+				/*
+				 * This helper process is allowed to ignore
+				 * SIGBUS signals and continue, no need to
+				 * restore default SIGBUS handler ever.
+				 */
+				sigaction(SIGBUS, &sa, NULL);
 
 				for (int pass = 0; pass < num_alloc; pass++) {
 					if (READ_ONCE(*lmem_done))
