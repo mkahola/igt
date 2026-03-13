@@ -105,7 +105,7 @@ static bool check_support(data_t *data)
 			return false;
 		}
 
-		if (!intel_fbc_plane_size_supported(data->drm_fd,
+		if (!intel_fbc_plane_size_supported(&data->display,
 						    data->mode->hdisplay,
 						    data->mode->vdisplay)) {
 			igt_info("Plane size not supported as per FBC size restrictions\n");

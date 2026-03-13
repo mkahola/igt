@@ -101,7 +101,7 @@ bool intel_fbc_wait_until_enabled(igt_crtc_t *crtc)
 /**
  * intel_fbc_max_plane_size
  *
- * @fd: fd of the device
+ * @display: display pointer
  * @width: To get the max supported width
  * @height: To get the max supported height
  *
@@ -110,8 +110,9 @@ bool intel_fbc_wait_until_enabled(igt_crtc_t *crtc)
  * Returns:
  * None
  */
-static void intel_fbc_max_plane_size(int fd, uint32_t *width, uint32_t *height)
+static void intel_fbc_max_plane_size(igt_display_t *display, uint32_t *width, uint32_t *height)
 {
+	int fd = display->drm_fd;
 	const uint32_t dev_id = intel_get_drm_devid(fd);
 	const struct intel_device_info *info = intel_get_device_info(dev_id);
 	int ver = info->graphics_ver;
@@ -135,7 +136,7 @@ static void intel_fbc_max_plane_size(int fd, uint32_t *width, uint32_t *height)
 /**
  * intel_fbc_plane_size_supported
  *
- * @fd: fd of the device
+ * @display: display pointer
  * @width: width of the plane to be checked
  * @height: height of the plane to be checked
  *
@@ -144,11 +145,11 @@ static void intel_fbc_max_plane_size(int fd, uint32_t *width, uint32_t *height)
  * Returns:
  * true if plane size is within the range as per the FBC supported size restrictions per platform
  */
-bool intel_fbc_plane_size_supported(int fd, uint32_t width, uint32_t height)
+bool intel_fbc_plane_size_supported(igt_display_t *display, uint32_t width, uint32_t height)
 {
 	unsigned int max_w, max_h;
 
-	intel_fbc_max_plane_size(fd, &max_w, &max_h);
+	intel_fbc_max_plane_size(display, &max_w, &max_h);
 
 	return width <= max_w && height <= max_h;
 }
