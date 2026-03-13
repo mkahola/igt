@@ -167,7 +167,7 @@ bool intel_fbc_plane_size_supported(igt_display_t *display, uint32_t width, uint
 /**
  * intel_fbc_supported_for_psr_mode
  *
- * @disp_ver: Display version
+ * @display: display pointer
  * @mode: psr mode
  *
  * FBC and PSR1/PSR2/PR combination support depends on the display version.
@@ -175,9 +175,14 @@ bool intel_fbc_plane_size_supported(igt_display_t *display, uint32_t width, uint
  * Returns:
  * true if FBC and the given PSR mode can be enabled together in a platform
  */
-bool intel_fbc_supported_for_psr_mode(int disp_ver, enum psr_mode mode)
+bool intel_fbc_supported_for_psr_mode(igt_display_t *display, enum psr_mode mode)
 {
+	uint32_t devid;
+	int disp_ver;
 	bool fbc_supported = true;
+
+	devid = intel_get_drm_devid(display->drm_fd);
+	disp_ver = intel_display_ver(devid);
 
 	switch(mode) {
 	case PSR_MODE_1:

@@ -786,7 +786,6 @@ int igt_main()
 	int fbc_status[] = {FBC_DISABLED, FBC_ENABLED};
 	igt_output_t *output;
 	bool fbc_chipset_support = false;
-	int disp_ver;
 
 	igt_fixture() {
 		igt_crtc_t *crtc;
@@ -798,7 +797,6 @@ int igt_main()
 		data.bops = buf_ops_create(data.drm_fd);
 		igt_display_require(&data.display, data.drm_fd);
 		igt_require_f(output_supports_psr(&data), "Sink does not support PSR/PSR2/PR\n");
-		disp_ver = intel_display_ver(data.devid);
 
 		for_each_crtc(&data.display, crtc) {
 			if (intel_fbc_supported(crtc))
@@ -811,7 +809,7 @@ int igt_main()
 		for (z = 0; z < ARRAY_SIZE(modes); z++) {
 			data.op_psr_mode = modes[z];
 			data.fbc_flag = fbc_chipset_support &&
-					intel_fbc_supported_for_psr_mode(disp_ver,
+					intel_fbc_supported_for_psr_mode(&data.display,
 									 data.op_psr_mode);
 
 			igt_describe("Basic check for psr if it is detecting changes made "
