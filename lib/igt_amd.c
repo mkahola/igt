@@ -1365,6 +1365,50 @@ void igt_amd_disallow_edp_enter_psr(int drm_fd, char *connector_name, bool enabl
 	close(ret);
 }
 
+/**
+ * igt_amd_disallow_edp_enter_replay: notify kernel skip edp replay setup and enable
+ * @drm_fd: DRM file descriptor
+ * @connector_name: The connector's name
+ * @enable: skip kernel eDP replay setup and enable -- disallow edp enter replay
+ * example usage: disallow replay
+ * echo 0x1 >
+ * /sys/kernel/debug/dri/0/eDP-1/disallow_edp_enter_replay
+ *
+ * expected IGT sequence is as below:
+ * 1. disable eDP PHY and notify eDP rx with dpcd 0x600 = 2.
+ *    for example, kmstest_set_connector_dpms off will do this.
+ * 2. echo 0x1 /sys/kernel/debug/dri/0/eDP-X/disallow_edp_enter_replay
+ * 3. enable eDP PHY and notify eDP rx with dpcd 0x600 = 1 but
+ *    without dpcd 0x37b.
+ * 4. read crc from rx dpcd 0x270, 0x246, etc.
+ *    igt_pipe_crc_collect_crc will do this.
+ * 5. echo 0x0 /sys/kernel/debug/dri/0/eDP-X/disallow_edp_enter_replay.
+ *    this will let eDP back to normal with replay setup.
+ */
+void igt_amd_disallow_edp_enter_replay(int drm_fd, char *connector_name, bool enable)
+{
+	int fd, ret, wr_len;
+	const char *allow_edp_replay = "1";
+	const char *dis_allow_edp_replay = "0";
+
+	fd = igt_debugfs_connector_dir(drm_fd, connector_name, O_RDONLY);
+	igt_assert(fd >= 0);
+	ret = openat(fd, DEBUGFS_DISALLOW_EDP_ENTER_REPLAY, O_WRONLY);
+	close(fd);
+	igt_skip_on_f(ret < 0, "Skip test: Debugfs %s not supported\n",
+		      DEBUGFS_DISALLOW_EDP_ENTER_REPLAY);
+
+	if (enable) {
+		wr_len = write(ret, allow_edp_replay, strlen(allow_edp_replay));
+		igt_assert_eq(wr_len, strlen(allow_edp_replay));
+	} else {
+		wr_len = write(ret, dis_allow_edp_replay, strlen(dis_allow_edp_replay));
+		igt_assert_eq(wr_len, strlen(dis_allow_edp_replay));
+	}
+
+	close(ret);
+}
+
 static bool get_dm_capabilities(int drm_fd, char *buf, size_t size)
 {
 	int ret, fd;
