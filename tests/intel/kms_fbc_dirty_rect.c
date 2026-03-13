@@ -422,7 +422,7 @@ static bool prepare_test(data_t *data)
 	}
 
 	if (data->feature & FEATURE_FBC)
-		intel_fbc_enable(data->drm_fd);
+		intel_fbc_enable(&data->display);
 
 	return intel_pipe_output_combo_valid(&data->display);
 }

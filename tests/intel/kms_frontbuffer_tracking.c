@@ -1902,7 +1902,7 @@ static bool disable_features(const struct test_mode *t)
 	if (t->feature == FEATURE_DEFAULT)
 		return false;
 
-	intel_fbc_disable(drm.fd);
+	intel_fbc_disable(&drm.display);
 	intel_drrs_disable(prim_mode_params.crtc);
 
 	return psr.can_test ? psr_disable(drm.fd, drm.debugfs, NULL) : false;
@@ -2535,7 +2535,7 @@ static bool enable_features_for_test(const struct test_mode *t)
 		return false;
 
 	if (t->feature & FEATURE_FBC)
-		intel_fbc_enable(drm.fd);
+		intel_fbc_enable(&drm.display);
 	if (t->feature & FEATURE_PSR)
 		ret = psr_enable(drm.fd, drm.debugfs, PSR_MODE_1, NULL);
 	if (t->feature & FEATURE_DRRS)

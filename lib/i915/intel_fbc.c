@@ -12,6 +12,16 @@
 
 #define FBC_STATUS_BUF_LEN 128
 
+void intel_fbc_enable(igt_display_t *display)
+{
+	igt_set_module_param_int(display->drm_fd, "enable_fbc", 1);
+}
+
+void intel_fbc_disable(igt_display_t *display)
+{
+	igt_set_module_param_int(display->drm_fd, "enable_fbc", 0);
+}
+
 /**
  * intel_fbc_supported:
  * @crtc: CRTC

@@ -147,7 +147,7 @@ static void enable_feature(data_t *data)
 	case FEATURE_NONE:
 		break;
 	case FEATURE_FBC:
-		intel_fbc_enable(data->drm_fd);
+		intel_fbc_enable(&data->display);
 		break;
 	case FEATURE_PSR:
 		psr_enable(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL);
@@ -215,7 +215,7 @@ static void check_feature(data_t *data)
 
 static void disable_features(data_t *data)
 {
-	intel_fbc_disable(data->drm_fd);
+	intel_fbc_disable(&data->display);
 
 	if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL))
 		psr_disable(data->drm_fd, data->debugfs_fd, NULL);
