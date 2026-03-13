@@ -595,6 +595,8 @@ typedef struct _igt_pipe_crc igt_pipe_crc_t;
 igt_pipe_crc_t *igt_crtc_crc_new(igt_crtc_t *crtc, const char *source);
 igt_pipe_crc_t *igt_crtc_crc_new_nonblock(igt_crtc_t *crtc, const char *source);
 
+int igt_crtc_debugfs_dir(igt_crtc_t *crtc, int mode);
+
 igt_crtc_t *igt_output_get_driving_crtc(igt_output_t *output);
 const char *igt_output_name(igt_output_t *output);
 bool kmstest_mode_is_valid(const drmModeModeInfo *mode);

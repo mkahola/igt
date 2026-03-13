@@ -1534,10 +1534,8 @@ static void set_mode_for_params(struct modeset_params *params)
 static void __debugfs_read_crtc(const char *param, char *buf, int len)
 {
 	int dir;
-	enum pipe pipe;
 
-	pipe = prim_mode_params.crtc->pipe;
-	dir = igt_debugfs_crtc_dir(drm.fd, pipe, O_DIRECTORY);
+	dir = igt_crtc_debugfs_dir(prim_mode_params.crtc, O_DIRECTORY);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, param, buf, len);
 	close(dir);

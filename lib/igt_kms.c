@@ -5254,6 +5254,11 @@ igt_pipe_crc_t *igt_crtc_crc_new_nonblock(igt_crtc_t *crtc, const char *source)
 	return igt_pipe_crc_new_nonblock(crtc->display->drm_fd, crtc->crtc_index, source);
 }
 
+int igt_crtc_debugfs_dir(igt_crtc_t *crtc, int mode)
+{
+	return igt_debugfs_crtc_dir(crtc->display->drm_fd, crtc->crtc_index, mode);
+}
+
 const char *igt_crtc_name(igt_crtc_t *crtc)
 {
 	if (crtc == NULL)
@@ -6638,7 +6643,7 @@ unsigned int igt_get_crtc_current_bpc(igt_crtc_t *crtc)
 	int fd, res;
 	unsigned int current;
 
-	fd = igt_debugfs_crtc_dir(drmfd, crtc->pipe, O_RDONLY);
+	fd = igt_crtc_debugfs_dir(crtc, O_RDONLY);
 	igt_assert(fd >= 0);
 
 	if (is_intel_device(drmfd))

@@ -370,9 +370,7 @@ int igt_main()
 			igt_plane_set_fb(data.primary, &data.default_fb);
 			igt_display_commit(&data.display);
 
-			dir = igt_debugfs_crtc_dir(data.drm_fd,
-						   data.crtc->pipe,
-						   O_DIRECTORY);
+			dir = igt_crtc_debugfs_dir(data.crtc, O_DIRECTORY);
 			igt_require_fd(dir);
 			data.nv_crc_dir = openat(dir, "nv_crc", O_DIRECTORY);
 			close(dir);
