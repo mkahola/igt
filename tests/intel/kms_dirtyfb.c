@@ -127,7 +127,7 @@ static bool check_support(data_t *data)
 		return true;
 
 	case FEATURE_DRRS:
-		if (!(intel_is_drrs_supported(data->drm_fd, data->crtc->pipe) &&
+		if (!(intel_is_drrs_supported(data->crtc) &&
 		      intel_output_has_drrs(data->drm_fd, data->output))) {
 			igt_info("Output doesn't support DRRS\n");
 			return false;
@@ -153,7 +153,7 @@ static void enable_feature(data_t *data)
 		psr_enable(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL);
 		break;
 	case FEATURE_DRRS:
-		intel_drrs_enable(data->drm_fd, data->crtc->pipe);
+		intel_drrs_enable(data->crtc);
 		break;
 	case FEATURE_DEFAULT:
 		break;
@@ -177,7 +177,7 @@ static void check_feature_enabled(data_t *data)
 			     "PSR still disabled\n");
 		break;
 	case FEATURE_DRRS:
-		igt_assert_f(!intel_is_drrs_inactive(data->drm_fd, data->crtc->pipe),
+		igt_assert_f(!intel_is_drrs_inactive(data->crtc),
 			     "DRRS INACTIVE\n");
 		break;
 	case FEATURE_DEFAULT:
@@ -203,7 +203,7 @@ static void check_feature(data_t *data)
 		psr_sink_error_check(data->debugfs_fd, PSR_MODE_1, data->output);
 		break;
 	case FEATURE_DRRS:
-		igt_assert_f(!intel_is_drrs_inactive(data->drm_fd, data->crtc->pipe),
+		igt_assert_f(!intel_is_drrs_inactive(data->crtc),
 			     "DRRS INACTIVE\n");
 		break;
 	case FEATURE_DEFAULT:
@@ -220,7 +220,7 @@ static void disable_features(data_t *data)
 	if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL))
 		psr_disable(data->drm_fd, data->debugfs_fd, NULL);
 
-	intel_drrs_disable(data->drm_fd, data->crtc->pipe);
+	intel_drrs_disable(data->crtc);
 }
 
 static void prepare(data_t *data)

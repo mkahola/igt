@@ -861,8 +861,12 @@ static int set_mode(struct test_output *o, uint32_t fb, int x, int y)
 		if (ret)
 			return ret;
 
-		if (is_intel_device(drm_fd))
-			intel_drrs_disable(drm_fd, o->crtc_index);
+		if (is_intel_device(drm_fd)) {
+			igt_crtc_t *crtc = igt_crtc_for_crtc_index(&display, o->crtc_index);
+
+			if (crtc)
+				intel_drrs_disable(crtc);
+		}
 	}
 
 	return 0;

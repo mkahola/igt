@@ -12,20 +12,19 @@
 
 /**
  * intel_is_drrs_supported:
- * @device: fd of the device
- * @crtc_index: CRTC index
+ * @crtc: CRTC
  *
- * Check if DRRS is supported on given CRTC index.
+ * Check if DRRS is supported on given CRTC.
  *
  * Returns:
  * true if DRRS is supported and false otherwise.
  */
-bool intel_is_drrs_supported(int device, int crtc_index)
+bool intel_is_drrs_supported(igt_crtc_t *crtc)
 {
 	char buf[256];
 	int dir;
 
-	dir = igt_debugfs_crtc_dir(device, crtc_index, O_DIRECTORY);
+	dir = igt_crtc_debugfs_dir(crtc, O_DIRECTORY);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, "i915_drrs_status", buf, sizeof(buf));
 	close(dir);
@@ -80,50 +79,53 @@ static void drrs_set(int device, int crtc_index, unsigned int val)
 
 /**
  * intel_drrs_enable:
- * @device: fd of the device
- * @crtc_index: CRTC index
+ * @crtc: CRTC
  *
- * Enable DRRS on given CRTC index.
+ * Enable DRRS on given CRTC.
  *
  * Returns:
  * none
  */
-void intel_drrs_enable(int device, int crtc_index)
+void intel_drrs_enable(igt_crtc_t *crtc)
 {
-	drrs_set(device, crtc_index, 1);
+	drrs_set(crtc->display->drm_fd, crtc->crtc_index, 1);
 }
 
 /**
  * intel_drrs_disable:
- * @device: fd of the device
- * @crtc_index: CRTC index
+ * @crtc: CRTC
  *
- * Disable DRRS on given CRTC index.
+ * Disable DRRS on given CRTC.
  *
  * Returns:
  * none
  */
-void intel_drrs_disable(int device, int crtc_index)
+void intel_drrs_disable(igt_crtc_t *crtc)
+{
+	drrs_set(crtc->display->drm_fd, crtc->crtc_index, 0);
+}
+
+/* FIXME: Remove this and its users. */
+void intel_drrs_disable_crtc_index(int device, int crtc_index)
 {
 	drrs_set(device, crtc_index, 0);
 }
 
 /**
  * intel_is_drrs_inactive:
- * @device: fd of the device
- * @crtc_index: CRTC index
+ * @crtc: CRTC
  *
- * Check if drrs is inactive on given CRTC index.
+ * Check if drrs is inactive on given CRTC.
  *
  * Returns:
  * true if inactive and false otherwise
  */
-bool intel_is_drrs_inactive(int device, int crtc_index)
+bool intel_is_drrs_inactive(igt_crtc_t *crtc)
 {
 	char buf[256];
 	int dir;
 
-	dir = igt_debugfs_crtc_dir(device, crtc_index, O_DIRECTORY);
+	dir = igt_crtc_debugfs_dir(crtc, O_DIRECTORY);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, "i915_drrs_status", buf, sizeof(buf));
 	close(dir);

@@ -1903,7 +1903,7 @@ static bool disable_features(const struct test_mode *t)
 		return false;
 
 	intel_fbc_disable(drm.fd);
-	intel_drrs_disable(drm.fd, prim_mode_params.crtc->pipe);
+	intel_drrs_disable(prim_mode_params.crtc);
 
 	return psr.can_test ? psr_disable(drm.fd, drm.debugfs, NULL) : false;
 }
@@ -2190,7 +2190,7 @@ static void setup_drrs(void)
 		return;
 	}
 
-	if (!intel_is_drrs_supported(drm.fd, prim_mode_params.crtc->pipe)) {
+	if (!intel_is_drrs_supported(prim_mode_params.crtc)) {
 		igt_info("Can't test DRRS: Not supported.\n");
 		return;
 	}
@@ -2347,7 +2347,7 @@ static void do_status_assertions(int flags)
 			igt_assert_f(false, "DRRS LOW\n");
 		}
 	} else if (flags & ASSERT_DRRS_INACTIVE) {
-		if (!intel_is_drrs_inactive(drm.fd, prim_mode_params.crtc->pipe)) {
+		if (!intel_is_drrs_inactive(prim_mode_params.crtc)) {
 			drrs_print_status();
 			igt_assert_f(false, "DRRS INACTIVE\n");
 		}
@@ -2539,7 +2539,7 @@ static bool enable_features_for_test(const struct test_mode *t)
 	if (t->feature & FEATURE_PSR)
 		ret = psr_enable(drm.fd, drm.debugfs, PSR_MODE_1, NULL);
 	if (t->feature & FEATURE_DRRS)
-		intel_drrs_enable(drm.fd, prim_mode_params.crtc->pipe);
+		intel_drrs_enable(prim_mode_params.crtc);
 
 	return ret;
 }
