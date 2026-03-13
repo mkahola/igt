@@ -1,0 +1,97 @@
+##################################################################
+# SR-IOV/IOV tests are not applicable for native
+# configuration and will be run under its separate configuration
+##################################################################
+igt@.*iov.*
+##################################################################
+# All Display related tests are being run under
+# separate display configurations
+##################################################################
+igt@.*kms.*
+igt@testdisplay
+igt@xe_pat@display-vs-wb-transient
+igt@fbdev@.*
+##################################################################
+# Valid skip: NVL is an integrated GPU and does not have
+# dedicated VRAM. Tests requiring device-local memory (VRAM),
+# small-BAR configurations, or VRAM eviction are not applicable.
+##################################################################
+igt@xe_mmap@vram$
+igt@xe_mmap@small-bar
+igt@xe_noexec_ping_pong
+igt@xe_create@create-big-vram
+igt@xe_evict.*
+igt@xe_pm@d3hot-mmap-vram
+igt@xe_eudebug_online@writes-caching-(?!sram-bb-sram-target-sram).*
+igt@xe_compute_preempt@.*vram.*
+igt@xe_vm@out-of-memory
+##################################################################
+# Valid skip: PAT index tests targeting older/different platforms
+# These PAT (Page Attribute Table) index subtests validate
+# platform-specific memory attribute encodings that are only
+# defined for their respective GPU generations
+# like ADL, MTL, LNL, BMG, PVC.
+# NVL uses its own PAT encoding; running these tests would
+# produce incorrect results or false failures.
+##################################################################
+igt@xe_pat@pat-index-xehpc
+igt@xe_pat@pat-index-xelp
+igt@xe_pat@pat-index-xelpg
+igt@xe_media_fill@media-fill
+igt@xe_pat@pat-index-xe2
+##################################################################
+# Valid Skip: Tests requiring multiple CCS (Compute Command
+# Streamers) engines — NVL exposes only a single CCS engine.
+##################################################################
+igt@xe_compute@ccs-mode-basic
+igt@xe_compute@ccs-mode-compute-kernel
+igt@xe_compute@eu-busy-10s
+##################################################################
+# Valid skip: Features / hardware blocks not present on NVL
+#   - xe_huc_copy@huc_copy: HuC (HEVC µController) firmware is
+#     not loaded/present on NVL; HuC copy operations will fail.
+#   - xe_exec_balancer@.*: Virtual engine / load balancer tests
+#     require multiple physical engines of the same class for
+#     balancing, which NVL does not expose.
+#   - xe_oa@oa-tlb-invalidate: OA TLB invalidation test relies
+#     on a specific OA unit configuration not present on NVL.
+#   - xe_pxp@.*: PXP (Protected Xe Path) content protection
+#     requires a TEE (Trusted Execution Environment) and
+#     associated firmware, which NVL does not support.
+#   - xe_exec_system_allocator@.*: System allocator execution
+#     tests depend on hardware features (e.g., SVM/USM page
+#     fault handling) not enabled on NVL yet.
+##################################################################
+igt@xe_huc_copy@huc_copy
+igt@xe_exec_balancer@.*
+igt@xe_oa@oa-tlb-invalidate
+igt@xe_pxp@.*
+igt@xe_exec_system_allocator@.*
+##################################################################
+# Valid skip: test applicable only for i2c capable systems
+##################################################################
+igt@xe_pm@d3hot-i2c
+##################################################################
+# Valid skip: multigpu/multitile tests are not supported on NVL
+##################################################################
+igt@.*@.*multigpu.*
+igt@xe_peer2peer@.*
+igt@.*@.*tiles
+##################################################################
+# Valid skip: Not Applicable for iGPUs
+##################################################################
+igt@intel_hwmon@.*
+igt@xe_mmap@pci-membarrier.*
+igt@xe_configfs@survivability-mode
+igt@xe_survivability@.*
+##################################################################
+# Valid skip: EU debugger and SIP (System Interrupt Protocol)
+# support is not yet available in the kernel for NVL. These tests
+# will be re-enabled once the required kernel enablement lands.
+##################################################################
+igt@xe_eudebug@.*
+igt@xe_eudebug_online@.*
+igt@xe_exec_sip@.*
+igt@xe_exec_sip_eudebug@.*
+igt@xe_live_ktest@xe_eudebug
+##################################################################
