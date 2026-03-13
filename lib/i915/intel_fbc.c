@@ -110,7 +110,7 @@ bool intel_fbc_wait_until_enabled(igt_crtc_t *crtc)
  * Returns:
  * None
  */
-void intel_fbc_max_plane_size(int fd, uint32_t *width, uint32_t *height)
+static void intel_fbc_max_plane_size(int fd, uint32_t *width, uint32_t *height)
 {
 	const uint32_t dev_id = intel_get_drm_devid(fd);
 	const struct intel_device_info *info = intel_get_device_info(dev_id);
