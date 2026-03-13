@@ -8020,6 +8020,18 @@ igt_crtc_t *igt_crtc_for_crtc_id(igt_display_t *display, uint32_t crtc_id)
 	return NULL;
 }
 
+igt_crtc_t *igt_crtc_for_crtc_index(igt_display_t *display, int crtc_index)
+{
+	igt_crtc_t *crtc;
+
+	for_each_crtc(display, crtc) {
+		if (crtc->crtc_index == crtc_index)
+			return crtc;
+	}
+
+	return NULL;
+}
+
 /*
  * igt_first_crtc:
  * @display: pointer to igt_display_t
