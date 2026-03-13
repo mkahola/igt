@@ -9,7 +9,6 @@
 #include "igt_psr.h"
 
 #include "intel_fbc.h"
-#include "intel_wa.h"
 
 #define FBC_STATUS_BUF_LEN 128
 
@@ -197,30 +196,4 @@ bool intel_fbc_supported_for_psr_mode(int disp_ver, enum psr_mode mode)
 	}
 
 	return fbc_supported;
-}
-
-/**
- * intel_is_fbc_disabled_by_wa
- *
- * @fd: fd of the device
- *
- * This function check if WA is present on some GT, which in turn make
- * FBC not possible
- *
- * Returns:
- * true: if WA is applied and FBC id disabled
- * false: otherwise
- */
-bool intel_is_fbc_disabled_by_wa(int fd)
-{
-	int wa;
-	const char *wa_fbc_disabled = "16023588340";
-
-	if (!is_xe_device(fd))
-		return false;
-
-	wa = igt_has_intel_wa(fd, wa_fbc_disabled);
-	igt_assert_f(wa >= 0, "WA path not found on GTs\n");
-
-	return wa == 1;
 }
