@@ -426,7 +426,7 @@ static void set_device_filter(const char* dev_path)
 
 static void unbind_reset_rebind(struct device_fds *dev, enum reset type)
 {
-	if (is_i915_device(dev->fds.dev)) {
+	if (is_intel_device(dev->fds.dev)) {
 		igt_audio_driver_unload(&dev->snd_driver);
 	}
 
