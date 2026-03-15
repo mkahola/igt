@@ -345,9 +345,6 @@ static bool has_cold_reset(int slot_dir, const char **reason)
 /* Unbind the driver from the device */
 static void driver_unbind(struct device_fds *dev)
 {
-	if (is_i915_device(dev->fds.dev))
-		igt_audio_driver_unload(&dev->snd_driver);
-
 	igt_debug("unbind the driver from the device\n");
 	igt_assert(igt_sysfs_set(dev->fds.drv_dir, "unbind",
 		   dev->dev_bus_addr));
@@ -429,6 +426,10 @@ static void set_device_filter(const char* dev_path)
 
 static void unbind_reset_rebind(struct device_fds *dev, enum reset type)
 {
+	if (is_i915_device(dev->fds.dev)) {
+		igt_audio_driver_unload(&dev->snd_driver);
+	}
+
 	igt_debug("close the device\n");
 	close_if_opened(&dev->fds.dev);
 
