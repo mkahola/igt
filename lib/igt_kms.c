@@ -162,16 +162,17 @@ const struct edid *igt_kms_get_full_edid(void)
 	static struct edid edid;
 	drmModeModeInfo mode = {};
 
-	mode.clock = 148500;
+	/* 2288x1287 @ 60Hz with proper timing values */
+	mode.clock = 194250;
 	mode.hdisplay = 2288;
-	mode.hsync_start = 2008;
-	mode.hsync_end = 2052;
-	mode.htotal = 2200;
+	mode.hsync_start = 2336;
+	mode.hsync_end = 2368;
+	mode.htotal = 2448;
 	mode.vdisplay = 1287;
-	mode.vsync_start = 1084;
-	mode.vsync_end = 1089;
-	mode.vtotal = 1125;
-	mode.vrefresh = 144;
+	mode.vsync_start = 1290;
+	mode.vsync_end = 1295;
+	mode.vtotal = 1324;
+	mode.vrefresh = 60;
 	edid_init_with_mode(&edid, &mode);
 
 	std_timing_set(&edid.standard_timings[0], 256, 60, STD_TIMING_16_10);
