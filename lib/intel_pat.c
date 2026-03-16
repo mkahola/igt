@@ -37,6 +37,8 @@ int32_t xe_get_pat_sw_config(int drm_fd, struct intel_pat_cache *xe_pat_cache)
 	}
 
 	memset(xe_pat_cache, 0, sizeof(*xe_pat_cache));
+	xe_pat_cache->uc_comp = XE_PAT_IDX_INVALID;
+
 	while ((nread = getline(&line, &line_len, dbgfs_file)) != -1) {
 		uint32_t value = 0;
 		char *p = NULL;
@@ -159,8 +161,11 @@ uint8_t intel_get_pat_idx_uc_comp(int fd)
 	uint16_t dev_id = intel_get_drm_devid(fd);
 
 	igt_assert(intel_gen(dev_id) >= 20);
+	igt_assert(HAS_FLATCCS(dev_id));
 
 	intel_get_pat_idx(fd, &pat);
+	igt_assert_f(pat.uc_comp != XE_PAT_IDX_INVALID,
+		     "No compressed PAT index available on this platform\n");
 	return pat.uc_comp;
 }
 

@@ -934,15 +934,18 @@ static bool has_no_compression_hint(int fd)
  * Test category: functionality test
  * Description: Validates that binding a BO created with
  * the NO_COMPRESSION flag using a compressed PAT index fails
- * with -EINVAL on Xe2+ platforms.
+ * with -EINVAL on Xe2+ platforms. On platforms where CCS
+ * does not exist, the test verifies uncompressed access works.
  */
 
 static void bo_comp_disable_bind(int fd)
 {
 	size_t size = xe_get_default_alignment(fd);
-	uint8_t comp_pat_index, uncomp_pat_index;
-	bool supported;
+	uint16_t dev_id = intel_get_drm_devid(fd);
+	bool has_flatccs = HAS_FLATCCS(dev_id);
+	uint8_t uncomp_pat_index;
 	uint32_t vm, bo;
+	bool supported;
 	int ret;
 
 	supported = has_no_compression_hint(fd);
@@ -958,14 +961,25 @@ static void bo_comp_disable_bind(int fd)
 	igt_assert_eq(ret, 0);
 	vm = xe_vm_create(fd, 0, 0);
 
-	comp_pat_index = intel_get_pat_idx_uc_comp(fd);
 	uncomp_pat_index = intel_get_pat_idx_uc(fd);
 
-	igt_assert_eq(__xe_vm_bind(fd, vm, 0, bo, 0, 0x100000,
-				   size, 0, 0, NULL, 0,
-				   0, comp_pat_index, 0),
-		      -EINVAL);
+	/*
+	 * On platforms with CCS, binding a NO_COMPRESSION BO with a
+	 * compressed PAT index must fail. On platforms without CCS,
+	 * there is no valid compressed PAT index, so skip this check.
+	 */
+	if (has_flatccs) {
+		uint8_t comp_pat_index = intel_get_pat_idx_uc_comp(fd);
 
+		igt_assert_eq(__xe_vm_bind(fd, vm, 0, bo, 0, 0x100000,
+					   size, 0, 0, NULL, 0,
+					   0, comp_pat_index, 0),
+			      -EINVAL);
+	} else {
+		igt_debug("Platform has no CCS, skipping compressed PAT bind check\n");
+	}
+
+	/* Uncompressed bind must always succeed */
 	igt_assert_eq(__xe_vm_bind(fd, vm, 0, bo, 0, 0x100000,
 				   size, 0, 0, NULL, 0,
 				   0, uncomp_pat_index, 0),
