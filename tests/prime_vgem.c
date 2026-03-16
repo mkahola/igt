@@ -908,8 +908,9 @@ static bool has_prime_import(int fd)
 	return value & DRM_PRIME_CAP_IMPORT;
 }
 
-static uint32_t set_fb_on_crtc(int fd, int pipe, struct vgem_bo *bo, uint32_t fb_id)
+static bool set_fb_on_crtc(igt_crtc_t *crtc, struct vgem_bo *bo, uint32_t fb_id)
 {
+	int fd = crtc->display->drm_fd;
 	drmModeRes *resources = drmModeGetResources(fd);
 	struct drm_mode_modeinfo *modes = malloc(4096*sizeof(*modes));
 	uint32_t encoders[32];
@@ -939,7 +940,7 @@ static uint32_t set_fb_on_crtc(int fd, int pipe, struct vgem_bo *bo, uint32_t fb
 			memset(&enc, 0, sizeof(enc));
 			enc.encoder_id = encoders[e];
 			drmIoctl(fd, DRM_IOCTL_MODE_GETENCODER, &enc);
-			if (enc.possible_crtcs & (1 << pipe))
+			if (enc.possible_crtcs & (1 << crtc->crtc_index))
 				break;
 		}
 		if (e == conn.count_encoders)
@@ -954,7 +955,7 @@ static uint32_t set_fb_on_crtc(int fd, int pipe, struct vgem_bo *bo, uint32_t fb
 			continue;
 
 		memset(&set, 0, sizeof(set));
-		set.crtc_id = resources->crtcs[pipe];
+		set.crtc_id = crtc->crtc_id;
 		set.fb_id = fb_id;
 		set.set_connectors_ptr = (uintptr_t)&conn.connector_id;
 		set.count_connectors = 1;
@@ -962,18 +963,18 @@ static uint32_t set_fb_on_crtc(int fd, int pipe, struct vgem_bo *bo, uint32_t fb
 		set.mode_valid = 1;
 		if (drmIoctl(fd, DRM_IOCTL_MODE_SETCRTC, &set) == 0) {
 			drmModeFreeResources(resources);
-			return set.crtc_id;
+			return true;
 		}
 	}
 
 	drmModeFreeResources(resources);
-	return 0;
+	return false;
 }
 
 static void flip_to_vgem(int i915, int vgem,
 			 struct vgem_bo *bo,
 			 uint32_t fb_id,
-			 uint32_t crtc_id,
+			 igt_crtc_t *crtc,
 			 unsigned hang,
 			 const char *name)
 {
@@ -985,13 +986,13 @@ static void flip_to_vgem(int i915, int vgem,
 
 	igt_fork(child, 1) { /* Use a child in case we block uninterruptibly */
 		/* Check we don't block nor flip before the fence is ready */
-		do_or_die(drmModePageFlip(i915, crtc_id, fb_id,
+		do_or_die(drmModePageFlip(i915, crtc->crtc_id, fb_id,
 					  DRM_MODE_PAGE_FLIP_EVENT, &fb_id));
 		for (int n = 0; n < 5; n++) { /* 5 frames should be <100ms */
 			igt_assert_f(poll(&pfd, 1, 0) == 0,
 				     "flip to %s completed whilst busy\n",
 				     name);
-			kmstest_get_vblank(i915, 0, DRM_VBLANK_NEXTONMISS);
+			igt_crtc_get_vblank(crtc, DRM_VBLANK_NEXTONMISS);
 		}
 	}
 	igt_waitchildren_timeout(2, "flip blocked by waiting for busy vgem fence");
@@ -1001,12 +1002,12 @@ static void flip_to_vgem(int i915, int vgem,
 		unsigned long miss;
 
 		/* Signal fence at the start of the next vblank */
-		kmstest_get_vblank(i915, 0, DRM_VBLANK_NEXTONMISS);
+		igt_crtc_get_vblank(crtc, DRM_VBLANK_NEXTONMISS);
 		vgem_fence_signal(vgem, fence);
 
 		miss = 0;
 		igt_until_timeout(5) {
-			kmstest_get_vblank(i915, 0, DRM_VBLANK_NEXTONMISS);
+			igt_crtc_get_vblank(crtc, DRM_VBLANK_NEXTONMISS);
 			if (poll(&pfd, 1, 0))
 				break;
 			miss++;
@@ -1027,7 +1028,7 @@ static void flip_to_vgem(int i915, int vgem,
 static void test_flip(int i915, int vgem, unsigned hang)
 {
 	drmModeModeInfo *mode = NULL;
-	uint32_t fb_id[2], handle[2], crtc_id;
+	uint32_t fb_id[2], handle[2];
 	igt_display_t display;
 	igt_output_t *output;
 	struct vgem_bo bo[2];
@@ -1070,22 +1071,22 @@ static void test_flip(int i915, int vgem, unsigned hang)
 		igt_assert(fb_id[i]);
 	}
 
-	igt_require((crtc_id = set_fb_on_crtc(i915, 0, &bo[0], fb_id[0])));
+	igt_require(set_fb_on_crtc(crtc, &bo[0], fb_id[0]));
 
 	/* Bind both fb for use by flipping */
 	for (int i = 1; i >= 0; i--) {
 		struct drm_event_vblank vbl;
 
-		do_or_die(drmModePageFlip(i915, crtc_id, fb_id[i],
+		do_or_die(drmModePageFlip(i915, crtc->crtc_id, fb_id[i],
 					  DRM_MODE_PAGE_FLIP_EVENT, &fb_id[i]));
 		igt_assert_eq(read(i915, &vbl, sizeof(vbl)), sizeof(vbl));
 	}
 
 	/* Schedule a flip to wait upon the frontbuffer vgem being written */
-	flip_to_vgem(i915, vgem, &bo[0], fb_id[0], crtc_id, hang, "front");
+	flip_to_vgem(i915, vgem, &bo[0], fb_id[0], crtc, hang, "front");
 
 	/* Schedule a flip to wait upon the backbuffer vgem being written */
-	flip_to_vgem(i915, vgem, &bo[1], fb_id[1], crtc_id, hang, "back");
+	flip_to_vgem(i915, vgem, &bo[1], fb_id[1], crtc, hang, "back");
 
 	for (int i = 0; i < 2; i++) {
 		do_or_die(drmModeRmFB(i915, fb_id[i]));
