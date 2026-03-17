@@ -2517,6 +2517,7 @@ int igt_main()
 	};
 
 	int fd, svm_compute_loops = getenv_int("IGT_SVM_COMPUTE_LOOPS", 1);
+	uint16_t dev_id;
 
 	igt_fixture() {
 		struct xe_device *xe;
@@ -2527,6 +2528,7 @@ int igt_main()
 		xe = xe_device_get(fd);
 		va_bits = xe->va_bits;
 		open_sync_file();
+		dev_id = intel_get_drm_devid(fd);
 	}
 
 	for (const struct section *s = sections; s->name; s++) {
@@ -2727,6 +2729,9 @@ int igt_main()
 			     !xe_has_vram(fd)) {
 				igt_skip("Skipping compression-related PAT index\n");
 			}
+			if (IS_PONTEVECCHIO(dev_id) &&
+			    strstr(s->name, "madvise-pat-idx-uc-comp-"))
+				igt_skip("Skipping compression-related PAT index on PVC\n");
 			xe_for_each_engine(fd, hwe)
 				test_exec(fd, hwe, 1, 1, SZ_4M, 0, 0, NULL, NULL, s->flags, s->fn);
 		}
