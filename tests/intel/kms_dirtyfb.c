@@ -120,8 +120,8 @@ static bool check_support(data_t *data)
 			return false;
 		}
 		if (!psr_sink_support(data->drm_fd, data->debugfs_fd,
-				      PSR_MODE_1, NULL)) {
-			igt_info("Output doesn't support PSR\n");
+				      PSR_MODE_1, data->output)) {
+			igt_info("Output %s doesn't support PSR\n", igt_output_name(data->output));
 			return false;
 		}
 		return true;
@@ -150,7 +150,7 @@ static void enable_feature(data_t *data)
 		intel_fbc_enable(&data->display);
 		break;
 	case FEATURE_PSR:
-		psr_enable(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL);
+		psr_enable(data->drm_fd, data->debugfs_fd, PSR_MODE_1, data->output);
 		break;
 	case FEATURE_DRRS:
 		intel_drrs_enable(data->crtc);
@@ -173,7 +173,7 @@ static void check_feature_enabled(data_t *data)
 		break;
 	case FEATURE_PSR:
 		igt_require(!psr_disabled_check(data->debugfs_fd));
-		igt_assert_f(psr_wait_entry(data->debugfs_fd, PSR_MODE_1, NULL),
+		igt_assert_f(psr_wait_entry(data->debugfs_fd, PSR_MODE_1, data->output),
 			     "PSR still disabled\n");
 		break;
 	case FEATURE_DRRS:
@@ -217,8 +217,8 @@ static void disable_features(data_t *data)
 {
 	intel_fbc_disable(&data->display);
 
-	if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL))
-		psr_disable(data->drm_fd, data->debugfs_fd, NULL);
+	if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, data->output))
+		psr_disable(data->drm_fd, data->debugfs_fd, data->output);
 
 	intel_drrs_disable(data->crtc);
 }
