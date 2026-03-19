@@ -103,7 +103,6 @@ lib_sources = [
 	'igt_pm.c',
 	'igt_dummyload.c',
 	'igt_store.c',
-	'uwildmat/uwildmat.c',
 	'igt_kmod.c',
 	'igt_ktap.c',
 	'igt_panfrost.c',
@@ -132,6 +131,9 @@ lib_sources = [
 	'xe/xe_sriov_debugfs.c',
 	'xe/xe_sriov_provisioning.c',
 	'xe/xe_util.c',
+
+	# Vendored libraries:
+	'vendor/uwildmat/uwildmat.c',
 ]
 
 lib_deps = [
@@ -150,6 +152,8 @@ lib_deps = [
 	realtime,
 	zlib
 ]
+
+inc = [ inc, include_directories('vendor') ]
 
 if libdrm_nouveau.found()
 	lib_deps += libdrm_nouveau
