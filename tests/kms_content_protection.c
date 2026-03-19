@@ -127,6 +127,7 @@ struct data {
 #define CP_UNDESIRED				0
 #define CP_DESIRED				1
 #define CP_ENABLED				2
+#define MAX_HDCP_OUTPUTS			10
 
 /*
  * HDCP_CONTENT_TYPE_0 can be handled on both HDCP1.4 and HDCP2.2. Where as
@@ -707,32 +708,56 @@ static bool is_output_hdcp_test_exempt(igt_output_t *output)
 	return igt_is_panel_blocked(sink_name, hdcp_blocklist, ARRAY_SIZE(hdcp_blocklist));
 }
 
+static int get_hdcp_outputs(igt_display_t *display, int content_type,
+			    igt_output_t **hdcp_outputs)
+{
+	igt_output_t *output;
+	int count = 0;
+
+	for_each_connected_output(display, output) {
+		if (!output_hdcp_capable(output, content_type))
+			continue;
+
+		if (is_output_hdcp_test_exempt(output)) {
+			igt_info("Skipping HDCP test on %s, as the panel is blocklisted\n",
+				 output->name);
+			continue;
+		}
+
+
+		if (count < MAX_HDCP_OUTPUTS)
+			hdcp_outputs[count++] = output;
+	}
+
+	return count;
+}
+
 static void
 test_content_protection(enum igt_commit_style commit_style, int content_type)
 {
 	igt_display_t *display = &data.display;
 	igt_output_t *output;
+	igt_output_t *hdcp_outputs[MAX_HDCP_OUTPUTS];
 	igt_crtc_t *crtc;
+	int hdcp_panel_count;
+	int i;
 
 	if (data.cp_tests & CP_MEI_RELOAD)
 		igt_require_f(igt_kmod_is_loaded("mei_hdcp"),
 			      "mei_hdcp module is not loaded\n");
+
+	hdcp_panel_count = get_hdcp_outputs(display, content_type, hdcp_outputs);
+	igt_skip_on_f(hdcp_panel_count == 0, "No connected output with HDCP support found\n");
 
 	if (data.cp_tests & CP_UEVENT) {
 		data.uevent_monitor = igt_watch_uevents();
 		igt_flush_uevents(data.uevent_monitor);
 	}
 
-	for_each_connected_output(display, output) {
-		for_each_crtc(display, crtc) {
-			if (!output_hdcp_capable(output, content_type))
-				continue;
-			if (is_output_hdcp_test_exempt(output)) {
-				igt_info("Skipping HDCP test on %s, as the panel is blocklisted\n",
-					  output->name);
-				continue;
-			}
+	for (i = 0; i < hdcp_panel_count; i++) {
+		output = hdcp_outputs[i];
 
+		for_each_crtc(display, crtc) {
 			igt_display_reset(display);
 			igt_output_set_crtc(output,
 				            crtc);
