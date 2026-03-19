@@ -504,6 +504,44 @@ is_queue_reset_tests_enable(const struct amdgpu_gpu_info *gpu_info, uint32_t ver
 	return enable;
 }
 
+/**
+ * is_sub_test_queue_reset_enable - check whether a subtest should run on this ASIC
+ * @gpu_info: GPU information from amdgpu_query_gpu_info
+ * @it: dynamic_test entry whose exclude_filter[] is checked
+ *
+ * Returns true if the subtest should run, false if the current ASIC matches
+ * one of the exclude filters and the subtest must be skipped.
+ */
+static bool
+is_sub_test_queue_reset_enable(const struct amdgpu_gpu_info *gpu_info,
+		const struct dynamic_test *it)
+{
+	int i;
+	bool enable = true;
+	int chip_id;
+	char error_str[128];
+	bool is_dispatch;
+
+	for (i = 0; i < _MAX_NUM_ASIC_ID_EXCLUDE_FILTER; i++) {
+		if (gpu_info->family_id == it->exclude_filter[i].family_id) {
+			chip_id = gpu_info->chip_external_rev - gpu_info->chip_rev;
+			if (chip_id >= it->exclude_filter[i].chip_id_begin &&
+			    chip_id < it->exclude_filter[i].chip_id_end) {
+				enable = false;
+				is_dispatch_shader_test(it->test, error_str, &is_dispatch);
+				igt_info("PID %d SKIP subtest %s family_id 0x%x chip_id 0x%x range [0x%x, 0x%x) excluded\n",
+					 getpid(), error_str,
+					 gpu_info->family_id, chip_id,
+					 it->exclude_filter[i].chip_id_begin,
+					 it->exclude_filter[i].chip_id_end);
+				break;
+			}
+		}
+	}
+
+	return enable;
+}
+
 static int
 amdgpu_write_linear(amdgpu_device_handle device, amdgpu_context_handle context_handle,
 		const struct amdgpu_ip_block_version *ip_block,
@@ -1135,7 +1173,8 @@ int igt_main()
 	struct dynamic_test arr_err[] = {
 			{CMD_STREAM_EXEC_INVALID_PACKET_LENGTH, "CMD_STREAM_EXEC_INVALID_PACKET_LENGTH",
 				"Stressful-and-multiple-cs-of-bad and good length-operations-using-multiple-processes",
-				{}, {-ECANCELED, -ECANCELED, -ECANCELED }, true},
+				{ {FAMILY_AI, 0x32, 0xFF} },
+				{-ECANCELED, -ECANCELED, -ECANCELED }, true},
 			{CMD_STREAM_EXEC_INVALID_OPCODE, "CMD_STREAM_EXEC_INVALID_OPCODE",
 				"Stressful-and-multiple-cs-of-bad and good opcode-operations-using-multiple-processes",
 				{}, {-ECANCELED, -ECANCELED, -ECANCELED }, true },
@@ -1239,7 +1278,8 @@ int igt_main()
 			igt_subtest_with_dynamic_f("amdgpu-%s-%s", ip_tests[i] == AMD_IP_COMPUTE ? "COMPUTE":
 					ip_tests[i] == AMD_IP_GFX ? "GFX" : "SDMA", it->name) {
 				reset = AMDGPU_RESET_TYPE_PER_QUEUE;
-				if (arr_cap[ip_tests[i]] && is_reset_enable(ip_tests[i], reset, &pci) &&
+				if (arr_cap[ip_tests[i]] && is_sub_test_queue_reset_enable(&gpu_info, it) &&
+				    is_reset_enable(ip_tests[i], reset, &pci) &&
 						get_next_rings(&ring_id_good, &ring_id_bad, info[0].available_rings,
 						info[i].available_rings, ip_background != ip_tests[i], &ring_id_job_good, &ring_id_job_bad)) {
 					igt_dynamic_f("amdgpu-%s-ring-good-%d-bad-%d-%s", it->name, ring_id_job_good, ring_id_job_bad,
