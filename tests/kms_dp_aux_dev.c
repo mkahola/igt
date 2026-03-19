@@ -32,16 +32,16 @@
 
 #include "config.h"
 
+#include <dirent.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <dirent.h>
 
 #include "igt.h"
 #include "igt_kms.h"
 
 /**
- * SUBTEST:
+ * SUBTEST: basic
  * Description: Test that /dev/drm_dp_aux reads work
  */
 
@@ -144,21 +144,31 @@ static bool test(int drm_fd, uint32_t connector_id)
 	return false;
 }
 
-int igt_simple_main()
+int igt_main()
 {
 	int valid_connectors = 0;
-	drmModeRes *res;
+	drmModeRes *res = NULL;
 	int drm_fd;
 
-	drm_fd = drm_open_driver_master(DRIVER_ANY);
+	igt_fixture() {
+		drm_fd = drm_open_driver_master(DRIVER_ANY);
 
-	res = drmModeGetResources(drm_fd);
-	igt_require(res);
+		res = drmModeGetResources(drm_fd);
+		igt_require(res);
+	}
 
-	for (int i = 0; i < res->count_connectors; i++)
-		valid_connectors += test(drm_fd, res->connectors[i]);
-	igt_require(valid_connectors);
+	igt_describe("Basic test for reading /dev/drm_dp_aux");
+	igt_subtest("basic") {
+		for (int i = 0; i < res->count_connectors; i++)
+			valid_connectors += test(drm_fd, res->connectors[i]);
 
-	drmModeFreeResources(res);
-	drm_close_driver(drm_fd);
+		igt_require(valid_connectors);
+	}
+
+	igt_fixture() {
+		if (res)
+			drmModeFreeResources(res);
+
+		drm_close_driver(drm_fd);
+	}
 }
