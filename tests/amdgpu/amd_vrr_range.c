@@ -189,9 +189,9 @@ static void test_init(data_t *data)
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc) {
-		igt_output_t *output = &display->outputs[crtc->pipe];
+		igt_output_t *output = &display->outputs[crtc->crtc_index];
 
-		data->output[crtc->pipe] = output;
+		data->output[crtc->crtc_index] = output;
 	}
 
 	igt_display_reset(display);
