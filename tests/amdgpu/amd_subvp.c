@@ -64,11 +64,11 @@ static void test_init(struct data *data)
 	bool subvp_en = false;
 
 	for_each_crtc(display, crtc) {
-		data->crtc[crtc->pipe] = crtc;
-		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
-								    DRM_PLANE_TYPE_PRIMARY);
-		data->pipe_crc[crtc->pipe] = igt_crtc_crc_new(crtc,
-							      IGT_PIPE_CRC_SOURCE_AUTO);
+		data->crtc[crtc->crtc_index] = crtc;
+		data->primary[crtc->crtc_index] =
+			igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
+		data->pipe_crc[crtc->crtc_index] =
+			igt_crtc_crc_new(crtc, IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
 	for (i = 0,
@@ -107,7 +107,7 @@ static void test_fini(struct data *data)
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc) {
-		igt_pipe_crc_free(data->pipe_crc[crtc->pipe]);
+		igt_pipe_crc_free(data->pipe_crc[crtc->crtc_index]);
 	}
 
 	igt_display_reset(display);
@@ -127,7 +127,7 @@ static void test_subvp(struct data *data)
 
 	for_each_crtc(&data->display, crtc) {
 		/* Setup the output */
-		output = data->output[crtc->pipe];
+		output = data->output[crtc->crtc_index];
 		if (!output || !igt_output_is_connected(output))
 			continue;
 
@@ -140,7 +140,7 @@ static void test_subvp(struct data *data)
 
 		igt_output_set_crtc(output,
 				    crtc);
-		igt_plane_set_fb(data->primary[crtc->pipe], &rfb);
+		igt_plane_set_fb(data->primary[crtc->crtc_index], &rfb);
 		igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 	}
 
