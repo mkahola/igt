@@ -873,16 +873,16 @@ static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
 							     DRM_PLANE_TYPE_PRIMARY);
 		drmModeModeInfo *mode = NULL;
 
-		if (!(mask & (1 << crtc->pipe))) {
+		if (!(mask & (1 << crtc->crtc_index))) {
 			if (igt_crtc_is_prop_changed(crtc, IGT_CRTC_ACTIVE)) {
-				event_mask |= 1 << crtc->pipe;
+				event_mask |= 1 << crtc->crtc_index;
 				igt_plane_set_fb(plane, NULL);
 			}
 
 			continue;
 		}
 
-		event_mask |= 1 << crtc->pipe;
+		event_mask |= 1 << crtc->crtc_index;
 
 		for_each_valid_output_on_crtc(&data->display,
 					      crtc,
@@ -919,7 +919,7 @@ static void refresh_primaries(data_t  *data, int mask)
 	igt_plane_t *plane;
 
 	for_each_crtc(&data->display, crtc) {
-		if (!((1 << crtc->pipe) & mask))
+		if (!((1 << crtc->crtc_index) & mask))
 			continue;
 
 		for_each_plane_on_crtc(crtc,
@@ -977,8 +977,8 @@ retry:
 		j += 1;
 
 		if (is_intel_device(data->drm_fd))
-			data->pipe_crcs[crtc->pipe] = igt_crtc_crc_new(crtc,
-							      IGT_PIPE_CRC_SOURCE_AUTO);
+			data->pipe_crcs[crtc->crtc_index] =
+				igt_crtc_crc_new(crtc, IGT_PIPE_CRC_SOURCE_AUTO);
 
 		for_each_valid_output_on_crtc(&data->display,
 					      crtc,
@@ -1096,7 +1096,7 @@ retry:
 
 	if (is_intel_device(data->drm_fd)) {
 		for_each_crtc(&data->display, crtc)
-			igt_pipe_crc_free(data->pipe_crcs[crtc->pipe]);
+			igt_pipe_crc_free(data->pipe_crcs[crtc->crtc_index]);
 	}
 
 	igt_remove_fb(data->drm_fd, &data->fbs[0]);
@@ -1117,12 +1117,12 @@ static void run_modeset_transition(data_t *data, int requested_outputs, bool non
 					      output) {
 			int i;
 
-			for (i = crtc->pipe - 1; i >= 0; i--)
+			for (i = crtc->crtc_index - 1; i >= 0; i--)
 				if (outputs[i] == output)
 					break;
 
 			if (i < 0) {
-				outputs[crtc->pipe] = output;
+				outputs[crtc->crtc_index] = output;
 				num_outputs++;
 				break;
 			}
