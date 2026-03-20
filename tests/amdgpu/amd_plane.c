@@ -155,20 +155,17 @@ static void test_init(data_t *data)
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc) {
-		data->crtc[crtc->pipe] = crtc;
-		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
-								    DRM_PLANE_TYPE_PRIMARY);
-		data->overlay[crtc->pipe] = igt_crtc_get_plane_type_index(crtc,
-									  DRM_PLANE_TYPE_OVERLAY,
-									  0);
-		data->overlay2[crtc->pipe] = igt_crtc_get_plane_type_index(crtc,
-									   DRM_PLANE_TYPE_OVERLAY,
-									   1);
-		data->cursor[crtc->pipe] = igt_crtc_get_plane_type(crtc,
-								   DRM_PLANE_TYPE_CURSOR);
-		data->pipe_crc[crtc->pipe] =
-			igt_crtc_crc_new(crtc,
-					 IGT_PIPE_CRC_SOURCE_AUTO);
+		data->crtc[crtc->crtc_index] = crtc;
+		data->primary[crtc->crtc_index] =
+			igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
+		data->overlay[crtc->crtc_index] =
+			igt_crtc_get_plane_type_index(crtc, DRM_PLANE_TYPE_OVERLAY, 0);
+		data->overlay2[crtc->crtc_index] =
+			igt_crtc_get_plane_type_index(crtc, DRM_PLANE_TYPE_OVERLAY, 1);
+		data->cursor[crtc->crtc_index] =
+			igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_CURSOR);
+		data->pipe_crc[crtc->crtc_index] =
+			igt_crtc_crc_new(crtc, IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
 	for (i = 0, n = 0; i < display->n_outputs && n < max_pipes; ++i) {
@@ -199,7 +196,7 @@ static void test_fini(data_t *data)
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc) {
-		igt_pipe_crc_free(data->pipe_crc[crtc->pipe]);
+		igt_pipe_crc_free(data->pipe_crc[crtc->crtc_index]);
 	}
 
 	igt_display_reset(display);
