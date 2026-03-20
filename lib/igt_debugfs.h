@@ -34,7 +34,7 @@ char *igt_debugfs_path(int device, char *path, int pathlen);
 
 int igt_debugfs_dir(int device);
 int igt_debugfs_connector_dir(int device, char *conn_name, int mode);
-int igt_debugfs_crtc_dir(int device, int crtc_index, int mode);
+int igt_debugfs_crtc_dir(int device, int crtc_index);
 
 int igt_debugfs_open(int fd, const char *filename, int mode);
 bool igt_debugfs_is_dir(int drm_fd, const char *name, int gt_id);

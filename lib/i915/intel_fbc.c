@@ -36,7 +36,7 @@ bool intel_fbc_supported(igt_crtc_t *crtc)
 	char buf[FBC_STATUS_BUF_LEN];
 	int dir;
 
-	dir = igt_crtc_debugfs_dir(crtc, O_DIRECTORY);
+	dir = igt_crtc_debugfs_dir(crtc);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, "i915_fbc_status", buf, sizeof(buf));
 	close(dir);
@@ -53,7 +53,7 @@ static bool _intel_fbc_is_enabled(igt_crtc_t *crtc, int log_level, char *last_fb
 	bool print = true;
 	int dir;
 
-	dir = igt_crtc_debugfs_dir(crtc, O_DIRECTORY);
+	dir = igt_crtc_debugfs_dir(crtc);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, "i915_fbc_status", buf, sizeof(buf));
 	close(dir);

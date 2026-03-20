@@ -1310,7 +1310,7 @@ int __intel_get_pipe_from_crtc_index(int fd, int crtc_index)
 	int debugfs_fd, pipe, res = 0;
 	char pipe_char;
 
-	debugfs_fd = igt_debugfs_crtc_dir(fd, crtc_index, O_RDONLY);
+	debugfs_fd = igt_debugfs_crtc_dir(fd, crtc_index);
 
 	if (debugfs_fd >= 0) {
 		res = igt_debugfs_simple_read(debugfs_fd, "i915_pipe", buf, sizeof(buf));
@@ -5255,9 +5255,9 @@ igt_pipe_crc_t *igt_crtc_crc_new_nonblock(igt_crtc_t *crtc, const char *source)
 	return igt_pipe_crc_new_nonblock(crtc->display->drm_fd, crtc->crtc_index, source);
 }
 
-int igt_crtc_debugfs_dir(igt_crtc_t *crtc, int mode)
+int igt_crtc_debugfs_dir(igt_crtc_t *crtc)
 {
-	return igt_debugfs_crtc_dir(crtc->display->drm_fd, crtc->crtc_index, mode);
+	return igt_debugfs_crtc_dir(crtc->display->drm_fd, crtc->crtc_index);
 }
 
 const char *igt_crtc_name(igt_crtc_t *crtc)
@@ -6676,7 +6676,7 @@ unsigned int igt_get_crtc_current_bpc(igt_crtc_t *crtc)
 	int fd, res;
 	unsigned int current;
 
-	fd = igt_crtc_debugfs_dir(crtc, O_RDONLY);
+	fd = igt_crtc_debugfs_dir(crtc);
 	igt_assert(fd >= 0);
 
 	if (is_intel_device(drmfd))

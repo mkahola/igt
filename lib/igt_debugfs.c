@@ -288,7 +288,6 @@ int igt_debugfs_connector_dir(int device, char *conn_name, int mode)
  * igt_debugfs_crtc_dir:
  * @device: fd of the device
  * @crtc_index: CRTC index
- * @mode: mode bits as used by open()
  *
  * This opens the debugfs directory corresponding to the CRTC index on the
  * device for use with igt_sysfs_get() and related functions. This is just
@@ -297,12 +296,12 @@ int igt_debugfs_connector_dir(int device, char *conn_name, int mode)
  * Returns:
  * The directory fd, or -1 on failure.
  */
-int igt_debugfs_crtc_dir(int device, int crtc_index, int mode)
+int igt_debugfs_crtc_dir(int device, int crtc_index)
 {
 	char buf[128];
 
 	snprintf(buf, sizeof(buf), "crtc-%d", crtc_index);
-	return igt_debugfs_open(device, buf, mode);
+	return igt_debugfs_open(device, buf, O_DIRECTORY | O_RDONLY);
 }
 
 /**

@@ -360,7 +360,7 @@ static void setup_test(data_t *data)
 	igt_plane_set_fb(data->primary, &data->default_fb);
 	igt_display_commit(&data->display);
 
-	dir = igt_crtc_debugfs_dir(data->crtc, O_DIRECTORY);
+	dir = igt_crtc_debugfs_dir(data->crtc);
 	igt_require_fd(dir);
 	data->nv_crc_dir = openat(dir, "nv_crc", O_DIRECTORY);
 	close(dir);

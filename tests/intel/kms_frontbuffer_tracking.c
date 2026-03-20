@@ -1535,7 +1535,7 @@ static void __debugfs_read_crtc(const char *param, char *buf, int len)
 {
 	int dir;
 
-	dir = igt_crtc_debugfs_dir(prim_mode_params.crtc, O_DIRECTORY);
+	dir = igt_crtc_debugfs_dir(prim_mode_params.crtc);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, param, buf, len);
 	close(dir);

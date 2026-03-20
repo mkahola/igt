@@ -24,7 +24,7 @@ bool intel_is_drrs_supported(igt_crtc_t *crtc)
 	char buf[256];
 	int dir;
 
-	dir = igt_crtc_debugfs_dir(crtc, O_DIRECTORY);
+	dir = igt_crtc_debugfs_dir(crtc);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, "i915_drrs_status", buf, sizeof(buf));
 	close(dir);
@@ -63,7 +63,7 @@ static void drrs_set(int device, int crtc_index, unsigned int val)
 	igt_debug("Manually %sabling DRRS. %u\n", val ? "en" : "dis", val);
 	snprintf(buf, sizeof(buf), "%d", val);
 
-	dir = igt_debugfs_crtc_dir(device, crtc_index, O_DIRECTORY);
+	dir = igt_debugfs_crtc_dir(device, crtc_index);
 	igt_require_fd(dir);
 	ret = igt_sysfs_write(dir, "i915_drrs_ctl", buf, sizeof(buf) - 1);
 	close(dir);
@@ -125,7 +125,7 @@ bool intel_is_drrs_inactive(igt_crtc_t *crtc)
 	char buf[256];
 	int dir;
 
-	dir = igt_crtc_debugfs_dir(crtc, O_DIRECTORY);
+	dir = igt_crtc_debugfs_dir(crtc);
 	igt_require_fd(dir);
 	igt_debugfs_simple_read(dir, "i915_drrs_status", buf, sizeof(buf));
 	close(dir);
