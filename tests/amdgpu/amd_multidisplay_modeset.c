@@ -160,9 +160,9 @@ static void test_init(struct data_t *data)
 		 * tested
 		 */
 		output = igt_get_single_output_for_crtc(crtc);
-		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
-							   DRM_PLANE_TYPE_PRIMARY);
-		data->output[crtc->pipe] = output;
+		data->primary[crtc->crtc_index] =
+			igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
+		data->output[crtc->crtc_index] = output;
 
 		/* dp rx crc only available for eDP, SST DP, MST DP */
 		if ((output->config.connector->connector_type ==
@@ -173,24 +173,24 @@ static void test_init(struct data_t *data)
 			ret = dpcd_read_byte(data->fd, output->config.connector,
 				DPCD_TEST_SINK_MISC, &dpcd_246h);
 			if (ret && ((dpcd_246h & 0x20) != 0x0))
-				data->pipe_crc_dprx[crtc->pipe] = igt_crtc_crc_new(crtc,
-									  AMDGPU_PIPE_CRC_SOURCE_DPRX);
+				data->pipe_crc_dprx[crtc->crtc_index] =
+					igt_crtc_crc_new(crtc, AMDGPU_PIPE_CRC_SOURCE_DPRX);
 		}
 
-		data->pipe_crc_otg[crtc->pipe] = igt_crtc_crc_new(crtc,
-							 IGT_PIPE_CRC_SOURCE_AUTO);
+		data->pipe_crc_otg[crtc->crtc_index] =
+			igt_crtc_crc_new(crtc, IGT_PIPE_CRC_SOURCE_AUTO);
 		/* disable eDP PSR */
-		if (data->output[crtc->pipe]->config.connector->connector_type ==
-				DRM_MODE_CONNECTOR_eDP) {
+		if (data->output[crtc->crtc_index]->config.connector->connector_type ==
+		    DRM_MODE_CONNECTOR_eDP) {
 			kmstest_set_connector_dpms(display->drm_fd,
-				data->output[crtc->pipe]->config.connector,
+				data->output[crtc->crtc_index]->config.connector,
 				DRM_MODE_DPMS_OFF);
 
 			igt_amd_disallow_edp_enter_psr(data->fd,
-				data->output[crtc->pipe]->name, true);
+				data->output[crtc->crtc_index]->name, true);
 
 			kmstest_set_connector_dpms(display->drm_fd,
-				data->output[crtc->pipe]->config.connector,
+				data->output[crtc->crtc_index]->config.connector,
 				DRM_MODE_DPMS_ON);
 		}
 	}
@@ -205,9 +205,9 @@ static void test_fini(struct data_t *data)
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc) {
-		if (data->pipe_crc_dprx[crtc->pipe])
-			igt_pipe_crc_free(data->pipe_crc_dprx[crtc->pipe]);
-		igt_pipe_crc_free(data->pipe_crc_otg[crtc->pipe]);
+		if (data->pipe_crc_dprx[crtc->crtc_index])
+			igt_pipe_crc_free(data->pipe_crc_dprx[crtc->crtc_index]);
+		igt_pipe_crc_free(data->pipe_crc_otg[crtc->crtc_index]);
 	}
 
 	igt_display_reset(display);
