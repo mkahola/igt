@@ -54,17 +54,15 @@ static void test_init(data_t *data)
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc) {
-		data->crtc[crtc->pipe] = crtc;
-		data->primary[crtc->pipe] = igt_crtc_get_plane_type(crtc,
-								    DRM_PLANE_TYPE_PRIMARY);
-		data->overlay[crtc->pipe] = igt_crtc_get_plane_type_index(crtc,
-									  DRM_PLANE_TYPE_OVERLAY,
-									  0);
-		data->cursor[crtc->pipe] = igt_crtc_get_plane_type(crtc,
-								   DRM_PLANE_TYPE_CURSOR);
-		data->pipe_crc[crtc->pipe] =
-			igt_crtc_crc_new(crtc,
-					 IGT_PIPE_CRC_SOURCE_AUTO);
+		data->crtc[crtc->crtc_index] = crtc;
+		data->primary[crtc->crtc_index] =
+			igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY);
+		data->overlay[crtc->crtc_index] =
+			igt_crtc_get_plane_type_index(crtc, DRM_PLANE_TYPE_OVERLAY, 0);
+		data->cursor[crtc->crtc_index] =
+			igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_CURSOR);
+		data->pipe_crc[crtc->crtc_index] =
+			igt_crtc_crc_new(crtc, IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
 	for (i = 0, n = 0; i < display->n_outputs && n < max_pipes; ++i) {
@@ -95,7 +93,7 @@ static void test_fini(data_t *data)
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc) {
-		igt_pipe_crc_free(data->pipe_crc[crtc->pipe]);
+		igt_pipe_crc_free(data->pipe_crc[crtc->crtc_index]);
 	}
 
 	igt_display_reset(display);
@@ -154,29 +152,29 @@ static void test_hotplug_basic(data_t *data, bool suspend)
 
 	/* Setup all outputs */
 	for_each_crtc(&data->display, crtc) {
-		output = data->output[crtc->pipe];
+		output = data->output[crtc->crtc_index];
 		if (!output || !igt_output_is_connected(output))
 			continue;
 
-		igt_create_pattern_fb(data->fd, data->w[crtc->pipe],
-				      data->h[crtc->pipe],
+		igt_create_pattern_fb(data->fd, data->w[crtc->crtc_index],
+				      data->h[crtc->crtc_index],
 				      DRM_FORMAT_XRGB8888, 0,
-				      &ref_fb[crtc->pipe]);
+				      &ref_fb[crtc->crtc_index]);
 		igt_output_set_crtc(output,
 				    crtc);
-		igt_plane_set_fb(data->primary[crtc->pipe],
-				 &ref_fb[crtc->pipe]);
+		igt_plane_set_fb(data->primary[crtc->crtc_index],
+				 &ref_fb[crtc->crtc_index]);
 	}
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, 0);
 
 	/* Collect reference CRCs */
 	for_each_crtc(&data->display, crtc) {
-		output = data->output[crtc->pipe];
+		output = data->output[crtc->crtc_index];
 		if (!output || !igt_output_is_connected(output))
 			continue;
 
-		igt_pipe_crc_collect_crc(data->pipe_crc[crtc->pipe],
-					 &ref_crc[crtc->pipe]);
+		igt_pipe_crc_collect_crc(data->pipe_crc[crtc->crtc_index],
+					 &ref_crc[crtc->crtc_index]);
 	}
 
 	if (suspend) {
@@ -191,17 +189,17 @@ static void test_hotplug_basic(data_t *data, bool suspend)
 
 	/* Trigger hotplug and confirm reference image is the same. */
 	for_each_crtc(&data->display, crtc) {
-		output = data->output[crtc->pipe];
+		output = data->output[crtc->crtc_index];
 		if (!output || !igt_output_is_connected(output))
 			continue;
 
 		igt_amd_trigger_hotplug(data->fd, output->name);
 
-		igt_pipe_crc_collect_crc(data->pipe_crc[crtc->pipe],
-					 &new_crc[crtc->pipe]);
-		igt_assert_crc_equal(&ref_crc[crtc->pipe],
-				     &new_crc[crtc->pipe]);
-		igt_remove_fb(data->fd, &ref_fb[crtc->pipe]);
+		igt_pipe_crc_collect_crc(data->pipe_crc[crtc->crtc_index],
+					 &new_crc[crtc->crtc_index]);
+		igt_assert_crc_equal(&ref_crc[crtc->crtc_index],
+				     &new_crc[crtc->crtc_index]);
+		igt_remove_fb(data->fd, &ref_fb[crtc->crtc_index]);
 	}
 
 	test_fini(data);
