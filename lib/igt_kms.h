@@ -687,7 +687,7 @@ static inline bool igt_output_is_connected(igt_output_t *output)
 static inline bool igt_crtc_connector_valid(igt_crtc_t *crtc, igt_output_t *output)
 {
 	return igt_output_is_connected(output) &&
-		output->config.valid_crtc_index_mask & (1 << crtc->pipe);
+		output->config.valid_crtc_index_mask & (1 << crtc->crtc_index);
 }
 
 #define for_each_if(condition) if (!(condition)) {} else
