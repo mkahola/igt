@@ -3588,6 +3588,18 @@ bool output_is_internal_panel(igt_output_t *output)
 	}
 }
 
+static int output_crtc_pipe_compare(const void *_a, const void *_b)
+{
+	const igt_output_crtc_t *a = _a, *b = _b;
+
+	/* pipe order for valid output/crtc combos */
+	if (a->crtc && b->crtc)
+		return a->crtc->pipe - b->crtc->pipe;
+
+	/* valid combos before empty elements */
+	return !b->crtc - !a->crtc;
+}
+
 igt_output_crtc_t *__igt_output_crtc_populate(igt_display_t *display, igt_output_crtc_t *chosen_outputs)
 {
 	unsigned int full_crtc_index_mask = 0, assigned_crtc_index_mask = 0;
@@ -3634,17 +3646,17 @@ igt_output_crtc_t *__igt_output_crtc_populate(igt_display_t *display, igt_output
 					/* We found an unassigned CRTC, use it! */
 					found = true;
 					assigned_crtc_index_mask |= 1 << crtc->crtc_index;
-					chosen_outputs[crtc->pipe].output = output;
-					chosen_outputs[crtc->pipe].crtc = crtc;
-				} else if (!chosen_outputs[crtc->pipe].output ||
-					   output_is_internal_panel(chosen_outputs[crtc->pipe].output)) {
+					chosen_outputs[crtc->crtc_index].output = output;
+					chosen_outputs[crtc->crtc_index].crtc = crtc;
+				} else if (!chosen_outputs[crtc->crtc_index].output ||
+					   output_is_internal_panel(chosen_outputs[crtc->crtc_index].output)) {
 					/*
 					 * Overwrite internal panel if not
 					 * assigned, external outputs are faster
 					 * to do modesets
 					 */
-					chosen_outputs[crtc->pipe].output = output;
-					chosen_outputs[crtc->pipe].crtc = crtc;
+					chosen_outputs[crtc->crtc_index].output = output;
+					chosen_outputs[crtc->crtc_index].crtc = crtc;
 				}
 			}
 
@@ -3653,6 +3665,11 @@ igt_output_crtc_t *__igt_output_crtc_populate(igt_display_t *display, igt_output
 					 igt_output_name(output));
 		}
 	}
+
+	/* For Intel, sort the output/crtc combos in pipe order */
+	if (is_intel_device(display->drm_fd))
+		qsort(chosen_outputs, igt_display_n_crtcs(display),
+		      sizeof(*chosen_outputs), output_crtc_pipe_compare);
 
 	return chosen_outputs;
 }
