@@ -520,6 +520,11 @@ typedef struct {
 	uint64_t values[IGT_NUM_CONNECTOR_PROPS];
 } igt_output_t;
 
+typedef struct {
+	igt_output_t *output;
+	igt_crtc_t *crtc;
+} igt_output_crtc_t;
+
 struct igt_display {
 	int drm_fd;
 	int log_shift;
@@ -757,25 +762,25 @@ static inline bool igt_crtc_connector_valid(igt_crtc_t *crtc, igt_output_t *outp
 		     (output) + 1 : ((crtc)++, &(display)->outputs[0])) \
 		for_each_if ((crtc)->valid && igt_crtc_connector_valid((crtc), (output)))
 
-igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display,
-					   igt_output_t **chosen_outputs);
+igt_output_crtc_t *__igt_output_crtc_populate(igt_display_t *display,
+					      igt_output_crtc_t *chosen_outputs);
 
 /**
  * for_each_crtc_with_single_output:
  * @display: a pointer to an #igt_display_t structure
- * @crtc: The CRTC for which this @crtc / @output combination is valid.
- * @output: The output for which this @crtc / @output combination is valid.
+ * @_crtc: The CRTC for which this @_crtc / @_output combination is valid.
+ * @_output: The output for which this @_crtc / @_output combination is valid.
  *
  * This loop is called over all CRTCs, and will try to find a compatible output
  * for each CRTC. Unlike for_each_pipe_with_valid_output(), this function will
  * be called at most once for each pipe.
  */
-#define for_each_crtc_with_single_output(display, crtc, output) \
-	for (igt_output_t *__outputs[igt_display_n_crtcs(display)], \
-	     **__output = __igt_pipe_populate_outputs((display), __outputs); \
+#define for_each_crtc_with_single_output(display, _crtc, _output) \
+	for (igt_output_crtc_t __outputs[igt_display_n_crtcs(display)], \
+	     *__output = __igt_output_crtc_populate((display), __outputs); \
 		 __output < &__outputs[igt_display_n_crtcs(display)]; __output++) \
-		for_each_if (*__output && \
-			     ((crtc) = igt_crtc_for_pipe((display), (__output - __outputs)), (output) = *__output, 1))
+		for_each_if (__output->output && __output->crtc && \
+			     ((_output) = __output->output, (_crtc) = __output->crtc, 1))
 
 /**
  * for_each_valid_output_on_crtc:

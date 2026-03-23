@@ -3588,7 +3588,7 @@ bool output_is_internal_panel(igt_output_t *output)
 	}
 }
 
-igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t **chosen_outputs)
+igt_output_crtc_t *__igt_output_crtc_populate(igt_display_t *display, igt_output_crtc_t *chosen_outputs)
 {
 	unsigned int full_crtc_index_mask = 0, assigned_crtc_index_mask = 0;
 	igt_output_t *output;
@@ -3634,15 +3634,17 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
 					/* We found an unassigned CRTC, use it! */
 					found = true;
 					assigned_crtc_index_mask |= 1 << crtc->crtc_index;
-					chosen_outputs[crtc->pipe] = output;
-				} else if (!chosen_outputs[crtc->pipe] ||
-					   output_is_internal_panel(chosen_outputs[crtc->pipe])) {
+					chosen_outputs[crtc->pipe].output = output;
+					chosen_outputs[crtc->pipe].crtc = crtc;
+				} else if (!chosen_outputs[crtc->pipe].output ||
+					   output_is_internal_panel(chosen_outputs[crtc->pipe].output)) {
 					/*
 					 * Overwrite internal panel if not
 					 * assigned, external outputs are faster
 					 * to do modesets
 					 */
-					chosen_outputs[crtc->pipe] = output;
+					chosen_outputs[crtc->pipe].output = output;
+					chosen_outputs[crtc->pipe].crtc = crtc;
 				}
 			}
 
