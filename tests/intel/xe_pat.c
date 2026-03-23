@@ -34,6 +34,11 @@
 #define XE_COH_NONE          1
 #define XE_COH_AT_LEAST_1WAY 2
 
+/*
+ * PAT index 18: XA (eXclusive Access) + UC (Uncached).
+ */
+#define XE_PAT_IDX_XA_UC     18
+
 static bool do_slow_check;
 static char bus_addr[NAME_MAX];
 static struct pci_device *pci_dev;
@@ -81,6 +86,10 @@ static void userptr_coh_none(int fd)
 	igt_assert_eq(__xe_vm_bind(fd, vm, 0, 0, to_user_pointer(data), 0x40000,
 				   size, DRM_XE_VM_BIND_OP_MAP_USERPTR, 0, NULL, 0, 0,
 				   intel_get_pat_idx_wt(fd), 0),
+		      -EINVAL);
+	igt_assert_eq(__xe_vm_bind(fd, vm, 0, 0, to_user_pointer(data), 0x40000,
+				   size, DRM_XE_VM_BIND_OP_MAP_USERPTR, 0, NULL, 0, 0,
+				   XE_PAT_IDX_XA_UC, 0),
 		      -EINVAL);
 
 	munmap(data, size);
@@ -756,6 +765,54 @@ static void pat_index_dw(struct xe_pat_param *p)
 }
 
 /**
+ * SUBTEST: l2-flush-opt-svm-pat-restrict
+ * Test category: negative test
+ * Description: Validate that on L2 flush optimized platforms, SVM
+ *		(CPU_ADDR_MIRROR) mappings only accept pat_index 19
+ *		(XA+UC+1WAY) and reject all other pat indices with -EINVAL.
+ */
+static void l2_flush_opt_svm_pat_restrict(int fd)
+{
+	struct drm_xe_query_config *config = xe_config(fd);
+	uint32_t vm;
+	void *buffer;
+	size_t alloc_size = xe_get_default_alignment(fd);
+	struct xe_device *xe_dev = xe_device_get(fd);
+	uint64_t svm_size;
+	size_t size = xe_get_default_alignment(fd);
+
+	svm_size = 1ull << xe_dev->va_bits;
+	vm = xe_vm_create(fd, DRM_XE_VM_CREATE_FLAG_LR_MODE |
+			  DRM_XE_VM_CREATE_FLAG_FAULT_MODE, 0);
+	xe_vm_bind_lr_sync(fd, vm, 0, 0, 0, svm_size,
+			   DRM_XE_VM_BIND_FLAG_CPU_ADDR_MIRROR);
+	buffer = aligned_alloc(alloc_size, SZ_2M);
+
+	igt_require(config->info[DRM_XE_QUERY_CONFIG_FLAGS] &
+		    DRM_XE_QUERY_CONFIG_FLAG_HAS_CPU_ADDR_MIRROR);
+
+	igt_assert_eq(__xe_vm_madvise(fd, vm, to_user_pointer(buffer), size,
+					0, DRM_XE_MEM_RANGE_ATTR_PAT,
+					intel_get_pat_idx_wb(fd), 0, 0), 0);
+
+	igt_assert_eq(__xe_vm_madvise(fd, vm, to_user_pointer(buffer), size,
+					0, DRM_XE_MEM_RANGE_ATTR_PAT,
+					intel_get_pat_idx_uc(fd), 0, 0), -EINVAL);
+
+	igt_assert_eq(__xe_vm_madvise(fd, vm, to_user_pointer(buffer), size,
+					0, DRM_XE_MEM_RANGE_ATTR_PAT,
+					intel_get_pat_idx_wt(fd), 0, 0), -EINVAL);
+
+	igt_assert_eq(__xe_vm_madvise(fd, vm, to_user_pointer(buffer), size,
+					0, DRM_XE_MEM_RANGE_ATTR_PAT,
+					XE_PAT_IDX_XA_UC, 0, 0), -EINVAL);
+
+	free(buffer);
+	xe_vm_unbind_lr_sync(fd, vm, 0, 0, svm_size);
+	xe_vm_destroy(fd, vm);
+}
+
+/**
  * SUBTEST: prime-self-import-coh
  * Test category: functionality test
  * Description: Check prime import from same device.
@@ -889,6 +946,11 @@ static void prime_external_import_coh(void)
 				   intel_get_pat_idx_wb(fd2), 0),
 		      0);
 	xe_vm_unbind_sync(fd2, vm, 0, 0x40000, size);
+
+	igt_assert_eq(__xe_vm_bind(fd2, vm, 0, handle_import, 0, 0x40000,
+				   size, DRM_XE_VM_BIND_OP_MAP, 0, NULL, 0, 0,
+				   XE_PAT_IDX_XA_UC, 0),
+		      -EINVAL);
 
 	xe_vm_destroy(fd2, vm);
 
@@ -1769,6 +1831,11 @@ int igt_main_args("V", NULL, help_str, opt_handler, NULL)
 			close(configfs_device_fd);
 			close(configfs_fd);
 		}
+	}
+
+	igt_subtest("l2-flush-opt-svm-pat-restrict") {
+		igt_require(intel_graphics_ver(dev_id) == IP_VER(35, 10));
+		l2_flush_opt_svm_pat_restrict(fd);
 	}
 
 	igt_fixture()
