@@ -3665,12 +3665,15 @@ igt_output_t **__igt_pipe_populate_outputs(igt_display_t *display, igt_output_t 
  */
 igt_output_t *igt_get_single_output_for_crtc(igt_crtc_t *crtc)
 {
-	igt_display_t *display = crtc->display;
-	igt_output_t *chosen_outputs[igt_display_n_crtcs(display)];
+	igt_output_t *output;
+	igt_crtc_t *iter;
 
-	__igt_pipe_populate_outputs(display, chosen_outputs);
+	for_each_crtc_with_single_output(crtc->display, iter, output) {
+		if (iter == crtc)
+			return output;
+	}
 
-	return chosen_outputs[crtc->pipe];
+	return NULL;
 }
 
 static igt_output_t *igt_crtc_get_output(igt_crtc_t *crtc)
