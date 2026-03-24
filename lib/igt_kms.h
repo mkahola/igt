@@ -575,15 +575,9 @@ int igt_display_n_crtcs(igt_display_t *display);
 
 const char *igt_crtc_name(igt_crtc_t *crtc);
 
-static inline igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pipe)
-{
-	if (pipe == PIPE_NONE)
-		return NULL;
-
-	return &display->crtcs[pipe];
-}
 igt_crtc_t *igt_crtc_for_crtc_id(igt_display_t *display, uint32_t crtc_id);
 igt_crtc_t *igt_crtc_for_crtc_index(igt_display_t *display, int crtc_index);
+igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pipe);
 igt_crtc_t *igt_first_crtc(igt_display_t *display);
 igt_crtc_t *igt_first_crtc_with_single_output(igt_display_t *display, igt_output_t **ret_output);
 igt_crtc_t *igt_next_crtc(igt_display_t *display, igt_crtc_t *crtc);

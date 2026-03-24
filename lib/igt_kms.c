@@ -8065,6 +8065,14 @@ igt_crtc_t *igt_crtc_for_crtc_index(igt_display_t *display, int crtc_index)
 	return NULL;
 }
 
+igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pipe)
+{
+	if (pipe == PIPE_NONE)
+		return NULL;
+
+	return &display->crtcs[pipe];
+}
+
 /*
  * igt_first_crtc:
  * @display: pointer to igt_display_t
