@@ -216,7 +216,7 @@ static bool output_mode_supported(igt_output_t *output, const drmModeModeInfo *m
 	return false;
 }
 
-static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo *mode, bool physical) {
+static void run_test_linear_tiling(data_t *data, int n_crtcs, const drmModeModeInfo *mode, bool physical) {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
 	struct igt_fb buffer[IGT_MAX_PIPES];
@@ -230,16 +230,16 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 	 * not give the numver of valid crtcs and always return IGT_MAX_PIPES */
 	for_each_crtc(display, crtc) num_pipes++;
 
-	igt_skip_on_f(pipe >= num_pipes,
-                      "ASIC does not have %d pipes\n", pipe + 1);
+	igt_skip_on_f(n_crtcs > num_pipes,
+                      "ASIC does not have %d pipes\n", n_crtcs);
 
 	test_init(data, physical);
 
-	igt_skip_on_f(physical && pipe >= data->connected_outputs,
-		      "Only %d connected need %d connected\n", data->connected_outputs, pipe + 1);
+	igt_skip_on_f(physical && n_crtcs > data->connected_outputs,
+		      "Only %d connected need %d connected\n", data->connected_outputs, n_crtcs);
 
 	/* create buffers */
-	for (i = 0; i <= pipe; i++) {
+	for (i = 0; i < n_crtcs; i++) {
 		crtc = igt_crtc_for_pipe(display, i);
 
 		output = physical ? data->connected_output[i] : data->output[i];
@@ -272,7 +272,7 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 
 	igt_display_commit_atomic(display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
-	for (i = 0; i <= pipe; i++) {
+	for (i = 0; i < n_crtcs; i++) {
 		output = physical ? data->connected_output[i] : data->output[i];
 		if (!output || !output_mode_supported(output, mode)) {
 			continue;
@@ -283,7 +283,7 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 			     "CRC is zero\n");
 	}
 
-	for (i = pipe; i >= 0; i--) {
+	for (i = n_crtcs - 1; i >= 0; i--) {
 		output = physical ? data->connected_output[i] : data->output[i];
 		if (!output || !output_mode_supported(output, mode))
 			continue;
@@ -297,6 +297,7 @@ static void run_test_linear_tiling(data_t *data, int pipe, const drmModeModeInfo
 int igt_main()
 {
 	data_t data;
+	int n_crtcs;
 	int i = 0, j = 0;
 
 	memset(&data, 0, sizeof(data));
@@ -316,16 +317,20 @@ int igt_main()
 	/* We're not using for_each_pipe_static because we need the
 	 * _amount_ of pipes */
 	for (i = 0; i < IGT_MAX_PIPES; i++) {
+		n_crtcs = i + 1;
+
 		for (j = 0; j < ARRAY_SIZE(test_mode); j++) {
-			igt_subtest_f("linear-tiling-%d-displays-%s", i+1, test_mode[j].name)
-				run_test_linear_tiling(&data, i, &test_mode[j], false);
+			igt_subtest_f("linear-tiling-%d-displays-%s", n_crtcs, test_mode[j].name)
+				run_test_linear_tiling(&data, n_crtcs, &test_mode[j], false);
 		}
 	}
 
         for (i = 0; i < IGT_MAX_PIPES; i++) {
+		n_crtcs = i + 1;
+
                 for (j = 0; j < ARRAY_SIZE(test_mode); j++) {
-                        igt_subtest_f("connected-linear-tiling-%d-displays-%s", i+1, test_mode[j].name)
-				run_test_linear_tiling(&data, i, &test_mode[j], true);
+                        igt_subtest_f("connected-linear-tiling-%d-displays-%s", n_crtcs, test_mode[j].name)
+				run_test_linear_tiling(&data, n_crtcs, &test_mode[j], true);
                 }
         }
 
