@@ -28,6 +28,8 @@ struct {
  * Feature: core
  * Test category: uapi
  *
+ * SUBTEST: check-gt-reg-sr
+ * Description: Check the reg_sr list associated with GTs for missing reg values
  */
 
 IGT_TEST_DESCRIPTION("Validate Xe debugfs devnodes and their contents");
@@ -365,6 +367,50 @@ static void test_info_read(struct xe_device *xe_dev)
 
 }
 
+/*
+ * A small number of reg_sr programming mismatches are expected and not
+ * indicative of hardware/software problems.
+ */
+static const unsigned long reg_sr_exceptions[] = {
+	/* GUC_INTR_CHICKEN_GUC_REG: GuC takes ownership after initial programming */
+	0xC50C,
+};
+
+static void check_gt_reg_sr(int fd, int gt)
+{
+	char buf[1024];
+	int debugfs_fd;
+	FILE *file;
+	int problems = 0;
+
+	debugfs_fd = igt_debugfs_gt_open(fd, gt, "register-save-restore-check",
+					 O_RDONLY);
+	igt_require(debugfs_fd);
+	file = fdopen(debugfs_fd, "r");
+	while (fgets(buf, sizeof(buf), file) != NULL) {
+		unsigned long offset = strtoul(buf, NULL, 16);
+		bool ok = false;
+
+		for (int ex = 0; ex < ARRAY_SIZE(reg_sr_exceptions); ex++) {
+			if (offset == reg_sr_exceptions[ex]) {
+				igt_info("Mismatch on %#lx is not a problem\n", offset);
+				ok = true;
+				break;
+			}
+		}
+
+		if (!ok) {
+			igt_warn("Mismatch on %#lx, Driver reports: %s", offset, buf);
+			problems++;
+		}
+	}
+
+	fclose(file);
+	close(debugfs_fd);
+
+	igt_assert_eq(problems, 0);
+}
+
 const char *help_str =
 	"  --warn-not-hit|--w\tWarn about devfs nodes that have no tests";
 
@@ -390,7 +436,7 @@ int igt_main_args("", long_options, help_str, opt_handler, NULL)
 {
 	struct xe_device *xe_dev;
 	unsigned int t;
-	int fd = -1;
+	int fd = -1, gt;
 
 	igt_fixture() {
 		fd = drm_open_driver_master(DRIVER_XE);
@@ -412,6 +458,12 @@ int igt_main_args("", long_options, help_str, opt_handler, NULL)
 	igt_describe("Check info debugfs devnode contents.");
 	igt_subtest("info-read")
 		test_info_read(xe_dev);
+
+	igt_subtest_with_dynamic("check-gt-reg-sr")
+		xe_for_each_gt(fd, gt)
+			igt_dynamic_f("gt%d", gt)
+				check_gt_reg_sr(fd, gt);
+
 	igt_fixture() {
 		drm_close_driver(fd);
 	}
