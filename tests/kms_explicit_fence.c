@@ -54,7 +54,7 @@ typedef struct {
 	int drm_fd;
 	igt_display_t display;
 	igt_output_t *output;
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 	igt_plane_t *primary;
 	igt_plane_t *overlay1;
 	igt_plane_t *overlay2;
@@ -91,7 +91,7 @@ static void setup_output(data_t *data)
 								       DRM_PLANE_TYPE_OVERLAY,
 								       1);
 			data->output = output;
-			data->pipe = crtc->pipe;
+			data->crtc = crtc;
 			data->mode = igt_output_get_mode(output);
 			data->width = data->mode->hdisplay;
 			data->height = data->mode->vdisplay;
@@ -141,7 +141,7 @@ static void create_fbs(data_t *data)
 static void setup_initial_modeset(data_t *data)
 {
 	/* Initial modeset to establish baseline (no fences) */
-	igt_output_set_crtc(data->output, igt_crtc_for_pipe(&data->display, data->pipe));
+	igt_output_set_crtc(data->output, data->crtc);
 	igt_plane_set_fb(data->primary, &data->primary_fb);
 	igt_plane_set_fb(data->overlay1, &data->overlay1_fb);
 	igt_plane_set_position(data->overlay1, OVERLAY1_POS_X, OVERLAY1_POS_Y);
@@ -250,7 +250,7 @@ static void multiplane_atomic_fence_wait(data_t *data)
 				data->overlay1_fb.width, OVERLAY1_POS_Y);
 
 	/* Request OUT_FENCE to track when display update completes */
-	igt_crtc_request_out_fence(igt_crtc_for_pipe(&data->display, data->pipe));
+	igt_crtc_request_out_fence(data->crtc);
 
 	/*
 	 * The atomic commit should succeed immediately (NONBLOCK mode),
@@ -268,7 +268,7 @@ static void multiplane_atomic_fence_wait(data_t *data)
 	igt_assert_eq(ret, 0);
 
 	/* Get the out fence to monitor completion */
-	out_fence = igt_crtc_for_pipe(&data->display, data->pipe)->out_fence_fd;
+	out_fence = data->crtc->out_fence_fd;
 	igt_assert(out_fence >= 0);
 
 	/* Verify overlay2 fence (last one) is still unsignaled */
@@ -324,7 +324,7 @@ static void multiplane_atomic_fence_wait(data_t *data)
 		igt_plane_set_fence_fd(planes[i], -1);
 	}
 	close(out_fence);
-	igt_crtc_for_pipe(&data->display, data->pipe)->out_fence_fd = -1;
+	data->crtc->out_fence_fd = -1;
 }
 
 static void reset_display_state(data_t *data)
@@ -349,7 +349,7 @@ int igt_main()
 		setup_output(&data);
 		create_fbs(&data);
 
-		data.pipe_crc = igt_pipe_crc_new(data.drm_fd, data.pipe,
+		data.pipe_crc = igt_pipe_crc_new(data.drm_fd, data.crtc->crtc_index,
 						 IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
