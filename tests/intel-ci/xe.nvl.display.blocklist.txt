@@ -62,9 +62,9 @@ igt@kms_scaling_modes@scaling-mode-none
 ##############################################################################
 igt@kms_ccs@.*-dg2-.*
 igt@kms_ccs@.*-mtl-.*
-igt@kms_flip_scaled_crc@.*dg2rcccs.*
 igt@kms_ccs@.*4-tiled-bmg-ccs
-igt@kms_plane@pixel-format.*(mtl|dg2).*
+igt@kms_flip_scaled_crc@.*dg2rcccs.*
+igt@kms_plane@pixel-format.*(mtl|dg2|bmg).*
 ##############################################################################
 # Valid skip: Valid for display ver < 13
 ##############################################################################
