@@ -9,7 +9,9 @@
  * Description: Test explicit fencing with multiple planes and mixed fence states
  * Driver requirement: i915, xe
  * Mega feature: General Display Features
- *
+ */
+
+/**
  * This test validates correct handling of explicit fences when multiple planes
  * are updated in a single atomic commit with different fence states. This is
  * critical for catching fence synchronization bugs where the driver might:
