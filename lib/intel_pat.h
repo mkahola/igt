@@ -25,7 +25,7 @@ struct intel_pat_cache {
 	uint8_t uc_comp; /* UC + COH_NONE + COMPRESSION, XE2 and later*/
 	uint8_t max_index;
 	struct xe_pat_entry entries[XE_PAT_MAX_ENTRIES];
-	uint32_t pat_mode;
+	uint32_t pta_mode;
 	uint32_t pat_ats;
 };
 

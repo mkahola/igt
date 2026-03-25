@@ -64,10 +64,10 @@ int32_t xe_get_pat_sw_config(int drm_fd, struct intel_pat_cache *xe_pat_cache)
 			} else {
 				igt_warn("Failed to parse PAT entry line: %s\n", line);
 			}
-		} else if (strncmp(line, "PAT_MODE", 8) == 0) {
+		} else if (strncmp(line, "PTA_MODE", 8) == 0) {
 			p = strstr(line, "(");
 			if (p && sscanf(p, "(%x", &value) == 1)
-				xe_pat_cache->pat_mode = value;
+				xe_pat_cache->pta_mode = value;
 		} else if (strncmp(line, "PAT_ATS", 7) == 0) {
 			p = strstr(line, "(");
 			if (p && sscanf(p, "(%x", &value) == 1)
