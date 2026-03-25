@@ -599,9 +599,10 @@ static void test_timestamp(data_t *data)
 	/* TODO: Make changes to do as many flips as possbile between two vblanks */
 
 	igt_assert_f(seq1 == seq + 1,
-		     "Vblank sequence is expected to be incremented by one(%d != (%d + 1)\n", seq1, seq);
+		     "Vblank sequence is expected to be incremented by one(%u != (%u + 1)\n",
+		     seq1, seq);
 
-	igt_info("vbl1_timestamp = %ldus\nflip_timestamp = %ldus\nvbl2_timestamp = %ldus\n",
+	igt_info("vbl1_timestamp = %lu us\nflip_timestamp = %lu us\nvbl2_timestamp = %lu us\n",
 		 vbl_time, data->flip_timestamp_us, vbl_time1);
 
 	igt_assert_f(vbl_time <= data->flip_timestamp_us && vbl_time1 > data->flip_timestamp_us,
