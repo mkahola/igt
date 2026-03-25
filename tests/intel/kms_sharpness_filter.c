@@ -438,7 +438,8 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 
 			data->output = output;
 			data->crtc = crtc;
-			data->mode = igt_output_get_mode(data->output);
+
+			igt_output_set_crtc(data->output, data->crtc);
 
 			/*
 			 * FIXME: Joiner + CASF currently unsupported.
@@ -447,7 +448,13 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 			 */
 			if (is_joiner_mode(data->drm_fd, data->output)) {
 				data->mode = igt_get_non_joiner_mode(data->drm_fd, data->output);
-				igt_info("Executing on mode %dx%d@%d\n",
+				if (!data->mode) {
+					igt_info("No non-joiner mode found on output %s\n",
+						 igt_output_name(data->output));
+					continue;
+				}
+
+				igt_info("Executing on non-joiner mode %dx%d@%d\n",
 					 data->mode->hdisplay,
 					 data->mode->vdisplay,
 					 data->mode->vrefresh);
@@ -455,14 +462,13 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 				data->mode = igt_output_get_mode(data->output);
 			}
 
+			igt_output_override_mode(data->output, data->mode);
+
 			if (!has_sharpness_filter(data->crtc)) {
 				igt_info("%s: Doesn't support IGT_CRTC_SHARPNESS_STRENGTH.\n",
 				igt_crtc_name(data->crtc));
 				continue;
 			}
-
-			igt_output_set_crtc(data->output,
-					    data->crtc);
 
 			if (!intel_pipe_output_combo_valid(display)) {
 				igt_output_set_crtc(data->output, NULL);
