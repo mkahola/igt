@@ -327,6 +327,8 @@ static void multiple_display_test(struct data_t *data, enum sub_test test_mode)
 
 			crtc = igt_crtc_for_pipe(display, j);
 
+			igt_assert_f(crtc->valid, "There is no pipe %s\n", kmstest_pipe_name(j));
+
 			igt_create_pattern_fb(data->fd, kmode->hdisplay,
 					kmode->vdisplay, DRM_FORMAT_XRGB8888,
 					0, (buf + j));
