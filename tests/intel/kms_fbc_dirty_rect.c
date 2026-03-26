@@ -401,6 +401,22 @@ static void cleanup(data_t *data)
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 }
 
+static bool check_fbc_supported(data_t *data)
+{
+	if (!intel_fbc_supported(data->crtc)) {
+		igt_info("FBC not supported by the chipset on pipe\n");
+		return false;
+	}
+
+	if (!intel_fbc_plane_size_supported(&data->display, data->mode->hdisplay,
+					    data->mode->vdisplay)) {
+		igt_info("Plane size not supported as per FBC size restrictions\n");
+		return false;
+	}
+
+	return true;
+}
+
 static bool prepare_test(data_t *data)
 {
 	igt_display_reset(&data->display);
@@ -411,8 +427,7 @@ static bool prepare_test(data_t *data)
 	data->pipe_crc = igt_crtc_crc_new(data->crtc,
 					  IGT_PIPE_CRC_SOURCE_AUTO);
 
-	igt_require_f(intel_fbc_supported(data->crtc),
-		      "FBC not supported by the chipset on pipe\n");
+	igt_require_f(check_fbc_supported(data), "FBC is not supported with this configuration\n");
 
 	if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL) ||
 	    psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_2, NULL) ||
