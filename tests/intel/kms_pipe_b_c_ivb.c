@@ -65,6 +65,8 @@ IGT_TEST_DESCRIPTION(
 typedef struct {
 	int drm_fd;
 	igt_display_t display;
+	igt_crtc_t *crtc_b;
+	igt_crtc_t *crtc_c;
 } data_t;
 
 drmModeModeInfo mode_3_lanes = {
@@ -173,8 +175,8 @@ find_outputs(data_t *data, igt_output_t **output1, igt_output_t **output2)
 static void
 test_dpms(data_t *data)
 {
-	igt_crtc_t *crtc_b = igt_crtc_for_pipe(&data->display, PIPE_B);
-	igt_crtc_t *crtc_c = igt_crtc_for_pipe(&data->display, PIPE_C);
+	igt_crtc_t *crtc_b = data->crtc_b;
+	igt_crtc_t *crtc_c = data->crtc_c;
 	igt_output_t *output1, *output2;
 	int ret;
 
@@ -202,8 +204,8 @@ test_dpms(data_t *data)
 static void
 test_lane_reduction(data_t *data)
 {
-	igt_crtc_t *crtc_b = igt_crtc_for_pipe(&data->display, PIPE_B);
-	igt_crtc_t *crtc_c = igt_crtc_for_pipe(&data->display, PIPE_C);
+	igt_crtc_t *crtc_b = data->crtc_b;
+	igt_crtc_t *crtc_c = data->crtc_c;
 	igt_output_t *output1, *output2;
 	int ret;
 
@@ -235,8 +237,8 @@ test_lane_reduction(data_t *data)
 static void
 test_disable_pipe_B(data_t *data)
 {
-	igt_crtc_t *crtc_b = igt_crtc_for_pipe(&data->display, PIPE_B);
-	igt_crtc_t *crtc_c = igt_crtc_for_pipe(&data->display, PIPE_C);
+	igt_crtc_t *crtc_b = data->crtc_b;
+	igt_crtc_t *crtc_c = data->crtc_c;
 	igt_output_t *output1, *output2;
 	int ret;
 
@@ -271,8 +273,8 @@ test_disable_pipe_B(data_t *data)
 static void
 test_from_C_to_B_with_3_lanes(data_t *data)
 {
-	igt_crtc_t *crtc_b = igt_crtc_for_pipe(&data->display, PIPE_B);
-	igt_crtc_t *crtc_c = igt_crtc_for_pipe(&data->display, PIPE_C);
+	igt_crtc_t *crtc_b = data->crtc_b;
+	igt_crtc_t *crtc_c = data->crtc_c;
 	igt_output_t *output1, *output2;
 	int ret;
 
@@ -302,8 +304,8 @@ test_from_C_to_B_with_3_lanes(data_t *data)
 static void
 test_fail_enable_pipe_C_while_B_has_3_lanes(data_t *data)
 {
-	igt_crtc_t *crtc_b = igt_crtc_for_pipe(&data->display, PIPE_B);
-	igt_crtc_t *crtc_c = igt_crtc_for_pipe(&data->display, PIPE_C);
+	igt_crtc_t *crtc_b = data->crtc_b;
+	igt_crtc_t *crtc_c = data->crtc_c;
 	igt_output_t *output1, *output2;
 	int ret;
 
@@ -339,6 +341,12 @@ int igt_main()
 		kmstest_set_vt_graphics_mode();
 		igt_display_require(&data.display, data.drm_fd);
 		igt_display_require_output(&data.display);
+
+		data.crtc_b = igt_crtc_for_pipe(&data.display, PIPE_B);
+		igt_skip_on(!data.crtc_b->valid);
+
+		data.crtc_c = igt_crtc_for_pipe(&data.display, PIPE_C);
+		igt_skip_on(!data.crtc_c->valid);
 	}
 
 	igt_describe("Tests pipe-B and pipe-C interactions in IVB by enabling pipe-B with mode "
