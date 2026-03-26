@@ -16,7 +16,6 @@ if libdrm_amdgpu.found()
 			  'amd_cursor_overlay',
 			  'amd_deadlock',
                           'amd_dmabuf_unload',
-                          'amd_kfd_dmabuf_unload',
 			  'amd_dp_dsc',
 			  'amd_freesync_video_mode',
 			  'amd_fuzzing',
