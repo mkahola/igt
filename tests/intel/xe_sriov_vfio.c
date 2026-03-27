@@ -2,6 +2,9 @@
 /*
  * Copyright(c) 2026 Intel Corporation. All rights reserved.
  */
+#include <linux/vfio.h>
+#include <limits.h>
+#include <sys/ioctl.h>
 
 #include "drmtest.h"
 #include "igt_core.h"
@@ -22,6 +25,9 @@
  *
  * SUBTEST: bind-unbind-vfs
  * Description: Enable VFs and bind/unbind each one to xe-vfio-pci via driver_override.
+ *
+ * SUBTEST: open-basic
+ * Description: Bind VF to xe-vfio-pci and perform minimal VFIO group open and status ioctl.
  */
 
 IGT_TEST_DESCRIPTION("Xe SR-IOV VFIO tests (xe-vfio-pci)");
@@ -107,6 +113,109 @@ static void bind_unbind_vfs(unsigned int num_vfs)
 	}
 
 	igt_sriov_disable_vfs(pf_fd);
+}
+
+static bool vf_iommu_group_id_alloc(const char *pci_slot, char **out_group_id)
+{
+	char path[PATH_MAX];
+	char link[PATH_MAX];
+	ssize_t len;
+	const char *base;
+
+	igt_assert(out_group_id);
+	*out_group_id = NULL;
+
+	snprintf(path, sizeof(path), "/sys/bus/pci/devices/%s/iommu_group", pci_slot);
+	len = readlink(path, link, sizeof(link) - 1);
+	if (len < 0)
+		return false;
+
+	link[len] = '\0';
+	base = strrchr(link, '/');
+	if (!base || !base[1])
+		return false;
+
+	*out_group_id = strdup(base + 1);
+	igt_assert(*out_group_id);
+
+	return true;
+}
+
+struct vfio_dev_fds {
+	int container_fd;
+	int group_fd;
+	int device_fd;
+	char *group_id;
+};
+
+static void vfio_open_group(const char *pci_slot, struct vfio_dev_fds *out,
+			    struct vfio_group_status *out_group_status)
+{
+	char group_path[PATH_MAX];
+	int ret;
+
+	igt_assert(out);
+	*out = (struct vfio_dev_fds){
+		.container_fd = -1,
+		.group_fd = -1,
+		.device_fd = -1,
+		.group_id = NULL,
+	};
+
+	if (out_group_status)
+		*out_group_status = (struct vfio_group_status){
+					.argsz = sizeof(*out_group_status)
+				    };
+
+	if (!vf_iommu_group_id_alloc(pci_slot, &out->group_id))
+		igt_skip("No IOMMU group (IOMMU disabled or not exposed)\n");
+
+	out->container_fd = open("/dev/vfio/vfio", O_RDWR | O_CLOEXEC);
+	if (out->container_fd < 0)
+		igt_skip("/dev/vfio/vfio not available\n");
+
+	snprintf(group_path, sizeof(group_path), "/dev/vfio/%s", out->group_id);
+	out->group_fd = open(group_path, O_RDWR | O_CLOEXEC);
+	igt_require_f(out->group_fd >= 0, "Failed to open %s (%d)\n", group_path, -errno);
+
+	if (out_group_status) {
+		ret = ioctl(out->group_fd, VFIO_GROUP_GET_STATUS, out_group_status);
+		igt_require_f(ret == 0, "VFIO_GROUP_GET_STATUS failed (%d)\n", -errno);
+	}
+}
+
+static void vfio_close_device(struct vfio_dev_fds *fds)
+{
+	if (!fds)
+		return;
+
+	if (fds->device_fd >= 0)
+		close(fds->device_fd);
+
+	if (fds->group_fd >= 0 && fds->container_fd >= 0)
+		ioctl(fds->group_fd, VFIO_GROUP_UNSET_CONTAINER, &fds->container_fd);
+
+	if (fds->group_fd >= 0)
+		close(fds->group_fd);
+	if (fds->container_fd >= 0)
+		close(fds->container_fd);
+
+	free(fds->group_id);
+
+	fds->container_fd = -1;
+	fds->group_fd = -1;
+	fds->device_fd = -1;
+	fds->group_id = NULL;
+}
+
+static void vfio_open_basic(const char *pci_slot)
+{
+	struct vfio_dev_fds fds;
+	struct vfio_group_status group_status;
+
+	vfio_open_group(pci_slot, &fds, &group_status);
+	igt_info("VFIO group %s status flags=0x%x\n", fds.group_id, group_status.flags);
+	vfio_close_device(&fds);
 }
 
 static void open_pf(void)
@@ -205,6 +314,33 @@ int igt_main()
 				bind_unbind_vfs(num_vfs);
 			}
 		}
+	}
+
+	igt_describe("Bind VF to xe-vfio-pci and do minimal VFIO open and GET_STATUS.");
+	igt_subtest("open-basic") {
+		unsigned int vf_num = 1;
+		char *slot = NULL;
+
+		igt_skip_on_f(igt_kmod_load(XE_VFIO_PCI_MOD, NULL),
+			      "Failed to load %s\n", XE_VFIO_PCI_MOD);
+
+		open_pf();
+
+		igt_sriov_disable_driver_autoprobe(pf_fd);
+		igt_sriov_enable_vfs(pf_fd, vf_num);
+
+		igt_require_f(!igt_pci_system_reinit(), "Failed to refresh PCI state\n");
+		igt_sriov_enable_driver_autoprobe(pf_fd);
+
+		slot = vf_pci_slot_alloc(vf_num);
+
+		vf_bind_override(vf_num, XE_VFIO_PCI_DRV);
+
+		vfio_open_basic(slot);
+
+		vf_unbind_override(vf_num);
+		free(slot);
+		igt_sriov_disable_vfs(pf_fd);
 	}
 
 	igt_fixture() {
