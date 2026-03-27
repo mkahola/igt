@@ -1345,6 +1345,363 @@ amd_kgd_multi_ioctl_field_fuzzing(int fd, amdgpu_device_handle amdgpu_dev)
 
 }
 
+/*
+ * Boundary value and edge-case ioctl fuzzing.
+ *
+ * Tests extreme/unusual parameter values that are technically in-range
+ * but exercise corner cases in the kernel validation logic:
+ * - GEM_CREATE with boundary sizes (0, 1, page-1, huge)
+ * - AMDGPU_INFO with every known query + invalid sub-fields
+ * - CTX alloc/free stress to test ID recycling
+ * - GEM_VA with misaligned addresses and zero-length maps
+ */
+static void
+amd_boundary_fuzzing(int fd)
+{
+	/*
+	 * GEM_CREATE boundary sizes: the driver must reject zero and
+	 * excessively large sizes without crashing.
+	 */
+	{
+		static const uint64_t test_sizes[] = {
+			0,              /* zero size */
+			1,              /* sub-page */
+			4095,           /* page_size - 1 */
+			4096,           /* exact page */
+			4097,           /* page + 1 */
+			(1ULL << 20),   /* 1 MB */
+			(1ULL << 32),   /* 4 GB */
+			(1ULL << 40),   /* 1 TB -- should fail */
+			UINT64_MAX,     /* max -- must fail */
+			UINT64_MAX - 4095, /* near-max */
+		};
+		unsigned int i;
+
+		for (i = 0; i < ARRAY_SIZE(test_sizes); i++) {
+			union drm_amdgpu_gem_create gem;
+			struct drm_gem_close close_arg;
+			int ret;
+
+			memset(&gem, 0, sizeof(gem));
+			gem.in.bo_size = test_sizes[i];
+			gem.in.alignment = 0;
+			gem.in.domains = AMDGPU_GEM_DOMAIN_GTT;
+			gem.in.domain_flags = 0;
+
+			errno = 0;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_CREATE, &gem);
+			igt_info("gem-create size=0x%llx: ret=%d errno=%d\n",
+				 (unsigned long long)test_sizes[i], ret, errno);
+
+			if (ret == 0) {
+				close_arg.handle = gem.out.handle;
+				close_arg.pad = 0;
+				drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+			}
+		}
+	}
+
+	/*
+	 * GEM_CREATE with every domain combination: some are invalid
+	 * and the driver must reject them without crashing.
+	 */
+	{
+		static const uint64_t test_domains[] = {
+			0,                              /* no domain */
+			AMDGPU_GEM_DOMAIN_CPU,
+			AMDGPU_GEM_DOMAIN_GTT,
+			AMDGPU_GEM_DOMAIN_VRAM,
+			AMDGPU_GEM_DOMAIN_GDS,
+			AMDGPU_GEM_DOMAIN_GWS,
+			AMDGPU_GEM_DOMAIN_OA,
+			AMDGPU_GEM_DOMAIN_MASK,         /* all bits */
+			~(uint64_t)AMDGPU_GEM_DOMAIN_MASK, /* invalid bits only */
+			UINT64_MAX,                     /* all bits set */
+		};
+		unsigned int i;
+
+		for (i = 0; i < ARRAY_SIZE(test_domains); i++) {
+			union drm_amdgpu_gem_create gem;
+			struct drm_gem_close close_arg;
+			int ret;
+
+			memset(&gem, 0, sizeof(gem));
+			gem.in.bo_size = 4096;
+			gem.in.alignment = 0;
+			gem.in.domains = test_domains[i];
+
+			errno = 0;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_CREATE, &gem);
+			igt_info("gem-create domain=0x%llx: ret=%d errno=%d\n",
+				 (unsigned long long)test_domains[i], ret, errno);
+
+			if (ret == 0) {
+				close_arg.handle = gem.out.handle;
+				close_arg.pad = 0;
+				drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+			}
+		}
+	}
+
+	/*
+	 * GEM_CREATE alignment fuzzing: non-power-of-2 and large alignments.
+	 */
+	{
+		static const uint64_t test_alignments[] = {
+			0, 1, 3, 7, 255, 4096, 65536,
+			(1ULL << 20), (1ULL << 32),
+			UINT64_MAX,
+		};
+		unsigned int i;
+
+		for (i = 0; i < ARRAY_SIZE(test_alignments); i++) {
+			union drm_amdgpu_gem_create gem;
+			struct drm_gem_close close_arg;
+			int ret;
+
+			memset(&gem, 0, sizeof(gem));
+			gem.in.bo_size = 4096;
+			gem.in.alignment = test_alignments[i];
+			gem.in.domains = AMDGPU_GEM_DOMAIN_GTT;
+
+			errno = 0;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_CREATE, &gem);
+			igt_info("gem-create align=0x%llx: ret=%d errno=%d\n",
+				 (unsigned long long)test_alignments[i], ret, errno);
+
+			if (ret == 0) {
+				close_arg.handle = gem.out.handle;
+				close_arg.pad = 0;
+				drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+			}
+		}
+	}
+
+	/*
+	 * AMDGPU_INFO exhaustive query fuzzing: iterate through all known
+	 * query IDs and some invalid ones.  Each must either succeed or
+	 * fail gracefully -- never crash.
+	 */
+	{
+		static const uint32_t queries[] = {
+			AMDGPU_INFO_ACCEL_WORKING,
+			AMDGPU_INFO_CRTC_FROM_ID,
+			AMDGPU_INFO_HW_IP_INFO,
+			AMDGPU_INFO_HW_IP_COUNT,
+			AMDGPU_INFO_TIMESTAMP,
+			AMDGPU_INFO_FW_VERSION,
+			AMDGPU_INFO_NUM_BYTES_MOVED,
+			AMDGPU_INFO_VRAM_GTT,
+			AMDGPU_INFO_GDS_CONFIG,
+			AMDGPU_INFO_VRAM_USAGE,
+			AMDGPU_INFO_GTT_USAGE,
+			AMDGPU_INFO_DEV_INFO,
+			AMDGPU_INFO_VIS_VRAM_USAGE,
+			AMDGPU_INFO_READ_MMR_REG,
+			AMDGPU_INFO_NUM_EVICTIONS,
+			AMDGPU_INFO_MEMORY,
+			AMDGPU_INFO_VBIOS,
+			AMDGPU_INFO_SENSOR,
+			AMDGPU_INFO_VIDEO_CAPS,
+			0,              /* invalid: zero */
+			0xDEAD,         /* invalid: garbage */
+			UINT32_MAX,     /* invalid: max */
+		};
+		uint8_t outbuf[256];
+		unsigned int i;
+
+		for (i = 0; i < ARRAY_SIZE(queries); i++) {
+			struct drm_amdgpu_info info;
+			int ret;
+
+			memset(&info, 0, sizeof(info));
+			memset(outbuf, 0, sizeof(outbuf));
+			info.return_pointer = (uintptr_t)outbuf;
+			info.return_size = sizeof(outbuf);
+			info.query = queries[i];
+
+			errno = 0;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_INFO, &info);
+			igt_info("amdgpu_info query=0x%x: ret=%d errno=%d\n",
+				 queries[i], ret, errno);
+			/* No assertion on ret -- some queries legitimately fail;
+			 * the point is the driver must not crash. */
+		}
+	}
+
+	/*
+	 * AMDGPU_INFO FW_VERSION: fuzz every firmware type.
+	 * Some FW types do not exist on some ASICs -- the driver must
+	 * return an error, not crash.
+	 */
+	{
+		static const uint32_t fw_types[] = {
+			AMDGPU_INFO_FW_VCE,
+			AMDGPU_INFO_FW_UVD,
+			AMDGPU_INFO_FW_GMC,
+			AMDGPU_INFO_FW_GFX_ME,
+			AMDGPU_INFO_FW_GFX_PFP,
+			AMDGPU_INFO_FW_GFX_CE,
+			AMDGPU_INFO_FW_GFX_RLC,
+			AMDGPU_INFO_FW_GFX_MEC,
+			AMDGPU_INFO_FW_SMC,
+			AMDGPU_INFO_FW_SDMA,
+			AMDGPU_INFO_FW_ASD,
+			AMDGPU_INFO_FW_VCN,
+			AMDGPU_INFO_FW_GFX_RLC_RESTORE_LIST_CNTL,
+			AMDGPU_INFO_FW_GFX_RLC_RESTORE_LIST_GPM_MEM,
+			AMDGPU_INFO_FW_GFX_RLC_RESTORE_LIST_SRM_MEM,
+			AMDGPU_INFO_FW_DMCU,
+			AMDGPU_INFO_FW_TA,
+			AMDGPU_INFO_FW_DMCUB,
+			AMDGPU_INFO_FW_TOC,
+			0xFF,           /* invalid type */
+			UINT32_MAX,     /* invalid max */
+		};
+		uint8_t outbuf[256];
+		unsigned int i;
+
+		for (i = 0; i < ARRAY_SIZE(fw_types); i++) {
+			struct drm_amdgpu_info info;
+			int ret;
+
+			memset(&info, 0, sizeof(info));
+			memset(outbuf, 0, sizeof(outbuf));
+			info.return_pointer = (uintptr_t)outbuf;
+			info.return_size = sizeof(outbuf);
+			info.query = AMDGPU_INFO_FW_VERSION;
+			info.query_fw.fw_type = fw_types[i];
+
+			errno = 0;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_INFO, &info);
+			igt_info("fw_version type=0x%x: ret=%d errno=%d\n",
+				 fw_types[i], ret, errno);
+		}
+	}
+
+	/*
+	 * AMDGPU_INFO HW_IP: fuzz all IP types including invalid ones.
+	 */
+	{
+		uint32_t ip;
+		uint8_t outbuf[256];
+
+		for (ip = 0; ip <= AMDGPU_HW_IP_VPE + 5; ip++) {
+			struct drm_amdgpu_info info;
+			int ret;
+
+			memset(&info, 0, sizeof(info));
+			memset(outbuf, 0, sizeof(outbuf));
+			info.return_pointer = (uintptr_t)outbuf;
+			info.return_size = sizeof(outbuf);
+			info.query = AMDGPU_INFO_HW_IP_INFO;
+			info.query_hw_ip.type = ip;
+
+			errno = 0;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_INFO, &info);
+			igt_info("hw_ip_info type=%u: ret=%d errno=%d\n",
+				 ip, ret, errno);
+		}
+	}
+
+	/*
+	 * CTX alloc/free stress: rapidly allocate and free contexts
+	 * to stress ID recycling paths.
+	 */
+	{
+		int i;
+
+		for (i = 0; i < 64; i++) {
+			union drm_amdgpu_ctx ctx;
+			int ret;
+
+			memset(&ctx, 0, sizeof(ctx));
+			ctx.in.op = AMDGPU_CTX_OP_ALLOC_CTX;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_CTX, &ctx);
+			if (ret != 0)
+				break;
+
+			ctx.in.op = AMDGPU_CTX_OP_FREE_CTX;
+			ctx.in.ctx_id = ctx.out.alloc.ctx_id;
+			drmIoctl(fd, DRM_IOCTL_AMDGPU_CTX, &ctx);
+		}
+		igt_info("ctx-alloc-free-stress: %d iterations\n", i);
+	}
+
+	/*
+	 * GEM_VA misaligned address: map with non-page-aligned VA.
+	 */
+	{
+		struct drm_amdgpu_gem_va va;
+		int ret;
+
+		memset(&va, 0, sizeof(va));
+		va.handle = 0;
+		va.operation = AMDGPU_VA_OP_MAP;
+		va.flags = AMDGPU_VM_PAGE_READABLE;
+		va.va_address = 0x1001;  /* not page aligned */
+		va.map_size = 4096;
+
+		errno = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_VA, &va);
+		igt_assert_neq(ret, 0);
+		igt_info("gem-va-misaligned: ret=%d errno=%d\n", ret, errno);
+	}
+
+	/*
+	 * GEM_VA zero-length map: must be rejected.
+	 */
+	{
+		struct drm_amdgpu_gem_va va;
+		int ret;
+
+		memset(&va, 0, sizeof(va));
+		va.handle = 0;
+		va.operation = AMDGPU_VA_OP_MAP;
+		va.flags = AMDGPU_VM_PAGE_READABLE;
+		va.va_address = 0x100000;
+		va.map_size = 0;
+
+		errno = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_VA, &va);
+		igt_assert_neq(ret, 0);
+		igt_info("gem-va-zero-size: ret=%d errno=%d\n", ret, errno);
+	}
+
+	/*
+	 * SCHED priority escalation: unprivileged user must not be
+	 * able to set high priority.
+	 */
+	{
+		union drm_amdgpu_ctx ctx;
+		union drm_amdgpu_sched sched;
+		int ret;
+
+		memset(&ctx, 0, sizeof(ctx));
+		ctx.in.op = AMDGPU_CTX_OP_ALLOC_CTX;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_CTX, &ctx);
+		if (ret == 0) {
+			memset(&sched, 0, sizeof(sched));
+			sched.in.op = AMDGPU_SCHED_OP_CONTEXT_PRIORITY_OVERRIDE;
+			sched.in.ctx_id = ctx.out.alloc.ctx_id;
+			sched.in.fd = fd;
+			sched.in.priority = AMDGPU_CTX_PRIORITY_VERY_HIGH;
+
+			errno = 0;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_SCHED, &sched);
+			igt_info("sched-priority-escalation: ret=%d errno=%d\n",
+				 ret, errno);
+			/* May succeed for root, fail for normal user -- just
+			 * must not crash. */
+
+			/* Clean up */
+			ctx.in.op = AMDGPU_CTX_OP_FREE_CTX;
+			ctx.in.ctx_id = ctx.out.alloc.ctx_id;
+			drmIoctl(fd, DRM_IOCTL_AMDGPU_CTX, &ctx);
+		}
+	}
+}
+
 int igt_main()
 {
 	int fd = -1;
@@ -1377,6 +1734,10 @@ int igt_main()
 	igt_describe("Field-level fuzzing for KGD ioctls (including gem_create): mutate ioctl input fields with invalid values");
 	igt_subtest("kgd-ioctl-field-fuzzing")
 		amd_kgd_multi_ioctl_field_fuzzing(fd, amdgpu_dev);
+
+	igt_describe("Boundary value and edge-case fuzzing: extreme sizes, alignments, domain combos, AMDGPU_INFO exhaustive query sweep");
+	igt_subtest("boundary-fuzzing")
+		amd_boundary_fuzzing(fd);
 
 	igt_fixture() {
 		drm_close_driver(fd);
