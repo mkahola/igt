@@ -5,6 +5,9 @@
 
 #include "lib/amdgpu/amd_memory.h"
 #include "lib/amdgpu/amd_gfx.h"
+#include "lib/amdgpu/amd_ip_blocks.h"
+#include "lib/amdgpu/amd_PM4.h"
+#include "lib/amdgpu/amd_sdma.h"
 #include "lib/ioctl_wrappers.h"
 
 #include <errno.h>
@@ -15,6 +18,18 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <pthread.h>
+
+#define AMD_CONC_THREADS 4
+#define AMD_CONC_ITERS   128
+
+#ifdef AMDGPU_USERQ_ENABLED
+struct amd_test_userq_ctx;
+
+static bool
+amd_test_try_create_userq(int fd, amdgpu_device_handle amdgpu_dev, uint32_t ip_type,
+			 struct amd_test_userq_ctx *userq);
+#endif
 
 /* GEM_LIST_HANDLES ioctl — may not be present in older installed libdrm headers */
 #ifndef DRM_AMDGPU_GEM_LIST_HANDLES
@@ -856,6 +871,7 @@ amd_kgd_multi_ioctl_field_fuzzing(int fd, amdgpu_device_handle amdgpu_dev)
 		struct drm_amdgpu_userq_fence_info out_fences[1];
 		/* This block targets early validation; real queue behavior is in userq-fuzzing. */
 		static const struct amd_ioctl_field_case cases[] = {
+			/* After updating the struct, uncomment it. */
 			//{ "userq_wait.waitq_id.invalid", offsetof(struct drm_amdgpu_userq_wait, waitq_id), sizeof(uint32_t), UINT32_MAX },
 			{ "userq_wait.syncobj_handles.invalid", offsetof(struct drm_amdgpu_userq_wait, syncobj_handles), sizeof(uint64_t), 0x1 },
 			{ "userq_wait.timeline_handles.invalid", offsetof(struct drm_amdgpu_userq_wait, syncobj_timeline_handles), sizeof(uint64_t), 0x1 },
@@ -2015,11 +2031,698 @@ amd_lifecycle_fuzzing(int fd)
 	}
 }
 
+#ifdef AMDGPU_USERQ_ENABLED
+struct amd_test_userq_ctx {
+	uint32_t ip_type;
+	struct amdgpu_ring_context *ring_context;
+	uint32_t queue_id;
+	bool created;
+};
+
+static bool
+amd_test_map_hw_to_ip_block_type(uint32_t hw_ip_type,
+				 enum amd_ip_block_type *block_type)
+{
+	if (!block_type)
+		return false;
+
+	switch (hw_ip_type) {
+	case AMDGPU_HW_IP_GFX:
+		*block_type = AMD_IP_GFX;
+		return true;
+	case AMDGPU_HW_IP_COMPUTE:
+		*block_type = AMD_IP_COMPUTE;
+		return true;
+	case AMDGPU_HW_IP_DMA:
+		*block_type = AMD_IP_DMA;
+		return true;
+	default:
+		return false;
+	}
+}
+
+static void
+amd_test_userq_cleanup(int fd, amdgpu_device_handle amdgpu_dev,
+		      struct amd_test_userq_ctx *userq)
+{
+	const struct amdgpu_ip_block_version *ip_block = NULL;
+	enum amd_ip_block_type block_type;
+	int r;
+	bool need_wait = false;
+
+	(void)fd;
+
+	if (!userq)
+		return;
+	if (!userq->ring_context)
+		return;
+
+	if (amdgpu_dev && amd_test_map_hw_to_ip_block_type(userq->ip_type, &block_type))
+		ip_block = get_ip_block(amdgpu_dev, block_type);
+
+	if (userq->created && ip_block && ip_block->funcs && ip_block->funcs->userq_destroy) {
+		ip_block->funcs->userq_destroy(amdgpu_dev, userq->ring_context,
+					      ip_block->type);
+		userq->created = false;
+	} else {
+		/* Queue may already be destroyed by a race thread; free remaining BOs only. */
+		switch (userq->ip_type) {
+		case AMDGPU_HW_IP_GFX:
+			if (userq->ring_context->csa.handle) {
+				amdgpu_bo_unmap_and_free(userq->ring_context->csa.handle,
+						 userq->ring_context->csa.va_handle,
+						 userq->ring_context->csa.mc_addr,
+						 userq->ring_context->info.gfx.csa_size);
+				userq->ring_context->csa.handle = NULL;
+				need_wait = true;
+			}
+
+			if (userq->ring_context->shadow.handle) {
+				amdgpu_bo_unmap_and_free(userq->ring_context->shadow.handle,
+						 userq->ring_context->shadow.va_handle,
+						 userq->ring_context->shadow.mc_addr,
+						 userq->ring_context->info.gfx.shadow_size);
+				userq->ring_context->shadow.handle = NULL;
+				need_wait = true;
+			}
+			break;
+
+		case AMDGPU_HW_IP_COMPUTE:
+			if (userq->ring_context->eop.handle) {
+				amdgpu_bo_unmap_and_free(userq->ring_context->eop.handle,
+						 userq->ring_context->eop.va_handle,
+						 userq->ring_context->eop.mc_addr,
+						 256);
+				userq->ring_context->eop.handle = NULL;
+				need_wait = true;
+			}
+			break;
+
+		case AMDGPU_HW_IP_DMA:
+			if (userq->ring_context->csa.handle) {
+				amdgpu_bo_unmap_and_free(userq->ring_context->csa.handle,
+						 userq->ring_context->csa.va_handle,
+						 userq->ring_context->csa.mc_addr,
+						 userq->ring_context->info.gfx.csa_size);
+				userq->ring_context->csa.handle = NULL;
+				need_wait = true;
+			}
+			break;
+
+		default:
+			break;
+		}
+
+		if (need_wait && userq->ring_context->timeline_syncobj_handle) {
+			r = amdgpu_timeline_syncobj_wait(amdgpu_dev,
+							 userq->ring_context->timeline_syncobj_handle,
+							 userq->ring_context->point);
+			if (r)
+				igt_info("userq cleanup wait failed: ip=%u ret=%d\n", userq->ip_type, r);
+		}
+
+		if (userq->ring_context->timeline_syncobj_handle) {
+			r = amdgpu_cs_destroy_syncobj(amdgpu_dev,
+						     userq->ring_context->timeline_syncobj_handle);
+			if (r)
+				igt_info("userq cleanup destroy syncobj failed: ip=%u ret=%d\n", userq->ip_type, r);
+			userq->ring_context->timeline_syncobj_handle = 0;
+		}
+
+		if (userq->ring_context->doorbell.handle) {
+			r = amdgpu_bo_cpu_unmap(userq->ring_context->doorbell.handle);
+			if (r)
+				igt_info("userq cleanup doorbell unmap failed: ip=%u ret=%d\n", userq->ip_type, r);
+
+			r = amdgpu_bo_free(userq->ring_context->doorbell.handle);
+			if (r)
+				igt_info("userq cleanup doorbell free failed: ip=%u ret=%d\n", userq->ip_type, r);
+
+			userq->ring_context->doorbell.handle = NULL;
+		}
+
+		if (userq->ring_context->rptr.handle) {
+			amdgpu_bo_unmap_and_free(userq->ring_context->rptr.handle,
+						 userq->ring_context->rptr.va_handle,
+						 userq->ring_context->rptr.mc_addr, 8);
+			userq->ring_context->rptr.handle = NULL;
+		}
+
+		if (userq->ring_context->wptr.handle) {
+			amdgpu_bo_unmap_and_free(userq->ring_context->wptr.handle,
+						 userq->ring_context->wptr.va_handle,
+						 userq->ring_context->wptr.mc_addr, 8);
+			userq->ring_context->wptr.handle = NULL;
+		}
+
+		if (userq->ring_context->queue.handle) {
+			amdgpu_bo_unmap_and_free(userq->ring_context->queue.handle,
+						 userq->ring_context->queue.va_handle,
+						 userq->ring_context->queue.mc_addr,
+						 USERMODE_QUEUE_SIZE);
+			userq->ring_context->queue.handle = NULL;
+		}
+	}
+
+	free(userq->ring_context);
+	userq->ring_context = NULL;
+	userq->queue_id = 0;
+}
+
+static bool
+amd_test_try_create_userq(int fd, amdgpu_device_handle amdgpu_dev, uint32_t ip_type,
+			 struct amd_test_userq_ctx *userq)
+{
+	const struct amdgpu_ip_block_version *ip_block;
+	enum amd_ip_block_type block_type;
+
+	(void)fd;
+
+	if (!amdgpu_dev || !userq)
+	{
+		igt_info("userq create failed: invalid args dev=%p userq=%p ip=%u\n",
+			 amdgpu_dev, userq, ip_type);
+		return false;
+	}
+
+	memset(userq, 0, sizeof(*userq));
+	userq->ip_type = ip_type;
+	if (!amd_test_map_hw_to_ip_block_type(ip_type, &block_type)) {
+		igt_info("userq create failed: unsupported hw ip_type=%u\n", ip_type);
+		return false;
+	}
+
+	ip_block = get_ip_block(amdgpu_dev, block_type);
+	if (!ip_block || !ip_block->funcs || !ip_block->funcs->userq_create) {
+		igt_info("userq create unavailable: ip=%u block=%p funcs=%p create=%p\n",
+			 ip_type,
+			 ip_block,
+			 ip_block ? ip_block->funcs : NULL,
+			 (ip_block && ip_block->funcs) ? ip_block->funcs->userq_create : NULL);
+		return false;
+	}
+
+	userq->ring_context = calloc(1, sizeof(*userq->ring_context));
+	if (!userq->ring_context) {
+		igt_info("userq create failed: ring_context alloc failed ip=%u\n", ip_type);
+		return false;
+	}
+
+	ip_block->funcs->userq_create(amdgpu_dev, userq->ring_context, ip_block->type);
+	if (!userq->ring_context->queue.handle) {
+		igt_info("userq create failed: queue.handle is NULL ip=%u\n", ip_type);
+		free(userq->ring_context);
+		userq->ring_context = NULL;
+		return false;
+	}
+
+	userq->queue_id = userq->ring_context->queue_id;
+	userq->created = true;
+	return true;
+}
+
+
+/*
+ * ------------------------------------------------------------------
+ * USERQ concurrency / race-condition fuzzing
+ *
+ * Runs on GFX / COMPUTE / DMA queues when supported by the ASIC.
+ *
+ * Race D – Concurrent USERQ_CREATE + USERQ_DESTROY:
+ *   N threads simultaneously create/destroy queues of the same ip_type.
+ *
+ * Race E – USERQ_SIGNAL racing USERQ_DESTROY (2 threads, 1 queue).
+ *
+ * Race F – Concurrent USERQ_DESTROY on the same queue_id (2 threads).
+ *
+ * Race G – USERQ_WAIT racing USERQ_DESTROY (2 threads, 1 queue).
+ *
+ * Race H – USERQ queue writes racing negative ioctls + DESTROY:
+ *   Writer thread submits tiny packets to the queue while another thread
+ *   injects invalid ioctls and then destroys the queue.
+ *
+ * No specific errno is asserted – the real signal is clean dmesg.
+ * ------------------------------------------------------------------
+ */
+
+static const char *
+amd_userq_ip_name(uint32_t ip_type)
+{
+	switch (ip_type) {
+	case AMDGPU_HW_IP_GFX:
+		return "GFX";
+	case AMDGPU_HW_IP_COMPUTE:
+		return "COMPUTE";
+	case AMDGPU_HW_IP_DMA:
+		return "DMA";
+	default:
+		return "UNKNOWN";
+	}
+}
+
+/* Race D: per-thread args for concurrent create/destroy. */
+struct amd_conc_userq_args {
+	int                  fd;
+	amdgpu_device_handle dev;
+	pthread_barrier_t   *barrier;
+	int                  iters;
+	uint32_t             ip_type;
+};
+
+/* Races E / G: state shared between the op-thread and the destroyer. */
+struct amd_conc_userq_op_state {
+	int                  fd;
+	amdgpu_device_handle dev;
+	pthread_barrier_t    barrier;
+	uint32_t             ip_type;
+	uint32_t             queue_id;
+	volatile int         destroyed;
+};
+
+/* Race H: writer + negative ops + destroy on one live queue. */
+struct amd_conc_userq_write_state {
+	int                          fd;
+	amdgpu_device_handle         dev;
+	pthread_barrier_t            barrier;
+	uint32_t                     ip_type;
+	uint32_t                     queue_id;
+	struct amdgpu_ring_context  *ring_context;
+	volatile int                 destroyed;
+};
+
+/* Race F: per-thread args for concurrent double-destroy. */
+struct amd_conc_userq_destroy_args {
+	int               fd;
+	uint32_t          queue_id;
+	pthread_barrier_t *barrier;
+};
+
+/* Race D thread: create own queue, immediately destroy it, N times. */
+static void *
+thread_userq_create_destroy(void *arg)
+{
+	struct amd_conc_userq_args *a = arg;
+	struct amd_test_userq_ctx local_ctx;
+	int i;
+
+	pthread_barrier_wait(a->barrier);
+	for (i = 0; i < a->iters; i++) {
+		memset(&local_ctx, 0, sizeof(local_ctx));
+		if (amd_test_try_create_userq(a->fd, a->dev,
+					      a->ip_type, &local_ctx))
+			amd_test_userq_cleanup(a->fd, a->dev, &local_ctx);
+	}
+	return NULL;
+}
+
+/*
+ * Queue write helper for Race H.
+ * Writes a tiny NOP packet and rings doorbell to exercise queue write path.
+ */
+static void
+amd_test_userq_write_once(struct amdgpu_ring_context *ctx, uint32_t ip_type,
+			 uint32_t tag)
+{
+	struct amdgpu_ring_context *ring_context = ctx;
+
+	if (!ring_context || !ring_context->queue_cpu || !ring_context->wptr_cpu ||
+	    !ring_context->doorbell_cpu)
+		return;
+
+	if (ip_type == AMDGPU_HW_IP_DMA) {
+		amdgpu_sdma_pkt_begin();
+		amdgpu_pkt_add_dw(SDMA_PKT_HEADER_OP(SDMA_NOP));
+		amdgpu_pkt_add_dw(tag);
+		amdgpu_sdma_pkt_end();
+	} else {
+		amdgpu_pkt_begin();
+		amdgpu_pkt_add_dw(PACKET3(PACKET3_NOP, 0));
+		amdgpu_pkt_add_dw(tag);
+		amdgpu_pkt_end();
+	}
+
+	ring_context->doorbell_cpu[DOORBELL_INDEX] = *ring_context->wptr_cpu;
+}
+
+/* Race H writer: keep writing tiny packets until queue is destroyed. */
+static void *
+thread_userq_writer(void *arg)
+{
+	struct amd_conc_userq_write_state *s = arg;
+	int iter;
+
+	pthread_barrier_wait(&s->barrier);
+	for (iter = 0; iter < AMD_CONC_ITERS; iter++) {
+		amd_test_userq_write_once(s->ring_context, s->ip_type,
+					  0xabc00000u | (uint32_t)iter);
+		if (s->destroyed)
+			break;
+		usleep(100);
+	}
+
+	return NULL;
+}
+
+/* Race H negative thread: inject invalid ioctls while writer is active, then destroy. */
+static void *
+thread_userq_negative_destroyer(void *arg)
+{
+	struct amd_conc_userq_write_state *s = arg;
+	int iter;
+
+	pthread_barrier_wait(&s->barrier);
+
+	for (iter = 0; iter < 8; iter++) {
+		struct drm_amdgpu_userq_signal sig;
+		struct drm_amdgpu_userq_wait wait;
+		union drm_amdgpu_userq free_arg;
+
+		memset(&sig, 0, sizeof(sig));
+		sig.queue_id = UINT32_MAX;
+		drmIoctl(s->fd, DRM_IOCTL_AMDGPU_USERQ_SIGNAL, &sig);
+
+		memset(&wait, 0, sizeof(wait));
+		/* After updating the struct, uncomment it. */
+		//wait.waitq_id = UINT32_MAX;
+		drmIoctl(s->fd, DRM_IOCTL_AMDGPU_USERQ_WAIT, &wait);
+
+		/* Invalid free should fail gracefully. */
+		memset(&free_arg, 0, sizeof(free_arg));
+		free_arg.in.op = AMDGPU_USERQ_OP_FREE;
+		free_arg.in.queue_id = UINT32_MAX;
+		drmIoctl(s->fd, DRM_IOCTL_AMDGPU_USERQ, &free_arg);
+
+		usleep(150);
+	}
+
+	/* destroy while writer may still be updating queue + doorbell */
+	s->destroyed = 1;
+	amdgpu_free_userqueue(s->dev, s->queue_id);
+
+	return NULL;
+}
+
+/*
+ * Race E thread: repeatedly SIGNAL the queue.
+ * Return value is not asserted – calls will fail once the queue is gone.
+ */
+static void *
+thread_userq_signaler(void *arg)
+{
+	struct amd_conc_userq_op_state *s = arg;
+	int iter;
+
+	pthread_barrier_wait(&s->barrier);
+	for (iter = 0; iter < AMD_CONC_ITERS; iter++) {
+		struct drm_amdgpu_userq_signal sig;
+
+		memset(&sig, 0, sizeof(sig));
+		sig.queue_id = s->queue_id;
+		/* empty payload: exercises queue_id XArray lookup vs teardown */
+		drmIoctl(s->fd, DRM_IOCTL_AMDGPU_USERQ_SIGNAL, &sig);
+		if (s->destroyed)
+			break;
+	}
+	return NULL;
+}
+
+/*
+ * Race G thread: repeatedly WAIT on the queue.
+ * Return value is not asserted – calls will fail once the queue is gone.
+ */
+static void *
+thread_userq_waiter(void *arg)
+{
+	struct amd_conc_userq_op_state *s = arg;
+	int iter;
+
+	pthread_barrier_wait(&s->barrier);
+	for (iter = 0; iter < AMD_CONC_ITERS; iter++) {
+		struct drm_amdgpu_userq_wait wait;
+
+		memset(&wait, 0, sizeof(wait));
+		/* After updating the struct, uncomment it. */
+		//wait.waitq_id = s->queue_id;
+		/* empty payload: exercises waitq_id lookup vs teardown */
+		drmIoctl(s->fd, DRM_IOCTL_AMDGPU_USERQ_WAIT, &wait);
+		if (s->destroyed)
+			break;
+	}
+	return NULL;
+}
+
+/* Shared destroyer for Races E and G. */
+static void *
+thread_userq_op_destroyer(void *arg)
+{
+	struct amd_conc_userq_op_state *s = arg;
+
+	pthread_barrier_wait(&s->barrier);
+	/*
+	 * Brief delay increases the probability that the op-thread is
+	 * inside a SIGNAL/WAIT ioctl when teardown fires.
+	 */
+	usleep(1000);
+	s->destroyed = 1;
+	amdgpu_free_userqueue(s->dev, s->queue_id);
+	return NULL;
+}
+
+/* Race F thread: attempt AMDGPU_USERQ_OP_FREE on a shared queue_id. */
+static void *
+thread_userq_double_destroy(void *arg)
+{
+	struct amd_conc_userq_destroy_args *a = arg;
+	union drm_amdgpu_userq userq_arg;
+
+	pthread_barrier_wait(a->barrier);
+	memset(&userq_arg, 0, sizeof(userq_arg));
+	userq_arg.in.op       = AMDGPU_USERQ_OP_FREE;
+	userq_arg.in.queue_id = a->queue_id;
+	/*
+	 * Return value intentionally unchecked: exactly one thread should
+	 * succeed; the driver must not crash on either outcome.
+	 */
+	drmIoctl(a->fd, DRM_IOCTL_AMDGPU_USERQ, &userq_arg);
+	return NULL;
+}
+
+static void
+amd_userq_run_create_destroy_race(int fd, amdgpu_device_handle dev,
+				 uint32_t ip_type)
+{
+	pthread_t threads[AMD_CONC_THREADS];
+	struct amd_conc_userq_args args[AMD_CONC_THREADS];
+	pthread_barrier_t barrier;
+	int i;
+
+	igt_info("concurrent-userq-fuzzing[%s]: concurrent-create-destroy "
+		 "(%d threads x 4 iters)\n",
+		 amd_userq_ip_name(ip_type), AMD_CONC_THREADS);
+	igt_assert(pthread_barrier_init(&barrier, NULL, AMD_CONC_THREADS) == 0);
+	for (i = 0; i < AMD_CONC_THREADS; i++) {
+		args[i].fd      = fd;
+		args[i].dev     = dev;
+		args[i].barrier = &barrier;
+		args[i].iters   = 4;
+		args[i].ip_type = ip_type;
+		igt_assert(pthread_create(&threads[i], NULL,
+					  thread_userq_create_destroy,
+					  &args[i]) == 0);
+	}
+	for (i = 0; i < AMD_CONC_THREADS; i++)
+		pthread_join(threads[i], NULL);
+	pthread_barrier_destroy(&barrier);
+}
+
+static void
+amd_userq_run_signal_destroy_race(int fd, amdgpu_device_handle dev,
+				 uint32_t ip_type)
+{
+	struct amd_conc_userq_op_state s;
+	struct amd_test_userq_ctx userq;
+	pthread_t signaler, destroyer;
+
+	memset(&userq, 0, sizeof(userq));
+	if (!amd_test_try_create_userq(fd, dev, ip_type, &userq)) {
+		igt_info("concurrent-userq-fuzzing[%s]: queue unavailable, "
+			 "skip signal-vs-destroy\n", amd_userq_ip_name(ip_type));
+		return;
+	}
+
+	memset(&s, 0, sizeof(s));
+	s.fd       = fd;
+	s.dev      = dev;
+	s.ip_type  = ip_type;
+	s.queue_id = userq.queue_id;
+	userq.created = false;
+	igt_assert(pthread_barrier_init(&s.barrier, NULL, 2) == 0);
+	igt_info("concurrent-userq-fuzzing[%s]: signal-vs-destroy start "
+		 "(queue_id=%u)\n", amd_userq_ip_name(ip_type), s.queue_id);
+	igt_assert(pthread_create(&signaler, NULL, thread_userq_signaler, &s) == 0);
+	igt_assert(pthread_create(&destroyer, NULL, thread_userq_op_destroyer, &s) == 0);
+	pthread_join(signaler, NULL);
+	pthread_join(destroyer, NULL);
+	pthread_barrier_destroy(&s.barrier);
+	amd_test_userq_cleanup(fd, dev, &userq);
+}
+
+static void
+amd_userq_run_double_destroy_race(int fd, amdgpu_device_handle dev,
+				 uint32_t ip_type)
+{
+	struct amd_conc_userq_destroy_args dargs[2];
+	struct amd_test_userq_ctx userq;
+	pthread_barrier_t barrier;
+	pthread_t threads[2];
+	int i;
+
+	memset(&userq, 0, sizeof(userq));
+	if (!amd_test_try_create_userq(fd, dev, ip_type, &userq)) {
+		igt_info("concurrent-userq-fuzzing[%s]: queue unavailable, "
+			 "skip double-destroy\n", amd_userq_ip_name(ip_type));
+		return;
+	}
+
+	igt_assert(pthread_barrier_init(&barrier, NULL, 2) == 0);
+	igt_info("concurrent-userq-fuzzing[%s]: double-destroy start "
+		 "(queue_id=%u)\n", amd_userq_ip_name(ip_type), userq.queue_id);
+	for (i = 0; i < 2; i++) {
+		dargs[i].fd       = fd;
+		dargs[i].queue_id = userq.queue_id;
+		dargs[i].barrier  = &barrier;
+		igt_assert(pthread_create(&threads[i], NULL,
+					  thread_userq_double_destroy,
+					  &dargs[i]) == 0);
+	}
+	pthread_join(threads[0], NULL);
+	pthread_join(threads[1], NULL);
+	pthread_barrier_destroy(&barrier);
+	userq.created = false;
+	amd_test_userq_cleanup(fd, dev, &userq);
+}
+
+static void
+amd_userq_run_wait_destroy_race(int fd, amdgpu_device_handle dev,
+				 uint32_t ip_type)
+{
+	struct amd_conc_userq_op_state s;
+	struct amd_test_userq_ctx userq;
+	pthread_t waiter, destroyer;
+
+	memset(&userq, 0, sizeof(userq));
+	if (!amd_test_try_create_userq(fd, dev, ip_type, &userq)) {
+		igt_info("concurrent-userq-fuzzing[%s]: queue unavailable, "
+			 "skip wait-vs-destroy\n", amd_userq_ip_name(ip_type));
+		return;
+	}
+
+	memset(&s, 0, sizeof(s));
+	s.fd       = fd;
+	s.dev      = dev;
+	s.ip_type  = ip_type;
+	s.queue_id = userq.queue_id;
+	userq.created = false;
+	igt_assert(pthread_barrier_init(&s.barrier, NULL, 2) == 0);
+	igt_info("concurrent-userq-fuzzing[%s]: wait-vs-destroy start "
+		 "(queue_id=%u)\n", amd_userq_ip_name(ip_type), s.queue_id);
+	igt_assert(pthread_create(&waiter, NULL, thread_userq_waiter, &s) == 0);
+	igt_assert(pthread_create(&destroyer, NULL, thread_userq_op_destroyer, &s) == 0);
+	pthread_join(waiter, NULL);
+	pthread_join(destroyer, NULL);
+	pthread_barrier_destroy(&s.barrier);
+	amd_test_userq_cleanup(fd, dev, &userq);
+}
+
+static void
+amd_userq_run_write_negative_destroy_race(int fd, amdgpu_device_handle dev,
+					 uint32_t ip_type)
+{
+	struct amd_conc_userq_write_state s;
+	struct amd_test_userq_ctx userq;
+	pthread_t writer, neg_destroyer;
+
+	memset(&userq, 0, sizeof(userq));
+	if (!amd_test_try_create_userq(fd, dev, ip_type, &userq)) {
+		igt_info("concurrent-userq-fuzzing[%s]: queue unavailable, "
+			 "skip write-vs-negative-vs-destroy\n",
+			 amd_userq_ip_name(ip_type));
+		return;
+	}
+
+	memset(&s, 0, sizeof(s));
+	s.fd = fd;
+	s.dev = dev;
+	s.ip_type = ip_type;
+	s.queue_id = userq.queue_id;
+	s.ring_context = userq.ring_context;
+	userq.created = false;
+
+	igt_assert(pthread_barrier_init(&s.barrier, NULL, 2) == 0);
+	igt_info("concurrent-userq-fuzzing[%s]: write-vs-negative-vs-destroy "
+		 "start (queue_id=%u)\n", amd_userq_ip_name(ip_type), s.queue_id);
+	igt_assert(pthread_create(&writer, NULL, thread_userq_writer, &s) == 0);
+	igt_assert(pthread_create(&neg_destroyer, NULL,
+				  thread_userq_negative_destroyer, &s) == 0);
+	pthread_join(writer, NULL);
+	pthread_join(neg_destroyer, NULL);
+	pthread_barrier_destroy(&s.barrier);
+	amd_test_userq_cleanup(fd, dev, &userq);
+}
+
+static void
+amd_userq_concurrent_fuzzing(int fd, amdgpu_device_handle dev,
+				    const bool userq_arr_cap[AMD_IP_MAX])
+{
+	static const uint32_t ip_types[] = {
+		AMDGPU_HW_IP_GFX,
+		AMDGPU_HW_IP_COMPUTE,
+		AMDGPU_HW_IP_DMA,
+	};
+	unsigned int i;
+
+	if (!dev) {
+		igt_info("concurrent-userq-fuzzing: no amdgpu device, skip\n");
+		return;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(ip_types); i++) {
+		uint32_t ip_type = ip_types[i];
+		enum amd_ip_block_type block_type;
+
+		if (!amd_test_map_hw_to_ip_block_type(ip_type, &block_type)) {
+			igt_info("concurrent-userq-fuzzing[%s]: unsupported hw ip, skip all races\n",
+				 amd_userq_ip_name(ip_type));
+			continue;
+		}
+
+		if (!userq_arr_cap[block_type]) {
+			igt_info("concurrent-userq-fuzzing[%s]: userq capability not present, skip all races\n",
+				 amd_userq_ip_name(ip_type));
+			continue;
+		}
+
+		igt_info("concurrent-userq-fuzzing[%s]: start\n",
+			 amd_userq_ip_name(ip_type));
+		amd_userq_run_create_destroy_race(fd, dev, ip_type);
+		amd_userq_run_signal_destroy_race(fd, dev, ip_type);
+		amd_userq_run_double_destroy_race(fd, dev, ip_type);
+		amd_userq_run_wait_destroy_race(fd, dev, ip_type);
+		amd_userq_run_write_negative_destroy_race(fd, dev, ip_type);
+		igt_info("concurrent-userq-fuzzing[%s]: done\n",
+			 amd_userq_ip_name(ip_type));
+	}
+}
+#endif /* AMDGPU_USERQ_ENABLED */
+
 int igt_main()
 {
 	int fd = -1;
 	amdgpu_device_handle amdgpu_dev = NULL;
 	uint32_t major_version = 0, minor_version = 0;
+	struct amdgpu_gpu_info gpu_info = {0};
+	bool userq_arr_cap[AMD_IP_MAX] = {0};
+	int r;
 	const enum amd_ip_block_type arr_types[] = {
 			AMD_IP_GFX, AMD_IP_COMPUTE, AMD_IP_DMA, AMD_IP_UVD,
 			AMD_IP_VCE, AMD_IP_UVD_ENC, AMD_IP_VCN_DEC, AMD_IP_VCN_ENC,
@@ -2029,7 +2732,17 @@ int igt_main()
 	igt_fixture() {
 		fd = drm_open_driver(DRIVER_AMDGPU);
 		igt_require(fd != -1);
-		amdgpu_device_initialize(fd, &major_version, &minor_version, &amdgpu_dev);
+		r = amdgpu_device_initialize(fd, &major_version, &minor_version, &amdgpu_dev);
+		igt_require(r == 0);
+
+		r = amdgpu_query_gpu_info(amdgpu_dev, &gpu_info);
+		igt_require(r == 0);
+
+		r = setup_amdgpu_ip_blocks(major_version, minor_version,
+					    &gpu_info, amdgpu_dev);
+		igt_require(r == 0);
+
+		asic_userq_readiness(amdgpu_dev, userq_arr_cap);
 	}
 
 	igt_describe("Check user ptr fuzzing with huge size and not valid address");
@@ -2055,6 +2768,12 @@ int igt_main()
 	igt_describe("Lifecycle/sequence fuzzing: double-free, use-after-free, operations on freed resources");
 	igt_subtest("lifecycle-fuzzing")
 		amd_lifecycle_fuzzing(fd);
+
+#ifdef AMDGPU_USERQ_ENABLED
+	igt_describe("USERQ concurrency fuzzing: concurrent CREATE/DESTROY, SIGNAL/WAIT racing DESTROY, double-DESTROY");
+	igt_subtest("concurrent-userq-fuzzing")
+		amd_userq_concurrent_fuzzing(fd, amdgpu_dev, userq_arr_cap);
+#endif
 
 	igt_fixture() {
 		drm_close_driver(fd);
