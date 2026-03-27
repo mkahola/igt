@@ -1702,6 +1702,319 @@ amd_boundary_fuzzing(int fd)
 	}
 }
 
+/*
+ * Lifecycle and sequence fuzzing tests.
+ *
+ * These tests validate the driver handles wrong-order operations safely:
+ * double-close, use-after-free patterns, and operations on freed resources.
+ * Many of these patterns mirror real Syzkaller-found bugs.
+ */
+static void
+amd_lifecycle_fuzzing(int fd)
+{
+	/*
+	 * Double-close GEM handle: closing the same BO twice must not
+	 * crash the driver.  The second close should fail with EINVAL.
+	 */
+	{
+		union drm_amdgpu_gem_create gem;
+		struct drm_gem_close close_arg;
+		int ret;
+		memset(&gem, 0, sizeof(gem));
+		gem.in.bo_size = 4096;
+		gem.in.alignment = 0;
+		gem.in.domains = AMDGPU_GEM_DOMAIN_GTT;
+		gem.in.domain_flags = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_CREATE, &gem);
+		igt_assert_eq(ret, 0);
+		close_arg.handle = gem.out.handle;
+		close_arg.pad = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+		igt_assert_eq(ret, 0);
+		/* Second close -- must not crash */
+		errno = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+		igt_assert_neq(ret, 0);
+		igt_info("double-close GEM handle: ret=%d errno=%d\n", ret, errno);
+	}
+	/*
+	 * GEM_MMAP on closed handle: mmap after close must fail gracefully.
+	 */
+	{
+		union drm_amdgpu_gem_create gem;
+		union drm_amdgpu_gem_mmap mmap_arg;
+		struct drm_gem_close close_arg;
+		int ret;
+		memset(&gem, 0, sizeof(gem));
+		gem.in.bo_size = 4096;
+		gem.in.alignment = 0;
+		gem.in.domains = AMDGPU_GEM_DOMAIN_GTT;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_CREATE, &gem);
+		igt_assert_eq(ret, 0);
+		close_arg.handle = gem.out.handle;
+		close_arg.pad = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+		igt_assert_eq(ret, 0);
+		memset(&mmap_arg, 0, sizeof(mmap_arg));
+		mmap_arg.in.handle = gem.out.handle;
+		errno = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_MMAP, &mmap_arg);
+		igt_assert_neq(ret, 0);
+		igt_info("mmap-after-close: ret=%d errno=%d\n", ret, errno);
+	}
+	/*
+	 * GEM_WAIT_IDLE on closed handle: must fail, not crash.
+	 */
+	{
+		union drm_amdgpu_gem_create gem;
+		union drm_amdgpu_gem_wait_idle wait;
+		struct drm_gem_close close_arg;
+		int ret;
+		memset(&gem, 0, sizeof(gem));
+		gem.in.bo_size = 4096;
+		gem.in.domains = AMDGPU_GEM_DOMAIN_GTT;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_CREATE, &gem);
+		igt_assert_eq(ret, 0);
+		close_arg.handle = gem.out.handle;
+		close_arg.pad = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+		igt_assert_eq(ret, 0);
+		memset(&wait, 0, sizeof(wait));
+		wait.in.handle = gem.out.handle;
+		wait.in.timeout = 1000;
+		errno = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_WAIT_IDLE, &wait);
+		igt_assert_neq(ret, 0);
+		igt_info("wait-idle-after-close: ret=%d errno=%d\n", ret, errno);
+	}
+	/*
+	 * Double-free CTX: freeing context twice must not crash.
+	 */
+	{
+		union drm_amdgpu_ctx ctx;
+		int ret;
+		memset(&ctx, 0, sizeof(ctx));
+		ctx.in.op = AMDGPU_CTX_OP_ALLOC_CTX;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_CTX, &ctx);
+		igt_assert_eq(ret, 0);
+		{
+			union drm_amdgpu_ctx free_ctx;
+			uint32_t saved_id = ctx.out.alloc.ctx_id;
+			memset(&free_ctx, 0, sizeof(free_ctx));
+			free_ctx.in.op = AMDGPU_CTX_OP_FREE_CTX;
+			free_ctx.in.ctx_id = saved_id;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_CTX, &free_ctx);
+			igt_assert_eq(ret, 0);
+			/* Second free -- must not crash */
+			errno = 0;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_CTX, &free_ctx);
+			igt_assert_neq(ret, 0);
+			igt_info("double-free CTX: ret=%d errno=%d\n", ret, errno);
+		}
+	}
+	/*
+	 * CS submit with freed CTX: must fail, not crash or UAF.
+	 */
+	{
+		union drm_amdgpu_ctx ctx;
+		union drm_amdgpu_cs cs;
+		int ret;
+		memset(&ctx, 0, sizeof(ctx));
+		ctx.in.op = AMDGPU_CTX_OP_ALLOC_CTX;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_CTX, &ctx);
+		igt_assert_eq(ret, 0);
+		{
+			union drm_amdgpu_ctx free_ctx;
+			uint32_t saved_id = ctx.out.alloc.ctx_id;
+			memset(&free_ctx, 0, sizeof(free_ctx));
+			free_ctx.in.op = AMDGPU_CTX_OP_FREE_CTX;
+			free_ctx.in.ctx_id = saved_id;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_CTX, &free_ctx);
+			igt_assert_eq(ret, 0);
+			/* Submit with freed ctx -- must not crash */
+			memset(&cs, 0, sizeof(cs));
+			cs.in.ctx_id = saved_id;
+			errno = 0;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_CS, &cs);
+			igt_assert_neq(ret, 0);
+			igt_info("CS-after-ctx-free: ret=%d errno=%d\n", ret, errno);
+		}
+	}
+	/*
+	 * WAIT_CS with freed CTX: must fail gracefully.
+	 */
+	{
+		union drm_amdgpu_ctx ctx;
+		union drm_amdgpu_wait_cs wait;
+		int ret;
+		memset(&ctx, 0, sizeof(ctx));
+		ctx.in.op = AMDGPU_CTX_OP_ALLOC_CTX;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_CTX, &ctx);
+		igt_assert_eq(ret, 0);
+		{
+			union drm_amdgpu_ctx free_ctx;
+			uint32_t saved_id = ctx.out.alloc.ctx_id;
+			memset(&free_ctx, 0, sizeof(free_ctx));
+			free_ctx.in.op = AMDGPU_CTX_OP_FREE_CTX;
+			free_ctx.in.ctx_id = saved_id;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_CTX, &free_ctx);
+			igt_assert_eq(ret, 0);
+			memset(&wait, 0, sizeof(wait));
+			wait.in.ctx_id = saved_id;
+			wait.in.ip_type = AMDGPU_HW_IP_GFX;
+			wait.in.timeout = 1000;
+			errno = 0;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_WAIT_CS, &wait);
+			igt_assert_neq(ret, 0);
+			igt_info("wait-cs-after-ctx-free: ret=%d errno=%d\n", ret, errno);
+		}
+	}
+	/*
+	 * GEM_METADATA on closed handle: get/set metadata on freed BO.
+	 */
+	{
+		union drm_amdgpu_gem_create gem;
+		struct drm_amdgpu_gem_metadata meta;
+		struct drm_gem_close close_arg;
+		int ret;
+		memset(&gem, 0, sizeof(gem));
+		gem.in.bo_size = 4096;
+		gem.in.domains = AMDGPU_GEM_DOMAIN_GTT;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_CREATE, &gem);
+		igt_assert_eq(ret, 0);
+		close_arg.handle = gem.out.handle;
+		close_arg.pad = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+		igt_assert_eq(ret, 0);
+		memset(&meta, 0, sizeof(meta));
+		meta.handle = gem.out.handle;
+		meta.op = AMDGPU_GEM_METADATA_OP_GET_METADATA;
+		errno = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_METADATA, &meta);
+		igt_assert_neq(ret, 0);
+		igt_info("metadata-get-after-close: ret=%d errno=%d\n", ret, errno);
+		meta.op = AMDGPU_GEM_METADATA_OP_SET_METADATA;
+		errno = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_METADATA, &meta);
+		igt_assert_neq(ret, 0);
+		igt_info("metadata-set-after-close: ret=%d errno=%d\n", ret, errno);
+	}
+	/*
+	 * GEM_OP on closed handle: must fail, not UAF.
+	 */
+	{
+		union drm_amdgpu_gem_create gem;
+		struct drm_amdgpu_gem_op gem_op;
+		struct drm_gem_close close_arg;
+		int ret;
+		memset(&gem, 0, sizeof(gem));
+		gem.in.bo_size = 4096;
+		gem.in.domains = AMDGPU_GEM_DOMAIN_GTT;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_CREATE, &gem);
+		igt_assert_eq(ret, 0);
+		close_arg.handle = gem.out.handle;
+		close_arg.pad = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+		igt_assert_eq(ret, 0);
+		memset(&gem_op, 0, sizeof(gem_op));
+		gem_op.handle = gem.out.handle;
+		gem_op.op = AMDGPU_GEM_OP_GET_GEM_CREATE_INFO;
+		errno = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_OP, &gem_op);
+		igt_assert_neq(ret, 0);
+		igt_info("gem-op-after-close: ret=%d errno=%d\n", ret, errno);
+	}
+	/*
+	 * BO_LIST with closed BO handle: create a bo_list referencing
+	 * a handle that was already closed.
+	 */
+	{
+		union drm_amdgpu_gem_create gem;
+		union drm_amdgpu_bo_list bo_list;
+		struct drm_amdgpu_bo_list_entry entry;
+		struct drm_gem_close close_arg;
+		int ret;
+		memset(&gem, 0, sizeof(gem));
+		gem.in.bo_size = 4096;
+		gem.in.domains = AMDGPU_GEM_DOMAIN_GTT;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_CREATE, &gem);
+		igt_assert_eq(ret, 0);
+		close_arg.handle = gem.out.handle;
+		close_arg.pad = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+		igt_assert_eq(ret, 0);
+		memset(&entry, 0, sizeof(entry));
+		entry.bo_handle = gem.out.handle;
+		memset(&bo_list, 0, sizeof(bo_list));
+		bo_list.in.operation = AMDGPU_BO_LIST_OP_CREATE;
+		bo_list.in.bo_number = 1;
+		bo_list.in.bo_info_size = sizeof(entry);
+		bo_list.in.bo_info_ptr = (uintptr_t)&entry;
+		errno = 0;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_BO_LIST, &bo_list);
+		igt_assert_neq(ret, 0);
+		igt_info("bo-list-with-closed-handle: ret=%d errno=%d\n", ret, errno);
+	}
+	/*
+	 * PRIME export + close + import-back: must not crash.
+	 * Tests the DMA-BUF handle lifecycle.
+	 */
+	{
+		union drm_amdgpu_gem_create gem;
+		struct drm_prime_handle prime;
+		struct drm_gem_close close_arg;
+		int ret;
+		memset(&gem, 0, sizeof(gem));
+		gem.in.bo_size = 4096;
+		gem.in.domains = AMDGPU_GEM_DOMAIN_GTT;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_GEM_CREATE, &gem);
+		igt_assert_eq(ret, 0);
+		/* Export to DMA-BUF fd */
+		memset(&prime, 0, sizeof(prime));
+		prime.handle = gem.out.handle;
+		prime.flags = DRM_CLOEXEC | DRM_RDWR;
+		ret = drmIoctl(fd, DRM_IOCTL_PRIME_HANDLE_TO_FD, &prime);
+		if (ret == 0) {
+			int dmabuf_fd = prime.fd;
+			/* Close the GEM handle */
+			close_arg.handle = gem.out.handle;
+			close_arg.pad = 0;
+			drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+			/* Import back from the DMA-BUF fd */
+			memset(&prime, 0, sizeof(prime));
+			prime.fd = dmabuf_fd;
+			ret = drmIoctl(fd, DRM_IOCTL_PRIME_FD_TO_HANDLE, &prime);
+			igt_info("prime-reimport-after-close: ret=%d handle=%u\n",
+				 ret, prime.handle);
+			/* Clean up */
+			if (ret == 0) {
+				close_arg.handle = prime.handle;
+				drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &close_arg);
+			}
+			close(dmabuf_fd);
+		}
+	}
+	/*
+	 * VM reserve/unreserve double-free: unreserving VMID twice.
+	 */
+	{
+		union drm_amdgpu_vm vm;
+		int ret;
+		memset(&vm, 0, sizeof(vm));
+		vm.in.op = AMDGPU_VM_OP_RESERVE_VMID;
+		ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_VM, &vm);
+		if (ret == 0) {
+			vm.in.op = AMDGPU_VM_OP_UNRESERVE_VMID;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_VM, &vm);
+			igt_assert_eq(ret, 0);
+			/* Second unreserve -- must not crash */
+			errno = 0;
+			ret = drmIoctl(fd, DRM_IOCTL_AMDGPU_VM, &vm);
+			igt_info("vm-double-unreserve: ret=%d errno=%d\n", ret, errno);
+		}
+	}
+}
+
 int igt_main()
 {
 	int fd = -1;
@@ -1738,6 +2051,10 @@ int igt_main()
 	igt_describe("Boundary value and edge-case fuzzing: extreme sizes, alignments, domain combos, AMDGPU_INFO exhaustive query sweep");
 	igt_subtest("boundary-fuzzing")
 		amd_boundary_fuzzing(fd);
+
+	igt_describe("Lifecycle/sequence fuzzing: double-free, use-after-free, operations on freed resources");
+	igt_subtest("lifecycle-fuzzing")
+		amd_lifecycle_fuzzing(fd);
 
 	igt_fixture() {
 		drm_close_driver(fd);
