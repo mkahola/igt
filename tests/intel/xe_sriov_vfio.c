@@ -28,6 +28,9 @@
  *
  * SUBTEST: open-basic
  * Description: Bind VF to xe-vfio-pci and perform minimal VFIO group open and status ioctl.
+ *
+ * SUBTEST: region-info
+ * Description: Bind VF to xe-vfio-pci, open VFIO device and query VFIO region info (BAR sizes).
  */
 
 IGT_TEST_DESCRIPTION("Xe SR-IOV VFIO tests (xe-vfio-pci)");
@@ -218,6 +221,58 @@ static void vfio_open_basic(const char *pci_slot)
 	vfio_close_device(&fds);
 }
 
+static void vfio_open_device(const char *pci_slot, struct vfio_dev_fds *out)
+{
+	struct vfio_group_status group_status;
+	int ret;
+
+	vfio_open_group(pci_slot, out, &group_status);
+
+	igt_require_f(group_status.flags & VFIO_GROUP_FLAGS_VIABLE,
+		      "VFIO group %s is not viable (flags=0x%x)\n",
+		      out->group_id, group_status.flags);
+
+	ret = ioctl(out->group_fd, VFIO_GROUP_SET_CONTAINER, &out->container_fd);
+	igt_require_f(ret == 0, "VFIO_GROUP_SET_CONTAINER failed (%d)\n", -errno);
+
+	ret = ioctl(out->container_fd, VFIO_SET_IOMMU, VFIO_TYPE1_IOMMU);
+	igt_require_f(ret == 0, "VFIO_SET_IOMMU(VFIO_TYPE1_IOMMU) failed (%d)\n", -errno);
+
+	out->device_fd = ioctl(out->group_fd, VFIO_GROUP_GET_DEVICE_FD, (char *)pci_slot);
+	igt_assert_f(out->device_fd >= 0, "VFIO_GROUP_GET_DEVICE_FD(%s) failed (%d)\n",
+		     pci_slot, -errno);
+}
+
+static void vfio_dump_region_info(int device_fd)
+{
+	struct vfio_device_info dinfo = { .argsz = sizeof(dinfo) };
+	int ret;
+
+	ret = ioctl(device_fd, VFIO_DEVICE_GET_INFO, &dinfo);
+	igt_assert_f(ret == 0, "VFIO_DEVICE_GET_INFO failed (%d)\n", -errno);
+
+	igt_info("VFIO device: flags=0x%x num_regions=%u num_irqs=%u\n",
+		 dinfo.flags, dinfo.num_regions, dinfo.num_irqs);
+
+	for (uint32_t i = 0; i < dinfo.num_regions; i++) {
+		struct vfio_region_info rinfo = {
+			.argsz = sizeof(rinfo),
+			.index = i,
+		};
+
+		ret = ioctl(device_fd, VFIO_DEVICE_GET_REGION_INFO, &rinfo);
+		igt_assert_f(ret == 0, "VFIO_DEVICE_GET_REGION_INFO(index=%u) failed (%d)\n",
+			     i, -errno);
+
+		igt_info("region[%u]: size=%llu offset=%llu flags=0x%x caps=%u\n",
+			 i,
+			 (unsigned long long)rinfo.size,
+			 (unsigned long long)rinfo.offset,
+			 rinfo.flags,
+			 rinfo.cap_offset);
+	}
+}
+
 static void open_pf(void)
 {
 	int fd;
@@ -337,6 +392,36 @@ int igt_main()
 		vf_bind_override(vf_num, XE_VFIO_PCI_DRV);
 
 		vfio_open_basic(slot);
+
+		vf_unbind_override(vf_num);
+		free(slot);
+		igt_sriov_disable_vfs(pf_fd);
+	}
+
+	igt_describe("Bind VF to xe-vfio-pci and query VFIO region info (BAR sizes). ");
+	igt_subtest("region-info") {
+		unsigned int vf_num = 1;
+		struct vfio_dev_fds fds;
+		char *slot = NULL;
+
+		igt_skip_on_f(igt_kmod_load(XE_VFIO_PCI_MOD, NULL),
+			      "Failed to load %s\n", XE_VFIO_PCI_MOD);
+
+		open_pf();
+
+		igt_sriov_disable_driver_autoprobe(pf_fd);
+		igt_sriov_enable_vfs(pf_fd, vf_num);
+
+		igt_require_f(!igt_pci_system_reinit(), "Failed to refresh PCI state\n");
+		igt_sriov_enable_driver_autoprobe(pf_fd);
+
+		slot = vf_pci_slot_alloc(vf_num);
+
+		vf_bind_override(vf_num, XE_VFIO_PCI_DRV);
+
+		vfio_open_device(slot, &fds);
+		vfio_dump_region_info(fds.device_fd);
+		vfio_close_device(&fds);
 
 		vf_unbind_override(vf_num);
 		free(slot);
