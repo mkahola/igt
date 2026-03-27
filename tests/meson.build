@@ -337,6 +337,7 @@ intel_xe_progs = [
 	'xe_sriov_admin',
 	'xe_sriov_auto_provisioning',
 	'xe_sriov_flr',
+	'xe_sriov_vfio',
 	'xe_sriov_scheduling',
         'xe_survivability',
 	'xe_sriov_vram',
