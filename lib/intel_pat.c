@@ -97,6 +97,62 @@ int32_t xe_get_pat_sw_config(int drm_fd, struct intel_pat_cache *xe_pat_cache)
 	return parsed;
 }
 
+/*
+ * Hardcoded PAT indices for Xe platforms, used as a fallback when the
+ * kernel doesn't expose gt0/pat_sw_config in debugfs.
+ *
+ * Covers platforms up to Crescent Island (xe3p XPC) that have Xe driver
+ * support in current stable kernels.  Anything newer must run a kernel
+ * that provides the pat_sw_config debugfs entry.
+ *
+ * TODO: drop this fallback once stable kernels ship with pat_sw_config.
+ */
+static bool xe_pat_fallback(int fd, struct intel_pat_cache *pat)
+{
+	uint16_t dev_id = intel_get_drm_devid(fd);
+
+	pat->uc_comp = XE_PAT_IDX_INVALID;
+
+	if (intel_graphics_ver(dev_id) == IP_VER(35, 11)) {
+		/* Xe3p XPC (GFX ver 35.11): no WT, no compression */
+		pat->uc = 3;
+		pat->wt = 3;   /* No WT on XPC; use UC */
+		pat->wb = 2;
+		pat->max_index = 31;
+	} else if (intel_get_device_info(dev_id)->graphics_ver == 30 ||
+		   intel_get_device_info(dev_id)->graphics_ver == 20) {
+		/* Xe2 / Xe3: GFX ver 20 / 30 */
+		pat->uc = 3;
+		pat->wt = 15;
+		pat->wb = 2;
+		pat->uc_comp = 12;
+		pat->max_index = 31;
+
+		/* Wa_16023588340: CLOS3 entries at end of table are unusable */
+		if (intel_graphics_ver(dev_id) == IP_VER(20, 1))
+			pat->max_index -= 4;
+	} else if (IS_METEORLAKE(dev_id)) {
+		pat->uc = 2;
+		pat->wt = 1;
+		pat->wb = 3;
+		pat->max_index = 3;
+	} else if (IS_PONTEVECCHIO(dev_id)) {
+		pat->uc = 0;
+		pat->wt = 2;
+		pat->wb = 3;
+		pat->max_index = 7;
+	} else if (IS_DG2(dev_id) || intel_graphics_ver(dev_id) <= IP_VER(12, 10)) {
+		pat->uc = 3;
+		pat->wt = 2;
+		pat->wb = 0;
+		pat->max_index = 3;
+	} else {
+		return false;
+	}
+
+	return true;
+}
+
 static void intel_get_pat_idx(int fd, struct intel_pat_cache *pat)
 {
 	uint16_t dev_id;
@@ -105,14 +161,26 @@ static void intel_get_pat_idx(int fd, struct intel_pat_cache *pat)
 	 * For Xe, use the PAT cache stored in struct xe_device.
 	 * xe_device_get() populates the cache while still root; forked
 	 * children that inherit the xe_device can use it post-drop_root().
+	 *
+	 * Fall back to hardcoded values when the kernel lacks the
+	 * pat_sw_config debugfs. Platforms newer than Crescent Island
+	 * must have the debugfs available.
 	 */
 	if (is_xe_device(fd)) {
 		struct xe_device *xe_dev = xe_device_get(fd);
 
-		igt_assert_f(xe_dev->pat_cache,
-			     "PAT sw_config not available -- "
-			     "debugfs not accessible (missing root or not mounted?)\n");
-		*pat = *xe_dev->pat_cache;
+		if (xe_dev->pat_cache) {
+			*pat = *xe_dev->pat_cache;
+		} else if (xe_pat_fallback(fd, pat)) {
+			igt_info("PAT sw_config debugfs not available, "
+				 "using hardcoded fallback\n");
+		} else {
+			igt_assert_f(false,
+				     "PAT sw_config not available and no "
+				     "hardcoded fallback for this platform -- "
+				     "kernel with 'drm/xe: expose PAT software "
+				     "config to debugfs' required\n");
+		}
 		return;
 	}
 
