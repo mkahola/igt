@@ -343,10 +343,10 @@ int igt_main()
 		igt_display_require_output(&data.display);
 
 		data.crtc_b = igt_crtc_for_pipe(&data.display, PIPE_B);
-		igt_skip_on(!data.crtc_b->valid);
+		igt_skip_on(!data.crtc_b);
 
 		data.crtc_c = igt_crtc_for_pipe(&data.display, PIPE_C);
-		igt_skip_on(!data.crtc_c->valid);
+		igt_skip_on(!data.crtc_c);
 	}
 
 	igt_describe("Tests pipe-B and pipe-C interactions in IVB by enabling pipe-B with mode "

@@ -3174,7 +3174,7 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 	for (crtc_index = 0; crtc_index < resources->count_crtcs; crtc_index++) {
 		int pipe_enum = is_intel_dev ? __intel_get_pipe_from_crtc_index(drm_fd, crtc_index) : crtc_index;
 
-		crtc = igt_crtc_for_pipe(display, pipe_enum);
+		crtc = &display->crtcs[pipe_enum];
 		crtc->pipe = pipe_enum;
 
 		crtc->valid = true;
@@ -5308,15 +5308,6 @@ void igt_output_set_crtc(igt_output_t *output, igt_crtc_t *crtc)
 	if (output->pending_crtc)
 		old_crtc = igt_output_get_driving_crtc(output);
 
-	/*
-	 * Ensure pending_crtc is always valid.
-	 *
-	 * FIXME: Ensure we only have valid crtc objects around in general, so
-	 * we can remove this check.
-	 */
-	if (crtc && !crtc->valid)
-		crtc = NULL;
-
 	LOG(display, "%s: set_crtc(%s)\n", igt_output_name(output),
 	    igt_crtc_name(crtc));
 	output->pending_crtc = crtc;
@@ -7295,9 +7286,9 @@ bool igt_check_bigjoiner_support(igt_display_t *display)
 				}
 			}
 
-			if (!igt_crtc_for_pipe(display, pipes[i].idx + 1)->valid) {
+			if (!igt_crtc_for_pipe(display, pipes[i].idx + 1)) {
 				igt_info("Consecutive pipe-%s: Fused-off, couldn't be used as a Bigjoiner Secondary.\n",
-					 igt_crtc_name(igt_crtc_for_pipe(display, pipes[i].idx + 1)));
+					 kmstest_pipe_name(pipes[i].idx + 1));
 				return false;
 			}
 
@@ -7317,9 +7308,9 @@ bool igt_check_bigjoiner_support(igt_display_t *display)
 				 max_dotclock, pipes[i - 1].force_joiner ? "Yes" : "No");
 			kmstest_dump_mode(pipes[i - 1].mode);
 
-			if (!igt_crtc_for_pipe(display, pipes[i - 1].idx + 1)->valid) {
+			if (!igt_crtc_for_pipe(display, pipes[i - 1].idx + 1)) {
 				igt_info("Consecutive pipe-%s: Fused-off, couldn't be used as a Bigjoiner Secondary.\n",
-					 igt_crtc_name(igt_crtc_for_pipe(display, pipes[i - 1].idx + 1)));
+					 kmstest_pipe_name(pipes[i - 1].idx + 1));
 				return false;
 			}
 
@@ -8089,10 +8080,14 @@ igt_crtc_t *igt_crtc_for_crtc_index(igt_display_t *display, int crtc_index)
 
 igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pipe)
 {
+	igt_crtc_t *crtc;
+
 	if (pipe == PIPE_NONE)
 		return NULL;
 
-	return &display->crtcs[pipe];
+	crtc = &display->crtcs[pipe];
+
+	return crtc->valid ? crtc : NULL;
 }
 
 /*

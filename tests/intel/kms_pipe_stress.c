@@ -579,7 +579,7 @@ static void stress_pipes(struct data *data, struct timespec *start,
 			continue;
 
 		crtc = igt_crtc_for_pipe(display, pipe);
-		igt_assert_f(crtc->valid, "There is no pipe %s\n", kmstest_pipe_name(pipe));
+		igt_assert_f(crtc, "There is no pipe %s\n", kmstest_pipe_name(pipe));
 
 		igt_assert_f(crtc->n_planes < MAX_PLANES,
 			     "Currently we don't support more than %d planes!",
@@ -741,7 +741,7 @@ static void destroy_framebuffers(struct data *data)
 			continue;
 
 		crtc = igt_crtc_for_pipe(display, i);
-		igt_assert_f(crtc->valid, "There is no pipe %s\n", kmstest_pipe_name(i));
+		igt_assert_f(crtc, "There is no pipe %s\n", kmstest_pipe_name(i));
 
 		for (j = 0; j < MAX_PLANES; j++) {
 			if (data->fb[i * MAX_PLANES + j].fb_id) {
@@ -803,7 +803,7 @@ static void prepare_test(struct data *data)
 		igt_assert(data->highest_mode[i]);
 
 		crtc = igt_crtc_for_pipe(display, i);
-		if (!crtc->valid)
+		if (!crtc)
 			continue;
 
 		if (data->highest_mode[i]) {

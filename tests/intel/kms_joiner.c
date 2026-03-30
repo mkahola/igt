@@ -148,7 +148,7 @@ static enum pipe setup_pipe(data_t *data, igt_output_t *output, enum pipe pipe, 
 	uint32_t attempt_mask;
 
 	crtc = igt_crtc_for_pipe(display, pipe);
-	igt_assert_f(crtc->valid, "There is no pipe %s\n", kmstest_pipe_name(pipe));
+	igt_assert_f(crtc, "There is no pipe %s\n", kmstest_pipe_name(pipe));
 
 	attempt_mask = BIT(crtc->pipe);
 	master_pipe = get_next_master_pipe(data, available_pipe_mask & attempt_mask);
@@ -176,7 +176,7 @@ static void set_joiner_mode(data_t *data, igt_output_t *output, drmModeModeInfo 
 		  output->name, mode->hdisplay, mode->vdisplay, mode->vrefresh);
 
 	crtc = igt_crtc_for_pipe(display, pipe);
-	igt_assert_f(crtc->valid, "There is no pipe %s\n", kmstest_pipe_name(pipe));
+	igt_assert_f(crtc, "There is no pipe %s\n", kmstest_pipe_name(pipe));
 
 	igt_output_set_crtc(output, crtc);
 	igt_output_override_mode(output, mode);
@@ -396,7 +396,7 @@ static void test_invalid_modeset_two_joiner(data_t *data,
 			igt_assert(kmstest_mode_is_valid(&mode));
 
 			crtc = igt_crtc_for_pipe(display, pipe);
-			igt_assert_f(crtc->valid, "There is no pipe %s\n", kmstest_pipe_name(pipe));
+			igt_assert_f(crtc, "There is no pipe %s\n", kmstest_pipe_name(pipe));
 
 			igt_output_set_crtc(output, crtc);
 			igt_info("Assigning pipe %s to %s with mode %dx%d@%d%s",
@@ -450,7 +450,7 @@ static void test_joiner_on_last_pipe(data_t *data, bool force_joiner)
 		}
 
 		crtc = igt_crtc_for_pipe(display, pipe);
-		igt_assert_f(crtc->valid, "There is no pipe %s\n", kmstest_pipe_name(pipe));
+		igt_assert_f(crtc, "There is no pipe %s\n", kmstest_pipe_name(pipe));
 
 		igt_output_set_crtc(output, crtc);
 		igt_info("Assigning pipe %s to %s with mode %dx%d@%d\n",
@@ -514,7 +514,7 @@ static void test_ultra_joiner(data_t *data, bool invalid_pipe, bool two_display,
 
 			pipe = data->pipe_seq[j];
 			crtc = igt_crtc_for_pipe(display, pipe);
-			igt_assert_f(crtc->valid, "There is no pipe %s\n", kmstest_pipe_name(pipe));
+			igt_assert_f(crtc, "There is no pipe %s\n", kmstest_pipe_name(pipe));
 
 			igt_output_set_crtc(output, crtc);
 
@@ -539,7 +539,7 @@ static void test_ultra_joiner(data_t *data, bool invalid_pipe, bool two_display,
 
 							pipe = data->pipe_seq[k];
 							crtc = igt_crtc_for_pipe(display, pipe);
-							igt_assert_f(crtc->valid, "There is no pipe %s\n", kmstest_pipe_name(pipe));
+							igt_assert_f(crtc, "There is no pipe %s\n", kmstest_pipe_name(pipe));
 
 							igt_output_set_crtc(non_ultra_joiner_output, crtc);
 							plane = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
@@ -591,7 +591,7 @@ static void test_basic_max_non_joiner(data_t *data)
 				igt_crtc_t *crtc;
 
 				crtc = igt_crtc_for_pipe(display, pipe);
-				igt_assert_f(crtc->valid, "There is no pipe %s\n", kmstest_pipe_name(pipe));
+				igt_assert_f(crtc, "There is no pipe %s\n", kmstest_pipe_name(pipe));
 
 				igt_output_set_crtc(output, crtc);
 				igt_require(max_non_joiner_mode_found(data->drm_fd,

@@ -105,7 +105,7 @@ void igt_set_all_master_pipes_for_platform(igt_display_t *display, uint32_t *mas
 
 	*master_pipes = 0;
 	for (pipe = PIPE_A; pipe < IGT_MAX_PIPES - 1; pipe++) {
-		if (igt_crtc_for_pipe(display, pipe)->valid && igt_crtc_for_pipe(display, pipe + 1)->valid) {
+		if (igt_crtc_for_pipe(display, pipe) && igt_crtc_for_pipe(display, pipe + 1)) {
 			*master_pipes |= BIT(pipe);
 			igt_info("Found master pipe %s\n", kmstest_pipe_name(pipe));
 		}
@@ -163,7 +163,7 @@ bool igt_assign_pipes_for_outputs(int drm_fd,
 				kmstest_pipe_name(start + needed - 1), out->name);
 
 		crtc = igt_crtc_for_pipe(out->display, start);
-		igt_assert_f(crtc->valid, "There is no pipe %s\n", kmstest_pipe_name(start));
+		igt_assert_f(crtc, "There is no pipe %s\n", kmstest_pipe_name(start));
 
 		if (needed > 1) {
 			mp = get_next_master_pipe(BIT(start));
