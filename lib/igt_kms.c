@@ -3107,6 +3107,13 @@ static void igt_crtc_init(igt_display_t *display, drmModeRes *resources, igt_crt
 		igt_assert_lte(0, crtc->planes[j].index);
 }
 
+static int crtc_pipe_compare(const void *_a, const void *_b)
+{
+	const igt_crtc_t *a = _a, *b = _b;
+
+	return a->pipe - b->pipe;
+}
+
 /**
  * igt_display_require:
  * @display: a pointer to an #igt_display_t structure
@@ -3164,23 +3171,24 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 		     "count_crtcs exceeds IGT_MAX_PIPES, resources->count_crtcs=%d, IGT_MAX_PIPES=%d\n",
 		     resources->count_crtcs, IGT_MAX_PIPES);
 
-	display->n_crtcs = IGT_MAX_PIPES;
-	display->crtcs = calloc(igt_display_n_crtcs(display),
-				sizeof(igt_crtc_t));
+	display->n_crtcs = resources->count_crtcs;
+	display->crtcs = calloc(igt_display_n_crtcs(display), sizeof(igt_crtc_t));
 	igt_assert_f(display->crtcs,
 		     "Failed to allocate memory for %d CRTCs\n",
 		     igt_display_n_crtcs(display));
 
 	for (crtc_index = 0; crtc_index < resources->count_crtcs; crtc_index++) {
-		int pipe_enum = is_intel_dev ? __intel_get_pipe_from_crtc_index(drm_fd, crtc_index) : crtc_index;
+		crtc = &display->crtcs[crtc_index];
 
-		crtc = &display->crtcs[pipe_enum];
-		crtc->pipe = pipe_enum;
-
-		crtc->valid = true;
 		crtc->crtc_id = resources->crtcs[crtc_index];
 		crtc->crtc_index = crtc_index;
+		crtc->pipe = is_intel_dev ? __intel_get_pipe_from_crtc_index(drm_fd, crtc_index) : crtc_index;
 	}
+
+	/* For Intel, sort the CRTCs in pipe order */
+	if (is_intel_dev)
+		qsort(display->crtcs, igt_display_n_crtcs(display),
+		      sizeof(display->crtcs[0]), crtc_pipe_compare);
 
 	drmSetClientCap(drm_fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
 

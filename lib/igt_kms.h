@@ -475,15 +475,6 @@ struct igt_crtc {
 	/* ID of a hardware pipe */
 	enum pipe pipe;
 
-        /*
-         * Indicates whether this pipe struct is valid and can be used. This can
-         * be false when the pipe is allocated as part of an array indexed by
-         * enum pipe, but the respective pipe is not reported by DRM, meaning
-         * that the pipe could not exist in the underlying hardware, could have
-         * been fused off, etc.
-         */
-        bool valid;
-
 	int n_planes;
 	int num_primary_planes;
 	igt_plane_t *planes;
@@ -738,8 +729,7 @@ static inline bool igt_crtc_connector_valid(igt_crtc_t *crtc, igt_output_t *outp
 #define for_each_crtc(display, crtc) \
 	for ((crtc) = &(display)->crtcs[0]; \
 	     (crtc) < &(display)->crtcs[(display)->n_crtcs]; \
-	     (crtc)++) \
-		for_each_if ((crtc)->valid)
+	     (crtc)++)
 
 /**
  * for_each_crtc_with_valid_output:
@@ -760,7 +750,7 @@ static inline bool igt_crtc_connector_valid(igt_crtc_t *crtc, igt_output_t *outp
 		     (output) < &(display)->outputs[(display)->n_outputs]; \
 	     (output) = (output) + 1 < &(display)->outputs[(display)->n_outputs] ? \
 		     (output) + 1 : ((crtc)++, &(display)->outputs[0])) \
-		for_each_if ((crtc)->valid && igt_crtc_connector_valid((crtc), (output)))
+		for_each_if (igt_crtc_connector_valid((crtc), (output)))
 
 igt_output_crtc_t *__igt_output_crtc_populate(igt_display_t *display,
 					      igt_output_crtc_t *chosen_outputs);
