@@ -8082,12 +8082,12 @@ igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pipe)
 {
 	igt_crtc_t *crtc;
 
-	if (pipe == PIPE_NONE)
-		return NULL;
+	for_each_crtc(display, crtc) {
+		if (crtc->pipe == pipe)
+			return crtc;
+	}
 
-	crtc = &display->crtcs[pipe];
-
-	return crtc->valid ? crtc : NULL;
+	return NULL;
 }
 
 /*
