@@ -1325,7 +1325,13 @@ static bool event_loop(struct test_output *o, unsigned duration_ms,
 		       unsigned *elapsed)
 {
 	unsigned long start, end;
+	uint32_t devid;
 	int count = 0;
+	bool wa;
+
+	devid = intel_get_drm_devid(drm_fd);
+
+	wa = IS_SANDYBRIDGE(devid) || IS_BATTLEMAGE(devid);
 
 	start = gettime_us();
 
@@ -1344,6 +1350,9 @@ static bool event_loop(struct test_output *o, unsigned duration_ms,
 		update_all_state(o, completed_events);
 
 		if (count && (gettime_us() - start) / 1000 >= duration_ms)
+			break;
+
+		if (count && wa && o->flags & TEST_SUSPEND)
 			break;
 
 		count++;
