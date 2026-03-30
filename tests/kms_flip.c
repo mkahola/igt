@@ -274,18 +274,14 @@ static bool all_crtcs = false;
 static bool all_conns = false;
 static bool all_pairs = false;
 
-drmModeRes *resources;
-int drm_fd;
+static drmModeRes *resources;
+static int drm_fd;
 static struct buf_ops *bops;
-uint32_t devid;
-int test_time = 3;
 static bool monotonic_timestamp;
 static pthread_t vblank_wait_thread;
 static int max_dotclock;
 
 static drmModeConnector *last_connector;
-
-uint32_t *fb_ptr;
 
 static igt_display_t display;
 
