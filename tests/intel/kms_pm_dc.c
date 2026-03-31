@@ -385,6 +385,17 @@ static void setup_dc_dpms(data_t *data)
 	}
 }
 
+static bool has_connected_outputs(data_t *data)
+{
+	igt_display_t *display = &data->display;
+	igt_output_t *output;
+
+	for_each_connected_output(display, output)
+		return true;
+
+	return false;
+}
+
 static void dpms_off(data_t *data)
 {
 	for (int i = 0; i < data->display.n_outputs; i++) {
@@ -406,7 +417,13 @@ static void dpms_on(data_t *data)
 					   DRM_MODE_DPMS_ON);
 	}
 
-	if (!data->runtime_suspend_disabled)
+	/*
+	 * DPMS_ON on disconnected connectors does not enable any pipe
+	 * or acquire a runtime PM wakeref, so the device will never
+	 * transition to active state. Skip the wait when no outputs
+	 * are physically connected.
+	 */
+	if (!data->runtime_suspend_disabled && has_connected_outputs(data))
 		igt_assert(igt_wait_for_pm_status
 			   (IGT_RUNTIME_PM_STATUS_ACTIVE));
 }
