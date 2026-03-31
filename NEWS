@@ -1,3 +1,107 @@
+Release 2.4 (2026-03-31)
+------------------------
+
+General changes:
+
+- libpci is new required library for building and running tests. (Janusz
+  Krzysztofik)
+
+Runner changes:
+
+- jansson library replaced json-c in igt_runner. (Ryszard Knop, Kamil
+  Konieczny)
+
+Library changes:
+
+- Big refactor to move from pipe to CRTC index (Jani Nikula, Ville Syrjälä)
+
+- Added PCI ids for WildcatLake and NovaLake-P. (Himanshu Girotra)
+
+- Improved and extending Intel compute kernels for new GPUs. (Zbigniew
+  Kempczyński)
+
+- Added wrappers for painting test patterns to framebuffers and simplifing
+  tests using it. (Karthik B S)
+
+- Added 1D LUT and Gamma 2.2 support in colorpipeline API. (Alex Hung)
+
+- Added selective sync skipping for error injection tests on AMDGPU. (Jesse
+  Zhang)
+
+Test changes:
+
+- New amd_dmabuf_unload test that validates fence independence during amdgpu
+  module unload with cross-driver (VGEM) DMA-BUF shared reservations.
+  (Vitaly Prosyak)
+
+- Skip all kms_flip subtests on MediaTek. (Xiandong Wang)
+
+- New test xe_non_msix for compute walker interrupt notification on non
+  msix mode. (Priyanka Dandamudi)
+
+- Enable planar-pixel-format-settings subtests to pass on VKMS. (Renjun Wang)
+
+- New kms_explicit_fence test to explicit fencing for multiple planes
+  and a single atomic commit. (S Sebinraj)
+
+- New test xe_prefetch_fault for L1/L2 prefetch fault handling support.
+  (Priyanka Dandamudi)
+
+- New amd_cross_gpu_sync test that simulates a render on GPU-A and
+  display on GPU-B pipeline. (Vitaly Prosyak)
+
+- Added 10-bit color depth support to CTM test. (Jason-JH Lin)
+
+- Improved VCN JPEG submission for AMDGPU. (Tessita Thomas)
+
+- New xe_svm_usrptr_madvise for GPU memory operations between SVM-allocated
+  memory and userptr memory with explicit madvise and preferred location
+  hints. (Nishit Sharma)
+
+- New xe_multigpu_svm test for SVM multi-GPU xGPU memory access hints. (Nishit
+  Sharma)
+
+- New xe_sriov_admin SR-IOV test for admin sysfs scheduling attributes. (Marcin
+  Bernatowicz)
+
+- New kms_color_pipeline for Intel plane pipeline tests with LUT1D and CTM.
+  (Swati Sharma)
+
+- Added FBC support to FP16 formats in kms_frontbuffer_tracking.(Pranay Samala)
+
+- Added SVM compute tests in xe_exec_system_allocator to allow triggering GPU
+  page faults from the context of execution units. (Francois Dugast)
+
+- New amd_cursor_overlay test for native cursor fallback to overlay. (Ivan
+  Lipski)
+
+- New buffer object allocation test for MSM. (Jitta Vignan)
+
+- Added VM_BIND tests for partial huge page unmaps for panthor.(Adrián Larumbe)
+
+Tools changes:
+
+- Improved intel_hdcp. (Santhosh Reddy Guddati)
+
+- Improved vmtb for SR-IOV, also enabling PTL and BMG support. (Adam Miszczak)
+
+- intel_gpu_top now explicitly reject Xe devices and informs to use gputop.
+  (Sebastian Brzezinka)
+
+- Add GPU frequencies to gputop. (S Sebinraj)
+
+- lsgpu now shows correct link bandwidth information for discrete GPUs. (Janusz
+  Krzysztofik)
+
+- Improved lsgpu to iterate over all matching devices when using filters.
+  (Zbigniew Kempczyński)
+
+- Improved intel_vbt_decode and intel_display_poller. (Ville Syrjälä)
+
+
+And many other bug fixes, improvements, cleanups and new tests.
+
+
 Release 2.03 (2025-12-16)
 -------------------------
 
