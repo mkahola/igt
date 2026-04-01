@@ -4367,7 +4367,7 @@ static void *map_oa_buffer(u32 *size)
 {
 	void *vaddr = mmap(0, default_oa_buffer_size, PROT_READ, MAP_PRIVATE, stream_fd, 0);
 
-	igt_assert(vaddr != NULL);
+	igt_assert(vaddr != MAP_FAILED);
 	*size = default_oa_buffer_size;
 	return vaddr;
 }
