@@ -19,6 +19,7 @@
 #include "igt_fs.h"
 #include "igt_kmod.h"
 #include "igt_map.h"
+#include "igt_sriov_device.h"
 #include "igt_syncobj.h"
 #include "igt_sysfs.h"
 #include "igt_vgem.h"
@@ -236,6 +237,81 @@ static void pat_sanity(int fd)
 			     "UC_COMP index %d does not point to a compressed UC entry (pat=%#x)\n",
 			     pat_sw_config.uc_comp, uc_comp_pat);
 	}
+}
+
+enum pat_test_opts {
+	PAT_CHECK = 1,
+	PAT_RESET_GT = 2,
+	PAT_SUSPEND = 3,
+};
+
+/**
+ * SUBTEST: pat-sw-hw-compare
+ * Description: verify debugfs 'pat' reflects 'pat_sw_config'
+ *
+ * SUBTEST: pat-sw-hw-reset-compare
+ * Description: verify debugfs 'pat' reflects 'pat_sw_config' after gt reset
+ *
+ * SUBTEST: pat-sw-hw-suspend
+ * Description: verify debugfs 'pat' reflects 'pat_sw_config' after suspend
+ */
+static void pat_sw_hw_compare(int fd, enum pat_test_opts opts)
+{
+	bool matches = true;
+	int gt;
+
+	igt_skip_on(intel_is_vf_device(fd));
+
+	xe_for_each_gt(fd, gt) {
+		struct intel_pat_cache pat_hw_config = {};
+		struct intel_pat_cache pat_sw_config = {};
+		int hw_entries, sw_entries;
+
+		if (opts == PAT_RESET_GT)
+			xe_force_gt_reset_sync(fd, gt);
+		else if (opts == PAT_SUSPEND)
+			igt_system_suspend_autoresume(SUSPEND_STATE_STANDBY, SUSPEND_TEST_NONE);
+
+		hw_entries = xe_get_pat_hw_config(fd, &pat_hw_config, gt);
+		sw_entries = xe_get_pat_sw_config(fd, &pat_sw_config, gt);
+
+		igt_debug("[GT%d] hw_entries: %d, sw_entries: %d\n", gt, hw_entries, sw_entries);
+
+		igt_assert_eq(hw_entries, sw_entries);
+		igt_assert_lt(0, hw_entries);
+		igt_assert_lt(0, sw_entries);
+
+		for (int i = 0; i < hw_entries; i++) {
+			uint32_t hw_pat, sw_pat;
+
+			hw_pat = pat_hw_config.entries[i].pat;
+			sw_pat = pat_sw_config.entries[i].pat;
+			if (hw_pat != sw_pat) {
+				igt_debug("[GT%d] Mismatch of pat register vs sw config "
+					  "- index: %i, entries: %08x <> %08x\n",
+					  gt, i, hw_pat, sw_pat);
+				matches = false;
+			}
+		}
+
+		/* Check PTA if was explicitly programmed */
+		if (pat_sw_config.pta_mode != UINT32_MAX &&
+			pat_hw_config.pta_mode != pat_sw_config.pta_mode) {
+			igt_debug("[GT%d] Mismatch of PTA_MODE - pta: %x, pta expected: %x\n",
+				  gt, pat_hw_config.pta_mode, pat_sw_config.pta_mode);
+			matches = false;
+		}
+
+		/* Check ATS if was explicitly programmed */
+		if (pat_sw_config.pat_ats != UINT32_MAX &&
+			pat_hw_config.pat_ats != pat_sw_config.pat_ats) {
+			igt_debug("[GT%d] Mismatch of PAT_ATS - ats: %x, ats expected: %x\n",
+				  gt, pat_hw_config.pat_ats, pat_sw_config.pat_ats);
+			matches = false;
+		}
+	}
+
+	igt_assert_eq(matches, true);
 }
 
 /**
@@ -2151,6 +2227,15 @@ int igt_main_args("V", NULL, help_str, opt_handler, NULL)
 
 	igt_subtest("pat-sanity")
 		pat_sanity(fd);
+
+	igt_subtest("pat-sw-hw-compare")
+		pat_sw_hw_compare(fd, 0);
+
+	igt_subtest("pat-sw-hw-reset-compare")
+		pat_sw_hw_compare(fd, PAT_RESET_GT);
+
+	igt_subtest("pat-sw-hw-suspend")
+		pat_sw_hw_compare(fd, PAT_SUSPEND);
 
 	igt_subtest("pat-index-all")
 		pat_index_all(fd);
