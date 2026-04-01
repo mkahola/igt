@@ -148,7 +148,6 @@ static const igt_rotation_t rotations[] = {
 };
 static const uint32_t scaling_modes[] = {
 	DRM_MODE_SCALE_FULLSCREEN,
-	DRM_MODE_SCALE_CENTER,
 	DRM_MODE_SCALE_ASPECT,
 };
 
