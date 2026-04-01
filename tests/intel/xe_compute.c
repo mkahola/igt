@@ -563,6 +563,7 @@ test_compute_square_userenv(int fd, uint32_t flags)
 {
 	struct user_execenv env = {};
 	uint32_t input_bo, output_bo, vm, size = SZ_4K;
+	uint32_t vm_flags = DRM_XE_VM_CREATE_FLAG_LR_MODE;
 	int va_bits = xe_va_bits(fd);
 	float *input, *output;
 	int i;
@@ -570,8 +571,9 @@ test_compute_square_userenv(int fd, uint32_t flags)
 	size = ALIGN(size, xe_get_default_alignment(fd));
 	env.array_size = size / sizeof(float);
 
-	vm = env.vm = xe_vm_create(fd, DRM_XE_VM_CREATE_FLAG_LR_MODE |
-				   DRM_XE_VM_CREATE_FLAG_FAULT_MODE, 0);
+	if ((flags & INPUT_IN_SVM) || (flags & OUTPUT_IN_SVM))
+		vm_flags |= DRM_XE_VM_CREATE_FLAG_FAULT_MODE;
+	vm = env.vm = xe_vm_create(fd, vm_flags, 0);
 
 	if ((flags & INPUT_IN_SVM) || (flags & OUTPUT_IN_SVM)) {
 		struct drm_xe_sync sync = {
