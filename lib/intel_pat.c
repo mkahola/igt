@@ -51,6 +51,8 @@ static int32_t xe_get_pat_config(int drm_fd, struct intel_pat_cache *xe_pat_cach
 
 	memset(xe_pat_cache, 0, sizeof(*xe_pat_cache));
 	xe_pat_cache->uc_comp = XE_PAT_IDX_INVALID;
+	xe_pat_cache->pta_mode = UINT32_MAX;
+	xe_pat_cache->pat_ats = UINT32_MAX;
 
 	while ((nread = getline(&line, &line_len, dbgfs_file)) != -1) {
 		uint32_t value = 0;
