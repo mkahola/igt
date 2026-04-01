@@ -519,6 +519,14 @@ test_compute_square(int fd)
  *	Run an openCL Kernel that returns output[i] = input[i] * input[i],
  *	taking buffers from userenv.
  *
+ * SUBTEST: compute-square-userenv-large-buffer
+ * Mega feature: Compute
+ * Sub-category: compute tests
+ * Functionality: OpenCL kernel
+ * Description:
+ *	Run an openCL Kernel that returns output[i] = input[i] * input[i],
+ *	taking large buffers from userenv.
+ *
  * SUBTEST: compute-square-userenv-isvm
  * Mega feature: Compute
  * Sub-category: compute tests
@@ -546,6 +554,8 @@ test_compute_square(int fd)
 
 #define INPUT_IN_SVM		(1 << 0)
 #define OUTPUT_IN_SVM		(1 << 1)
+#define LARGE_BUFFER		(1 << 2)
+#define LARGE_BUFFER_SIZE	(SZ_2M + SZ_1M)
 #define INPUT_BO_ADDR		0x30000000
 #define OUTPUT_BO_ADDR		0x31000000
 #define USER_FENCE_VALUE	0xdeadbeefdeadbeefull
@@ -568,6 +578,8 @@ test_compute_square_userenv(int fd, uint32_t flags)
 	float *input, *output;
 	int i;
 
+	if (flags & LARGE_BUFFER)
+		size = LARGE_BUFFER_SIZE;
 	size = ALIGN(size, xe_get_default_alignment(fd));
 	env.array_size = size / sizeof(float);
 
@@ -616,7 +628,10 @@ test_compute_square_userenv(int fd, uint32_t flags)
 		env.output_addr = OUTPUT_BO_ADDR;
 	}
 
-	env.loop_count = env.array_size / 2;
+	if (flags == LARGE_BUFFER)
+		env.loop_count = env.array_size;
+	else
+		env.loop_count = env.array_size / 2;
 
 	/* Skip check in the library and verify user controls data locally */
 	env.skip_results_check = true;
@@ -669,6 +684,9 @@ int igt_main()
 
 	igt_subtest("compute-square-userenv")
 		test_compute_square_userenv(xe, 0);
+
+	igt_subtest("compute-square-userenv-large-buffer")
+		test_compute_square_userenv(xe, LARGE_BUFFER);
 
 	igt_subtest("compute-square-userenv-isvm")
 		test_compute_square_userenv(xe, INPUT_IN_SVM);
