@@ -352,8 +352,8 @@ static void bo_execenv_bind(struct bo_execenv *execenv,
 				memset(bo_dict[i].data, 0, bo_dict[i].size);
 			}
 
-			igt_debug("[i: %2d name: %20s] data: %p, addr: %16llx, size: %llx\n",
-				  i, bo_dict[i].name, bo_dict[i].data,
+			igt_debug("[i: %2d name: %20s] data: %p, handle: %u, addr: %16llx, size: %llx\n",
+				  i, bo_dict[i].name, bo_dict[i].data, bo_dict[i].handle,
 				  (long long)bo_dict[i].addr,
 				  (long long)bo_dict[i].size);
 		}
