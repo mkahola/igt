@@ -1100,7 +1100,7 @@ amd_kgd_multi_ioctl_field_fuzzing(int fd, amdgpu_device_handle amdgpu_dev)
 	 * Note: USERQ_WAIT has no timeout field; it is not a blocking wait.
 	 * It only registers the dependency.  We therefore only test ret==0.
 	 */
-	if (have_amdgpu_dev) {
+	if (amdgpu_dev) {
 		uint32_t timeline_handle = 0;
 		uint32_t timeline_handles[1];
 		uint64_t timeline_points[1];
@@ -1142,7 +1142,7 @@ amd_kgd_multi_ioctl_field_fuzzing(int fd, amdgpu_device_handle amdgpu_dev)
 	 * Note: USERQ_WAIT has no timeout field and is not a blocking call; it
 	 * only registers a dependency.  We therefore only verify ret==0 here.
 	 */
-	if (have_amdgpu_dev) {
+	if (amdgpu_dev) {
 		uint32_t timeline_handles[2] = { 0, 0 };
 		uint64_t signal_points[2] = { 8, 8 };
 		uint64_t wait_points[2]   = { 8, 8 }; /* both already signaled */
