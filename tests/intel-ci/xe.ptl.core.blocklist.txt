@@ -71,10 +71,6 @@ igt@xe_pm_residency@toggle-gt-c6
 igt@xe_pxp@.*
 igt@xe_fault_injection@exec-queue-create-fail-xe_pxp_exec_queue_add
 ##################################################################
-# System allocator feature is not POR for PTL
-##################################################################
-igt@xe_exec_system_allocator@.*
-##################################################################
 # survivability feature not applicable for PTL
 ##################################################################
 igt@xe_survivability@.*

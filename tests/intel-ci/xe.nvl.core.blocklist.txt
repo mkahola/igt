@@ -58,15 +58,11 @@ igt@xe_compute@eu-busy-10s
 #   - xe_pxp@.*: PXP (Protected Xe Path) content protection
 #     requires a TEE (Trusted Execution Environment) and
 #     associated firmware, which NVL does not support.
-#   - xe_exec_system_allocator@.*: System allocator execution
-#     tests depend on hardware features (e.g., SVM/USM page
-#     fault handling) not enabled on NVL yet.
 ##################################################################
 igt@xe_huc_copy@huc_copy
 igt@xe_exec_balancer@.*
 igt@xe_oa@oa-tlb-invalidate
 igt@xe_pxp@.*
-igt@xe_exec_system_allocator@.*
 ##################################################################
 # Valid skip: test applicable only for i2c capable systems
 ##################################################################
