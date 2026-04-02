@@ -295,7 +295,6 @@ amd_kgd_multi_ioctl_field_fuzzing(int fd, amdgpu_device_handle amdgpu_dev)
 	uint32_t valid_bo_handle = 0;
 	bool have_valid_ctx = false;
 	bool have_valid_bo = false;
-	bool have_amdgpu_dev = (amdgpu_dev != NULL);
 
 	memset(&valid_ctx, 0, sizeof(valid_ctx));
 	valid_ctx.in.op = AMDGPU_CTX_OP_ALLOC_CTX;
