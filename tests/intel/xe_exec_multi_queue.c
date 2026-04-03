@@ -112,7 +112,7 @@ __test_sanity(int fd, int gt, int class, bool preempt_mode)
 
 	/* Multi-Queue can't be a parallel queue */
 	multi_queue.value = DRM_XE_MULTI_GROUP_CREATE;
-	if (n > 1)
+	if (n > 1 && xe_engine_class_supports_multi_lrc(fd, class))
 		igt_assert_eq(__xe_exec_queue_create(fd, vm, 2, 1, eci, ext, &val), -EINVAL);
 
 	/* Specifying multiple MULTI_GROUP property is invalid */

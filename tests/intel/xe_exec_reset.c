@@ -184,7 +184,7 @@ test_balancer(int fd, int gt, int class, int n_exec_queues, int n_execs,
 		fd = drm_open_driver(DRIVER_XE);
 
 	num_placements = xe_gt_fill_engines_by_class(fd, gt, class, eci);
-	if (num_placements < 2)
+	if (num_placements < 2 || !xe_engine_class_supports_multi_lrc(fd, class))
 		return;
 
 	vm = xe_vm_create(fd, 0, 0);
