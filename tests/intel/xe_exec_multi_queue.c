@@ -1052,7 +1052,7 @@ int igt_main()
 
 	igt_subtest_f("sanity")
 		xe_for_each_gt(fd, gt)
-			xe_for_each_multi_queue_engine_class(class)
+			xe_for_each_multi_queue_engine_class(fd, class)
 				test_sanity(fd, gt, class);
 
 	igt_subtest_f("exec-sanity")
@@ -1061,7 +1061,7 @@ int igt_main()
 
 	igt_subtest_f("virtual")
 		xe_for_each_gt(fd, gt)
-			xe_for_each_multi_queue_engine_class(class)
+			xe_for_each_multi_queue_engine_class(fd, class)
 				test_exec_virtual(fd, gt, class);
 
 	igt_subtest_f("priority")

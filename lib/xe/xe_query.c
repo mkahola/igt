@@ -216,28 +216,6 @@ static uint16_t xe_device_query_engine_class_mask(int fd, const char *key)
 }
 
 /**
- * xe_engine_class_supports_multi_queue:
- * @engine_class: engine class
- *
- * Returns true if multi queue supported by engine class or false.
- */
-bool xe_engine_class_supports_multi_queue(uint32_t engine_class)
-{
-	switch (engine_class) {
-		case DRM_XE_ENGINE_CLASS_COPY:
-		case DRM_XE_ENGINE_CLASS_COMPUTE:
-			return true;
-		case DRM_XE_ENGINE_CLASS_RENDER:
-		case DRM_XE_ENGINE_CLASS_VIDEO_DECODE:
-		case DRM_XE_ENGINE_CLASS_VIDEO_ENHANCE:
-			return false;
-		default:
-			igt_warn("Engine class 0x%x unknown\n", engine_class);
-			return false;
-	}
-}
-
-/**
  * xe_engine_class_string:
  * @engine_class: engine class
  *
@@ -332,6 +310,36 @@ bool xe_engine_class_supports_multi_lrc(int fd, uint32_t engine_class)
 	case DRM_XE_ENGINE_CLASS_VIDEO_DECODE:
 	case DRM_XE_ENGINE_CLASS_VIDEO_ENHANCE:
 		return true;
+	default:
+		igt_warn("Engine class 0x%x unknown\n", engine_class);
+		return false;
+	}
+}
+
+/**
+ * xe_engine_class_supports_multi_queue:
+ * @fd: xe device fd
+ * @engine_class: engine class
+ *
+ * Returns true if multi queue supported by engine class or false.
+ * Uses the kernel-reported bitmask from debugfs when available, otherwise
+ * falls back to the hardcoded per-class default.
+ */
+bool xe_engine_class_supports_multi_queue(int fd, uint32_t engine_class)
+{
+	struct xe_device *xe_dev = find_in_cache(fd);
+
+	if (xe_dev && xe_dev->multi_queue_engine_class_mask != UINT16_MAX)
+		return !!(xe_dev->multi_queue_engine_class_mask & BIT(engine_class));
+
+	switch (engine_class) {
+	case DRM_XE_ENGINE_CLASS_COPY:
+	case DRM_XE_ENGINE_CLASS_COMPUTE:
+		return true;
+	case DRM_XE_ENGINE_CLASS_RENDER:
+	case DRM_XE_ENGINE_CLASS_VIDEO_DECODE:
+	case DRM_XE_ENGINE_CLASS_VIDEO_ENHANCE:
+		return false;
 	default:
 		igt_warn("Engine class 0x%x unknown\n", engine_class);
 		return false;
