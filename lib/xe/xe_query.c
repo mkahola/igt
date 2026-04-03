@@ -6,6 +6,7 @@
  *    Matthew Brost <matthew.brost@intel.com>
  */
 
+#include <fcntl.h>
 #include <stdlib.h>
 #include <pthread.h>
 
@@ -19,6 +20,7 @@
 #endif
 
 #include "drmtest.h"
+#include "igt_debugfs.h"
 #include "ioctl_wrappers.h"
 #include "igt_map.h"
 #include "intel_pat.h"
@@ -132,6 +134,85 @@ static uint32_t __mem_default_alignment(struct drm_xe_query_mem_regions *mem_reg
 			alignment = mem_regions->mem_regions[i].min_page_size;
 
 	return alignment;
+}
+
+/*
+ * parse_engine_class_mask - parse a space-separated list of engine class names
+ * into a bitmask indexed by DRM_XE_ENGINE_CLASS_* values.
+ *
+ * @names: the engine class names string, e.g. " vcs vecs" or "bcs ccs"
+ *
+ * The kernel debugfs "info" output for multi_lrc_engine_classes and
+ * multi_queue_engine_classes uses the same short names as
+ * xe_engine_class_short_string(): "rcs", "bcs", "vcs", "vecs", "ccs".
+ *
+ * Returns the bitmask, or 0 if no known class names were found.
+ */
+static uint16_t parse_engine_class_mask(const char *names)
+{
+	static const struct {
+		const char *name;
+		uint32_t engine_class;
+	} class_map[] = {
+		{ "rcs",    DRM_XE_ENGINE_CLASS_RENDER },
+		{ "bcs",    DRM_XE_ENGINE_CLASS_COPY },
+		{ "vcs",    DRM_XE_ENGINE_CLASS_VIDEO_DECODE },
+		{ "vecs",   DRM_XE_ENGINE_CLASS_VIDEO_ENHANCE },
+		{ "ccs",    DRM_XE_ENGINE_CLASS_COMPUTE },
+	};
+	uint16_t mask = 0;
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(class_map); i++) {
+		if (strstr(names, class_map[i].name))
+			mask |= BIT(class_map[i].engine_class);
+	}
+
+	return mask;
+}
+
+/*
+ * Read the debugfs "info" file and OR together the engine class bitmasks from
+ * every line that contains @key.  Returns UINT16_MAX if @key is not found
+ * (kernel too old to expose this information).
+ *
+ * multi_lrc_engine_classes is printed once at device level; multi_queue_engine_classes
+ * is printed once per GT, so the OR handles the multi-GT case transparently.
+ */
+static uint16_t xe_device_query_engine_class_mask(int fd, const char *key)
+{
+	char *line = NULL;
+	size_t line_len = 0;
+	uint16_t mask = UINT16_MAX;
+	size_t key_len = strlen(key);
+	int dbgfs_fd;
+	FILE *dbgfs_file;
+
+	dbgfs_fd = igt_debugfs_open(fd, "info", O_RDONLY);
+	if (dbgfs_fd < 0)
+		return mask;
+
+	dbgfs_file = fdopen(dbgfs_fd, "r");
+	if (!dbgfs_file) {
+		close(dbgfs_fd);
+		return mask;
+	}
+
+	while (getline(&line, &line_len, dbgfs_file) != -1) {
+		const char *p = strstr(line, key);
+
+		if (!p)
+			continue;
+
+		if (mask == UINT16_MAX)
+			mask = 0;
+		mask |= parse_engine_class_mask(p + key_len);
+	}
+
+	free(line);
+	fclose(dbgfs_file);
+
+	return mask;
 }
 
 /**
@@ -329,6 +410,11 @@ struct xe_device *xe_device_get(int fd)
 		xe_dev = prev;
 	}
 	pthread_mutex_unlock(&cache.cache_mutex);
+
+	xe_dev->multi_lrc_mask =
+		xe_device_query_engine_class_mask(fd, "multi_lrc_engine_classes");
+	xe_dev->multi_queue_engine_class_mask =
+		xe_device_query_engine_class_mask(fd, "multi_queue_engine_classes");
 
 	return xe_dev;
 }

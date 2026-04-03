@@ -79,6 +79,18 @@ struct xe_device {
 
 	/** @pat_cache: cached PAT index configuration, NULL if not yet populated */
 	struct intel_pat_cache *pat_cache;
+
+	/**
+	 * @multi_lrc_mask: bitmask of engine classes supporting multi-LRC.
+	 * UINT16_MAX if not available (older kernel).
+	 */
+	uint16_t multi_lrc_mask;
+
+	/**
+	 * @multi_queue_engine_class_mask: bitmask of engine classes supporting
+	 * multi-queue. UINT16_MAX if not available (older kernel).
+	 */
+	uint16_t multi_queue_engine_class_mask;
 };
 
 #define xe_for_each_engine(__fd, __hwe) \
