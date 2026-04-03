@@ -162,6 +162,7 @@ uint32_t xe_va_bits(int fd);
 uint16_t xe_dev_id(int fd);
 int xe_supports_faults(int fd);
 bool xe_engine_class_supports_multi_queue(uint32_t engine_class);
+bool xe_engine_class_supports_multi_lrc(int fd, uint32_t engine_class);
 const char *xe_engine_class_string(uint32_t engine_class);
 const char *xe_engine_class_short_string(uint32_t engine_class);
 bool xe_has_engine_class(int fd, uint16_t engine_class);

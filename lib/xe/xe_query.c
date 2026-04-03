@@ -308,6 +308,36 @@ static struct xe_device *find_in_cache(int fd)
 	return xe_dev;
 }
 
+/**
+ * xe_engine_class_supports_multi_lrc:
+ * @fd: xe device fd
+ * @engine_class: engine class
+ *
+ * Returns true if multi LRC supported by engine class or false.
+ * Uses the kernel-reported bitmask from debugfs when available, otherwise
+ * falls back to the hardcoded per-class default.
+ */
+bool xe_engine_class_supports_multi_lrc(int fd, uint32_t engine_class)
+{
+	struct xe_device *xe_dev = find_in_cache(fd);
+
+	if (xe_dev && xe_dev->multi_lrc_mask != UINT16_MAX)
+		return !!(xe_dev->multi_lrc_mask & BIT(engine_class));
+
+	switch (engine_class) {
+	case DRM_XE_ENGINE_CLASS_COPY:
+	case DRM_XE_ENGINE_CLASS_COMPUTE:
+	case DRM_XE_ENGINE_CLASS_RENDER:
+		return false;
+	case DRM_XE_ENGINE_CLASS_VIDEO_DECODE:
+	case DRM_XE_ENGINE_CLASS_VIDEO_ENHANCE:
+		return true;
+	default:
+		igt_warn("Engine class 0x%x unknown\n", engine_class);
+		return false;
+	}
+}
+
 static void xe_device_free(struct xe_device *xe_dev)
 {
 	free(xe_dev->config);
