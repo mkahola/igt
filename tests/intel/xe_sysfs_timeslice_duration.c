@@ -9,7 +9,7 @@
 /**
  * TEST: sysfs timeslice duration
  * Category: Core
- * Mega feature: SysMan
+ * Mega feature: General Core features
  * Sub-category: SysMan tests
  * Functionality: sysfs timslice duration
  * Feature: SMI, context

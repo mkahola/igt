@@ -27,7 +27,7 @@
  * Description: Validate multi-GPU Shared Virtual Memory (SVM) features,
  *		including cross-GPU access, atomic operations, coherency
  *
- * Category: Multi-GPU
+ * Category: Core
  * Mega feature: MultiGPU
  * Sub-category: SVM, memory management, performance
  * Functionality: Multi-GPU SVM, migration, coherency, atomic ops

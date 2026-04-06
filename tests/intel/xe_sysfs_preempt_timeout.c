@@ -6,7 +6,7 @@
 /**
  * TEST: sysfs preempt timeout
  * Category: Core
- * Mega feature: SysMan
+ * Mega feature: General Core features
  * Sub-category: SysMan tests
  * Functionality: sysfs preempt timeout
  * Feature: SMI, context
