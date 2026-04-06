@@ -107,6 +107,20 @@ static void compare_prl_stats(struct xe_prl_stats *before, struct xe_prl_stats *
 		      expected->prl_aborted_count);
 }
 
+static void xe_vm_null_bind_sync(int fd, uint32_t vm, uint64_t addr, uint64_t size)
+{
+	struct drm_xe_sync sync = {
+		.type = DRM_XE_SYNC_TYPE_SYNCOBJ,
+		.flags = DRM_XE_SYNC_FLAG_SIGNAL,
+		.handle = syncobj_create(fd, 0),
+	};
+
+	xe_vm_bind_async_flags(fd, vm, 0, 0, 0, addr, size, &sync, 1,
+			       DRM_XE_VM_BIND_FLAG_NULL);
+	igt_assert(syncobj_wait(fd, &sync.handle, 1, INT64_MAX, 0, NULL));
+	syncobj_destroy(fd, sync.handle);
+}
+
 /* Helper with more flexibility on unbinding and offsets */
 static void vma_range_list_with_unbind_and_offsets(int fd, const uint64_t *vma_sizes, unsigned int n_vmas,
 				 uint64_t start_addr, uint64_t unbind_size, const uint64_t *vma_offsets)
@@ -623,6 +637,130 @@ static void test_pat_index_xd(int fd)
 	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
 }
 
+/**
+ * SUBTEST: binds-large-split
+ * Description: Bind a large BO (256MB + 4K) split across two adjacent
+ *      VM bind operations at non-2M-aligned boundaries, then unbind each
+ *      range separately to verify that page reclamation correctly handles
+ *      split binds producing a mix of 2M and 4K PRL entries across two
+ *      distinct page reclaim list operations.
+ */
+static void test_binds_large_split(int fd)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+
+	uint64_t bo_size = SZ_256M;
+	uint64_t split_offset = SZ_4K;
+	uint32_t bo, vm;
+
+	uint64_t addr = (1ull << 30);
+
+	expected_stats.prl_4k_entry_count = 1;
+	expected_stats.prl_64k_entry_count = 0;
+	expected_stats.prl_2m_entry_count = 128;
+	expected_stats.prl_issued_count = 2;
+	expected_stats.prl_aborted_count = 0;
+
+	stats_before = get_prl_stats(fd, 0);
+
+	vm = xe_vm_create(fd, 0, 0);
+	/* Slightly larger BO to see behavior of split */
+	bo = xe_bo_create(fd, 0, bo_size + split_offset, system_memory(fd), 0);
+	xe_vm_bind_sync(fd, vm, bo, 0, addr, bo_size / 2);
+	xe_vm_bind_sync(fd, vm, bo, bo_size / 2, addr + bo_size / 2, bo_size / 2 + split_offset);
+	xe_vm_unbind_sync(fd, vm, 0, addr, bo_size / 2);
+	xe_vm_unbind_sync(fd, vm, 0, addr + bo_size / 2, bo_size / 2 + split_offset);
+
+	stats_after = get_prl_stats(fd, 0);
+
+	gem_close(fd, bo);
+	xe_vm_destroy(fd, vm);
+
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+}
+
+/**
+ * SUBTEST: binds-full-pd
+ * Description: Fill almost an entire 1G page directory (1G minus 4K)
+ *      by splitting a single BO across two adjacent VM bind operations,
+ *      then unbind each range separately to verify correct page reclamation
+ *      when most entries of a page directory are present, producing a mix
+ *      of 2M, 64K, and 4K PRL entries across two page reclaim list
+ *      operations.
+ */
+static void test_binds_full_pd(int fd)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+	uint32_t bo, vm;
+	uint64_t addr = (1ull << 30);
+
+	expected_stats.prl_4k_entry_count = 15;
+	expected_stats.prl_64k_entry_count = 31;
+	expected_stats.prl_2m_entry_count = 511;
+	expected_stats.prl_issued_count = 2;
+	expected_stats.prl_aborted_count = 0;
+
+	stats_before = get_prl_stats(fd, 0);
+
+	vm = xe_vm_create(fd, 0, 0);
+	bo = xe_bo_create(fd, 0, SZ_1G - SZ_4K, system_memory(fd), 0);
+	xe_vm_bind_sync(fd, vm, bo, 0, addr, SZ_512M);
+	xe_vm_bind_sync(fd, vm, bo, SZ_512M, addr + SZ_512M, SZ_512M - SZ_4K);
+	xe_vm_unbind_sync(fd, vm, 0, addr, SZ_512M);
+	xe_vm_unbind_sync(fd, vm, 0, addr + SZ_512M, SZ_512M - SZ_4K);
+
+	stats_after = get_prl_stats(fd, 0);
+
+	gem_close(fd, bo);
+	xe_vm_destroy(fd, vm);
+
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+}
+
+/**
+ * SUBTEST: binds-null-vma
+ * Description: Verify handling of null VMAs by creating a VM with real
+ *      BO mappings followed by a large null VMA mapping, then trigger
+ *      page reclamation across the entire range.
+ */
+static void test_binds_null_vma(int fd)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+	uint32_t bo, vm;
+	/* 512G aligned */
+	uint64_t addr = 0;
+
+	/*
+	 * Layout:
+	 *   [0,      2M)      : real 2M BO   → allocates the level-3[0] subtree
+	 *   [2M,  512G)       : null VMA     → fills the rest of the level-3[0] span
+	 *   UNMAP [0, 512G)   → walk covers exactly one level-3 entry (512G each)
+	 *
+	 * Only the real 2M BO produces a PRL entry; the null VMA has no
+	 * hardware PTEs and is skipped by the page-reclaim walker.
+	 */
+	expected_stats.prl_4k_entry_count = 0;
+	expected_stats.prl_64k_entry_count = 0;
+	expected_stats.prl_2m_entry_count = 1;
+	expected_stats.prl_issued_count = 1;
+	expected_stats.prl_aborted_count = 0;
+
+	stats_before = get_prl_stats(fd, 0);
+
+	vm = xe_vm_create(fd, 0, 0);
+	bo = xe_bo_create(fd, 0, SZ_2M, system_memory(fd), 0);
+	xe_vm_bind_sync(fd, vm, bo, 0, addr, SZ_2M);
+	xe_vm_null_bind_sync(fd, vm, addr + SZ_2M, 512ull * SZ_1G - SZ_2M);
+	xe_vm_unbind_sync(fd, vm, 0, addr, 512ull * SZ_1G);
+
+	stats_after = get_prl_stats(fd, 0);
+
+	gem_close(fd, bo);
+	xe_vm_destroy(fd, vm);
+
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+}
+
 int igt_main()
 {
 	int fd;
@@ -673,6 +811,15 @@ int igt_main()
 
 	igt_subtest("pat-index-xd")
 		test_pat_index_xd(fd);
+
+	igt_subtest("binds-large-split")
+		test_binds_large_split(fd);
+
+	igt_subtest("binds-full-pd")
+		test_binds_full_pd(fd);
+
+	igt_subtest("binds-null-vma")
+		test_binds_null_vma(fd);
 
 	igt_fixture()
 		drm_close_driver(fd);
