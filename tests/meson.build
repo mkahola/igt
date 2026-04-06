@@ -322,6 +322,7 @@ intel_xe_progs = [
 	'xe_noexec_ping_pong',
         'xe_non_msix',
 	'xe_oa',
+	'xe_page_reclaim',
 	'xe_pat',
 	'xe_peer2peer',
 	'xe_pm',

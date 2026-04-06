@@ -1,0 +1,441 @@
+// SPDX-License-Identifier: MIT
+/*
+ * Copyright © 2026 Intel Corporation
+ */
+
+#include <fcntl.h>
+
+#include "ioctl_wrappers.h"
+#include "xe/xe_gt.h"
+#include "xe/xe_ioctl.h"
+
+#define OVERFLOW_PRL_SIZE 512
+
+/**
+ * TEST: xe_page_reclaim
+ * Category: Core
+ * Mega feature: General Core features
+ * Sub-category: VM bind
+ * Functionality: Page Reclamation
+ * Test category: functionality test
+ */
+struct xe_prl_stats {
+	int prl_4k_entry_count;
+	int prl_64k_entry_count;
+	int prl_2m_entry_count;
+	int prl_issued_count;
+	int prl_aborted_count;
+};
+
+/*
+ * PRL is only active on the render GT (gt0); media tiles do not participate
+ * in page reclamation. Callers typically pass gt=0.
+ */
+static struct xe_prl_stats get_prl_stats(int fd, int gt)
+{
+	struct xe_prl_stats stats = {0};
+
+	stats.prl_4k_entry_count = xe_gt_stats_get_count(fd, gt, "prl_4k_entry_count");
+	stats.prl_64k_entry_count = xe_gt_stats_get_count(fd, gt, "prl_64k_entry_count");
+	stats.prl_2m_entry_count = xe_gt_stats_get_count(fd, gt, "prl_2m_entry_count");
+	stats.prl_issued_count = xe_gt_stats_get_count(fd, gt, "prl_issued_count");
+	stats.prl_aborted_count = xe_gt_stats_get_count(fd, gt, "prl_aborted_count");
+
+	return stats;
+}
+
+static void log_prl_stat_diff(struct xe_prl_stats *stats_before, struct xe_prl_stats *stats_after)
+{
+	igt_debug("PRL stats diff: 4K: %d->%d, 64K: %d->%d, 2M: %d -> %d, issued: %d->%d, aborted: %d->%d\n",
+		  stats_before->prl_4k_entry_count,
+		  stats_after->prl_4k_entry_count,
+		  stats_before->prl_64k_entry_count,
+		  stats_after->prl_64k_entry_count,
+		  stats_before->prl_2m_entry_count,
+		  stats_after->prl_2m_entry_count,
+		  stats_before->prl_issued_count,
+		  stats_after->prl_issued_count,
+		  stats_before->prl_aborted_count,
+		  stats_after->prl_aborted_count);
+}
+
+/* Compare differences between stats and determine if expected */
+static void compare_prl_stats(struct xe_prl_stats *before, struct xe_prl_stats *after,
+			      struct xe_prl_stats *expected)
+{
+	log_prl_stat_diff(before, after);
+
+	igt_assert_eq(after->prl_4k_entry_count - before->prl_4k_entry_count,
+		      expected->prl_4k_entry_count);
+	igt_assert_eq(after->prl_64k_entry_count - before->prl_64k_entry_count,
+		      expected->prl_64k_entry_count);
+	igt_assert_eq(after->prl_2m_entry_count - before->prl_2m_entry_count,
+		      expected->prl_2m_entry_count);
+	igt_assert_eq(after->prl_issued_count - before->prl_issued_count,
+		      expected->prl_issued_count);
+	igt_assert_eq(after->prl_aborted_count - before->prl_aborted_count,
+		      expected->prl_aborted_count);
+}
+
+/* Helper with more flexibility on unbinding and offsets */
+static void vma_range_list_with_unbind_and_offsets(int fd, const uint64_t *vma_sizes, unsigned int n_vmas,
+				 uint64_t start_addr, uint64_t unbind_size, const uint64_t *vma_offsets)
+{
+	uint32_t vm;
+	uint32_t *bos;
+	uint64_t addr;
+
+	igt_assert(vma_sizes);
+	igt_assert(n_vmas);
+
+	vm = xe_vm_create(fd, 0, 0);
+
+	bos = calloc(n_vmas, sizeof(*bos));
+	igt_assert(bos);
+
+	addr = start_addr;
+	for (unsigned int i = 0; i < n_vmas; i++) {
+		igt_assert(vma_sizes[i]);
+
+		bos[i] = xe_bo_create(fd, 0, vma_sizes[i], system_memory(fd), 0);
+		if (vma_offsets)
+			addr = start_addr + vma_offsets[i];
+		xe_vm_bind_sync(fd, vm, bos[i], 0, addr, vma_sizes[i]);
+		addr += vma_sizes[i];
+	}
+
+	/* Unbind the whole contiguous VA span in one operation. */
+	xe_vm_unbind_sync(fd, vm, 0, start_addr, unbind_size ? unbind_size : addr - start_addr);
+
+	for (unsigned int i = 0; i < n_vmas; i++)
+		gem_close(fd, bos[i]);
+
+	free(bos);
+	xe_vm_destroy(fd, vm);
+}
+
+/*
+ * Takes in an array of vma sizes and allocates/binds individual BOs for each given size,
+ * then unbinds them all at once
+ */
+static void test_vma_ranges_list(int fd, const uint64_t *vma_sizes,
+				 unsigned int n_vmas, uint64_t start_addr)
+{
+	vma_range_list_with_unbind_and_offsets(fd, vma_sizes, n_vmas, start_addr, 0, NULL);
+}
+
+/**
+ * SUBTEST: basic-mixed
+ * Description: Create multiple different sizes of page (4K, 64K, 2M)
+ *      GPU VMA ranges, bind them into a VM at unique addresses, then
+ *      unbind all to trigger page reclamation on different page sizes
+ *      in one page reclaim list.
+ */
+static void test_vma_ranges_basic_mixed(int fd)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+	const uint64_t num_4k_pages = 16;
+	const uint64_t num_64k_pages = 31;
+	const uint64_t num_2m_pages = 2;
+	uint64_t *sizes = calloc(num_4k_pages + num_64k_pages + num_2m_pages, sizeof(uint64_t));
+	int count = 0;
+
+	igt_assert(sizes);
+	for (int i = 0; i < num_4k_pages; i++)
+		sizes[count++] = SZ_4K;
+
+	for (int i = 0; i < num_64k_pages; i++)
+		sizes[count++] = SZ_64K;
+
+	for (int i = 0; i < num_2m_pages; i++)
+		sizes[count++] = SZ_2M;
+
+	expected_stats.prl_4k_entry_count = num_4k_pages;
+	expected_stats.prl_64k_entry_count = num_64k_pages;
+	expected_stats.prl_2m_entry_count = num_2m_pages;
+	expected_stats.prl_issued_count = 1;
+	expected_stats.prl_aborted_count = 0;
+
+	stats_before = get_prl_stats(fd, 0);
+	test_vma_ranges_list(fd, sizes, count, 1ull << 30);
+	stats_after = get_prl_stats(fd, 0);
+
+	free(sizes);
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+}
+
+/**
+ * SUBTEST: prl-invalidate-full
+ * Description: Create 512 4K page entries at the maximum page reclaim list
+ *      size boundary and bind them into a VM.
+ *      Expects to trigger a fallback to full PPC flush due to page reclaim
+ *      list size limitations (512 entries max).
+ *
+ * SUBTEST: prl-max-entries
+ * Description: Create the maximum page reclaim list without overflow
+ *      bind them into a VM.
+ *      Expects no fallback to PPC flush due to page reclaim
+ *      list size limitations (512 entries max).
+ */
+static void test_vma_ranges_prl_entries(int fd, unsigned int num_entries,
+					int expected_issued, int expected_aborted)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+	const uint64_t page_size = SZ_4K;
+	/* Start address aligned but offset by a page to ensure no large PTE are created */
+	uint64_t addr = (1ull << 30) + page_size;
+
+	/* Capped at OVERFLOW_PRL_SIZE - 1: on overflow the last entry triggers abort */
+	expected_stats.prl_4k_entry_count = min_t(int, num_entries, OVERFLOW_PRL_SIZE - 1);
+	expected_stats.prl_64k_entry_count = 0;
+	expected_stats.prl_2m_entry_count = 0;
+	expected_stats.prl_issued_count = expected_issued;
+	expected_stats.prl_aborted_count = expected_aborted;
+
+	stats_before = get_prl_stats(fd, 0);
+	test_vma_ranges_list(fd, &(uint64_t){page_size * num_entries}, 1, addr);
+	stats_after = get_prl_stats(fd, 0);
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+}
+
+/*
+ * Bind the BOs to multiple VA ranges and unbind all VA with one range.
+ * BO size is chosen as the maximum of the requested VMA sizes.
+ */
+static void test_many_ranges_one_bo(int fd,
+				    const uint64_t vma_size,
+				    unsigned int n_vmas,
+				    uint64_t start_addr)
+{
+	uint32_t vm;
+	uint64_t addr;
+	uint32_t bo;
+
+	igt_assert(n_vmas);
+
+	vm = xe_vm_create(fd, 0, 0);
+
+	igt_assert(vma_size);
+	bo = xe_bo_create(fd, 0, vma_size, system_memory(fd), 0);
+
+	addr = start_addr;
+	for (unsigned int i = 0; i < n_vmas; i++) {
+		/* Bind the same BO (offset 0) at a new VA location */
+		xe_vm_bind_sync(fd, vm, bo, 0, addr, vma_size);
+		addr += vma_size;
+	}
+
+	/* Unbind all VMAs */
+	xe_vm_unbind_sync(fd, vm, 0, start_addr, addr - start_addr);
+
+	gem_close(fd, bo);
+	xe_vm_destroy(fd, vm);
+}
+
+/**
+ * SUBTEST: many-vma-same-bo
+ * Description: Create multiple 4K page VMA ranges bound to the same BO,
+ *      bind them into a VM at unique addresses, then unbind all to trigger
+ *      page reclamation handling when the same BO is bound to multiple
+ *      virtual addresses.
+ */
+static void test_vma_ranges_many_vma_same_bo(int fd, uint64_t vma_size, unsigned int n_vmas)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+
+	expected_stats.prl_4k_entry_count = n_vmas;
+	expected_stats.prl_issued_count = 1;
+
+	stats_before = get_prl_stats(fd, 0);
+	test_many_ranges_one_bo(fd, vma_size, n_vmas, 1ull << 30);
+	stats_after = get_prl_stats(fd, 0);
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+}
+
+/**
+ * SUBTEST: invalid-1g
+ * Description: Create a 1G page VMA followed by a 4K page VMA to test
+ *      handling of 1G page mappings during page reclamation.
+ *      Expected is to fallback to invalidation.
+ */
+static void test_vma_range_invalid_1g(int fd)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+	static const uint64_t sizes[] = {
+		SZ_1G,
+		SZ_4K,
+	};
+	int delta_4k, delta_64k, delta_2m, delta_issued, delta_aborted;
+	bool expected_2m_entries, all_entries_dropped;
+
+	/* 1G page broken into 512 2M pages, but it should invalidate the last entry */
+	expected_stats.prl_2m_entry_count = OVERFLOW_PRL_SIZE - 1;
+	/* No page size because PRL should be invalidated before the second page */
+	expected_stats.prl_4k_entry_count = 0;
+	expected_stats.prl_issued_count = 0;
+	expected_stats.prl_aborted_count = 1;
+
+	stats_before = get_prl_stats(fd, 0);
+	/* Offset 2G to avoid alignment issues */
+	test_vma_ranges_list(fd, sizes, ARRAY_SIZE(sizes), SZ_2G);
+	stats_after = get_prl_stats(fd, 0);
+	log_prl_stat_diff(&stats_before, &stats_after);
+
+	/*
+	 * Depending on page placement, 1G page directory could be dropped from page walk
+	 * which would not generate any entries
+	 */
+	delta_4k = stats_after.prl_4k_entry_count - stats_before.prl_4k_entry_count;
+	delta_64k = stats_after.prl_64k_entry_count - stats_before.prl_64k_entry_count;
+	delta_2m = stats_after.prl_2m_entry_count - stats_before.prl_2m_entry_count;
+	delta_issued = stats_after.prl_issued_count - stats_before.prl_issued_count;
+	delta_aborted = stats_after.prl_aborted_count - stats_before.prl_aborted_count;
+	expected_2m_entries = (delta_2m == expected_stats.prl_2m_entry_count);
+	all_entries_dropped = (delta_2m == 0 && delta_64k == 0 && delta_4k == 0);
+
+	igt_assert_eq(delta_issued, expected_stats.prl_issued_count);
+	igt_assert_eq(delta_aborted, expected_stats.prl_aborted_count);
+	igt_assert_eq(delta_4k, expected_stats.prl_4k_entry_count);
+	igt_assert(expected_2m_entries || all_entries_dropped);
+}
+
+/**
+ * SUBTEST: pde-vs-pd
+ * Description: Test case to trigger invalidation of both PDE (2M pages)
+ *      and PD (page directory filled with 64K pages) to determine correct
+ *      handling of both cases for PRL.
+ */
+static void test_vma_ranges_pde_vs_pd(int fd)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+	/* Ensure no alignment issue by using 1G */
+	uint64_t start_addr = 1ull << 30;
+	/* 32 pages of 64K to fill one page directory */
+	static const unsigned int num_pages = SZ_2M / SZ_64K;
+	static const uint64_t size_pde[] = {
+		SZ_2M,
+	};
+	uint64_t size_pd[num_pages];
+
+	for (int i = 0; i < num_pages; i++)
+		size_pd[i] = SZ_64K;
+
+	expected_stats = (struct xe_prl_stats) {
+		.prl_64k_entry_count = num_pages,
+		.prl_issued_count = 1,
+	};
+	stats_before = get_prl_stats(fd, 0);
+	test_vma_ranges_list(fd, size_pd, ARRAY_SIZE(size_pd), start_addr);
+	stats_after = get_prl_stats(fd, 0);
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+
+	expected_stats = (struct xe_prl_stats) {
+		.prl_2m_entry_count = 1,
+		.prl_issued_count = 1,
+	};
+	stats_before = get_prl_stats(fd, 0);
+	test_vma_ranges_list(fd, size_pde, ARRAY_SIZE(size_pde), start_addr);
+	stats_after = get_prl_stats(fd, 0);
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+}
+
+/**
+ * SUBTEST: boundary-split
+ * Description: Test case to trigger PRL generation beyond a page size alignment
+ *      to ensure correct handling of PRL entries that span page size boundaries.
+ */
+static void test_boundary_split(int fd)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+	/* Dangle a page past the boundary with a combination of address offset and size */
+	uint64_t size_boundary = 64 * SZ_2M + SZ_4K;
+	uint64_t addr = (1ull << 30) + 64 * SZ_2M;
+
+	expected_stats.prl_4k_entry_count = 1;
+	expected_stats.prl_64k_entry_count = 0;
+	expected_stats.prl_2m_entry_count = 64;
+	expected_stats.prl_issued_count = 1;
+	expected_stats.prl_aborted_count = 0;
+
+	stats_before = get_prl_stats(fd, 0);
+	test_vma_ranges_list(fd, &(uint64_t){size_boundary}, 1, addr);
+	stats_after = get_prl_stats(fd, 0);
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+}
+
+/**
+ * SUBTEST: binds-1g-partial
+ * Description: Bind a 1G VMA and a 2M VMA into a VM and unbind only
+ *      the 1G range to verify that decomposing a 1G mapping into its
+ *      constituent 2M PRL entries overflows the PRL capacity limit,
+ *      triggering a full TLB invalidation fallback (aborted PRL) instead
+ *      of a targeted page reclaim list flush.
+ */
+static void test_binds_1g_partial(int fd)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+
+	uint64_t sizes[]   = { SZ_1G, SZ_2M };
+	uint64_t offsets[] = { 0, SZ_1G };
+	int count = ARRAY_SIZE(sizes);
+
+	expected_stats.prl_4k_entry_count = 0;
+	expected_stats.prl_64k_entry_count = 0;
+	expected_stats.prl_2m_entry_count = 0;
+	expected_stats.prl_issued_count = 0;
+	expected_stats.prl_aborted_count = 1;
+
+	stats_before = get_prl_stats(fd, 0);
+	vma_range_list_with_unbind_and_offsets(fd, sizes, count, (1ull << 30), SZ_1G + SZ_2M, offsets);
+	stats_after = get_prl_stats(fd, 0);
+
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+}
+
+int igt_main()
+{
+	int fd;
+	/* Buffer to read debugfs entries boolean */
+	char buf[16] = {0};
+
+	igt_fixture() {
+		fd = drm_open_driver(DRIVER_XE);
+
+		igt_require_f(igt_debugfs_exists(fd, "page_reclaim_hw_assist", O_RDONLY),
+			      "Page Reclamation feature is not supported.\n");
+
+		igt_debugfs_read(fd, "page_reclaim_hw_assist", buf);
+		igt_require_f(buf[0] == '1',
+			      "Page Reclamation feature is not enabled.\n");
+
+		igt_require_f(xe_gt_stats_get_count(fd, 0, "prl_4k_entry_count") >= 0,
+			      "gt_stats is required for Page Reclamation tests.\n");
+	}
+
+	igt_subtest("basic-mixed")
+		test_vma_ranges_basic_mixed(fd);
+
+	igt_subtest("prl-invalidate-full")
+		test_vma_ranges_prl_entries(fd, OVERFLOW_PRL_SIZE, 0, 1);
+
+	igt_subtest("prl-max-entries")
+		test_vma_ranges_prl_entries(fd, OVERFLOW_PRL_SIZE - 1, 1, 0);
+
+	igt_subtest("many-vma-same-bo")
+		test_vma_ranges_many_vma_same_bo(fd, SZ_4K, 16);
+
+	igt_subtest("pde-vs-pd")
+		test_vma_ranges_pde_vs_pd(fd);
+
+	igt_subtest("invalid-1g")
+		test_vma_range_invalid_1g(fd);
+
+	igt_subtest("boundary-split")
+		test_boundary_split(fd);
+
+	igt_subtest("binds-1g-partial")
+		test_binds_1g_partial(fd);
+
+	igt_fixture()
+		drm_close_driver(fd);
+}
