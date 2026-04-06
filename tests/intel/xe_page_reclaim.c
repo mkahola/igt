@@ -164,6 +164,153 @@ static void test_vma_ranges_basic_mixed(int fd)
 	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
 }
 
+/* Helper to calculate alignment filler pages needed */
+struct alignment_fillers {
+	uint64_t gap_to_64k;
+	uint64_t remaining_gap;
+};
+
+static struct alignment_fillers calculate_alignment_fillers(uint64_t start_addr,
+							    uint64_t current_offset,
+							    uint64_t page_size)
+{
+	struct alignment_fillers fillers = {0};
+	uint64_t current_addr = start_addr + current_offset;
+	uint64_t misalignment = current_addr % page_size;
+	uint64_t gap, misalignment_64k;
+
+	if (!misalignment)
+		return fillers;
+
+	gap = page_size - misalignment;
+
+	/*
+	 * Fill the alignment gap using a two-level strategy to match the
+	 * GPU page table hierarchy (4K → 64K → page_size):
+	 * 1. Use 4K pages to reach the next 64K boundary (if the current
+	 *    address is not already 64K-aligned).
+	 * 2. Use 64K pages for the remaining gap up to page_size alignment
+	 *    (this remainder is always a multiple of 64K).
+	 */
+	misalignment_64k = current_addr % SZ_64K;
+	if (misalignment_64k) {
+		/* Not 64K aligned, fill with 4K pages up to next 64K boundary */
+		fillers.gap_to_64k = SZ_64K - misalignment_64k;
+		if (fillers.gap_to_64k > gap)
+			fillers.gap_to_64k = gap;
+	}
+
+	fillers.remaining_gap = gap - fillers.gap_to_64k;
+	return fillers;
+}
+
+/**
+ * SUBTEST: random
+ * Description: Create a random mix of page sizes (4K, 64K, 2M) with
+ *      proper alignment handling. Larger pages are aligned by inserting
+ *      filler pages (64K and 4K) as needed to test random page size
+ *      combinations in page reclamation.
+ */
+static void test_vma_range_random(int fd)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+	const int num_random_pages = 10; /* Total number of random pages to generate */
+	struct alignment_fillers fillers;
+	uint64_t *sizes;
+	uint64_t *random_pages;
+	uint64_t start_addr = 1ull << 30; /* Start at 1GB aligned */
+	int count_4k = 0, count_64k = 0, count_2m = 0;
+	uint64_t current_offset = 0;
+	uint64_t remainder, j;
+	int idx = 0;
+	int i, rand_val;
+
+	/* Generate random page sizes */
+	random_pages = calloc(num_random_pages, sizeof(uint64_t));
+	igt_assert(random_pages);
+
+	for (i = 0; i < num_random_pages; i++) {
+		rand_val = random() % 100;
+
+		/* Weight the distribution: 50% 4K, 30% 64K, 20% 2M */
+		if (rand_val < 50)
+			random_pages[i] = SZ_4K;
+		else if (rand_val < 80)
+			random_pages[i] = SZ_64K;
+		else
+			random_pages[i] = SZ_2M;
+	}
+
+	/* Over-allocate: worst case is 47 pages per random page (15×4K + 31×64K + 1×2M) */
+	sizes = calloc(num_random_pages * 47, sizeof(uint64_t));
+	igt_assert(sizes);
+
+	/* Populate sizes array in a single pass while tracking counts */
+	for (i = 0; i < num_random_pages; i++) {
+		fillers = calculate_alignment_fillers(start_addr,
+						      current_offset,
+						      random_pages[i]);
+
+		if (fillers.gap_to_64k || fillers.remaining_gap) {
+			/* Fill gap to 64K boundary with 4K pages */
+			for (j = 0; j < fillers.gap_to_64k; j += SZ_4K) {
+				sizes[idx++] = SZ_4K;
+				current_offset += SZ_4K;
+				count_4k++;
+			}
+
+			/* Fill remainder with 64K pages */
+			remainder = fillers.remaining_gap;
+			while (remainder >= SZ_64K) {
+				sizes[idx++] = SZ_64K;
+				current_offset += SZ_64K;
+				remainder -= SZ_64K;
+				count_64k++;
+			}
+
+			/* After 64K alignment, remainder should always be 0 */
+			igt_assert_eq(remainder, 0);
+		}
+
+		sizes[idx++] = random_pages[i];
+		current_offset += random_pages[i];
+
+		switch (random_pages[i]) {
+		case SZ_4K:
+			count_4k++;
+			break;
+		case SZ_64K:
+			count_64k++;
+			break;
+		case SZ_2M:
+			count_2m++;
+			break;
+		}
+	}
+
+	igt_assert_f(idx < OVERFLOW_PRL_SIZE,
+		     "Random test generated %d entries, exceeds PRL limit %d\n",
+		     idx, OVERFLOW_PRL_SIZE);
+
+	/* Set expected stats based on tracked counts */
+	expected_stats.prl_4k_entry_count = count_4k;
+	expected_stats.prl_64k_entry_count = count_64k;
+	expected_stats.prl_2m_entry_count = count_2m;
+	expected_stats.prl_issued_count = 1;
+	expected_stats.prl_aborted_count = 0;
+
+	igt_debug("Random test generated: %d total pages (%d 4K, %d 64K, %d 2M)\n",
+		  idx, count_4k, count_64k, count_2m);
+
+	stats_before = get_prl_stats(fd, 0);
+	test_vma_ranges_list(fd, sizes, idx, start_addr);
+	stats_after = get_prl_stats(fd, 0);
+
+	free(random_pages);
+	free(sizes);
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+}
+
 /**
  * SUBTEST: prl-invalidate-full
  * Description: Create 512 4K page entries at the maximum page reclaim list
@@ -410,10 +557,14 @@ int igt_main()
 
 		igt_require_f(xe_gt_stats_get_count(fd, 0, "prl_4k_entry_count") >= 0,
 			      "gt_stats is required for Page Reclamation tests.\n");
+		igt_srandom();
 	}
 
 	igt_subtest("basic-mixed")
 		test_vma_ranges_basic_mixed(fd);
+
+	igt_subtest("random")
+		test_vma_range_random(fd);
 
 	igt_subtest("prl-invalidate-full")
 		test_vma_ranges_prl_entries(fd, OVERFLOW_PRL_SIZE, 0, 1);
