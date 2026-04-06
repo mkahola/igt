@@ -4,7 +4,10 @@
  */
 
 #include <fcntl.h>
+#include <linux_scaffold.h>
 
+#include "igt_syncobj.h"
+#include "intel_pat.h"
 #include "ioctl_wrappers.h"
 #include "xe/xe_gt.h"
 #include "xe/xe_ioctl.h"
@@ -42,6 +45,33 @@ static struct xe_prl_stats get_prl_stats(int fd, int gt)
 	stats.prl_aborted_count = xe_gt_stats_get_count(fd, gt, "prl_aborted_count");
 
 	return stats;
+}
+
+#define XE2_L3_POLICY		GENMASK(5, 4)
+#define L3_CACHE_POLICY_XD	1
+
+static int get_xd_pat_idx(int fd)
+{
+	uint16_t dev_id = intel_get_drm_devid(fd);
+	struct intel_pat_cache pat_config = {};
+	int32_t parsed;
+	int i;
+
+	if (intel_graphics_ver(dev_id) < IP_VER(20, 0))
+		return -1;
+
+	parsed = xe_get_pat_sw_config(fd, &pat_config, 0);
+	if (parsed <= 0)
+		return -1;
+
+	for (i = 0; i < parsed; i++) {
+		if (pat_config.entries[i].rsvd)
+			continue;
+		if (FIELD_GET(XE2_L3_POLICY, pat_config.entries[i].pat) == L3_CACHE_POLICY_XD)
+			return i;
+	}
+
+	return -1;
 }
 
 static void log_prl_stat_diff(struct xe_prl_stats *stats_before, struct xe_prl_stats *stats_after)
@@ -535,7 +565,61 @@ static void test_binds_1g_partial(int fd)
 	stats_before = get_prl_stats(fd, 0);
 	vma_range_list_with_unbind_and_offsets(fd, sizes, count, (1ull << 30), SZ_1G + SZ_2M, offsets);
 	stats_after = get_prl_stats(fd, 0);
+	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
+}
 
+/**
+ * SUBTEST: pat-index-xd
+ * Description: Create a VM binding with a BO that has PAT INDEX with XD
+ *      (transient display) property to test page reclamation
+ *      with transient cache entries on XE2+ platforms.
+ */
+static void test_pat_index_xd(int fd)
+{
+	struct xe_prl_stats stats_before, stats_after, expected_stats = { 0 };
+	uint32_t vm, bo;
+	uint64_t size = SZ_4K;
+	uint64_t addr = 1ull << 30;
+	int pat_idx_xd, err;
+	struct drm_xe_sync sync = {
+		.type = DRM_XE_SYNC_TYPE_SYNCOBJ,
+		.flags = DRM_XE_SYNC_FLAG_SIGNAL,
+	};
+
+	pat_idx_xd = get_xd_pat_idx(fd);
+	igt_require_f(pat_idx_xd >= 0, "XD PAT index not available on this platform\n");
+
+	vm = xe_vm_create(fd, 0, 0);
+	bo = xe_bo_create_caching(fd, 0, size, system_memory(fd), 0,
+				  DRM_XE_GEM_CPU_CACHING_WC);
+
+	/* Bind with XD PAT index - synchronous operation */
+	sync.handle = syncobj_create(fd, 0);
+	err = __xe_vm_bind(fd, vm, 0, bo, 0, addr,
+			   size, DRM_XE_VM_BIND_OP_MAP, 0, &sync, 1, 0,
+			   pat_idx_xd, 0);
+	igt_assert_eq(err, 0);
+	igt_assert(syncobj_wait(fd, &sync.handle, 1, INT64_MAX, 0, NULL));
+	syncobj_destroy(fd, sync.handle);
+
+	/*
+	 * Page reclamation should skip over the XD pat vma pages.
+	 * PRL is still issued because pages are still valid, just handled
+	 * elsewhere so no invalidation required to ensure not squashing valid
+	 * PRL entries from other VMAs.
+	 */
+	expected_stats.prl_4k_entry_count = 0;
+	expected_stats.prl_64k_entry_count = 0;
+	expected_stats.prl_2m_entry_count = 0;
+	expected_stats.prl_issued_count = 1;
+	expected_stats.prl_aborted_count = 0;
+
+	stats_before = get_prl_stats(fd, 0);
+	xe_vm_unbind_sync(fd, vm, 0, addr, size);
+	stats_after = get_prl_stats(fd, 0);
+
+	gem_close(fd, bo);
+	xe_vm_destroy(fd, vm);
 	compare_prl_stats(&stats_before, &stats_after, &expected_stats);
 }
 
@@ -586,6 +670,9 @@ int igt_main()
 
 	igt_subtest("binds-1g-partial")
 		test_binds_1g_partial(fd);
+
+	igt_subtest("pat-index-xd")
+		test_pat_index_xd(fd);
 
 	igt_fixture()
 		drm_close_driver(fd);
