@@ -215,18 +215,18 @@ static unsigned long read_idle_residency(int fd, int gt)
 static void test_idle_residency(int fd, int gt, enum test_type flag)
 {
 	unsigned long elapsed_ms, residency_start, residency_end;
+	struct timespec ts_start, ts_end;
 
 	igt_assert_f(igt_wait(xe_gt_is_in_c6(fd, gt), 1000, 1), "GT %d not in C6\n", gt);
 
 	if (flag == TEST_S2IDLE) {
-		/*
-		 * elapsed time during suspend is approximately equal to autoresume delay
-		 * when a full suspend cycle(SUSPEND_TEST_NONE) is used.
-		 */
-		elapsed_ms = igt_get_autoresume_delay(SUSPEND_STATE_FREEZE);
+		clock_gettime(CLOCK_BOOTTIME, &ts_start);
 		residency_start = read_idle_residency(fd, gt);
 		igt_system_suspend_autoresume(SUSPEND_STATE_FREEZE, SUSPEND_TEST_NONE);
 		residency_end = read_idle_residency(fd, gt);
+		clock_gettime(CLOCK_BOOTTIME, &ts_end);
+
+		elapsed_ms = igt_time_elapsed(&ts_start, &ts_end) * MSEC_PER_SEC;
 	}
 
 	if (flag == TEST_IDLE) {
@@ -237,14 +237,6 @@ static void test_idle_residency(int fd, int gt, enum test_type flag)
 
 	igt_info("Measured %lums of idle residency in %lums\n",
 		 residency_end - residency_start, elapsed_ms);
-
-	/*
-	 * When suspended (system or runtime suspend), device needs to be woken up to read
-	 * residency. Idle residency may increase during resume thus being greater than
-	 * elapsed ms.
-	 */
-	if ((residency_end - residency_start) >= elapsed_ms)
-		return;
 
 	assert_within_epsilon(residency_end - residency_start, elapsed_ms, tolerance);
 }
