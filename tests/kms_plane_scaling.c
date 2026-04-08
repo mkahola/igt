@@ -1221,21 +1221,20 @@ static void invalid_parameter_tests(data_t *d)
 
 static drmModeModeInfo *find_mode(data_t *data, igt_output_t *output, const struct invalid_paramtests *test)
 {
-	drmModeModeInfo *mode = NULL;
+	drmModeModeInfo *found = NULL, *mode;
 
-	for (int i = 0; i < output->config.connector->count_modes; i++) {
-		if (output->config.connector->modes[i].hdisplay == test->planesize[0] &&
-		    output->config.connector->modes[i].vdisplay == test->planesize[1] &&
-		    output->config.connector->modes[i].vrefresh >= test->vrefresh) {
-			if (mode &&
-			    mode->vrefresh < output->config.connector->modes[i].vrefresh)
+	for_each_connector_mode(output, mode) {
+		if (mode->hdisplay == test->planesize[0] &&
+		    mode->vdisplay == test->planesize[1] &&
+		    mode->vrefresh >= test->vrefresh) {
+			if (found && found->vrefresh < mode->vrefresh)
 				continue;
 
-			mode = &output->config.connector->modes[i];
+			found = mode;
 		}
 	}
 
-	return mode;
+	return found;
 }
 
 /*
