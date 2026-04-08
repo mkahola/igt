@@ -468,10 +468,14 @@ static igt_output_t *list_writeback_modes(igt_display_t *display)
 		igt_output_t *output = &display->outputs[i];
 
 		if (output->config.connector->connector_type == DRM_MODE_CONNECTOR_WRITEBACK) {
+			drmModeModeInfo *mode;
+			int j = 0;
+
 			igt_info("\tname  vref hdis hss hse htot vdis vss vse vtot flags type clock\n");
-			for (int j = 0; j < output->config.connector->count_modes; j++) {
-				igt_info("[%d]", j);
-				kmstest_dump_mode(&output->config.connector->modes[j]);
+
+			for_each_connector_mode(output, mode) {
+				igt_info("[%d]", j++);
+				kmstest_dump_mode(mode);
 			}
 			break;
 		}
