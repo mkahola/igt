@@ -84,6 +84,44 @@ enum {
 
 IGT_TEST_DESCRIPTION("Basic backlight sysfs test");
 
+static void cleanup_fbs(igt_backlight_context_t *context)
+{
+	igt_output_t *output = context->output;
+	igt_display_t *display = output->display;
+
+	igt_remove_fb(display->drm_fd, &context->red);
+	igt_remove_fb(display->drm_fd, &context->green);
+}
+
+static void create_color_fbs(igt_backlight_context_t *context)
+{
+	drmModeModeInfo *mode;
+	igt_output_t *output = context->output;
+	igt_display_t *display = output->display;
+
+	mode = igt_output_get_mode(output);
+	igt_create_color_pattern_fb(display->drm_fd, mode->hdisplay,
+				    mode->vdisplay,
+				    DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR,
+				    1.f, 0.f, 0.f, &context->red);
+	igt_create_color_pattern_fb(display->drm_fd, mode->hdisplay,
+				    mode->vdisplay,
+				    DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR,
+				    0.f, 1.f, 0.f, &context->green);
+}
+
+static void commit_new_color(igt_backlight_context_t *context)
+{
+	igt_output_t *output = context->output;
+	igt_display_t *display = output->display;
+	igt_plane_t *primary;
+
+	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
+	igt_plane_set_fb(primary, context->color_flag ? &context->green : &context->red);
+	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
+	context->color_flag ^= 1;
+}
+
 static void test_and_verify(igt_backlight_context_t *context, int val)
 {
 	const int tolerance = val * TOLERANCE / 100;
@@ -131,12 +169,16 @@ static void test_fade(igt_backlight_context_t *context)
 	int i;
 	static const struct timespec ts = { .tv_sec = 0, .tv_nsec = FADESPEED*1000000 };
 
+	create_color_fbs(context);
+
 	/* Fade out, then in */
 	for (i = context->max; i > 0; i -= context->max / FADESTEPS) {
+		commit_new_color(context);
 		test_and_verify(context, i);
 		nanosleep(&ts, NULL);
 	}
 	for (i = 0; i <= context->max; i += context->max / FADESTEPS) {
+		commit_new_color(context);
 		test_and_verify(context, i);
 		nanosleep(&ts, NULL);
 	}
@@ -164,15 +206,21 @@ check_suspend(igt_output_t *output)
 	igt_system_suspend_autoresume(SUSPEND_STATE_MEM, SUSPEND_TEST_NONE);
 }
 
-static void test_cleanup(igt_display_t *display, igt_output_t *output)
+static void test_cleanup(igt_display_t *display, igt_backlight_context_t *context)
 {
+	igt_output_t *output = context->output;
+	igt_plane_t *primary;
+
+	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
+	igt_plane_set_fb(primary, NULL);
 	igt_output_set_crtc(output, NULL);
 	igt_display_commit2(display, display->is_atomic ? COMMIT_ATOMIC : COMMIT_LEGACY);
 	igt_pm_restore_sata_link_power_management();
 }
 
-static void test_setup(igt_display_t display, igt_output_t *output)
+static void test_setup(igt_display_t display, igt_backlight_context_t *context)
 {
+	igt_output_t *output = context->output;
 	igt_plane_t *primary;
 	drmModeModeInfo *mode;
 	struct igt_fb fb;
@@ -292,7 +340,7 @@ int igt_main()
 		igt_describe(tests[i].desc);
 		igt_subtest_with_dynamic(tests[i].name) {
 			for (int j = 0; j < (dual_edp ? 2 : 1); j++) {
-				test_setup(display, &contexts->output[j]);
+				test_setup(display, &contexts[j]);
 
 				if (tests[i].flags == TEST_DPMS)
 					igt_pm_dpms_toggle(contexts[j].output);
@@ -302,7 +350,7 @@ int igt_main()
 
 				igt_dynamic_f("%s", igt_output_name(contexts[j].output)) {
 					tests[i].test_t(&contexts[j]);
-					test_cleanup(&display, contexts[j].output);
+					test_cleanup(&display, &contexts[j]);
 				}
 			}
 		}
@@ -310,8 +358,10 @@ int igt_main()
 
 	igt_fixture() {
 		/* Restore old brightness */
-		for (i = 0; i < (dual_edp ? 2 : 1); i++)
+		for (i = 0; i < (dual_edp ? 2 : 1); i++) {
 			igt_backlight_write(contexts[i].old, "brightness", &contexts[i]);
+			cleanup_fbs(&contexts[i]);
+		}
 
 		igt_display_fini(&display);
 		igt_pm_restore_sata_link_power_management();

@@ -550,6 +550,9 @@ typedef struct {
 typedef struct {
 	int max;
 	int old;
+	int color_flag;
+	struct igt_fb green;
+	struct igt_fb red;
 	igt_output_t *output;
 	char path[PATH_MAX];
 	char backlight_dir_path[PATH_MAX];
