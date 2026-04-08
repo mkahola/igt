@@ -673,7 +673,8 @@ utilization_multi(int fd, int gt, int class, unsigned int flags)
 	igt_assert(virtual ^ parallel);
 
 	num_placements = xe_gt_fill_engines_by_class(fd, gt, class, eci);
-	if (num_placements < 2 || !xe_engine_class_supports_multi_lrc(fd, class))
+	if (num_placements < 2 ||
+	    (parallel && !xe_engine_class_supports_multi_lrc(fd, class)))
 		return;
 
 	igt_debug("Target class: %s\n", engine_map[class]);

@@ -85,7 +85,6 @@ test_balancer(int fd, int gt, uint32_t vm, uint64_t addr, uint64_t userptr,
 
 	num_placements = xe_gt_fill_engines_by_class(fd, gt, class, eci);
 	igt_assert_lt(1, num_placements);
-	igt_assert(xe_engine_class_supports_multi_lrc(fd, class));
 
 	bo_size = sizeof(*data) * n_execs;
 	bo_size = xe_bb_size(fd, bo_size);
@@ -1211,6 +1210,12 @@ static void threads(int fd, int flags)
 					continue;
 
 				while (*data_flags >= 0) {
+					if ((*data_flags & PARALLEL) &&
+					    !xe_engine_class_supports_multi_lrc(fd, class)) {
+						data_flags++;
+						continue;
+					}
+
 					threads_data[i].mutex = &mutex;
 					threads_data[i].cond = &cond;
 					if (flags & SHARED_VM)

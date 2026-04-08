@@ -57,7 +57,7 @@ static bool test_all_active(int fd, int gt, int class)
 	int i, num_placements;
 
 	num_placements = xe_gt_fill_engines_by_class(fd, gt, class, eci);
-	if (num_placements < 2 || !xe_engine_class_supports_multi_lrc(fd, class))
+	if (num_placements < 2)
 		return false;
 
 	vm = xe_vm_create(fd, 0, 0);
@@ -187,7 +187,8 @@ test_exec(int fd, int gt, int class, int n_exec_queues, int n_execs,
 	igt_assert_lte(n_exec_queues, MAX_N_EXEC_QUEUES);
 
 	num_placements = xe_gt_fill_engines_by_class(fd, gt, class, eci);
-	if (num_placements < 2 || !xe_engine_class_supports_multi_lrc(fd, class))
+	if (num_placements < 2 ||
+	    ((flags & PARALLEL) && !xe_engine_class_supports_multi_lrc(fd, class)))
 		return false;
 
 	vm = xe_vm_create(fd, 0, 0);
@@ -402,7 +403,8 @@ test_cm(int fd, int gt, int class, int n_exec_queues, int n_execs,
 	igt_assert_lte(n_exec_queues, MAX_N_EXEC_QUEUES);
 
 	num_placements = xe_gt_fill_engines_by_class(fd, gt, class, eci);
-	if (num_placements < 2 || !xe_engine_class_supports_multi_lrc(fd, class))
+	if (num_placements < 2 ||
+	    ((flags & PARALLEL) && !xe_engine_class_supports_multi_lrc(fd, class)))
 		return false;
 
 	vm = xe_vm_create(fd, DRM_XE_VM_CREATE_FLAG_LR_MODE, 0);
