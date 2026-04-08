@@ -1595,11 +1595,9 @@ static void pm_test_caching(void)
 static bool is_preferred_mode_present(igt_output_t *output,
 				      igt_display_t *display)
 {
-	drmModeModeInfo *mode = NULL;
+	drmModeModeInfo *mode;
 
-	for (int i = 0; i < output->config.connector->count_modes; i++) {
-		mode = &output->config.connector->modes[i];
-
+	for_each_connector_mode(output, mode) {
 		for (int j = 0; j < ARRAY_SIZE(prefers_mode); j++) {
 			if (mode->hdisplay == prefers_mode[j].w &&
 				mode->vdisplay == prefers_mode[j].h &&
