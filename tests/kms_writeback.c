@@ -58,8 +58,8 @@
  * Description: Validate WRITEBACK_FB_ID with valid and invalid options
  *
  * SUBTEST: writeback-invalid-parameters
- * Description: Writeback has a couple of parameters linked together(output
- *              framebuffer and fence); this test goes throughthe combination
+ * Description: Writeback has a couple of parameters linked together (output
+ *              framebuffer and fence); this test goes through the combination
  *              of possible bad options
  *
  * SUBTEST: writeback-pixel-formats
@@ -620,8 +620,8 @@ int igt_main_args("b:c:f:dl", long_options, help_str, opt_handler, NULL)
 		drmModeFreePropertyBlob(formats_blob);
 	}
 
-	igt_describe("Writeback has a couple of parameters linked together"
-		     "(output framebuffer and fence); this test goes through"
+	igt_describe("Writeback has a couple of parameters linked together "
+		     "(output framebuffer and fence); this test goes through "
 		     "the combination of possible bad options");
 	igt_subtest("writeback-invalid-parameters") {
 		igt_fb_t invalid_output_fb;
@@ -644,7 +644,7 @@ int igt_main_args("b:c:f:dl", long_options, help_str, opt_handler, NULL)
 		igt_fb_t output_fb;
 
 		igt_skip_on(data.dump_check || data.list_modes);
-		igt_skip_on_f(!(data.supported_colors & XRGB8888),"DRM_FORMAT_XRGB8888 is unsupported\n");
+		igt_skip_on_f(!(data.supported_colors & XRGB8888), "DRM_FORMAT_XRGB8888 is unsupported\n");
 		fb_id = igt_create_fb(display.drm_fd, mode.hdisplay, mode.vdisplay,
 				      DRM_FORMAT_XRGB8888,
 				      DRM_FORMAT_MOD_LINEAR,
@@ -678,7 +678,7 @@ int igt_main_args("b:c:f:dl", long_options, help_str, opt_handler, NULL)
 		igt_fb_t output_fb;
 
 		igt_skip_on(data.dump_check || data.list_modes);
-		igt_skip_on_f(!(data.supported_colors & XRGB8888),"DRM_FORMAT_XRGB8888 is unsupported\n");
+		igt_skip_on_f(!(data.supported_colors & XRGB8888), "DRM_FORMAT_XRGB8888 is unsupported\n");
 		fb_id = igt_create_fb(display.drm_fd, mode.hdisplay, mode.vdisplay,
 				      DRM_FORMAT_XRGB8888,
 				      igt_fb_mod_to_tiling(0),
