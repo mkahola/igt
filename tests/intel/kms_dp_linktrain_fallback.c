@@ -38,7 +38,6 @@ static int traversed_mst_output_count;
 typedef struct {
 	int drm_fd;
 	igt_display_t display;
-	drmModeModeInfo *mode;
 	igt_output_t *output;
 	igt_crtc_t *crtc;
 	struct igt_fb fb;
@@ -477,12 +476,11 @@ static void test_dsc_sst_fallback(data_t *data)
 
 	/* Find a mode that doesn't require DSC initially */
 	for_each_connector_mode(data->output, mode) {
-		data->mode = mode;
-		igt_create_color_fb(data->drm_fd, data->mode->hdisplay,
-				    data->mode->vdisplay, DRM_FORMAT_XRGB8888,
+		igt_create_color_fb(data->drm_fd, mode->hdisplay,
+				    mode->vdisplay, DRM_FORMAT_XRGB8888,
 				    DRM_FORMAT_MOD_LINEAR, 0.0, 1.0, 0.0,
 				    &data->fb);
-		igt_output_override_mode(data->output, data->mode);
+		igt_output_override_mode(data->output, mode);
 		igt_output_set_crtc(data->output,
 				    data->crtc);
 		data->primary = igt_output_get_plane_type(data->output,
@@ -495,8 +493,8 @@ static void test_dsc_sst_fallback(data_t *data)
 						    NULL);
 		if (ret != 0) {
 			igt_debug("Skipping mode %dx%d@%d on %s\n",
-				 data->mode->hdisplay, data->mode->vdisplay,
-				 data->mode->vrefresh,
+				 mode->hdisplay, mode->vdisplay,
+				 mode->vrefresh,
 				 igt_output_name(data->output));
 			continue;
 		}
