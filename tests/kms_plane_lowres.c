@@ -87,12 +87,10 @@ get_lowres_mode(int drmfd, igt_output_t *output,
 {
 	const drmModeModeInfo *mode;
 	const drmModeModeInfo *min;
-	int j;
 
         /* search for lowest mode */
         min = mode_default;
-	for (j = 0; j < output->config.connector->count_modes; j++) {
-		mode = &output->config.connector->modes[j];
+	for_each_connector_mode(output, mode) {
 		if (mode->vdisplay < min->vdisplay)
 			min = mode;
 	}
