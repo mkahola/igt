@@ -284,6 +284,8 @@ gfx_ring_bad_write_linear(const struct amdgpu_ip_funcs *func,
 	  */
 	if (cmd_error == CMD_STREAM_EXEC_INVALID_PACKET_LENGTH)
 		stream_length = ring_context->write_length / 16;
+	else if (cmd_error == CMD_STREAM_EXEC_INVALID_PACKET_LENGTH_OVERSIZE)
+		stream_length = ring_context->write_length * 2;
 	else
 		stream_length = ring_context->write_length;
 
