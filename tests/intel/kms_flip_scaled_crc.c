@@ -836,15 +836,15 @@ static void test_flip_to_scaled(data_t *data, uint32_t index,
 static drmModeModeInfoPtr find_mode(data_t *data, igt_output_t *output)
 {
 	drmModeModeInfoPtr modetoset = NULL;
+	drmModeModeInfo *mode;
 
-	for (int i = 0; i < output->config.connector->count_modes; i++) {
-		if (output->config.connector->modes[i].hdisplay == data->attemptmodewidth &&
-		    output->config.connector->modes[i].vdisplay == data->attemptmodeheight) {
-			if (modetoset &&
-			    modetoset->vrefresh < output->config.connector->modes[i].vrefresh)
+	for_each_connector_mode(output, mode) {
+		if (mode->hdisplay == data->attemptmodewidth &&
+		    mode->vdisplay == data->attemptmodeheight) {
+			if (modetoset && modetoset->vrefresh < mode->vrefresh)
 				continue;
 
-			data->mode = output->config.connector->modes[i];
+			data->mode = *mode;
 			modetoset = &data->mode;
 		}
 	}
