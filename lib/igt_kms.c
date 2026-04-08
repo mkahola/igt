@@ -5361,16 +5361,17 @@ bool __override_all_active_output_modes_to_fit_bw(igt_display_t *display,
 						  int base)
 {
 	igt_output_t *output = NULL;
+	drmModeModeInfo *mode;
 
 	if (base >= n_outputs)
 		return false;
 
 	output = outputs[base];
 
-	for_each_connector_mode(output) {
+	for_each_connector_mode(output, mode) {
 		int ret;
 
-		igt_output_override_mode(output, &output->config.connector->modes[j__]);
+		igt_output_override_mode(output, mode);
 
 		if (__override_all_active_output_modes_to_fit_bw(display, outputs, n_outputs, base + 1))
 			return true;
@@ -6791,11 +6792,12 @@ bool igt_max_bpc_constraint(igt_display_t *display, igt_crtc_t *crtc,
 			    igt_output_t *output, int bpc)
 {
 	drmModeConnector *connector = output->config.connector;
+	drmModeModeInfo *mode;
 
 	igt_sort_connector_modes(connector, sort_drm_modes_by_clk_dsc);
 
-	for_each_connector_mode(output) {
-		igt_output_override_mode(output, &connector->modes[j__]);
+	for_each_connector_mode(output, mode) {
+		igt_output_override_mode(output, mode);
 
 		if (is_intel_device(display->drm_fd) &&
 		    !igt_check_bigjoiner_support(display))

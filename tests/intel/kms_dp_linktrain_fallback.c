@@ -464,6 +464,7 @@ static void test_dsc_sst_fallback(data_t *data)
 	int ret;
 	struct udev_monitor *mon;
 	drmModeModeInfo *mode_to_check;
+	drmModeModeInfo *mode;
 	igt_output_t *outputs[IGT_MAX_PIPES];
 	int output_count = 0;
 
@@ -475,8 +476,8 @@ static void test_dsc_sst_fallback(data_t *data)
 	igt_force_link_retrain(data->drm_fd, data->output, RETRAIN_COUNT);
 
 	/* Find a mode that doesn't require DSC initially */
-	for_each_connector_mode(data->output) {
-		data->mode = &data->output->config.connector->modes[j__];
+	for_each_connector_mode(data->output, mode) {
+		data->mode = mode;
 		igt_create_color_fb(data->drm_fd, data->mode->hdisplay,
 				    data->mode->vdisplay, DRM_FORMAT_XRGB8888,
 				    DRM_FORMAT_MOD_LINEAR, 0.0, 1.0, 0.0,

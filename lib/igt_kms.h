@@ -802,12 +802,15 @@ igt_output_crtc_t *__igt_output_crtc_populate(igt_display_t *display,
 /**
  * for_each_connector_mode:
  * @output: Output to enumerate available modes.
+ * @mode: The enumerated mode.
  *
  * This for loop iterates over all modes associated to the given @output.
  * If there are no mode available for this output, nothing happens.
  */
-#define for_each_connector_mode(output)		\
-	for (int j__ = 0;  j__ < output->config.connector->count_modes; j__++)
+#define for_each_connector_mode(output, mode) \
+	for ((mode) = &(output)->config.connector->modes[0]; \
+	     (mode) < &(output)->config.connector->modes[(output)->config.connector->count_modes]; \
+	     (mode)++)
 
 #define IGT_FIXED(i,f)	((i) << 16 | (f))
 

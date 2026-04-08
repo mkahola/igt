@@ -505,6 +505,7 @@ test_plane_panning(data_t *data, igt_crtc_t *crtc)
 	uint64_t mem_size = 0;
 	igt_output_t *output = data->output;
 	igt_crc_t ref_crc;
+	drmModeModeInfo *mode;
 
 	igt_info("Using (pipe %s + %s) to run the subtest.\n",
 		 igt_crtc_name(crtc), igt_output_name(output));
@@ -530,17 +531,16 @@ test_plane_panning(data_t *data, igt_crtc_t *crtc)
 		}
 	}
 
-	for_each_connector_mode(output) {
-		drmModeModeInfo *m = &output->config.connector->modes[j__];
-		uint32_t fb_size = m->hdisplay * m->vdisplay * 4;
+	for_each_connector_mode(output, mode) {
+		uint32_t fb_size = mode->hdisplay * mode->vdisplay * 4;
 
 		/* test allocates 2 double-dim fbs, add one more, to be safe */
 		if (mem_size && 3 * 4 * fb_size > mem_size) {
-			igt_debug("Skipping mode %s due to low memory\n", m->name);
+			igt_debug("Skipping mode %s due to low memory\n", mode->name);
 			continue;
 		}
 
-		igt_output_override_mode(output, m);
+		igt_output_override_mode(output, mode);
 		mode_found = true;
 		break;
 	}

@@ -166,9 +166,7 @@ static bool test_constraint(data_t *data)
 		return false;
 
 	if (igt_bigjoiner_possible(data->drm_fd, mode, max_dotclock)) {
-		for_each_connector_mode(data->output) {
-			mode = &data->output->config.connector->modes[j__];
-
+		for_each_connector_mode(data->output, mode) {
 			if (igt_bigjoiner_possible(data->drm_fd, mode, max_dotclock))
 				continue;
 

@@ -92,8 +92,7 @@ static void set_crtc_size(struct data_t *data)
 	drmModeModeInfo *mode;
 	struct rect_t *crtc = &data->kms.crtc;
 
-	for_each_connector_mode(data->wb_output) {
-		mode = &data->wb_output->config.connector->modes[j__];
+	for_each_connector_mode(data->wb_output, mode) {
 		if (mode->hdisplay == crtc->width && mode->vdisplay == crtc->height) {
 			igt_output_override_mode(data->wb_output, mode);
 			return;

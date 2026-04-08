@@ -548,6 +548,7 @@ static void test_deep_pkgc_state(data_t *data)
 	igt_display_t *display = &data->display;
 	igt_plane_t *primary;
 	igt_output_t *output = NULL;
+	drmModeModeInfo *mode;
 
 	for_each_crtc_with_valid_output(display, crtc, output) {
 		if (output->config.connector->connector_type == DRM_MODE_CONNECTOR_eDP) {
@@ -577,8 +578,8 @@ static void test_deep_pkgc_state(data_t *data)
 	igt_display_reset(display);
 
 	igt_output_set_crtc(output, crtc);
-	for_each_connector_mode(output) {
-		data->mode = &output->config.connector->modes[j__];
+	for_each_connector_mode(output, mode) {
+		data->mode = mode;
 		delay = (MSEC / (data->mode->vrefresh));
 		/*
 		 * Should be 5ms vblank time required to program higher

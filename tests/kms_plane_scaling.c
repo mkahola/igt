@@ -585,8 +585,7 @@ check_scaling_pipe_plane_rot(data_t *d, igt_plane_t *plane,
 	int w, h;
 	int width, height;
 
-	for_each_connector_mode(output) {
-		mode = &output->config.connector->modes[j__];
+	for_each_connector_mode(output, mode) {
 		igt_output_override_mode(output, mode);
 		igt_debug("Trying mode %dx%d\n",
 			  mode->hdisplay, mode->vdisplay);
@@ -946,8 +945,7 @@ test_planes_scaling_combo(data_t *d, double sf_plane1,
 	cleanup_crtc(d);
 
 	igt_output_set_crtc(output, crtc);
-	for_each_connector_mode(output) {
-		mode = &output->config.connector->modes[j__];
+	for_each_connector_mode(output, mode) {
 		igt_output_override_mode(output, mode);
 		igt_debug("Trying mode %dx%d\n",
 			  mode->hdisplay, mode->vdisplay);
