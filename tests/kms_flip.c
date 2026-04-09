@@ -1327,11 +1327,12 @@ static bool event_loop(struct test_output *o, unsigned duration_ms,
 	unsigned long start, end;
 	uint32_t devid;
 	int count = 0;
-	bool wa;
+	bool wa = false;
 
-	devid = intel_get_drm_devid(drm_fd);
-
-	wa = IS_SANDYBRIDGE(devid) || IS_BATTLEMAGE(devid);
+	if (is_intel_device(drm_fd)) {
+		devid = intel_get_drm_devid(drm_fd);
+		wa = IS_SANDYBRIDGE(devid) || IS_BATTLEMAGE(devid);
+	}
 
 	start = gettime_us();
 
