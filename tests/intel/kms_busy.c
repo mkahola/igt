@@ -35,6 +35,7 @@
 
 #include "i915/gem.h"
 #include "igt.h"
+#include "igt_sysfs.h"
 
 /**
  * SUBTEST: basic
@@ -413,6 +414,18 @@ static void gpu_engines_restore_timeouts(int fd, int num_engines, const struct g
 		gem_engine_properties_restore(fd, &props[i]);
 }
 
+static uint32_t display_reset_count(int drm_fd)
+{
+	uint32_t count;
+	int dir;
+
+	dir = igt_debugfs_dir(drm_fd);
+	count = igt_sysfs_get_u32(dir, "intel_display_reset_count");
+	close(dir);
+
+	return count;
+}
+
 const char *help_str =
 	"  -e \tRun on all pipes. (By default subtests will run on two pipes)\n";
 
@@ -549,16 +562,22 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 					continue;
 
 				igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {
-					if (tests[i].reset)
+					uint32_t reset_count_pre = 0;
+
+					if (tests[i].reset) {
 						igt_set_module_param_int(display.drm_fd, "force_reset_modeset_test", 1);
+						reset_count_pre = display_reset_count(display.drm_fd);
+					}
 
 					test_hang(&display,
 						  crtc,
 						  output,
 						  tests[i].modeset, tests[i].hang_newfb);
 
-					if (tests[i].reset)
+					if (tests[i].reset) {
 						igt_set_module_param_int(display.drm_fd, "force_reset_modeset_test", 0);
+						igt_assert_neq(reset_count_pre, display_reset_count(display.drm_fd));
+					}
 				}
 			}
 
