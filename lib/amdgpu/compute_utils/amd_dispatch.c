@@ -12,6 +12,51 @@
 #include "amdgpu/amd_ip_blocks.h"
 #include "amdgpu/shaders/amd_shaders.h"
 
+/*
+ * Static state for sched_mask cleanup on abnormal subtest exit.
+ *
+ * When amdgpu_dispatch_hang_slow_helper() or amdgpu_gfx_dispatch_test()
+ * isolate a single compute/gfx ring via sysfs sched_mask, an igt_assert
+ * failure inside the dispatch helpers triggers siglongjmp() back to the
+ * subtest entry point, bypassing the mask restore at the end of the
+ * function.  This leaves all other HW rings disabled, which causes
+ * drm_sched to see ready == false and can lead to NULL-pointer
+ * dereferences on subsequent tests.
+ *
+ * Saving the original mask in file-scoped variables and registering an
+ * IGT exit handler guarantees restoration on both normal and abnormal
+ * exit paths (siglongjmp, signals, process exit).
+ */
+static char sched_mask_sysfs[256];
+static long sched_mask_saved;
+static bool sched_mask_dirty;
+
+static void sched_mask_exit_handler(int sig)
+{
+	char cmd[1024];
+
+	if (!sched_mask_dirty)
+		return;
+
+	sched_mask_dirty = false;
+	snprintf(cmd, sizeof(cmd) - 1, "sudo echo  0x%lx > %s",
+		 sched_mask_saved, sched_mask_sysfs);
+	system(cmd);
+}
+
+static void sched_mask_arm(const char *sysfs, long mask)
+{
+	/* If a prior subtest left the mask dirty, restore it first */
+	if (sched_mask_dirty)
+		sched_mask_exit_handler(0);
+
+	strncpy(sched_mask_sysfs, sysfs, sizeof(sched_mask_sysfs) - 1);
+	sched_mask_sysfs[sizeof(sched_mask_sysfs) - 1] = '\0';
+	sched_mask_saved = mask;
+	sched_mask_dirty = true;
+	igt_install_exit_handler(sched_mask_exit_handler);
+}
+
 static void
 amdgpu_memset_dispatch_test(amdgpu_device_handle device_handle,
 			    uint32_t ip_type, uint32_t priority,
@@ -687,6 +732,9 @@ amdgpu_dispatch_hang_slow_helper(amdgpu_device_handle device_handle,
 		sched_mask = 1;
 	}
 
+	if (sched_mask > 1)
+		sched_mask_arm(sysfs, sched_mask);
+
 	for (ring_id = 0; (0x1 << ring_id) <= sched_mask; ring_id++) {
 		/* check sched is ready is on the ring. */
 		if (!((1 << ring_id) & sched_mask))
@@ -733,6 +781,7 @@ amdgpu_dispatch_hang_slow_helper(amdgpu_device_handle device_handle,
 		snprintf(cmd, sizeof(cmd) - 1, "sudo echo  0x%lx > %s",sched_mask, sysfs);
 		r = system(cmd);
 		igt_assert_eq(r, 0);
+		sched_mask_dirty = false;
 	}
 }
 
@@ -768,6 +817,9 @@ void amdgpu_gfx_dispatch_test(amdgpu_device_handle device_handle, uint32_t ip_ty
 			sched_mask = 1;
 		}
 	}
+
+	if (sched_mask > 1)
+		sched_mask_arm(sysfs, sched_mask);
 
 	for (ring_id = 0; (0x1 << ring_id) <= sched_mask; ring_id++) {
 		/* check sched is ready is on the ring. */
@@ -811,6 +863,7 @@ void amdgpu_gfx_dispatch_test(amdgpu_device_handle device_handle, uint32_t ip_ty
 		snprintf(cmd, sizeof(cmd) - 1, "sudo echo  0x%lx > %s",sched_mask, sysfs);
 		r = system(cmd);
 		igt_assert_eq(r, 0);
+		sched_mask_dirty = false;
 	}
 }
 
