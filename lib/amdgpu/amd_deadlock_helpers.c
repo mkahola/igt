@@ -27,6 +27,50 @@ struct thread_param {
 static int
 use_uc_mtype = 1;
 
+/*
+ * Static state for sched_mask cleanup on abnormal subtest exit.
+ *
+ * A failing assert in ring iteration helpers can jump over the normal
+ * sched_mask restore path, leaving non-selected rings disabled for later
+ * subtests. Keep one file-scoped backup and restore it from an exit handler.
+ */
+static char sched_mask_sysfs[256];
+static uint64_t sched_mask_saved;
+static bool sched_mask_dirty;
+static bool sched_mask_handler_installed;
+
+static void sched_mask_exit_handler(int sig)
+{
+	char cmd[1024];
+
+	(void)sig;
+
+	if (!sched_mask_dirty)
+		return;
+
+	sched_mask_dirty = false;
+	snprintf(cmd, sizeof(cmd) - 1, "sudo echo  0x%" PRIx64 " > %s",
+		 sched_mask_saved, sched_mask_sysfs);
+	system(cmd);
+}
+
+static void sched_mask_arm(const char *sysfs, uint64_t mask)
+{
+	/* Restore stale state first if a prior subtest exited abnormally. */
+	if (sched_mask_dirty)
+		sched_mask_exit_handler(0);
+
+	strncpy(sched_mask_sysfs, sysfs, sizeof(sched_mask_sysfs) - 1);
+	sched_mask_sysfs[sizeof(sched_mask_sysfs) - 1] = '\0';
+	sched_mask_saved = mask;
+	sched_mask_dirty = true;
+
+	if (!sched_mask_handler_installed) {
+		igt_install_exit_handler(sched_mask_exit_handler);
+		sched_mask_handler_installed = true;
+	}
+}
+
 static void*
 write_mem_address(void *data)
 {
@@ -239,6 +283,9 @@ void amdgpu_wait_memory_helper(amdgpu_device_handle device_handle, unsigned int 
 		igt_info("The scheduling ring only enables one for ip %d\n", ip_type);
 	}
 
+	if (sched_mask > 1)
+		sched_mask_arm(sysfs, sched_mask);
+
 	for (ring_id = 0; ((uint64_t)0x1 << ring_id) <= sched_mask; ring_id += 1) {
 		/* check sched is ready is on the ring. */
 		if (!((1 << ring_id) & sched_mask))
@@ -289,6 +336,7 @@ void amdgpu_wait_memory_helper(amdgpu_device_handle device_handle, unsigned int 
 		snprintf(cmd, sizeof(cmd) - 1, "sudo echo  0x%" PRIx64 " > %s", sched_mask, sysfs);
 		r = system(cmd);
 		igt_assert_eq(r, 0);
+		sched_mask_dirty = false;
 	}
 
 }
@@ -494,6 +542,9 @@ void bad_access_ring_helper(amdgpu_device_handle device_handle, unsigned int cmd
 		igt_info("The scheduling ring only enables one for ip %d\n", ip_type);
 	}
 
+	if (sched_mask > 1)
+		sched_mask_arm(sysfs, sched_mask);
+
 	for (ring_id = 0; ((uint64_t)0x1 << ring_id) <= sched_mask; ring_id++) {
 		/* check sched is ready is on the ring. */
 		if (!((1 << ring_id) & sched_mask))
@@ -544,6 +595,7 @@ void bad_access_ring_helper(amdgpu_device_handle device_handle, unsigned int cmd
 		snprintf(cmd, sizeof(cmd) - 1, "sudo echo  0x%" PRIx64 " > %s", sched_mask, sysfs);
 		r = system(cmd);
 		igt_assert_eq(r, 0);
+		sched_mask_dirty = false;
 	}
 
 }
@@ -581,6 +633,9 @@ void amdgpu_hang_sdma_ring_helper(amdgpu_device_handle device_handle, uint8_t ha
 	} else
 		sched_mask = 1;
 
+	if (sched_mask > 1)
+		sched_mask_arm(sysfs, sched_mask);
+
 	for (ring_id = 0; ((uint64_t)0x1 << ring_id) <= sched_mask; ring_id++) {
 		/* check sched is ready is on the ring. */
 		if (!((1 << ring_id) & sched_mask))
@@ -613,6 +668,7 @@ void amdgpu_hang_sdma_ring_helper(amdgpu_device_handle device_handle, uint8_t ha
 		snprintf(cmd, sizeof(cmd) - 1, "sudo echo  0x%" PRIx64 " > %s", sched_mask, sysfs);
 		r = system(cmd);
 		igt_assert_eq(r, 0);
+		sched_mask_dirty = false;
 	}
 }
 

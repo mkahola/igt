@@ -4,6 +4,47 @@
  */
 #include "amd_mmd_shared.h"
 
+/*
+ * Static state for sched_mask cleanup when subtests abort out of the
+ * per-ring loop before reaching the normal restore path.
+ */
+static char sched_mask_sysfs[256];
+static long sched_mask_saved;
+static bool sched_mask_dirty;
+static bool sched_mask_handler_installed;
+
+static void sched_mask_exit_handler(int sig)
+{
+	char cmd[1024];
+
+	(void)sig;
+
+	if (!sched_mask_dirty)
+		return;
+
+	sched_mask_dirty = false;
+	snprintf(cmd, sizeof(cmd) - 1, "sudo echo  0x%lx > %s",
+		 sched_mask_saved, sched_mask_sysfs);
+	system(cmd);
+}
+
+static void sched_mask_arm(const char *sysfs, long mask)
+{
+	/* Restore stale state first if a prior subtest exited abnormally. */
+	if (sched_mask_dirty)
+		sched_mask_exit_handler(0);
+
+	strncpy(sched_mask_sysfs, sysfs, sizeof(sched_mask_sysfs) - 1);
+	sched_mask_sysfs[sizeof(sched_mask_sysfs) - 1] = '\0';
+	sched_mask_saved = mask;
+	sched_mask_dirty = true;
+
+	if (!sched_mask_handler_installed) {
+		igt_install_exit_handler(sched_mask_exit_handler);
+		sched_mask_handler_installed = true;
+	}
+}
+
 bool
 is_gfx_pipe_removed(uint32_t family_id, uint32_t chip_id, uint32_t chip_rev)
 {
@@ -214,7 +255,7 @@ int
 mm_queue_test_helper(amdgpu_device_handle device_handle, struct mmd_shared_context *context,
 		mm_test_callback callback, int err_type, const struct pci_addr *pci)
 {
-	int r;
+	int r = 0;
 	char cmd[1024];
 	long sched_mask = 0;
 	long mask = 0;
@@ -229,6 +270,9 @@ mm_queue_test_helper(amdgpu_device_handle device_handle, struct mmd_shared_conte
 	} else {
 		sched_mask = 1;
 	}
+
+	if (sched_mask > 1)
+		sched_mask_arm(sysfs, sched_mask);
 
 	mask = sched_mask;
 	for (ring_id = 0;  mask > 0; ring_id++) {
@@ -251,6 +295,7 @@ mm_queue_test_helper(amdgpu_device_handle device_handle, struct mmd_shared_conte
 		snprintf(cmd, sizeof(cmd) - 1, "sudo echo  0x%lx > %s", sched_mask, sysfs);
 		r = system(cmd);
 		igt_assert_eq(r, 0);
+		sched_mask_dirty = false;
 	}
 	return r;
 }
