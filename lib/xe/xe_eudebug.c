@@ -325,7 +325,6 @@ static int safe_pipe_read(int pipe[2], void *buf, int nbytes, int timeout_ms)
 
 		ret = poll(&r, 1, interval_ms);
 		if (!ret) {
-			igt_debug("poll: timeout\n");
 			catch_child_failure();
 			t += interval_ms;
 		} else if (ret == -1) {
