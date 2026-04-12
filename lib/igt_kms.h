@@ -692,9 +692,10 @@ static inline bool igt_crtc_connector_valid(igt_crtc_t *crtc, igt_output_t *outp
  *
  * This for loop iterates over all outputs.
  */
-#define for_each_output(display, output)		\
-	for (int i__ = 0;  assert(igt_can_fail()), i__ < (display)->n_outputs; i__++)	\
-		for_each_if (((output) = (&(display)->outputs[i__])))
+#define for_each_output(display, output) \
+	for ((output) = &(display)->outputs[0]; \
+	     (output) < &(display)->outputs[(display)->n_outputs]; \
+	     (output)++)
 
 /**
  * for_each_connected_output:
