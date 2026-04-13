@@ -470,7 +470,7 @@ static void *keypress_thread(void *arg)
 
 static void *video_player_thread(void *arg)
 {
-	double font_size, x, y;
+	double font_size, x, y, edge_gap;
 	struct igt_fb fb;
 	cairo_t *cr;
 	igt_plane_t *primary;
@@ -528,29 +528,13 @@ static void *video_player_thread(void *arg)
 
 		draw_menu_text(cr, data);
 
-		current_time = time(NULL);
-		elapsed = current_time - data->video_start_time;
-		minutes = elapsed / 60;
-		seconds = elapsed % 60;
-		snprintf(timer_str, sizeof(timer_str), "%02d:%02d", minutes, seconds);
-
 		cairo_select_font_face(cr, "Helvetica", CAIRO_FONT_SLANT_NORMAL,
 				       CAIRO_FONT_WEIGHT_BOLD);
 		cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
 		font_size = data->height / 12.0;
-		cairo_set_font_size(cr, font_size / 2.0);
-		cairo_text_extents(cr, timer_str, &ext);
-		cairo_move_to(cr, data->width - ext.width - 20, data->height - 20);
-		cairo_show_text(cr, timer_str);
-
-		/* Draw HDCP status above timer */
-		cairo_set_font_size(cr, font_size);
-		cairo_text_extents(cr, hdcp_str, &ext);
-		x = data->width - ext.width - 20;
-		y = data->height - ext.height - 60;
-
-		cairo_move_to(cr, x, y);
-		cairo_show_text(cr, hdcp_str);
+		edge_gap = font_size / 5;
+		x = data->width - edge_gap;
+		y = data->height - edge_gap;
 
 		/* Add timer in bottom-right corner */
 		current_time = time(NULL);
@@ -561,8 +545,16 @@ static void *video_player_thread(void *arg)
 
 		cairo_set_font_size(cr, font_size / 2.0);
 		cairo_text_extents(cr, timer_str, &ext);
-		cairo_move_to(cr, data->width - ext.width - 20, data->height - 20);
+		cairo_move_to(cr, x - ext.width, y);
 		cairo_show_text(cr, timer_str);
+		y -= ext.height + edge_gap;
+
+		/* Draw HDCP status above timer */
+		cairo_set_font_size(cr, font_size);
+		cairo_text_extents(cr, hdcp_str, &ext);
+		cairo_move_to(cr, x - ext.width, y);
+		cairo_show_text(cr, hdcp_str);
+		y -= ext.height + edge_gap;
 
 		cairo_destroy(cr);
 
