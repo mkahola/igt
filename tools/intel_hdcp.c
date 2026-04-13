@@ -102,24 +102,13 @@ static void draw_menu_text(cairo_t *cr, data_t *data)
 	}
 }
 
-static void draw_menu(data_t *data, const char *status)
+static void draw_menu(data_t *data)
 {
 	cairo_t *cr = igt_get_cairo_ctx(data->fd, &data->fb);
 
-	/* Background color and text color based on HDCP status */
-	if (strcmp(status, "INIT") == 0) {
-		cairo_set_source_rgb(cr, 0.051, 0.278, 0.631);
-		cairo_paint(cr);
-		cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-	} else if (strcmp(status, "Enabled") == 0) {
-		cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
-		cairo_paint(cr);
-		cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-	} else {
-		cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
-		cairo_paint(cr);
-		cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-	}
+	cairo_set_source_rgb(cr, 0.051, 0.278, 0.631);
+	cairo_paint(cr);
+	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
 
 	draw_menu_text(cr, data);
 
@@ -667,13 +656,12 @@ int main(int argc, char **argv)
 {
 	data_t data;
 	pthread_t tid;
-	const char *status = NULL;
 	igt_plane_t *primary;
 
 	data.selected_connector = -1;
 	test_init(&data);
 
-	draw_menu(&data, "INIT");
+	draw_menu(&data);
 	primary = igt_output_get_plane_type(data.output, DRM_PLANE_TYPE_PRIMARY);
 	igt_plane_set_fb(primary, &data.fb);
 	igt_display_commit2(&data.display, COMMIT_ATOMIC);
@@ -707,7 +695,6 @@ int main(int argc, char **argv)
 			enable_hdcp_type(&data, HDCP_TYPE_2_2_TYPE_1);
 			break;
 		case 5:
-			stop_video_player(&data);
 			set_hdcp_prop(&data, CP_UNDESIRED, HDCP_TYPE_2_2_TYPE_1,
 				      data.selected_connector);
 			data.hdcp_type = HDCP_TYPE_NONE;
@@ -715,17 +702,6 @@ int main(int argc, char **argv)
 		default:
 			break;
 		}
-
-		if (cmd == 1) {
-			draw_menu(&data, "INIT");
-		} else {
-			status = get_hdcp_status(&data, data.selected_connector);
-			draw_menu(&data, status);
-		}
-
-		primary = igt_output_get_plane_type(data.output, DRM_PLANE_TYPE_PRIMARY);
-		igt_plane_set_fb(primary, &data.fb);
-		igt_display_commit2(&data.display, COMMIT_ATOMIC);
 
 		usleep(200 * 1000);
 	}
