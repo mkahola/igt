@@ -486,7 +486,8 @@ static void *video_player_thread(void *arg)
 	struct igt_fb fb;
 	cairo_t *cr;
 	igt_plane_t *primary;
-	const char *hdcp_str;
+	const char *hdcp_request;
+	const char *hdcp_status;
 	double bg_r = 0.0, bg_g = 0.0, bg_b = 0.0;
 	enum hdcp_type cur_type, prev_type;
 	data_t *data;
@@ -513,22 +514,24 @@ static void *video_player_thread(void *arg)
 			prev_type = cur_type;
 		}
 
+		hdcp_status = get_hdcp_status(data, data->selected_connector);
+
 		switch (cur_type) {
 		case HDCP_TYPE_1_4:
 			bg_r = 0.0; bg_g = 0.7; bg_b = 0.0;
-			hdcp_str = "HDCP1.4";
+			hdcp_request = "HDCP1.4";
 			break;
 		case HDCP_TYPE_2_2_TYPE_0:
 			bg_r = 0.0; bg_g = 0.45; bg_b = 0.45;
-			hdcp_str = "HDCP2.2 TYPE 0";
+			hdcp_request = "HDCP2.2 TYPE 0";
 			break;
 		case HDCP_TYPE_2_2_TYPE_1:
 			bg_r = 0.45; bg_g = 0.15; bg_b = 0.6;
-			hdcp_str = "HDCP2.2 TYPE 1";
+			hdcp_request = "HDCP2.2 TYPE 1";
 			break;
 		default:
 			bg_r = 0.0; bg_g = 0.0; bg_b = 0.0;
-			hdcp_str = "NO HDCP";
+			hdcp_request = "NO HDCP";
 			break;
 		}
 
@@ -556,7 +559,10 @@ static void *video_player_thread(void *arg)
 		y = draw_text_right(cr, font_size / 2.0, x, y, timer_str);
 
 		/* Draw HDCP status above timer */
-		y = draw_text_right(cr, font_size, x, y, hdcp_str);
+		y = draw_text_right(cr, font_size, x, y, hdcp_status);
+
+		/* Draw HDCP request above status */
+		y = draw_text_right(cr, font_size, x, y, hdcp_request);
 
 		cairo_destroy(cr);
 
@@ -599,8 +605,8 @@ static void stop_video_player(data_t *data)
 
 static void enable_hdcp_type(data_t *data, enum hdcp_type type)
 {
-		set_hdcp_prop(data, CP_DESIRED, type, data->selected_connector);
 		pthread_mutex_lock(&data->lock);
+		set_hdcp_prop(data, CP_DESIRED, type, data->selected_connector);
 		data->hdcp_type = type;
 		data->video_start_time = time(NULL);
 		pthread_mutex_unlock(&data->lock);
