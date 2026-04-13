@@ -468,6 +468,18 @@ static void *keypress_thread(void *arg)
 	return NULL;
 }
 
+static double draw_text_right(cairo_t *cr, double font_size, double x, double y, const char *str)
+{
+	cairo_text_extents_t ext;
+
+	cairo_set_font_size(cr, font_size);
+	cairo_text_extents(cr, str, &ext);
+	cairo_move_to(cr, x - ext.width, y);
+	cairo_show_text(cr, str);
+
+	return y - ext.height - (font_size / 4);
+}
+
 static void *video_player_thread(void *arg)
 {
 	double font_size, x, y, edge_gap;
@@ -476,7 +488,6 @@ static void *video_player_thread(void *arg)
 	igt_plane_t *primary;
 	const char *hdcp_str;
 	double bg_r = 0.0, bg_g = 0.0, bg_b = 0.0;
-	cairo_text_extents_t ext;
 	enum hdcp_type cur_type, prev_type;
 	data_t *data;
 	char timer_str[32];
@@ -542,19 +553,10 @@ static void *video_player_thread(void *arg)
 		minutes = elapsed / 60;
 		seconds = elapsed % 60;
 		snprintf(timer_str, sizeof(timer_str), "%02d:%02d", minutes, seconds);
-
-		cairo_set_font_size(cr, font_size / 2.0);
-		cairo_text_extents(cr, timer_str, &ext);
-		cairo_move_to(cr, x - ext.width, y);
-		cairo_show_text(cr, timer_str);
-		y -= ext.height + edge_gap;
+		y = draw_text_right(cr, font_size / 2.0, x, y, timer_str);
 
 		/* Draw HDCP status above timer */
-		cairo_set_font_size(cr, font_size);
-		cairo_text_extents(cr, hdcp_str, &ext);
-		cairo_move_to(cr, x - ext.width, y);
-		cairo_show_text(cr, hdcp_str);
-		y -= ext.height + edge_gap;
+		y = draw_text_right(cr, font_size, x, y, hdcp_str);
 
 		cairo_destroy(cr);
 
