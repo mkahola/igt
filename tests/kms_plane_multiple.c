@@ -524,8 +524,7 @@ static void test_plane_position_2_display(data_t *data, igt_crtc_t *crtc1,
 
 static void run_2_display_test(data_t *data, uint64_t modifier, const char *name)
 {
-	igt_crtc_t *crtc2;
-	igt_crtc_t *crtc;
+	igt_crtc_t *crtc1, *crtc2;
 	igt_output_t *output1, *output2;
 	igt_display_t *display = &data->display;
 
@@ -534,42 +533,30 @@ static void run_2_display_test(data_t *data, uint64_t modifier, const char *name
 
 	igt_display_reset(display);
 
-	for_each_crtc(display, crtc) {
-		for_each_valid_output_on_crtc(display,
-					      crtc,
-					      output1) {
-			for_each_crtc(display, crtc2) {
-				if (crtc == crtc2)
-					continue;
+	for_each_crtc_with_valid_output(display, crtc1, output1) {
+		for_each_crtc_with_valid_output(display, crtc2, output2) {
+			if (crtc1 == crtc2)
+				continue;
 
-				for_each_valid_output_on_crtc(display, crtc2, output2) {
-					if (output1 == output2)
-						continue;
+			if (output1 == output2)
+				continue;
 
-					igt_display_reset(display);
+			igt_display_reset(display);
 
-					igt_output_set_crtc(output1,
-							    crtc);
-					igt_output_set_crtc(output2,
-							    crtc2);
+			igt_output_set_crtc(output1, crtc1);
+			igt_output_set_crtc(output2, crtc2);
 
-					if (!intel_pipe_output_combo_valid(display))
-						continue;
+			if (!intel_pipe_output_combo_valid(display))
+				continue;
 
-					igt_dynamic_f("pipe-%s-%s-pipe-%s-%s",
-						       igt_crtc_name(crtc),
-						       output1->name,
-						       igt_crtc_name(crtc2),
-						       output2->name)
-						test_plane_position_2_display(data,
-									      crtc,
-									      crtc2,
-									      output1, output2,
-									      modifier);
-
-					test_fini_2_display(data);
-				}
-			}
+			igt_dynamic_f("pipe-%s-%s-pipe-%s-%s",
+				      igt_crtc_name(crtc1), output1->name,
+				      igt_crtc_name(crtc2), output2->name)
+				test_plane_position_2_display(data,
+							      crtc1, crtc2,
+							      output1, output2,
+							      modifier);
+			test_fini_2_display(data);
 		}
 	}
 }

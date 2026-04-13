@@ -178,49 +178,36 @@ static void run_extendedmode_basic(data_t *data, igt_crtc_t *crtc1,
 }
 
 static void run_extendedmode_test(data_t *data) {
-	igt_crtc_t *crtc2;
-	igt_crtc_t *crtc;
 	bool sim_flag = igt_run_in_simulation();
+	igt_crtc_t *crtc1, *crtc2;
 	igt_output_t *output1, *output2;
 	igt_display_t *display = &data->display;
 
 	igt_display_reset(display);
 
-	for_each_crtc(display, crtc) {
-		for_each_valid_output_on_crtc(display,
-					      crtc,
-					      output1) {
+	for_each_crtc_with_valid_output(display, crtc1, output1) {
+		for_each_crtc_with_valid_output(display, crtc2, output2) {
+			if (crtc1 == crtc2)
+				continue;
 
-			for_each_crtc(display, crtc2) {
-				if (crtc == crtc2)
-					continue;
+			if (output1 == output2)
+				continue;
 
-				for_each_valid_output_on_crtc(display, crtc2, output2) {
-					if (output1 == output2)
-						continue;
+			igt_display_reset(display);
 
-					igt_display_reset(display);
+			igt_output_set_crtc(output1, crtc1);
+			igt_output_set_crtc(output2, crtc2);
 
-					igt_output_set_crtc(output1,
-							    crtc);
-					igt_output_set_crtc(output2,
-							    crtc2);
+			if (!intel_pipe_output_combo_valid(display))
+				continue;
 
-					if (!intel_pipe_output_combo_valid(display))
-						continue;
+			igt_dynamic_f("pipe-%s-%s-pipe-%s-%s",
+				      igt_crtc_name(crtc1), igt_output_name(output1),
+				      igt_crtc_name(crtc2), igt_output_name(output2))
+				run_extendedmode_basic(data,
+						       crtc1, output1,
+						       crtc2, output2);
 
-					igt_dynamic_f("pipe-%s-%s-pipe-%s-%s",
-						      igt_crtc_name(crtc),
-						      igt_output_name(output1),
-						      igt_crtc_name(crtc2),
-						      igt_output_name(output2))
-						run_extendedmode_basic(data,
-								       crtc,
-								       output1,
-								       crtc2,
-								       output2);
-				}
-			}
 			/*
 			 * In simulation env, only run the test once with a
 			 * single valid pipe/output pair instead of all combos.
