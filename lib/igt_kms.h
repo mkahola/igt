@@ -379,7 +379,7 @@ extern const char * const igt_plane_prop_names[];
 extern const char * const igt_colorop_prop_names[];
 
 typedef struct _igt_display igt_display_t;
-typedef struct igt_crtc igt_crtc_t;
+typedef struct _igt_crtc igt_crtc_t;
 typedef uint32_t igt_fixed_t;			/* 16.16 fixed point */
 
 #define IGT_NUM_PLANE_COLOR_PIPELINES 4
@@ -470,7 +470,7 @@ typedef struct _igt_plane {
 /*
  * This struct represents a hardware pipe
  */
-struct igt_crtc {
+struct _igt_crtc {
 	igt_display_t *display;
 	/* ID of a hardware pipe */
 	enum pipe pipe;
