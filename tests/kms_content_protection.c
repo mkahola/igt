@@ -395,10 +395,10 @@ static void test_cp_enable_with_retry(igt_output_t *output,
 static bool igt_crtc_is_free(igt_crtc_t *crtc)
 {
 	igt_display_t *display = crtc->display;
-	int i;
+	igt_output_t *output;
 
-	for (i = 0; i < display->n_outputs; i++)
-		if (igt_output_get_driving_crtc(&display->outputs[i]) == crtc)
+	for_each_output(display, output)
+		if (igt_output_get_driving_crtc(output) == crtc)
 			return false;
 
 	return true;
