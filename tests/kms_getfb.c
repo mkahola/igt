@@ -131,8 +131,9 @@ static bool has_getfb_iface(int fd)
  */
 static uint32_t get_any_prop_id(igt_display_t *display)
 {
-	for (int i = 0; i < display->n_outputs; i++) {
-		igt_output_t *output = &display->outputs[i];
+	igt_output_t *output;
+
+	for_each_output(display, output) {
 		if (output->props[IGT_CONNECTOR_DPMS] != 0)
 			return output->props[IGT_CONNECTOR_DPMS];
 	}
