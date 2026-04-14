@@ -409,7 +409,7 @@ static inline bool igt_rotation_90_or_270(igt_rotation_t rotation)
 	return rotation & (IGT_ROTATION_90 | IGT_ROTATION_270);
 }
 
-typedef struct igt_plane igt_plane_t;
+typedef struct _igt_plane igt_plane_t;
 
 typedef struct igt_colorop {
 	uint32_t id;
@@ -423,10 +423,10 @@ typedef struct igt_colorop {
 
 } igt_colorop_t;
 
-typedef struct igt_plane {
+typedef struct _igt_plane {
 	/*< private >*/
 	igt_crtc_t *crtc;
-	struct igt_plane *ref;
+	igt_plane_t *ref;
 	int index;
 	/* capabilities */
 	int type;
