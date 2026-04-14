@@ -411,7 +411,7 @@ static inline bool igt_rotation_90_or_270(igt_rotation_t rotation)
 
 typedef struct _igt_plane igt_plane_t;
 
-typedef struct igt_colorop {
+typedef struct {
 	uint32_t id;
 	igt_plane_t *plane;
 
