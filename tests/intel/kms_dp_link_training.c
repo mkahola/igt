@@ -118,7 +118,7 @@ static void assert_link_status_good(data_t *data, bool mst)
  */
 static void setup_planes_fbs(data_t *data, igt_output_t *outs[],
 			     int count, drmModeModeInfo *modes[],
-			     struct igt_fb fbs[], struct igt_plane *planes[])
+			     struct igt_fb fbs[], igt_plane_t *planes[])
 {
 	int i;
 
@@ -148,7 +148,7 @@ static void do_modeset(data_t *data, bool mst)
 	igt_output_t *outs[IGT_MAX_PIPES];
 	drmModeModeInfo *modes[IGT_MAX_PIPES];
 	struct igt_fb fbs[IGT_MAX_PIPES];
-	struct igt_plane *planes[IGT_MAX_PIPES];
+	igt_plane_t *planes[IGT_MAX_PIPES];
 	int n_pipes = 0;
 	int out_count = 0;
 	igt_crtc_t *crtc;

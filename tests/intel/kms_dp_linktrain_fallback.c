@@ -41,7 +41,7 @@ typedef struct {
 	igt_output_t *output;
 	igt_crtc_t *crtc;
 	struct igt_fb fb;
-	struct igt_plane *primary;
+	igt_plane_t *primary;
 	int n_pipes;
 } data_t;
 
@@ -115,7 +115,7 @@ static void setup_modeset_on_outputs(data_t *data,
 				     int *output_count,
 				     drmModeModeInfo *mode[],
 				     struct igt_fb fb[],
-				     struct igt_plane *primary[])
+				     igt_plane_t *primary[])
 {
 	int i;
 
@@ -159,7 +159,7 @@ static bool validate_modeset_for_outputs(data_t *data,
 					int *output_count,
 					drmModeModeInfo *mode[],
 					struct igt_fb fb[],
-					struct igt_plane *primary[])
+					igt_plane_t *primary[])
 {
 	igt_require_f(*output_count > 0, "Require at least 1 output\n");
 	setup_pipe_on_outputs(data, outputs, output_count);
@@ -173,7 +173,7 @@ static bool validate_modeset_for_outputs(data_t *data,
 static bool setup_outputs(data_t *data, bool is_mst,
 		      igt_output_t *outputs[],
 		      int *output_count, drmModeModeInfo *mode[],
-		      struct igt_fb fb[], struct igt_plane *primary[])
+		      struct igt_fb fb[], igt_plane_t *primary[])
 {
 	bool ret;
 
@@ -307,7 +307,7 @@ static bool fix_link_status_and_recommit(data_t *data,
 					 int *output_count,
 					 drmModeModeInfo * modes[],
 					 struct igt_fb fbs[],
-					 struct igt_plane *primaries[])
+					 igt_plane_t *primaries[])
 {
 	int i;
 	igt_output_t *out;
@@ -347,7 +347,7 @@ static void test_fallback(data_t *data, bool is_mst)
 	igt_output_t *outputs[IGT_MAX_PIPES];
 	drmModeModeInfo * modes[IGT_MAX_PIPES];
 	struct igt_fb fbs[IGT_MAX_PIPES];
-	struct igt_plane *primaries[IGT_MAX_PIPES];
+	igt_plane_t *primaries[IGT_MAX_PIPES];
 	struct udev_monitor *mon;
 
 	retries = SPURIOUS_HPD_RETRY;
