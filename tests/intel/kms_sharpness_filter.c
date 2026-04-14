@@ -453,6 +453,8 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 					continue;
 				}
 
+				igt_output_override_mode(data->output, data->mode);
+
 				igt_info("Executing on non-joiner mode %dx%d@%d\n",
 					 data->mode->hdisplay,
 					 data->mode->vdisplay,
@@ -460,8 +462,6 @@ run_sharpness_filter_test(data_t *data, enum test_type type)
 			} else {
 				data->mode = igt_output_get_mode(data->output);
 			}
-
-			igt_output_override_mode(data->output, data->mode);
 
 			if (!has_sharpness_filter(data->crtc)) {
 				igt_info("%s: Doesn't support IGT_CRTC_SHARPNESS_STRENGTH.\n",
