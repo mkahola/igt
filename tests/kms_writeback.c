@@ -143,7 +143,7 @@ static bool check_writeback_config(igt_display_t *display, igt_output_t *output,
 
 static igt_output_t *kms_writeback_get_output(igt_display_t *display)
 {
-	int i;
+	igt_output_t *output;
 	igt_crtc_t *crtc;
 
 	drmModeModeInfo override_mode = {
@@ -163,9 +163,7 @@ static igt_output_t *kms_writeback_get_output(igt_display_t *display)
 		.name = {"640x480-60"},
 	};
 
-	for (i = 0; i < display->n_outputs; i++) {
-		igt_output_t *output = &display->outputs[i];
-
+	for_each_output(display, output) {
 		if (output->config.connector->connector_type != DRM_MODE_CONNECTOR_WRITEBACK)
 			continue;
 
@@ -464,9 +462,9 @@ static void commit_and_dump_fb(igt_display_t *display, igt_output_t *output, igt
 
 static igt_output_t *list_writeback_modes(igt_display_t *display)
 {
-	for (int i = 0; i < display->n_outputs; i++) {
-		igt_output_t *output = &display->outputs[i];
+	igt_output_t *output;
 
+	for_each_output(display, output) {
 		if (output->config.connector->connector_type == DRM_MODE_CONNECTOR_WRITEBACK) {
 			drmModeModeInfo *mode;
 			int j = 0;
