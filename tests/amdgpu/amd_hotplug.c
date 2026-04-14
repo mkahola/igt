@@ -50,7 +50,8 @@ typedef struct data {
 static void test_init(data_t *data)
 {
 	igt_display_t *display = &data->display;
-	int i, n, max_pipes = igt_display_n_crtcs(display);
+	int n = 0;
+	igt_output_t *output;
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc) {
@@ -65,8 +66,9 @@ static void test_init(data_t *data)
 			igt_crtc_crc_new(crtc, IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
-	for (i = 0, n = 0; i < display->n_outputs && n < max_pipes; ++i) {
-		igt_output_t *output = &display->outputs[i];
+	for_each_output(display, output) {
+		if (n == igt_display_n_crtcs(display))
+			break;
 
 		data->output[n] = output;
 
