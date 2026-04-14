@@ -835,10 +835,10 @@ static void commit_display(data_t *data, unsigned event_mask, bool nonblocking)
 
 static void unset_output_pipe(igt_display_t *display)
 {
-	int i;
+	igt_output_t *output;
 
-	for (i = 0; i < display->n_outputs; i++)
-		igt_output_set_crtc(&display->outputs[i], NULL);
+	for_each_output(display, output)
+		igt_output_set_crtc(output, NULL);
 }
 
 static unsigned set_combinations(data_t *data, unsigned mask, struct igt_fb *fb)
