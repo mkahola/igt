@@ -60,8 +60,9 @@ static void test_fini(data_t *data)
 static void test_init(data_t *data)
 {
 	igt_display_t *display = &data->display;
+	igt_output_t *output;
 	igt_crtc_t *crtc;
-	int i, n;
+	int n = 0;
 
 	for_each_crtc(display, crtc) {
 		data->crtc[crtc->crtc_index] = crtc;
@@ -71,9 +72,10 @@ static void test_init(data_t *data)
 			igt_crtc_crc_new(crtc, IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
-	for (i = 0,
-	     n = 0; i < display->n_outputs && n < igt_display_n_crtcs(display); ++i) {
-		igt_output_t *output = &display->outputs[i];
+	for_each_output(display, output) {
+		if (n == igt_display_n_crtcs(display))
+			break;
+
 		data->output[n] = output;
 
 		/* Only allow physically connected displays for the tests. */
