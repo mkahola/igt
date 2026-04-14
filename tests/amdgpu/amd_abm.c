@@ -112,13 +112,13 @@ static void fbmem_draw_smpte_pattern(uint32_t *fbmem, int width, int height)
 static void test_init(data_t *data)
 {
 	igt_display_t *display = &data->display;
-	drmModeConnectorPtr conn;
+	igt_output_t *output;
 	bool has_edp = false;
-	int i, fb_id;
+	int fb_id;
 
 	/* Skip test if no eDP connected. */
-	for (i = 0; i < display->n_outputs; i++) {
-		conn = display->outputs[i].config.connector;
+	for_each_output(display, output) {
+		drmModeConnectorPtr conn = output->config.connector;
 
 		if (conn->connector_type == DRM_MODE_CONNECTOR_eDP &&
 		    conn->connection == DRM_MODE_CONNECTED) {
