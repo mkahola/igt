@@ -58,8 +58,9 @@ static void force_output_mode(struct data *d, igt_output_t *output,
 static void test_init(struct data *data)
 {
 	igt_display_t *display = &data->display;
+	igt_output_t *output;
 	igt_crtc_t *crtc;
-	int i, n;
+	int n = 0;
 	bool subvp_capable = false;
 	bool subvp_en = false;
 
@@ -71,9 +72,9 @@ static void test_init(struct data *data)
 			igt_crtc_crc_new(crtc, IGT_PIPE_CRC_SOURCE_AUTO);
 	}
 
-	for (i = 0,
-	     n = 0; i < display->n_outputs && n < igt_display_n_crtcs(display); ++i) {
-		igt_output_t *output = &display->outputs[i];
+	for_each_output(display, output) {
+		if (n == igt_display_n_crtcs(display))
+			break;
 
 		data->output[n] = output;
 		/* Only allow physically connected displays for the tests. */
