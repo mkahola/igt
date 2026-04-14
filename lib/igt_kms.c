@@ -4012,7 +4012,7 @@ static int igt_primary_plane_commit_legacy(igt_plane_t *primary,
 					   igt_crtc_t *crtc,
 					   bool fail_on_error)
 {
-	struct igt_display *display = primary->crtc->display;
+	igt_display_t *display = primary->crtc->display;
 	igt_output_t *output = igt_crtc_get_output(crtc);
 	drmModeModeInfo *mode;
 	uint32_t fb_id, crtc_id;

@@ -378,7 +378,7 @@ extern const char * const igt_plane_prop_names[];
  */
 extern const char * const igt_colorop_prop_names[];
 
-typedef struct igt_display igt_display_t;
+typedef struct _igt_display igt_display_t;
 typedef struct igt_crtc igt_crtc_t;
 typedef uint32_t igt_fixed_t;			/* 16.16 fixed point */
 
@@ -516,7 +516,7 @@ typedef struct {
 	igt_crtc_t *crtc;
 } igt_output_crtc_t;
 
-struct igt_display {
+struct _igt_display {
 	int drm_fd;
 	int log_shift;
 	int n_crtcs;
