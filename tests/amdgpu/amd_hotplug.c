@@ -122,7 +122,7 @@ static bool is_system_s2idle(void)
 	return strstr(dst, "[s2idle]");
 }
 
-/* return the last hw_sleep duration time */
+/* Return the last hw_sleep duration time */
 static int get_last_hw_sleep_time(void)
 {
 	int fd;
@@ -189,7 +189,7 @@ static void test_hotplug_basic(data_t *data, bool suspend)
 					  "Suspend did not reach hardware sleep state\n");
 	}
 
-	/* Trigger hotplug and confirm reference image is the same. */
+	/* Trigger hotplug and confirm the reference image is the same. */
 	for_each_crtc(&data->display, crtc) {
 		output = data->output[crtc->crtc_index];
 		if (!output || !igt_output_is_connected(output))

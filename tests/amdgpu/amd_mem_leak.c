@@ -45,7 +45,7 @@ static void test_init(data_t *data)
 {
 	igt_display_t *display = &data->display;
 
-	/* It doesn't matter which pipe we choose on amdpgu. */
+	/* It doesn't matter which pipe we choose on amdgpu. */
 	data->crtc = igt_first_crtc(&data->display);
 
 	igt_display_reset(display);
@@ -167,7 +167,7 @@ int igt_main()
 
 	igt_describe("Test memory leaks after resume from suspend");
 	igt_subtest("connector-suspend-resume") test_suspend_resume(&data);
-	igt_describe("Test memroy leaks after connector hotplug");
+	igt_describe("Test memory leaks after connector hotplug");
 	igt_subtest("connector-hotplug") test_hotplug(&data);
 	igt_describe("Test memory leaks with driver unload");
 	igt_subtest("driver-unload") test_driver_unload(&data);

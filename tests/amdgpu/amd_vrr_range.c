@@ -28,7 +28,7 @@
 
 IGT_TEST_DESCRIPTION("Test EDID parsing and debugfs reporting on Freesync displays");
 
-/* Maximumm pipes on any AMD ASIC. */
+/* Maximum pipes on any AMD ASIC. */
 #define MAX_PIPES 6
 #define EDID_SIZE 256
 #define EDID_PATH "/sys/class/drm/card%d-%s/edid"
@@ -249,7 +249,7 @@ static void trigger_edid_parse(data_t *data, igt_output_t *output, uint32_t test
 	else
 		igt_amd_trigger_hotplug(data->fd, output->name);
 
-	/* more safe margin until resume and hotplug is completed */
+	/* more safety margin until resume and hotplug is completed */
 	usleep(1500000);
 }
 
@@ -325,7 +325,7 @@ static bool find_vrr_range_from_edid(data_t *data, igt_output_t *output)
 }
 
 /* Check if EDID parsing is correctly reporting Freesync capability
- * by overriding EDID with ones from golden sample.
+ * by overriding EDID with ones from a golden sample.
  */
 static void test_freesync_parsing_base(data_t *data, uint32_t test_flags)
 {
@@ -354,7 +354,7 @@ static void test_freesync_parsing_base(data_t *data, uint32_t test_flags)
 			trigger_edid_parse(data, output, test_flags);
 
 			igt_assert_f(find_vrr_range_from_edid(data, output),
-				"Cannot parsing VRR range from EDID\n");
+				"Cannot parse VRR range from EDID\n");
 
 			expected_range.min = data->expected_range.min;
 			expected_range.max = data->expected_range.max;

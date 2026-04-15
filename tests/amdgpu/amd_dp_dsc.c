@@ -28,7 +28,7 @@
 
 #define NUM_SLICE_SLOTS 4
 
-/* Maximumm pipes on any AMD ASIC. */
+/* Maximum pipes on any AMD ASIC. */
 #define MAX_PIPES 6
 
 /* Common test data. */
@@ -82,7 +82,7 @@ static void test_init(data_t *data)
 		if (!igt_output_is_connected(output))
 			continue;
 
-		/* Ensure that outpus are DP, DSC & FEC capable */
+		/* Ensure that outputs are DP, DSC & FEC capable */
 		if (!(is_dp_fec_supported(data->fd, output->name) &&
 		      is_dp_dsc_supported(data->fd, output->name)))
 			continue;
@@ -236,7 +236,7 @@ static bool update_slice_width(data_t *data,
 		igt_plane_set_fb(data->primary[conn_idx], &ref_fb);
 		igt_display_commit_atomic(&data->display, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
-		igt_info("Forcing slice width: slice width %d num slices horisontal %d\n", slice_width, num_slices[i]);
+		igt_info("Forcing slice width: slice width %d num slices horizontal %d\n", slice_width, num_slices[i]);
 
 		act_slice_width = igt_amd_read_dsc_param_slice_width(data->fd, output->name);
 
@@ -293,7 +293,7 @@ static void test_dsc_slice_dimensions_change(data_t *data)
 		h_addressable = data->mode->hdisplay;
 		v_addressable = data->mode->vdisplay;
 
-		igt_info("Mode info: v_ative %d  h_active %d\n", v_addressable, h_addressable);
+		igt_info("Mode info: v_active %d  h_active %d\n", v_addressable, h_addressable);
 
 		/* Save pipe's initial DSC state */
 		dsc_before = igt_amd_read_dsc_clock_status(data->fd, output->name);
