@@ -72,14 +72,6 @@ struct _data {
 	bool (*adjust_mode)(data_t *data, drmModeModeInfoPtr mode);
 };
 
-static bool has_scaling_mode_prop(data_t *data)
-{
-	return kmstest_get_property(data->drm_fd,
-				    data->output->id,
-				    DRM_MODE_OBJECT_CONNECTOR,
-				    "scaling mode",
-				    NULL, NULL, NULL);
-}
 static bool
 can_bigjoiner(data_t *data)
 {
@@ -127,17 +119,6 @@ adjust_mode_clock_too_high(data_t *data, drmModeModeInfoPtr mode)
 	int max_dotclock = data->max_dotclock;
 
 	igt_require(max_dotclock != 0);
-
-	/*
-	 * FIXME When we have a fixed mode, the kernel will ignore
-	 * the user timings apart from hdisplay/vdisplay. Should
-	 * fix the kernel to at least make sure the requested
-	 * refresh rate as specified by the user timings will
-	 * roughly match the user will get. For now skip the
-	 * test on  any connector with a fixed mode.
-	 */
-	if (has_scaling_mode_prop(data))
-		return false;
 
 	/*
 	 * Newer platforms can support modes higher than the maximum dot clock
