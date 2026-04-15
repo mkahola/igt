@@ -88,6 +88,12 @@ enum hdmi_eotf {
 	HDMI_EOTF_SMPTE_ST2084,
 };
 
+/* HDR test formats: 10bpc + FP16 */
+static const uint32_t hdr_test_formats[] = {
+	DRM_FORMAT_XRGB2101010,
+	DRM_FORMAT_XRGB16161616F,
+};
+
 /* Test flags. */
 enum {
 	TEST_NONE = 1 << 0,
@@ -233,6 +239,7 @@ static void prepare_test(data_t *data, igt_output_t *output, igt_crtc_t *crtc)
 
 static void test_bpc_switch_on_output(data_t *data, igt_crtc_t *crtc,
 				      igt_output_t *output,
+				      uint32_t format,
 				      uint32_t flags)
 {
 	igt_display_t *display = &data->display;
@@ -242,7 +249,7 @@ static void test_bpc_switch_on_output(data_t *data, igt_crtc_t *crtc,
 
 	/* 10-bit formats are slow, so limit the size. */
 	afb_id = igt_create_fb(data->fd, 512, 512,
-			       DRM_FORMAT_XRGB2101010, DRM_FORMAT_MOD_LINEAR, &afb);
+			       format, DRM_FORMAT_MOD_LINEAR, &afb);
 	igt_assert(afb_id);
 
 	draw_hdr_pattern(&afb);
@@ -337,27 +344,30 @@ static void test_bpc_switch(data_t *data, uint32_t flags)
 				continue;
 			}
 
-			prepare_test(data, output,
-				     crtc);
+			for (int i = 0; i < ARRAY_SIZE(hdr_test_formats); i++) {
+				prepare_test(data, output,
+					     crtc);
 
-			if (is_intel_device(data->fd) &&
-			    !igt_max_bpc_constraint(display, crtc, output, 10)) {
-				igt_info("%s: No suitable mode found to use 10 bpc.\n",
-					 igt_output_name(output));
+				if (is_intel_device(data->fd) &&
+				    !igt_max_bpc_constraint(display, crtc, output, 10)) {
+					igt_info("%s: No suitable mode found to use 10 bpc.\n",
+						  igt_output_name(output));
 
-				test_fini(data);
-				break;
+					test_fini(data);
+					break;
+				}
+
+				data->mode = igt_output_get_mode(output);
+				data->w = data->mode->hdisplay;
+				data->h = data->mode->vdisplay;
+
+				igt_dynamic_f("pipe-%s-%s-%s",
+					      igt_crtc_name(crtc), output->name,
+					      igt_format_str(hdr_test_formats[i]))
+					      test_bpc_switch_on_output(data,
+								       crtc,
+								       output, hdr_test_formats[i], flags);
 			}
-
-			data->mode = igt_output_get_mode(output);
-			data->w = data->mode->hdisplay;
-			data->h = data->mode->vdisplay;
-
-			igt_dynamic_f("pipe-%s-%s",
-				      igt_crtc_name(crtc), output->name)
-				test_bpc_switch_on_output(data,
-							  crtc,
-							  output, flags);
 
 			/* One pipe is enough */
 			break;
@@ -475,7 +485,7 @@ static void adjust_brightness(data_t *data, uint32_t flags)
 
 static void test_static_toggle(data_t *data, igt_crtc_t *crtc,
 			       igt_output_t *output,
-			       uint32_t flags)
+			       uint32_t format, uint32_t flags)
 {
 	igt_display_t *display = &data->display;
 	struct hdr_output_metadata hdr;
@@ -485,7 +495,7 @@ static void test_static_toggle(data_t *data, igt_crtc_t *crtc,
 
 	/* 10-bit formats are slow, so limit the size. */
 	afb_id = igt_create_fb(data->fd, 512, 512,
-			       DRM_FORMAT_XRGB2101010, DRM_FORMAT_MOD_LINEAR, &afb);
+			       format, DRM_FORMAT_MOD_LINEAR, &afb);
 	igt_assert(afb_id);
 
 	draw_hdr_pattern(&afb);
@@ -590,7 +600,8 @@ static void fill_hdr_output_metadata_sdr(struct hdr_output_metadata *meta)
 }
 
 static void test_static_swap(data_t *data, igt_crtc_t *crtc,
-			     igt_output_t *output, uint32_t flags)
+			     igt_output_t *output,
+			     uint32_t format, uint32_t flags)
 {
 	igt_display_t *display = &data->display;
 	igt_crc_t ref_crc, new_crc;
@@ -600,7 +611,7 @@ static void test_static_swap(data_t *data, igt_crtc_t *crtc,
 
 	/* 10-bit formats are slow, so limit the size. */
 	afb_id = igt_create_fb(data->fd, 512, 512,
-			       DRM_FORMAT_XRGB2101010, DRM_FORMAT_MOD_LINEAR, &afb);
+			       format, DRM_FORMAT_MOD_LINEAR, &afb);
 	igt_assert(afb_id);
 
 	draw_hdr_pattern(&afb);
@@ -756,55 +767,58 @@ static void test_hdr(data_t *data, uint32_t flags)
 				continue;
 			}
 
-			prepare_test(data, output,
-				     crtc);
+			for (int i = 0; i < ARRAY_SIZE(hdr_test_formats); i++) {
+				prepare_test(data, output,
+					     crtc);
 
-			/* Signal HDR requirement via metadata */
-			fill_hdr_output_metadata_st2084(&hdr);
-			set_hdr_output_metadata(data, &hdr);
-			if (igt_display_try_commit2(display, display->is_atomic ?
-						    COMMIT_ATOMIC : COMMIT_LEGACY)) {
-				igt_info("%s: Couldn't set HDR metadata\n",
-					 igt_output_name(output));
-				test_fini(data);
-				break;
-			}
+				/* Signal HDR requirement via metadata */
+				fill_hdr_output_metadata_st2084(&hdr);
+				set_hdr_output_metadata(data, &hdr);
+				if (igt_display_try_commit2(display, display->is_atomic ?
+							    COMMIT_ATOMIC : COMMIT_LEGACY)) {
+					igt_info("%s: Couldn't set HDR metadata\n",
+						  igt_output_name(output));
+					test_fini(data);
+					break;
+				}
 
-			if (is_intel_device(data->fd) &&
-			    !igt_max_bpc_constraint(display, crtc, output, 10)) {
-				igt_info("%s: No suitable mode found to use 10 bpc.\n",
-					 igt_output_name(output));
+				if (is_intel_device(data->fd) &&
+				    !igt_max_bpc_constraint(display, crtc, output, 10)) {
+					igt_info("%s: No suitable mode found to use 10 bpc.\n",
+						  igt_output_name(output));
 
-				test_fini(data);
-				break;
-			}
+					test_fini(data);
+					break;
+				}
 
-			if (igt_is_dsc_enabled(data->fd, output->name))
-				flags |= TEST_NEEDS_DSC;
-			else
-				flags &= ~TEST_NEEDS_DSC;
+				if (igt_is_dsc_enabled(data->fd, output->name))
+					flags |= TEST_NEEDS_DSC;
+				else
+					flags &= ~TEST_NEEDS_DSC;
 
-			set_hdr_output_metadata(data, NULL);
-			igt_display_commit2(display, display->is_atomic ?
-					    COMMIT_ATOMIC : COMMIT_LEGACY);
+				set_hdr_output_metadata(data, NULL);
+				igt_display_commit2(display, display->is_atomic ?
+						    COMMIT_ATOMIC : COMMIT_LEGACY);
 
-			data->mode = igt_output_get_mode(output);
-			data->w = data->mode->hdisplay;
-			data->h = data->mode->vdisplay;
+				data->mode = igt_output_get_mode(output);
+				data->w = data->mode->hdisplay;
+				data->h = data->mode->vdisplay;
 
-			igt_dynamic_f("pipe-%s-%s",
-				      igt_crtc_name(crtc), output->name) {
-				if (flags & (TEST_NONE | TEST_DPMS | TEST_SUSPEND |
-					     TEST_INVALID_HDR | TEST_BRIGHTNESS))
-					test_static_toggle(data,
-							   crtc,
-							   output, flags);
-				if (flags & TEST_SWAP)
-					test_static_swap(data,
-							 crtc,
-							 output, flags);
-				if (flags & TEST_INVALID_METADATA_SIZES)
-					test_invalid_metadata_sizes(data, output);
+				igt_dynamic_f("pipe-%s-%s-%s",
+					       igt_crtc_name(crtc), output->name,
+					       igt_format_str(hdr_test_formats[i])) {
+					if (flags & (TEST_NONE | TEST_DPMS | TEST_SUSPEND |
+						     TEST_INVALID_HDR | TEST_BRIGHTNESS))
+						test_static_toggle(data,
+								   crtc,
+								   output, hdr_test_formats[i], flags);
+					if (flags & TEST_SWAP)
+						test_static_swap(data,
+								 crtc,
+								 output, hdr_test_formats[i], flags);
+					if (flags & TEST_INVALID_METADATA_SIZES)
+						test_invalid_metadata_sizes(data, output);
+				}
 			}
 
 			/* One pipe is enough */
