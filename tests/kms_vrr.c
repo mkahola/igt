@@ -912,9 +912,10 @@ test_lobf(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 			igt_skip("%s: Aux-less ALPM not enabled, LOBF not supported.\n",
 				 igt_output_name(output));
 
-		if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL) ||
-		    psr_sink_support(data->drm_fd, data->debugfs_fd, PR_MODE, NULL))
-			psr_disable(data->drm_fd, data->debugfs_fd, NULL);
+		if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, output) ||
+		    psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_2, output) ||
+		    psr_sink_support(data->drm_fd, data->debugfs_fd, PR_MODE, output))
+			psr_disable(data->drm_fd, data->debugfs_fd, output);
 	}
 
 	igt_info("LOBF test execution on %s, PIPE %s with VRR range: (%u-%u) Hz\n",
