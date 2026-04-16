@@ -429,11 +429,15 @@ static bool prepare_test(data_t *data)
 
 	igt_require_f(check_fbc_supported(data), "FBC is not supported with this configuration\n");
 
-	if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, NULL) ||
-	    psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_2, NULL) ||
-	    psr_sink_support(data->drm_fd, data->debugfs_fd, PR_MODE, NULL)) {
-		igt_info("PSR is supported by the sink. Disabling PSR to test Dirty FBC functionality.\n");
-		psr_disable(data->drm_fd, data->debugfs_fd, data->output);
+	if (psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_1, data->output) ||
+	    psr_sink_support(data->drm_fd, data->debugfs_fd, PSR_MODE_2, data->output) ||
+	    psr_sink_support(data->drm_fd, data->debugfs_fd, PR_MODE, data->output)) {
+		igt_info("PSR/PR supported on %s, disabling for dirty FBC test\n",
+			 igt_output_name(data->output));
+
+		igt_require_f(psr_disable(data->drm_fd, data->debugfs_fd, data->output),
+			      "Failed to disable PSR/PR on %s\n",
+			      igt_output_name(data->output));
 	}
 
 	if (data->feature & FEATURE_FBC)
