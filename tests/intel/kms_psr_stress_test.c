@@ -93,6 +93,10 @@ static void setup_output(data_t *data)
 		if (c->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 
+		if (!psr_sink_support(data->drm_fd, data->debugfs_fd,
+				      PSR_MODE_1, output))
+			continue;
+
 		igt_display_reset(display);
 		igt_output_set_crtc(output,
 				    crtc);
@@ -107,7 +111,7 @@ static void setup_output(data_t *data)
 		return;
 	}
 
-	igt_require(data->output);
+	igt_require_f(data->output, "No eDP output with PSR support found\n");
 }
 
 static void primary_draw(data_t *data, struct igt_fb *fb, uint8_t i)
@@ -232,7 +236,7 @@ static void prepare(data_t *data)
 	r = timerfd_settime(data->completed_timerfd, 0, &interval, NULL);
 	igt_require_f(r != -1, "Error setting completed_timerfd\n");
 
-	data->initial_state = psr_get_mode(data->debugfs_fd, NULL);
+	data->initial_state = psr_get_mode(data->debugfs_fd, data->output);
 	igt_require(data->initial_state != PSR_DISABLED);
 	igt_require(psr_wait_entry(data->debugfs_fd, data->initial_state, data->output));
 }
@@ -345,7 +349,7 @@ static void run(data_t *data)
 	}
 
 	/* Check if after all this stress the PSR is still in the same state */
-	igt_assert(psr_get_mode(data->debugfs_fd, NULL) == data->initial_state);
+	igt_assert(psr_get_mode(data->debugfs_fd, data->output) == data->initial_state);
 	psr_sink_error_check(data->debugfs_fd, data->initial_state, data->output);
 }
 
@@ -358,10 +362,6 @@ int igt_main()
 		data.debugfs_fd = igt_debugfs_dir(data.drm_fd);
 		data.bops = buf_ops_create(data.drm_fd);
 		kmstest_set_vt_graphics_mode();
-
-		igt_require_f(psr_sink_support(data.drm_fd, data.debugfs_fd,
-					       PSR_MODE_1, NULL),
-			      "Sink does not support PSR\n");
 
 		setup_output(&data);
 
