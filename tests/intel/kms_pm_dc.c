@@ -162,6 +162,10 @@ static void setup_output(data_t *data)
 		if (c->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 
+		if (!psr_sink_support(data->drm_fd, data->debugfs_fd,
+				      data->op_psr_mode, output))
+			continue;
+
 		igt_output_set_crtc(output, crtc);
 		data->output = output;
 		data->mode = igt_output_get_mode(output);
@@ -318,9 +322,8 @@ static void check_dc3co_with_videoplayback_like_load(data_t *data)
 
 static void setup_dc3co(data_t *data)
 {
-	data->op_psr_mode = PSR_MODE_2;
-	psr_enable(data->drm_fd, data->debugfs_fd, data->op_psr_mode, NULL);
-	igt_require_f(psr_wait_entry(data->debugfs_fd, data->op_psr_mode, NULL),
+	psr_enable(data->drm_fd, data->debugfs_fd, data->op_psr_mode, data->output);
+	igt_require_f(psr_wait_entry(data->debugfs_fd, data->op_psr_mode, data->output),
 		      "PSR2 is not enabled\n");
 }
 
@@ -342,7 +345,7 @@ static void test_dc5_retention_flops(data_t *data, int dc_flag)
 	dc_counter_before_psr = igt_read_dc_counter(data->debugfs_fd, dc_flag);
 	set_output_on_pipe_b(data);
 	setup_primary(data);
-	igt_assert(psr_wait_entry(data->debugfs_fd, data->op_psr_mode, NULL));
+	igt_assert(psr_wait_entry(data->debugfs_fd, data->op_psr_mode, data->output));
 	check_dc_counter(data, dc_flag, dc_counter_before_psr);
 	cleanup_dc_psr(data);
 }
@@ -356,7 +359,7 @@ static void test_dc_state_psr(data_t *data, int dc_flag)
 	setup_output(data);
 	setup_primary(data);
 	igt_require(!psr_disabled_check(data->debugfs_fd));
-	igt_assert(psr_wait_entry(data->debugfs_fd, data->op_psr_mode, NULL));
+	igt_assert(psr_wait_entry(data->debugfs_fd, data->op_psr_mode, data->output));
 	check_dc_counter(data, dc_flag, dc_counter_before_psr);
 	psr_sink_error_check(data->debugfs_fd, data->op_psr_mode, data->output);
 	cleanup_dc_psr(data);
@@ -658,17 +661,18 @@ int igt_main()
 	igt_describe("In this test we make sure that system enters DC3CO "
 		     "when PSR2 is active and system is in SLEEP state");
 	igt_subtest("dc3co-vpb-simulation") {
+		data.op_psr_mode = PSR_MODE_2;
 		igt_require(psr_sink_support(data.drm_fd, data.debugfs_fd,
-					     PSR_MODE_2, NULL));
+					     data.op_psr_mode, NULL));
 		test_dc3co_vpb_simulation(&data);
 	}
 
 	igt_describe("This test validates display engine entry to DC5 state "
 		     "while PSR is active");
 	igt_subtest("dc5-psr") {
-		igt_require(psr_sink_support(data.drm_fd, data.debugfs_fd,
-					     PSR_MODE_1, NULL));
 		data.op_psr_mode = PSR_MODE_1;
+		igt_require(psr_sink_support(data.drm_fd, data.debugfs_fd,
+					     data.op_psr_mode, NULL));
 		psr_enable(data.drm_fd, data.debugfs_fd, data.op_psr_mode, NULL);
 		test_dc_state_psr(&data, IGT_INTEL_CHECK_DC5);
 	}
@@ -676,9 +680,9 @@ int igt_main()
 	igt_describe("This test validates display engine entry to DC6 state "
 		     "while PSR is active");
 	igt_subtest("dc6-psr") {
-		igt_require(psr_sink_support(data.drm_fd, data.debugfs_fd,
-					     PSR_MODE_1, NULL));
 		data.op_psr_mode = PSR_MODE_1;
+		igt_require(psr_sink_support(data.drm_fd, data.debugfs_fd,
+					     data.op_psr_mode, NULL));
 		psr_enable(data.drm_fd, data.debugfs_fd, data.op_psr_mode, NULL);
 		igt_require_f(igt_pm_pc8_plus_residencies_enabled(data.msr_fd),
 			      "PC8+ residencies not supported\n");
@@ -703,11 +707,11 @@ int igt_main()
 	igt_describe("This test validates display engine entry to DC5 state "
 		     "while PSR is active on Pipe B");
 	igt_subtest("dc5-retention-flops") {
+		data.op_psr_mode = PSR_MODE_1;
 		igt_require_f(intel_display_ver(data.devid) >= 30,
 			      "Test not supported on this platform.\n");
 		igt_require(psr_sink_support(data.drm_fd, data.debugfs_fd,
-					     PSR_MODE_1, NULL));
-		data.op_psr_mode = PSR_MODE_1;
+					     data.op_psr_mode, NULL));
 		psr_enable(data.drm_fd, data.debugfs_fd, data.op_psr_mode, NULL);
 		igt_require(!psr_disabled_check(data.debugfs_fd));
 		test_dc5_retention_flops(&data, IGT_INTEL_CHECK_DC5);
