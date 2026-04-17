@@ -378,7 +378,7 @@ static void test_multi_overlay(data_t *data, int display_count, int w, int h, st
  * NOTE: The reason for using White+White is to speed up the crc (reuse the ref crc for all cases vs taking
  * a ref crc per flip)
  */
-static void test_plane(data_t *data, int n, int x, int y, double w, double h, double dw, double dh, int pw, int ph, struct fbc *fbc){
+static void test_plane(data_t *data, int n, int x, int y, double dw, double dh, int pw, int ph, struct fbc *fbc){
 
 	igt_crc_t test_crc;
 	igt_display_t *display = &data->display;
@@ -455,7 +455,7 @@ static void test_panning_1_display(data_t *data, int display_count, int w, int h
 				if (pw <= w && ph <= h)
 					break;
 
-				test_plane(data, n, x, y, w, h, w, h, pw, ph, fb);
+				test_plane(data, n, x, y, w, h, pw, ph, fb);
 
 			}
 		}
@@ -494,11 +494,11 @@ static void test_scaling_planes(data_t *data, int display_count, int w, int h, s
 			/* No need to scale an overlay that is bigger than the display */
 			if (pw <= w*scale[i] && ph <= h*scale[i])
 				break;
-			test_plane(data, n, 0, 0, w, h, w*scale[i], h*scale[i], pw, ph, fb);
+			test_plane(data, n, 0, 0, w*scale[i], h*scale[i], pw, ph, fb);
 		}
 
 		/* Test Fullscreen scale*/
-		test_plane(data, n, 0, 0, w, h, pw, ph, pw, ph, fb);
+		test_plane(data, n, 0, 0, pw, ph, pw, ph, fb);
 	}
 
 	return;
@@ -532,9 +532,9 @@ static void test_panning_2_display(data_t *data, int w, int h, struct fbc *fbc)
 	for (int j = 0; j < ARRAY_SIZE(y); j++){
 		for (int i = 0; i < it; i++){
 			if (toggle)
-				test_plane(data, 0, pw-w, y[j], w, h, w, h, pw, ph, fbc);
+				test_plane(data, 0, pw-w, y[j], w, h, pw, ph, fbc);
 			else
-				test_plane(data, 1, 0, y[j], w, h, w, h, pw2, ph2, fbc);
+				test_plane(data, 1, 0, y[j], w, h, pw2, ph2, fbc);
 
 			toggle = !toggle;
 		}
