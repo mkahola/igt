@@ -139,12 +139,23 @@ def generate_metric_sets(args, gen):
                     metric_set->perfcnt_offset = metric_set->c_offset + 8;
                 """))
         elif gen.chipset == "lnl" or gen.chipset == "bmg" or gen.chipset == "ptl" or gen.chipset == "cri":
-            # See intel_xe_perf_accumulate_reports for the offsets
+            # See intel_xe_perf_accumulate_reports for the offsets (value of idx variable)
             if set.oa_format == "128B_MPEC8_NOA16" or set.oa_format == "128B_MERT_PEC8":
                 c(textwrap.dedent("""\
                     metric_set->perf_oa_format = XE_OAM_FORMAT_MPEC8u32_B8_C8;
 
                     metric_set->perf_raw_size = 128;
+                    metric_set->gpu_time_offset = 0;
+                    metric_set->gpu_clock_offset = 1;
+                    metric_set->pec_offset = 2;
+                    metric_set->b_offset = metric_set->pec_offset + 8;
+                    metric_set->c_offset = metric_set->b_offset + 8;
+                """))
+            elif set.oa_format == "192B_MPEC8LL_NOA16":
+                c(textwrap.dedent("""\
+                    metric_set->perf_oa_format = XE_OAM_FORMAT_MPEC8u64_B8_C8;
+
+                    metric_set->perf_raw_size = 192;
                     metric_set->gpu_time_offset = 0;
                     metric_set->gpu_clock_offset = 1;
                     metric_set->pec_offset = 2;
