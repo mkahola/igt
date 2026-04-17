@@ -724,6 +724,48 @@ void igt_describe_f(const char *fmt, ...);
 #define igt_fail_on_f(expr, f...) igt_assert_f(!(expr), f)
 
 /**
+ * igt_assert_cmpptr:
+ * @n1: first value
+ * @cmp: compare operator
+ * @ncmp: negated version of @cmp
+ * @n2: second value
+ *
+ * Fails (sub-)test if the condition is not met
+ *
+ * Should be used everywhere where a test compares two pointers.
+ *
+ * Like igt_assert(), but displays the pointers being compared on failure instead
+ * of simply printing the stringified expression.
+ */
+#define igt_assert_cmpptr(n1, cmp, ncmp, n2) \
+	do { \
+		void *__n1 = (void *)(n1); \
+		void *__n2 = (void *)(n2); \
+		if (__n1 cmp __n2) ; else \
+		__igt_fail_assert(IGT_LOG_DOMAIN, __FILE__, __LINE__, __func__, \
+				  #n1 " " #cmp " " #n2, \
+				  "error: %p " #ncmp " %p\n", __n1, __n2); \
+	} while (0)
+
+/**
+ * igt_assert_eq_ptr:
+ * @n1: first pointer
+ * @n2: second pointer
+ *
+ * Like igt_assert_eq(), but for pointers.
+ */
+#define igt_assert_eq_ptr(n1, n2) igt_assert_cmpptr(n1, ==, !=, n2)
+
+/**
+ * igt_assert_neq_ptr:
+ * @n1: first pointer
+ * @n2: second pointer
+ *
+ * Like igt_assert_neq(), but for pointers.
+ */
+#define igt_assert_neq_ptr(n1, n2) igt_assert_cmpptr(n1, !=, ==, n2)
+
+/**
  * igt_assert_cmpint:
  * @n1: first value
  * @cmp: compare operator
