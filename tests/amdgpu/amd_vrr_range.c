@@ -260,7 +260,7 @@ static bool has_vrr(igt_output_t *output)
 	       igt_output_get_prop(output, IGT_CONNECTOR_VRR_CAPABLE);
 }
 
-static void parse_vrr_gange_from_edid(data_t *data, uint8_t *edid, int index)
+static void parse_vrr_range_from_edid(data_t *data, uint8_t *edid, int index)
 {
 	bool max_rate_offset = false;
 	bool min_rate_offset = false;
@@ -314,7 +314,7 @@ static bool find_vrr_range_from_edid(data_t *data, igt_output_t *output)
 				break;
 			else if (i == range_head_size-1) {
 				/* Found Display Range Limits Descriptor block */
-				parse_vrr_gange_from_edid(data, sink_edid, index);
+				parse_vrr_range_from_edid(data, sink_edid, index);
 				return true;
 			}
 		}

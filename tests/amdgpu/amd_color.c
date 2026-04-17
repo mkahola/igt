@@ -177,7 +177,7 @@ static void test_init(data_t *data)
 {
 	igt_display_t *display = &data->display;
 
-	/* It doesn't matter which pipe we choose on amdpgu. */
+	/* It doesn't matter which pipe we choose on amdgpu. */
 	data->crtc = igt_first_crtc(&data->display);
 
 	igt_display_reset(display);
@@ -262,7 +262,7 @@ static void test_crtc_linear_degamma(data_t *data)
  * sRGB regamma matrix with incorrect calculations or rounding errors.
  * If we put the pipe into bypass or use the hardware defined sRGB regamma
  * on the plane then we can and should get the correct CRTC when passing a
- * liner regamma matrix to DRM.
+ * linear regamma matrix to DRM.
  */
 static void test_crtc_linear_regamma(data_t *data)
 {
@@ -291,7 +291,7 @@ static void test_crtc_linear_regamma(data_t *data)
 
 	igt_pipe_crc_collect_crc(data->pipe_crc, &ref_crc);
 
-	/* Apply a linear degamma. The result should remain the same. */
+	/* Apply a linear regamma. The result should remain the same. */
 	set_regamma_lut(data, &lut_linear);
 	igt_display_commit_atomic(display, 0, NULL);
 

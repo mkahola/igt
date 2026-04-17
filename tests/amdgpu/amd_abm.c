@@ -128,7 +128,7 @@ static void test_init(data_t *data)
 	if (!has_edp)
 		igt_skip("No eDP connector found\n");
 
-	/* It doesn't matter which pipe we choose on amdpgu. */
+	/* It doesn't matter which pipe we choose on amdgpu. */
 	data->crtc = igt_first_crtc(&data->display);
 
 	igt_display_reset(display);
@@ -169,7 +169,7 @@ static void test_fini(data_t *data)
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
 
-	/* Disable ABM before exit test */
+	/* Disable ABM before exiting the test */
 	for_each_valid_output_on_crtc(&data->display,
 				      data->crtc,
 				      output) {

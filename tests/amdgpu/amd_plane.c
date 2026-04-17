@@ -366,14 +366,14 @@ static void test_multi_overlay(data_t *data, int display_count, int w, int h, st
 }
 
 /*
- * Compares the result of white backgroud with white window with and without MPO
+ * Compares the result of white background with white window with and without MPO
  *
  * Reference crc:
  * Draws a White background of size (pw,ph).
  *
  * Test crc:
- * Draws a White Overlay of size (pw,ph) then creates a cutout of size (p,w) at location (x,y)
- * Draws a White Primary plane of size (p,w) at location (x,y) (under the overlay)
+ * Draws a White Overlay of size (pw,ph) then creates a cutout of size (dw,dh) at location (x,y)
+ * Draws a White Primary plane of size (dw,dh) at location (x,y) (under the overlay)
  *
  * NOTE: The reason for using White+White is to speed up the crc (reuse the ref crc for all cases vs taking
  * a ref crc per flip)
@@ -400,7 +400,7 @@ static void test_plane(data_t *data, int n, int x, int y, double w, double h, do
 	igt_plane_set_fb(data->primary[n], &fbc[n].test_primary);
 	igt_plane_set_fb(data->overlay[n], &fbc[n].test_overlay);
 
-	/* Move the overlay to cover the cutout */
+	/* Move the primary to cover the cutout */
 	igt_plane_set_position(data->primary[n], x, y);
 	igt_plane_set_size(data->primary[n], dw, dh);
 
@@ -451,7 +451,7 @@ static void test_panning_1_display(data_t *data, int display_count, int w, int h
 				int x = dx*j*dir[i][0];
 				int y = dy*j*dir[i][1];
 
-				/* No need to pan a overley that is bigger than the display */
+				/* No need to pan an overlay that is bigger than the display */
 				if (pw <= w && ph <= h)
 					break;
 
@@ -491,7 +491,7 @@ static void test_scaling_planes(data_t *data, int display_count, int w, int h, s
 		int ph = data->h[n];
 
 		for (int i=0;i<ARRAY_SIZE(scale);i++) {
-			/* No need to scale a overley that is bigger than the display */
+			/* No need to scale an overlay that is bigger than the display */
 			if (pw <= w*scale[i] && ph <= h*scale[i])
 				break;
 			test_plane(data, n, 0, 0, w, h, w*scale[i], h*scale[i], pw, ph, fb);
@@ -523,7 +523,7 @@ static void test_panning_2_display(data_t *data, int w, int h, struct fbc *fbc)
 	int it = 3; /* # of times to swap */
 
 	/* Set y to 0 if window is bigger than one of the displays
-	 * beacause y will be negative in that case
+	 * because y will be negative in that case
 	 */
 	if (h >= smallest_h)
 		y[0] = y[1] = y[2] = 0;
