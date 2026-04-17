@@ -198,7 +198,7 @@ static void test_purged_mmap_blocked(int fd)
 	igt_assert_eq(igt_ioctl(fd, DRM_IOCTL_XE_GEM_MMAP_OFFSET, &mmo), 0);
 
 	ptr = mmap(NULL, bo_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, mmo.offset);
-	igt_assert_eq_u64((uint64_t)ptr, (uint64_t)MAP_FAILED);
+	igt_assert_eq_ptr(ptr, MAP_FAILED);
 	igt_assert_eq(errno, EINVAL);
 
 	gem_close(fd, bo);
@@ -340,7 +340,7 @@ static void test_dontneed_before_mmap(int fd)
 
 	/* mmap() on a DONTNEED BO must fail with EBUSY. */
 	ptr = mmap(NULL, bo_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, mmo.offset);
-	igt_assert_eq_u64((uint64_t)ptr, (uint64_t)MAP_FAILED);
+	igt_assert_eq_ptr(ptr, MAP_FAILED);
 	igt_assert_eq(errno, EBUSY);
 
 	/* Restore to WILLNEED before cleanup */
