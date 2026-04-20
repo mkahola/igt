@@ -35,7 +35,7 @@
 #include <xf86drmMode.h>
 
 /**
- * SUBTEST: linear-tiling-%d-displays-%s
+ * SUBTEST: linear-tiling-%d-displays-target-%s
  * Description: bw test with %arg[2]
  *
  * arg[1].values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
@@ -47,7 +47,7 @@
  * @3840x2160p:       3840x2160 resolution
  * @2160x1440p:       2160x1440 resolution
  *
- * SUBTEST: connected-linear-tiling-%d-displays-%s
+ * SUBTEST: connected-linear-tiling-%d-displays-target-%s
  * Description: bw test with %arg[2]
  *
  * arg[1].values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
@@ -186,14 +186,16 @@ static void force_output_mode(data_t *d, igt_output_t *output,
 	igt_output_override_mode(output, mode);
 }
 
-static bool output_mode_supported(igt_output_t *output, const drmModeModeInfo *mode)
+/* Check if output has a matching mode and call it out if mode is being forced */
+static void log_output_mode_support(igt_output_t *output, const drmModeModeInfo *mode)
 {
 	drmModeConnector *connector = output->config.connector;
+	drmModeModeInfo *default_mode;
 	int i;
 
 	/* Virtual/forced sinks support all modes */
 	if (!igt_output_is_connected(output))
-		return true;
+		return;
 
 	for (i = 0; i < connector->count_modes; i++) {
 		drmModeModeInfo *conn_mode = &connector->modes[i];
@@ -204,26 +206,33 @@ static bool output_mode_supported(igt_output_t *output, const drmModeModeInfo *m
 			igt_debug("Found matching mode for %dx%d@%dHz on %s\n",
 				  mode->hdisplay, mode->vdisplay, mode->vrefresh,
 				  igt_output_name(output));
-			return true;
+			return;
 		}
 	}
 
-	igt_info("Mode %dx%d@%dHz not supported by %s (has %d modes)\n",
-		 mode->hdisplay, mode->vdisplay, mode->vrefresh,
-		 igt_output_name(output), connector->count_modes);
-
-	return false;
+	if (output_is_internal_panel(output)) {
+		default_mode = igt_output_get_mode(output);
+		igt_info("Mode %dx%d@%dHz not supported by %s (has %d modes).\n"
+			 "%s Default mode: %dx%d@%dHz\n",
+			 mode->hdisplay, mode->vdisplay, mode->vrefresh,
+			 igt_output_name(output), connector->count_modes, igt_output_name(output),
+			 default_mode->hdisplay, default_mode->vdisplay, default_mode->vrefresh);
+	} else {
+		igt_info("Mode %dx%d@%dHz not supported by %s (has %d modes). Forcing mode.\n",
+			 mode->hdisplay, mode->vdisplay, mode->vrefresh,
+			 igt_output_name(output), connector->count_modes);
+	}
 }
 
 static void run_test_linear_tiling(data_t *data, int n_crtcs, const drmModeModeInfo *mode, bool physical) {
 	igt_display_t *display = &data->display;
 	igt_output_t *output;
+	drmModeModeInfo fb_mode;
 	struct igt_fb buffer[IGT_MAX_PIPES];
 	igt_crc_t zero, captured[IGT_MAX_PIPES];
 	int i = 0, num_pipes = 0;
 	igt_crtc_t *crtc;
 	int ret;
-	bool has_supported_mode = false;
 
 	/* Cannot use igt_display_n_crtcs() due to fused pipes on i915 where they do
 	 * not give the numver of valid crtcs and always return IGT_MAX_PIPES */
@@ -242,14 +251,28 @@ static void run_test_linear_tiling(data_t *data, int n_crtcs, const drmModeModeI
 		crtc = data->crtc[i];
 
 		output = physical ? data->connected_output[i] : data->output[i];
-		if (!output || !output_mode_supported(output, mode)) {
+		if (!output)
 			continue;
+
+		log_output_mode_support(output, mode);
+
+		/*
+		 * On fixed mode panels trying to force a custom mode can lead
+		 * to failures or implicit handling where the default mode is
+		 * used even though custom mode is requested.
+		 *
+		 * To avoid this use default mode on fixed mode panels and
+		 * use custom modes only on external panels.
+		 */
+		if (output_is_internal_panel(output)) {
+			fb_mode = *igt_output_get_mode(output);
+		} else {
+			force_output_mode(data, output, mode);
+			fb_mode = *mode;
 		}
 
-		force_output_mode(data, output, mode);
-
-		igt_create_color_fb(display->drm_fd, mode->hdisplay,
-				    mode->vdisplay, DRM_FORMAT_XRGB8888,
+		igt_create_color_fb(display->drm_fd, fb_mode.hdisplay,
+				    fb_mode.vdisplay, DRM_FORMAT_XRGB8888,
 				    DRM_FORMAT_MOD_LINEAR, 1.f, 0.f, 0.f,
 				    &buffer[i]);
 
@@ -258,10 +281,8 @@ static void run_test_linear_tiling(data_t *data, int n_crtcs, const drmModeModeI
 		igt_plane_set_fb(data->primary[i], &buffer[i]);
 		igt_info("Assigning pipe %s to output %s with mode %s\n",
 			 igt_crtc_name(crtc), igt_output_name(output),
-			 mode->name);
-		has_supported_mode = true;
+			 fb_mode.name);
 	}
-	igt_skip_on_f(!has_supported_mode, "Unsupported mode for all pipes\n");
 
 	ret = igt_display_try_commit_atomic(display,
 					    DRM_MODE_ATOMIC_ALLOW_MODESET |
@@ -273,9 +294,8 @@ static void run_test_linear_tiling(data_t *data, int n_crtcs, const drmModeModeI
 
 	for (i = 0; i < n_crtcs; i++) {
 		output = physical ? data->connected_output[i] : data->output[i];
-		if (!output || !output_mode_supported(output, mode)) {
+		if (!output)
 			continue;
-		}
 
 		igt_pipe_crc_collect_crc(data->pipe_crc[i], &captured[i]);
 		igt_assert_f(!igt_check_crc_equal(&zero, &captured[i]),
@@ -284,7 +304,7 @@ static void run_test_linear_tiling(data_t *data, int n_crtcs, const drmModeModeI
 
 	for (i = n_crtcs - 1; i >= 0; i--) {
 		output = physical ? data->connected_output[i] : data->output[i];
-		if (!output || !output_mode_supported(output, mode))
+		if (!output)
 			continue;
 
 		igt_remove_fb(display->drm_fd, &buffer[i]);
@@ -319,7 +339,14 @@ int igt_main()
 		n_crtcs = i + 1;
 
 		for (j = 0; j < ARRAY_SIZE(test_mode); j++) {
-			igt_subtest_f("linear-tiling-%d-displays-%s", n_crtcs, test_mode[j].name)
+			igt_describe("Exercise bandwidth test using linear tiling across multiple pipes "
+				     "on a combination of physical and/or virtual outputs."
+				     "The test targets a bandwidth configuration corresponding to the "
+				     "requested mode, forcing the mode on external or virtual outputs"
+				     "(where supported).On fixed-mode internal panels, if the native mode "
+				     "is used even if it does not match the requested mode.");
+			igt_subtest_f("linear-tiling-%d-displays-target-%s",
+				      n_crtcs, test_mode[j].name)
 				run_test_linear_tiling(&data, n_crtcs, &test_mode[j], false);
 		}
 	}
@@ -328,7 +355,14 @@ int igt_main()
 		n_crtcs = i + 1;
 
                 for (j = 0; j < ARRAY_SIZE(test_mode); j++) {
-                        igt_subtest_f("connected-linear-tiling-%d-displays-%s", n_crtcs, test_mode[j].name)
+			igt_describe("Exercise bandwidth test using linear tiling across multiple pipes "
+				     "on physically connected outputs only."
+				     "The test targets a bandwidth configuration corresponding to the "
+				     "requested mode, forcing the mode on external panels."
+				     "On fixed-mode internal panels, the native mode "
+				     "is used even if it does not match the requested mode.");
+			igt_subtest_f("connected-linear-tiling-%d-displays-target-%s",
+				      n_crtcs, test_mode[j].name)
 				run_test_linear_tiling(&data, n_crtcs, &test_mode[j], true);
                 }
         }
