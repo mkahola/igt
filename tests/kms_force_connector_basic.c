@@ -32,6 +32,49 @@
 
 #include "igt.h"
 
+static bool crtc_id_to_pipe_index(int drm_fd, uint32_t crtc_id, unsigned int *pipe)
+{
+	drmModeRes *res;
+	int i;
+	bool found = false;
+
+	res = drmModeGetResources(drm_fd);
+	if (!res)
+		return false;
+
+	for (i = 0; i < res->count_crtcs; i++) {
+		if (res->crtcs[i] == crtc_id) {
+			*pipe = i;
+			found = true;
+			break;
+		}
+	}
+
+	drmModeFreeResources(res);
+
+	return found;
+}
+
+static void wait_for_crtc_vblank(int drm_fd, uint32_t crtc_id)
+{
+	drmVBlank vbl = {};
+	unsigned int pipe;
+
+	/*
+	 * drmWaitVBlank uses a pipe index encoded in request.type.
+	 * If we can't map the crtc_id to a pipe index (or if vblank isn't
+	 * running), treat this as best-effort and just skip.
+	 */
+	if (!crtc_id_to_pipe_index(drm_fd, crtc_id, &pipe))
+		return;
+
+	vbl.request.type = DRM_VBLANK_RELATIVE |
+			   (pipe << DRM_VBLANK_HIGH_CRTC_SHIFT);
+	vbl.request.sequence = 1;
+
+	drmWaitVBlank(drm_fd, &vbl);
+}
+
 /**
  * SUBTEST: force-load-detect
  * Description: Test to detect forced load.
@@ -338,6 +381,7 @@ int igt_main_args("", long_opts, help_str, opt_handler, NULL)
 
 	igt_fixture() {
 		unsigned connector_id = 0;
+		drmModeEncoder *enc = NULL;
 
 		drm_fd = drm_open_driver_master(DRIVER_ANY);
 		kmstest_set_vt_graphics_mode();
@@ -392,6 +436,25 @@ int igt_main_args("", long_opts, help_str, opt_handler, NULL)
 end:
 		/* Reacquire status after clearing any previous overrides. */
 		connector = drmModeGetConnector(drm_fd, connector_id);
+		igt_assert(connector);
+
+		/*
+		 * Wait for a vblank on the currently driving CRTC before touching
+		 * force_connector state. Best-effort: if the connector isn't
+		 * currently driving a CRTC, or vblank isn't running, skip.
+		 */
+		if (connector->encoder_id)
+			enc = drmModeGetEncoder(drm_fd, connector->encoder_id);
+
+		if (enc && enc->crtc_id)
+			wait_for_crtc_vblank(drm_fd, enc->crtc_id);
+
+		if (enc)
+			drmModeFreeEncoder(enc);
+
+		/* Ensure that no override was left in place. */
+		kmstest_force_connector(drm_fd, connector,
+					FORCE_CONNECTOR_UNSPECIFIED);
 	}
 
 	igt_describe("Test to detect forced load.");
