@@ -1039,12 +1039,12 @@ static void unprovision_and_disable_vfs(int fd)
 
 static void stash_gt_freq(int fd, uint32_t **stash_min, uint32_t **stash_max)
 {
-	int num_gts, gt;
+	int max_gt, gt;
 
-	num_gts = xe_number_gt(fd);
+	max_gt = xe_dev_max_gt(fd);
 
-	*stash_min = (uint32_t *) malloc(sizeof(uint32_t) * num_gts);
-	*stash_max = (uint32_t *) malloc(sizeof(uint32_t) * num_gts);
+	*stash_min = (uint32_t *)calloc(max_gt + 1, sizeof(uint32_t));
+	*stash_max = (uint32_t *)calloc(max_gt + 1, sizeof(uint32_t));
 
 	igt_skip_on(*stash_min == NULL || *stash_max == NULL);
 
