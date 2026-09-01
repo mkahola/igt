@@ -101,13 +101,14 @@ static enum pipe get_next_master_pipe(uint32_t pipe_mask)
  */
 void igt_set_all_master_pipes_for_platform(igt_display_t *display, uint32_t *master_pipes)
 {
-	enum pipe pipe;
+	igt_crtc_t *crtc;
 
 	*master_pipes = 0;
-	for (pipe = PIPE_A; pipe < IGT_MAX_PIPES - 1; pipe++) {
-		if (igt_crtc_for_pipe(display, pipe) && igt_crtc_for_pipe(display, pipe + 1)) {
-			*master_pipes |= BIT(pipe);
-			igt_info("Found master pipe %s\n", kmstest_pipe_name(pipe));
+
+	for_each_crtc(display, crtc) {
+		if (igt_crtc_for_pipe(display, crtc->pipe + 1)) {
+			*master_pipes |= BIT(crtc->pipe);
+			igt_info("Found master pipe %s\n", igt_crtc_name(crtc));
 		}
 	}
 }
