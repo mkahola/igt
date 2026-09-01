@@ -98,7 +98,7 @@ typedef struct {
 	igt_output_t *non_ultra_joiner_output[IGT_MAX_PIPES];
 	igt_output_t *mixed_output[IGT_MAX_PIPES];
 	igt_output_t *non_joiner_output[IGT_MAX_PIPES];
-	enum pipe pipe_seq[IGT_MAX_PIPES];
+	enum hardware_pipe pipe_seq[IGT_MAX_PIPES];
 	igt_display_t display;
 	bool ultra_joiner_supported;
 } data_t;
@@ -131,7 +131,7 @@ static void enable_force_joiner_on_all_non_ultra_joiner_outputs(data_t *data)
 	}
 }
 
-static enum pipe get_next_master_pipe(data_t *data, uint32_t available_pipe_mask)
+static enum hardware_pipe get_next_master_pipe(data_t *data, uint32_t available_pipe_mask)
 {
 	if ((data->master_pipes & available_pipe_mask) == 0)
 		return PIPE_NONE;
@@ -139,17 +139,17 @@ static enum pipe get_next_master_pipe(data_t *data, uint32_t available_pipe_mask
 	return ffs(data->master_pipes & available_pipe_mask) - 1;
 }
 
-static enum pipe setup_pipe(data_t *data, igt_output_t *output, enum pipe pipe, uint32_t available_pipe_mask)
+static enum hardware_pipe setup_pipe(data_t *data, igt_output_t *output, enum hardware_pipe pipe, uint32_t available_pipe_mask)
 {
 	igt_display_t *display = &data->display;
 	igt_crtc_t *crtc;
-	enum pipe master_pipe;
+	enum hardware_pipe master_pipe;
 	uint32_t attempt_mask;
 
 	crtc = igt_crtc_for_pipe(display, pipe);
 	igt_assert_f(crtc, "There is no pipe %s\n", kmstest_pipe_name(pipe));
 
-	attempt_mask = BIT(crtc->pipe);
+	attempt_mask = BIT(crtc->hardware_pipe);
 	master_pipe = get_next_master_pipe(data, available_pipe_mask & attempt_mask);
 
 	if (master_pipe == PIPE_NONE)
@@ -157,7 +157,7 @@ static enum pipe setup_pipe(data_t *data, igt_output_t *output, enum pipe pipe, 
 
 	igt_info("Using pipe %s as master and %s slave for %s\n",
 		 igt_crtc_name(crtc),
-		 kmstest_pipe_name(crtc->pipe + 1), output->name);
+		 kmstest_pipe_name(crtc->hardware_pipe + 1), output->name);
 	igt_output_set_crtc(output, crtc);
 
 	return master_pipe;
@@ -167,7 +167,7 @@ static void set_joiner_mode(data_t *data, igt_output_t *output, drmModeModeInfo 
 {
 	igt_display_t *display = &data->display;
 	igt_crtc_t *crtc;
-	enum pipe pipe = PIPE_A;
+	enum hardware_pipe pipe = PIPE_A;
 	igt_plane_t *primary;
 	igt_fb_t fb;
 
@@ -223,7 +223,7 @@ static void switch_modeset_ultra_joiner_big_joiner(data_t *data, igt_output_t *o
 	drmModeModeInfo uj_mode;
 	int status;
 	bool ultrajoiner_found;
-	enum pipe pipe;
+	enum hardware_pipe pipe;
 	bool force_joiner_supported;
 
 	drmModeConnector *connector = output->config.connector;
@@ -278,7 +278,7 @@ static void switch_modeset_ultra_joiner_big_joiner(data_t *data, igt_output_t *o
 static void test_single_joiner(data_t *data, int output_count, bool force_joiner)
 {
 	int i;
-	enum pipe pipe, master_pipe;
+	enum hardware_pipe pipe, master_pipe;
 	uint32_t available_pipe_mask = BIT(data->n_pipes) - 1;
 	igt_output_t *output;
 	igt_plane_t *primary;
@@ -313,7 +313,7 @@ static void test_multi_joiner(data_t *data, int output_count, bool force_joiner)
 {
 	int i, cleanup;
 	uint32_t available_pipe_mask;
-	enum pipe pipe, master_pipe;
+	enum hardware_pipe pipe, master_pipe;
 	igt_output_t **outputs;
 	igt_output_t *output;
 	igt_plane_t *primary[output_count];
@@ -359,7 +359,7 @@ static void test_invalid_modeset_two_joiner(data_t *data,
 	int i, j, ret;
 	uint32_t available_pipe_mask;
 	uint32_t attempt_mask;
-	enum pipe master_pipe;
+	enum hardware_pipe master_pipe;
 	igt_output_t **outputs;
 	igt_output_t *output;
 	igt_plane_t *primary[INVALID_TEST_OUTPUT];
@@ -381,7 +381,7 @@ static void test_invalid_modeset_two_joiner(data_t *data,
 
 		for (j = 0; j < INVALID_TEST_OUTPUT; j++) {
 			igt_crtc_t *crtc;
-			enum pipe pipe = data->pipe_seq[i + j];
+			enum hardware_pipe pipe = data->pipe_seq[i + j];
 			/*
 			 * In the mixed case only the first output (j == 0) is a
 			 * big joiner output; the second is a non-big-joiner output.
@@ -441,7 +441,7 @@ static void test_joiner_on_last_pipe(data_t *data, bool force_joiner)
 
 	for (i = 0; i < len; i++) {
 		igt_crtc_t *crtc;
-		enum pipe pipe = data->pipe_seq[data->n_pipes - 1];
+		enum hardware_pipe pipe = data->pipe_seq[data->n_pipes - 1];
 
 		igt_display_reset(&data->display);
 		igt_display_commit2(&data->display, COMMIT_ATOMIC);
@@ -508,7 +508,7 @@ static void test_ultra_joiner(data_t *data, bool invalid_pipe, bool two_display,
 
 		for (j = 0; j < data->n_pipes; j++) {
 			igt_crtc_t *crtc;
-			enum pipe pipe;
+			enum hardware_pipe pipe;
 
 			/* Ultra joiner is only valid on PIPE_A */
 			if (invalid_pipe && j == PIPE_A)
@@ -579,7 +579,7 @@ static void test_basic_max_non_joiner(data_t *data)
 {
 	igt_display_t *display = &data->display;
 	int count;
-	enum pipe pipe;
+	enum hardware_pipe pipe;
 	igt_output_t **outputs, *output;
 	igt_fb_t fb;
 	igt_plane_t *primary;
@@ -698,7 +698,7 @@ int igt_main()
 		data.n_pipes = 0;
 		for_each_crtc(&data.display, crtc) {
 			data.n_pipes++;
-			data.pipe_seq[j] = crtc->pipe;
+			data.pipe_seq[j] = crtc->hardware_pipe;
 			j++;
 		}
 	}

@@ -75,7 +75,7 @@ static int find_consecutive_pipes(int n_pipes,
 	return -1;
 }
 
-static enum pipe get_next_master_pipe(uint32_t pipe_mask)
+static enum hardware_pipe get_next_master_pipe(uint32_t pipe_mask)
 {
 	int i;
 
@@ -106,8 +106,8 @@ void igt_set_all_master_pipes_for_platform(igt_display_t *display, uint32_t *mas
 	*master_pipes = 0;
 
 	for_each_crtc(display, crtc) {
-		if (igt_crtc_for_pipe(display, crtc->pipe + 1)) {
-			*master_pipes |= BIT(crtc->pipe);
+		if (igt_crtc_for_pipe(display, crtc->hardware_pipe + 1)) {
+			*master_pipes |= BIT(crtc->hardware_pipe);
 			igt_info("Found master pipe %s\n", igt_crtc_name(crtc));
 		}
 	}
@@ -138,7 +138,7 @@ bool igt_assign_pipes_for_outputs(int drm_fd,
 {
 	int i = 0, idx  = 0, needed = 0, start = 0;
 	uint32_t available_pipes_mask = 0;
-	enum pipe mp = PIPE_NONE;
+	enum hardware_pipe mp = PIPE_NONE;
 	igt_output_t *out;
 
 	for (idx = 0; idx < num_outputs; idx++) {

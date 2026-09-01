@@ -51,7 +51,13 @@
 #define LOCAL_DRM_CLIENT_CAP_CURSOR_PLANE_HOTSPOT	6
 
 /**
- * pipe:
+ * hardware_pipe:
+ *
+ * GPU vendor-specific hardware pipe, which may be different from the CRTC
+ * index. Only code and tests that specifically need to know the pipe should use
+ * this, and conditional to the device in question. Defaults to matching the
+ * CRTC index, but do not rely on it.
+ *
  * @PIPE_NONE: Invalid pipe, used for disconnecting a output from a pipe.
  * @PIPE_A: First crtc.
  * @PIPE_B: Second crtc.
@@ -71,7 +77,7 @@
  * @PIPE_P: Sixteenth crtc.
  * @IGT_MAX_PIPES: Max number of pipes allowed.
  */
-enum pipe {
+enum hardware_pipe {
         PIPE_NONE = -1,
         PIPE_A = 0,
         PIPE_B,
@@ -91,7 +97,7 @@ enum pipe {
         PIPE_P,
         IGT_MAX_PIPES
 };
-const char *kmstest_pipe_name(enum pipe pipe);
+const char *kmstest_pipe_name(enum hardware_pipe pipe);
 const char *kmstest_plane_type_name(int plane_type);
 
 enum port {
@@ -478,8 +484,8 @@ typedef struct _igt_plane {
  */
 struct _igt_crtc {
 	igt_display_t *display;
-	/* ID of a hardware pipe */
-	enum pipe pipe;
+	/* ID of a hardware pipe. This may be vendor specific. Use crtc_index instead. */
+	enum hardware_pipe hardware_pipe;
 
 	int n_planes;
 	int num_primary_planes;
@@ -581,7 +587,7 @@ const char *igt_crtc_name(igt_crtc_t *crtc);
 
 igt_crtc_t *igt_crtc_for_crtc_id(igt_display_t *display, uint32_t crtc_id);
 igt_crtc_t *igt_crtc_for_crtc_index(igt_display_t *display, int crtc_index);
-igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pipe);
+igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum hardware_pipe pipe);
 igt_crtc_t *igt_first_crtc(igt_display_t *display);
 igt_crtc_t *igt_first_crtc_with_single_output(igt_display_t *display, igt_output_t **ret_output);
 igt_crtc_t *igt_next_crtc(igt_display_t *display, igt_crtc_t *crtc);
@@ -1348,7 +1354,7 @@ bool bigjoiner_mode_found(int drm_fd, drmModeConnector *connector,
 			  int max_dotclock, drmModeModeInfo *mode);
 bool intel_boundary_non_joiner_mode_found(int drm_fd, drmModeConnector *connector,
 					   int max_dotclock, drmModeModeInfo *mode);
-bool igt_is_joiner_enabled_for_pipe(int drmfd, enum pipe pipe);
+bool igt_is_joiner_enabled_for_pipe(int drmfd, enum hardware_pipe pipe);
 bool igt_ultrajoiner_possible(int drmfd, drmModeModeInfo *mode, int max_dotclock);
 bool ultrajoiner_mode_found(int drm_fd, drmModeConnector *connector,
 			  int max_dotclock, drmModeModeInfo *mode);

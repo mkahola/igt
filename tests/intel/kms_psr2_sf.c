@@ -1046,11 +1046,11 @@ static void cleanup(data_t *data)
 
 static bool sel_fetch_pipe_combo_valid(data_t *data)
 {
-	if (data->devid < 14 && !IS_ALDERLAKE_P(data->devid) && data->crtc->pipe != PIPE_A)
+	if (data->devid < 14 && !IS_ALDERLAKE_P(data->devid) && data->crtc->hardware_pipe != PIPE_A)
 		return false;
 
 	if (data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_eDP &&
-	    data->crtc->pipe != PIPE_A && data->crtc->pipe != PIPE_B)
+	    data->crtc->hardware_pipe != PIPE_A && data->crtc->hardware_pipe != PIPE_B)
 		return false;
 
 	return true;

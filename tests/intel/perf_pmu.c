@@ -1173,7 +1173,7 @@ event_wait(int gem_fd, const intel_ctx_t *ctx,
 		uint64_t val[2];
 
 		batch[6] = MI_WAIT_FOR_EVENT;
-		switch (crtc->pipe) {
+		switch (crtc->hardware_pipe) {
 		case PIPE_A:
 			batch[6] |= MI_WAIT_FOR_PIPE_A_VBLANK;
 			batch[5] = ~(1 << 3);

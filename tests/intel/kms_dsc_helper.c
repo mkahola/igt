@@ -91,7 +91,7 @@ bool check_gen11_dp_constraint(int drmfd, igt_output_t *output,
 	drmModeConnector *connector = output->config.connector;
 
 	if ((connector->connector_type == DRM_MODE_CONNECTOR_DisplayPort) &&
-	    (crtc->pipe == PIPE_A) && IS_GEN11(devid)) {
+	    (crtc->hardware_pipe == PIPE_A) && IS_GEN11(devid)) {
 		igt_info("DSC not supported on pipe %s on %s in gen11 platforms\n",
 			 igt_crtc_name(crtc), output->name);
 		return false;
@@ -215,7 +215,7 @@ bool is_dsc_fractional_bpp_supported(int disp_ver, int drmfd, igt_output_t *outp
 bool check_dsc_joiner_constraints(int drm_fd,
 				  igt_output_t *output,
 				  igt_display_t *display,
-				  enum pipe pipe,
+				  enum hardware_pipe pipe,
 				  int num_pipes,
 				  enum joined_pipes type)
 {

@@ -280,7 +280,7 @@ static void mst_suspend_read_crc(igt_display_t *display)
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc)
-		valid_pipes_mask |= BIT(crtc->pipe);
+		valid_pipes_mask |= BIT(crtc->hardware_pipe);
 
 	igt_set_all_master_pipes_for_platform(display, &master_pipes_mask);
 

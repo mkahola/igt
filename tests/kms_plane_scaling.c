@@ -695,7 +695,7 @@ static bool test_crtc_iteration(data_t *data, igt_crtc_t *crtc, int iteration)
 	    data->extended)
 		return true;
 
-	if ((crtc->pipe > PIPE_B) && (iteration >= 2))
+	if ((crtc->hardware_pipe > PIPE_B) && (iteration >= 2))
 		return false;
 
 	return true;

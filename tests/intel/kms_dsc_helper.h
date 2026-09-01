@@ -41,7 +41,7 @@ void save_force_dsc_fractional_bpp_en(int drmfd, igt_output_t *output);
 void restore_force_dsc_fractional_bpp_en(void);
 bool is_dsc_fractional_bpp_supported(int disp_ver, int drmfd, igt_output_t *output);
 bool check_dsc_joiner_constraints(int drm_fd, igt_output_t *output,
-				  igt_display_t *display, enum pipe pipe,
+				  igt_display_t *display, enum hardware_pipe pipe,
 				  int num_pipes,
 				  enum joined_pipes type);
 

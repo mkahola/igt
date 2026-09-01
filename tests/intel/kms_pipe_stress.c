@@ -386,8 +386,8 @@ static void cleanup_plane_fbs(struct data *data, igt_crtc_t *crtc, int start,
 
 	while (i < end) {
 		igt_remove_fb(data->display.drm_fd,
-			      &data->fb[crtc->pipe * MAX_PLANES + i]);
-		data->fb[crtc->pipe * MAX_PLANES + i].fb_id = 0;
+			      &data->fb[crtc->hardware_pipe * MAX_PLANES + i]);
+		data->fb[crtc->hardware_pipe * MAX_PLANES + i].fb_id = 0;
 		i++;
 	}
 }
@@ -407,14 +407,14 @@ static int crtc_stress(struct data *data, igt_output_t *output,
 	if (!mode)
 		mode = igt_output_get_mode(output);
 
-	if (data->last_mode[crtc->pipe] != mode) {
+	if (data->last_mode[crtc->hardware_pipe] != mode) {
 		ret = commit_mode(data, output,
 				  crtc, mode);
 
 		if (ret)
 			return ret;
 
-		data->last_mode[crtc->pipe] = mode;
+		data->last_mode[crtc->hardware_pipe] = mode;
 		new_mode = true;
 	}
 
@@ -422,7 +422,7 @@ static int crtc_stress(struct data *data, igt_output_t *output,
 	 * Looks like we can't have planes on that pipe at all
 	 * or mode hasn't changed
 	 */
-	if (!data->num_planes[crtc->pipe] || !new_mode)
+	if (!data->num_planes[crtc->hardware_pipe] || !new_mode)
 		return 0;
 
 	/* Set up overlay/primary planes up to the configured limit. */
@@ -443,7 +443,7 @@ static int crtc_stress(struct data *data, igt_output_t *output,
 		 * in the reduction loop below.
 		 */
 		universal_plane_set_fb(plane,
-				       &data->fb[crtc->pipe * MAX_PLANES + i],
+				       &data->fb[crtc->hardware_pipe * MAX_PLANES + i],
 				       plane_width, plane_height);
 
 		ret = try_plane_scaling(data, plane, plane_width, plane_height);
@@ -456,7 +456,7 @@ static int crtc_stress(struct data *data, igt_output_t *output,
 			plane_height /= 2;
 
 			/* Keep source crop in sync with the reduced destination. */
-			igt_fb_set_size(&data->fb[crtc->pipe * MAX_PLANES + i],
+			igt_fb_set_size(&data->fb[crtc->hardware_pipe * MAX_PLANES + i],
 					plane, plane_width, plane_height);
 
 			ret = try_plane_scaling(data, plane, plane_width, plane_height);
@@ -466,10 +466,10 @@ static int crtc_stress(struct data *data, igt_output_t *output,
 		}
 		if (ret) {
 			igt_info("Plane %d pipe %d try commit failed, exiting\n", i,
-				 crtc->pipe);
-			data->num_planes[crtc->pipe] = i;
+				 crtc->hardware_pipe);
+			data->num_planes[crtc->hardware_pipe] = i;
 			igt_info("Max num planes for pipe %d set to %d\n",
-				 crtc->pipe, i);
+				 crtc->hardware_pipe, i);
 			/*
 			 * We have now determined max amount of full sized planes, we will just
 			 * keep it in mind and be smarter next time. Also lets remove unneeded fbs.
@@ -479,7 +479,7 @@ static int crtc_stress(struct data *data, igt_output_t *output,
 			cleanup_plane_fbs(data, crtc, i, MAX_PLANES);
 		}
 
-		if (++i >= data->num_planes[crtc->pipe])
+		if (++i >= data->num_planes[crtc->hardware_pipe])
 			break;
 	}
 
@@ -493,7 +493,7 @@ static int crtc_stress(struct data *data, igt_output_t *output,
 	for_each_plane_on_crtc(crtc, plane) {
 		if (plane->type == DRM_PLANE_TYPE_CURSOR) {
 			cursor_plane_set_fb(plane,
-					    &data->cursor_fb[crtc->pipe],
+					    &data->cursor_fb[crtc->hardware_pipe],
 					    cursor_width, cursor_height);
 			if (igt_display_try_commit_atomic(&data->display,
 							  DRM_MODE_ATOMIC_TEST_ONLY |

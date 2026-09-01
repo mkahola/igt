@@ -432,7 +432,7 @@ const char *help_str =
 int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 {
 	igt_display_t display = { .drm_fd = -1, .n_crtcs = IGT_MAX_PIPES };
-	enum pipe active_pipes[IGT_MAX_PIPES];
+	enum hardware_pipe active_pipes[IGT_MAX_PIPES];
 	igt_output_t *output;
 	uint32_t last_pipe = 0;
 	igt_crtc_t *crtc;
@@ -465,7 +465,7 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 
 		/* Get active pipes. */
 		for_each_crtc(&display, crtc)
-			active_pipes[last_pipe++] = crtc->pipe;
+			active_pipes[last_pipe++] = crtc->hardware_pipe;
 		last_pipe--;
 	}
 
@@ -497,8 +497,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 			if (!crtc_output_combo_valid(&display, output, crtc))
 				continue;
 
-			if (!all_pipes && crtc->pipe != active_pipes[0] &&
-					  crtc->pipe != active_pipes[last_pipe])
+			if (!all_pipes && crtc->hardware_pipe != active_pipes[0] &&
+					  crtc->hardware_pipe != active_pipes[last_pipe])
 				continue;
 
 			igt_dynamic_f("flip-pipe-%s", igt_crtc_name(crtc))
@@ -522,8 +522,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 			if (!crtc_output_combo_valid(&display, output, crtc))
 				continue;
 
-			if (!all_pipes && crtc->pipe != active_pipes[0] &&
-					  crtc->pipe != active_pipes[last_pipe])
+			if (!all_pipes && crtc->hardware_pipe != active_pipes[0] &&
+					  crtc->hardware_pipe != active_pipes[last_pipe])
 				continue;
 
 			igt_dynamic_f("pipe-%s", igt_crtc_name(crtc))
@@ -557,8 +557,8 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 				if (!crtc_output_combo_valid(&display, output, crtc))
 					continue;
 
-				if (!all_pipes && crtc->pipe != active_pipes[0] &&
-						  crtc->pipe != active_pipes[last_pipe])
+				if (!all_pipes && crtc->hardware_pipe != active_pipes[0] &&
+						  crtc->hardware_pipe != active_pipes[last_pipe])
 					continue;
 
 				igt_dynamic_f("pipe-%s", igt_crtc_name(crtc)) {

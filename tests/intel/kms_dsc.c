@@ -369,7 +369,7 @@ static void test_dsc(data_t *data, uint32_t test_type, int bpc,
 			/* Check joiner constraints for this pipe */
 			if (joined_pipes != JOINED_PIPES_DEFAULT &&
 			    !check_dsc_joiner_constraints(data->drm_fd, data->output,
-							  display, crtc->pipe,
+							  display, crtc->hardware_pipe,
 							  n_pipes, joined_pipes))
 				continue;
 

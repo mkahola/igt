@@ -240,7 +240,7 @@ static bool chv_cursor_broken(data_t *data, int x)
 	if (x >= 0)
 		return false;
 
-	return IS_CHERRYVIEW(devid) && data->crtc->pipe == PIPE_C;
+	return IS_CHERRYVIEW(devid) && data->crtc->hardware_pipe == PIPE_C;
 }
 
 static bool cursor_visible(data_t *data, int x, int y)

@@ -155,7 +155,7 @@ static void do_modeset(data_t *data, bool mst)
 	igt_crtc_t *crtc;
 
 	for_each_crtc(&data->display, crtc) {
-		valid_pipes_mask |= BIT(crtc->pipe);
+		valid_pipes_mask |= BIT(crtc->hardware_pipe);
 		n_pipes++;
 	}
 

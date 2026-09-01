@@ -234,7 +234,7 @@ int igt_main()
 					continue;
 
 				/* LPSP is low power single pipe usages i.e. PIPE_A */
-				if (crtc->pipe != PIPE_A)
+				if (crtc->hardware_pipe != PIPE_A)
 					continue;
 
 				if (connector->connector_type != DRM_MODE_CONNECTOR_eDP)

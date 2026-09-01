@@ -1234,7 +1234,7 @@ static bool find_connector(bool edp_only, bool pipe_a,
 		if (edp_only && c->connector_type != DRM_MODE_CONNECTOR_eDP)
 			continue;
 
-		if (pipe_a && crtc->pipe != PIPE_A)
+		if (pipe_a && crtc->hardware_pipe != PIPE_A)
 			continue;
 
 		if (output == forbidden_output || crtc == forbidden_crtc) {

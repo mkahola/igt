@@ -160,10 +160,10 @@ find_outputs(data_t *data, igt_output_t **output1, igt_output_t **output2)
 	*output2 = NULL;
 
 	for_each_crtc_with_valid_output(&data->display, crtc, output) {
-		if (crtc->pipe == PIPE_B && !*output1 && output != *output2)
+		if (crtc->hardware_pipe == PIPE_B && !*output1 && output != *output2)
 			*output1 = output;
 
-		if (crtc->pipe == PIPE_C && output != *output1 && !*output2)
+		if (crtc->hardware_pipe == PIPE_C && output != *output1 && !*output2)
 			*output2 = output;
 
 		igt_output_set_crtc(output, NULL);

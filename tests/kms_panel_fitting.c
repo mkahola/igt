@@ -170,7 +170,7 @@ test_panel_fitting_legacy(data_t *d, igt_display_t *display, igt_crtc_t *crtc,
 		 */
 		if (IS_GEN8(devid) ||
 			(IS_GEN7(devid) && !IS_IVYBRIDGE(devid)) ||
-			(IS_GEN9(devid) && crtc->pipe == PIPE_C)) {
+			(IS_GEN9(devid) && crtc->hardware_pipe == PIPE_C)) {
 			is_plane_scaling_active = false;
 		}
 	}

@@ -193,7 +193,7 @@ static void run_extendedmode_test(data_t *data) {
 			if (output1 == output2)
 				continue;
 
-			if (crtc1->pipe > crtc2->pipe &&
+			if (crtc1->hardware_pipe > crtc2->hardware_pipe &&
 			    igt_check_output_is_dp_mst(output1) ==
 			    igt_check_output_is_dp_mst(output2))
 				continue;

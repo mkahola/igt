@@ -1059,7 +1059,7 @@ static igt_plane_t *igt_get_assigned_primary(igt_output_t *output,
  *
  * Returns: A string representing @pipe, e.g. "A".
  */
-const char *kmstest_pipe_name(enum pipe pipe)
+const char *kmstest_pipe_name(enum hardware_pipe pipe)
 {
 	static const char str[] = "A\0B\0C\0D\0E\0F\0G\0H\0I\0J\0K\0L\0M\0N\0O\0P";
 
@@ -3115,7 +3115,7 @@ static int crtc_pipe_compare(const void *_a, const void *_b)
 {
 	const igt_crtc_t *a = _a, *b = _b;
 
-	return a->pipe - b->pipe;
+	return a->hardware_pipe - b->hardware_pipe;
 }
 
 /**
@@ -3190,7 +3190,7 @@ void igt_display_require(igt_display_t *display, int drm_fd)
 
 		crtc->crtc_id = resources->crtcs[crtc_index];
 		crtc->crtc_index = crtc_index;
-		crtc->pipe = is_intel_dev ? __intel_get_pipe_from_crtc_index(drm_fd, crtc_index) : crtc_index;
+		crtc->hardware_pipe = is_intel_dev ? __intel_get_pipe_from_crtc_index(drm_fd, crtc_index) : crtc_index;
 	}
 
 	/* For Intel, sort the CRTCs in pipe order */
@@ -3619,7 +3619,7 @@ static int output_crtc_pipe_compare(const void *_a, const void *_b)
 
 	/* pipe order for valid output/crtc combos */
 	if (a->crtc && b->crtc)
-		return a->crtc->pipe - b->crtc->pipe;
+		return a->crtc->hardware_pipe - b->crtc->hardware_pipe;
 
 	/* valid combos before empty elements */
 	return !b->crtc - !a->crtc;
@@ -5312,7 +5312,7 @@ const char *igt_crtc_name(igt_crtc_t *crtc)
 	if (crtc == NULL)
 		return "None";
 
-	return kmstest_pipe_name(crtc->pipe);
+	return kmstest_pipe_name(crtc->hardware_pipe);
 }
 
 /**
@@ -7212,7 +7212,7 @@ bool intel_boundary_non_joiner_mode_found(int drm_fd, drmModeConnector *connecto
  *
  * Returns: True if joiner is enabled, false otherwise.
  */
-bool igt_is_joiner_enabled_for_pipe(int drmfd, enum pipe pipe)
+bool igt_is_joiner_enabled_for_pipe(int drmfd, enum hardware_pipe pipe)
 {
 	char buf[16384], master_str[64], slave_str[64];
 	int dir, res;
@@ -7431,9 +7431,9 @@ bool igt_check_bigjoiner_support(igt_display_t *display)
 	uint8_t i, pipes_in_use = 0;
 	igt_crtc_t *crtc;
 	igt_output_t *output;
-	enum pipe last_pipe = PIPE_NONE;
+	enum hardware_pipe last_pipe = PIPE_NONE;
 	struct {
-		enum pipe idx;
+		enum hardware_pipe idx;
 		drmModeModeInfo *mode;
 		igt_output_t *output;
 		bool force_joiner;
@@ -7442,8 +7442,8 @@ bool igt_check_bigjoiner_support(igt_display_t *display)
 
 	/* Get last pipe */
 	for_each_crtc(display, crtc) {
-		if (crtc->pipe > last_pipe)
-			last_pipe = crtc->pipe;
+		if (crtc->hardware_pipe > last_pipe)
+			last_pipe = crtc->hardware_pipe;
 	}
 
 	/*
@@ -7454,7 +7454,7 @@ bool igt_check_bigjoiner_support(igt_display_t *display)
 		if (!output->pending_crtc)
 			continue;
 
-		pipes[pipes_in_use].idx = output->pending_crtc->pipe;
+		pipes[pipes_in_use].idx = output->pending_crtc->hardware_pipe;
 		pipes[pipes_in_use].mode = igt_output_get_mode(output);
 		pipes[pipes_in_use].output = output;
 		pipes[pipes_in_use].force_joiner = igt_check_force_joiner_status(display->drm_fd, output->name);
@@ -7924,12 +7924,12 @@ igt_crtc_t *igt_crtc_for_crtc_index(igt_display_t *display, int crtc_index)
 	return NULL;
 }
 
-igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum pipe pipe)
+igt_crtc_t *igt_crtc_for_pipe(igt_display_t *display, enum hardware_pipe pipe)
 {
 	igt_crtc_t *crtc;
 
 	for_each_crtc(display, crtc) {
-		if (crtc->pipe == pipe)
+		if (crtc->hardware_pipe == pipe)
 			return crtc;
 	}
 
@@ -7991,7 +7991,7 @@ igt_crtc_t *igt_next_crtc(igt_display_t *display, igt_crtc_t *crtc)
 	igt_crtc_t *next;
 
 	for_each_crtc(display, next) {
-		if (!crtc || next->pipe > crtc->pipe)
+		if (!crtc || next->hardware_pipe > crtc->hardware_pipe)
 			return next;
 	}
 
