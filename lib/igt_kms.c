@@ -1313,10 +1313,11 @@ void kmstest_dump_mode(drmModeModeInfo *mode)
  * The hardware pipe may be different from the CRTC index. Figure out the CRTC
  * index to pipe mapping from the debugfs.
  */
-int __intel_get_pipe_from_crtc_index(int fd, int crtc_index)
+enum hardware_pipe __intel_get_pipe_from_crtc_index(int fd, int crtc_index)
 {
+	enum hardware_pipe hardware_pipe;
 	char buf[2];
-	int debugfs_fd, pipe, res = 0;
+	int debugfs_fd, res = 0;
 	char pipe_char;
 
 	debugfs_fd = igt_debugfs_crtc_dir(fd, crtc_index);
@@ -1330,11 +1331,12 @@ int __intel_get_pipe_from_crtc_index(int fd, int crtc_index)
 
 	igt_assert_eq(sscanf(buf, "%c", &pipe_char), 1);
 
-	pipe = pipe_char - 'A';
+	hardware_pipe = pipe_char - 'A';
 
-	igt_assert_f(pipe >= 0 && pipe < IGT_MAX_PIPES, "i915_pipe %c out of range\n", pipe_char);
+	igt_assert_f(hardware_pipe >= 0 && hardware_pipe < IGT_MAX_PIPES,
+		     "i915_pipe %c out of range\n", pipe_char);
 
-	return pipe;
+	return hardware_pipe;
 }
 
 /**
