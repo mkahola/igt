@@ -76,11 +76,11 @@ static enum cea_sad_sampling_rate parse_sad_rate(const char *value)
 		return CEA_SAD_SAMPLING_RATE_44KHZ;
 	case 48000:
 		return CEA_SAD_SAMPLING_RATE_48KHZ;
-	case 88000:
+	case 88200:
 		return CEA_SAD_SAMPLING_RATE_88KHZ;
 	case 96000:
 		return CEA_SAD_SAMPLING_RATE_96KHZ;
-	case 176000:
+	case 176400:
 		return CEA_SAD_SAMPLING_RATE_176KHZ;
 	case 192000:
 		return CEA_SAD_SAMPLING_RATE_192KHZ;
