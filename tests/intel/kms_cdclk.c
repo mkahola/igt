@@ -44,6 +44,10 @@
  *
  * SUBTEST: plane-scaling
  * Description: Plane scaling test to validate cdclk frequency change.
+ *
+ * SUBTEST: mode-rejected-max-dotclock
+ * Description: Verify that a mode exceeding the maximum pixel clock
+ *              frequency is rejected by the driver.
  */
 
 IGT_TEST_DESCRIPTION("Test cdclk features : crawling and squashing");
@@ -357,6 +361,63 @@ static void run_cdclk_test(data_t *data, uint32_t flags)
 	}
 }
 
+static void test_mode_rejected_max_dotclock(data_t *data)
+{
+	igt_display_t *display = &data->display;
+	igt_output_t *output;
+	igt_crtc_t *crtc;
+	igt_plane_t *primary;
+	int max_dotclock, ret;
+	struct igt_fb fb;
+
+	max_dotclock = igt_get_max_dotclock(data->drm_fd);
+	igt_require_f(max_dotclock > 0,
+		      "Could not read max pixel clock\n");
+
+	for_each_crtc_with_valid_output(display, crtc, output) {
+		drmModeModeInfo mode = *igt_output_get_mode(output);
+
+		igt_output_set_crtc(output, crtc);
+		if (!intel_pipe_output_combo_valid(display)) {
+			igt_output_set_crtc(output, NULL);
+			continue;
+		}
+
+		/* Set clock above PHY max */
+		mode.clock = max_dotclock + 50000;
+
+		do_cleanup_display(display);
+		igt_display_reset(display);
+		igt_output_set_crtc(output, crtc);
+		igt_output_override_mode(output, &mode);
+		primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
+
+		igt_create_pattern_fb(data->drm_fd,
+				      mode.hdisplay, mode.vdisplay,
+				      DRM_FORMAT_XRGB8888,
+				      DRM_FORMAT_MOD_LINEAR, &fb);
+		igt_plane_set_fb(primary, &fb);
+
+		ret = igt_display_try_commit_atomic(display,
+						    DRM_MODE_ATOMIC_ALLOW_MODESET,
+						    NULL);
+
+		igt_info("Output %s: clock=%dkHz (max=%dkHz) -> %s\n",
+			 output->name, mode.clock, max_dotclock,
+			 ret ? "rejected" : "accepted");
+
+		igt_assert_f(ret != 0,
+			     "Mode with clock=%dkHz exceeding max=%dkHz "
+			     "should be rejected on %s\n",
+			     mode.clock, max_dotclock, output->name);
+
+		igt_plane_set_fb(primary, NULL);
+		igt_output_set_crtc(output, NULL);
+		igt_remove_fb(data->drm_fd, &fb);
+		break;
+	}
+}
+
 int igt_main()
 {
 	data_t data = {};
@@ -386,6 +447,10 @@ int igt_main()
 		     "by simultaneous modesets on all pipes with valid outputs.");
 	igt_subtest("mode-transition-all-outputs")
 		test_mode_transition_on_all_outputs(&data);
+
+	igt_describe("Verify that a mode exceeding max pixel clock is rejected.");
+	igt_subtest("mode-rejected-max-dotclock")
+		test_mode_rejected_max_dotclock(&data);
 
 	igt_fixture() {
 		igt_display_fini(&data.display);
