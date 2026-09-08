@@ -262,6 +262,7 @@ intel_kms_progs = [
 	'kms_flip_scaled_crc',
 	'kms_flip_tiling',
 	'kms_frontbuffer_tracking',
+	'kms_hdmi_audio_bw',
 	'kms_joiner',
 	'kms_legacy_colorkey',
 	'kms_mmap_write_crc',
