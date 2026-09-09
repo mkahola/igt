@@ -14,4 +14,6 @@ cp "$input" "$out_dir"
 ${rst2man} "$out_dir/$in_file" "${output%.gz}"
 
 rm -f "${output}"
-gzip "${output%.gz}"
+# Do not save timestamp in generated file, so it will be the same binary file
+# when generated again after some time.
+gzip --no-name "${output%.gz}"
