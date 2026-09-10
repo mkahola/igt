@@ -1043,7 +1043,11 @@ gen9_emit_depth(struct intel_bb *ibb)
 
 	igt_genxml_emit(ibb, GFX9_3DSTATE_WM_DEPTH_STENCIL, wds) { }
 
-	if (HAS_4TILE(ibb->devid)) {
+	if (intel_gen(ibb->devid) >= 20) {
+		igt_genxml_emit(ibb, GFX20_3DSTATE_DEPTH_BUFFER, db) {
+			db.MOCS = mocs;
+		}
+	} else if (HAS_4TILE(ibb->devid)) {
 		igt_genxml_emit(ibb, GFX125_3DSTATE_DEPTH_BUFFER, db) {
 			db.MOCS = mocs;
 		}
