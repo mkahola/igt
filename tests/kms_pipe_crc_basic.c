@@ -127,6 +127,16 @@ enum {
 	TEST_HANG = 1 << 3,
 };
 
+static bool suspend_constraint(unsigned flags, igt_crtc_t *crtc)
+{
+	if (!extended && (flags & TEST_SUSPEND) &&
+	    crtc->crtc_index != active_crtcs[0] &&
+	    crtc->crtc_index != active_crtcs[last_crtc_index])
+		return true;
+
+	return false;
+}
+
 static void test_read_crc(data_t *data, igt_crtc_t *crtc,
 			  igt_output_t *output, unsigned flags)
 {
@@ -423,6 +433,9 @@ int igt_main_args("e", NULL, help_str, opt_handler, NULL)
 			for_each_crtc_with_single_output(&data.display, crtc,
 							 output) {
 				if (simulation_constraint(crtc))
+					continue;
+
+				if (suspend_constraint(tests[i].flags, crtc))
 					continue;
 
 				if(!crtc_output_combo_valid(&data.display, crtc, output))
