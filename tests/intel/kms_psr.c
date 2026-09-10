@@ -275,6 +275,8 @@
  * @plane-move:         Move plane position
  */
 
+#define SUSPEND_OUTPUT_LIMIT 2
+
 enum operations {
 	PAGE_FLIP,
 	MMAP_GTT,
@@ -318,6 +320,7 @@ typedef struct {
 	drmModeModeInfo *mode;
 	igt_output_t *output;
 	bool fbc_flag;
+	bool all_outputs;
 } data_t;
 
 static void create_cursor_fb(data_t *data)
@@ -767,9 +770,27 @@ static void dpms_off_on(data_t *data)
 				   DRM_MODE_DPMS_ON);
 }
 
+static int opt_handler(int opt, int opt_index, void *opt_data)
+{
+	data_t *data = opt_data;
+
+	switch (opt) {
+	case 'o':
+		data->all_outputs = true;
+		break;
+	default:
+		return IGT_OPT_HANDLER_ERROR;
+	}
+
+	return IGT_OPT_HANDLER_SUCCESS;
+}
+
 data_t data = {};
 
-int igt_main()
+const char *help_str =
+	"  -o \tRun on all connectors. (By default suspend subtests will run on 2 connectors)\n";
+
+int igt_main_args("o", NULL, help_str, opt_handler, &data)
 {
 	int z, y;
 	enum operations op;
@@ -945,10 +966,15 @@ int igt_main()
 				     "performed with suspend resume cycles");
 			igt_subtest_with_dynamic_f("%s%ssuspend", append_fbc_subtest[y],
 						   append_subtest_name[z]) {
+				int output_count = 0;
+
 				for_each_connected_output(&data.display, output) {
 					if (!psr_sink_support(data.drm_fd, data.debugfs_fd,
 							      data.op_psr_mode, output))
 						continue;
+					if (!data.all_outputs && output_count >= SUSPEND_OUTPUT_LIMIT)
+						continue;
+					output_count++;
 					igt_display_reset(&data.display);
 					data.output = output;
 					igt_dynamic_f("%s", data.output->name) {
