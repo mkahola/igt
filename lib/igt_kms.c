@@ -7125,6 +7125,9 @@ static bool match_joiner_exception(drmModeModeInfo *mode,
  */
 static const struct joiner_mode_exception nvl_joiner_exception_modes[] = {
 	{ 6144, 3456, 1413390 }, /* 6144x3456@60Hz */
+	{ 3840, 2160, 1543000 }, /* 3840x2160@165Hz */
+	{ 3840, 2160, 1398400 }, /* 3840x2160@160Hz */
+	{ 3840, 2160, 2291120 }, /* 3840x2160@240 */
 };
 
 /*
