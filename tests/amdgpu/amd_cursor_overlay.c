@@ -340,6 +340,30 @@ static void test_cursor_spots(data_t *data, int size, unsigned int flags)
 		test_cursor_pos(data, pos[i].x, pos[i].y, flags);
 }
 
+/*
+ * Returns this ASIC's maximum downscale source width (in pixels), as reported
+ * by the connector's max_downscale_src_width debugfs file. Returns 0 when the
+ * limit is unknown (older kernel without the file) or unlimited, in which case
+ * the caller should not skip on it.
+ */
+static int get_max_downscale_src_width(data_t *data)
+{
+	char buf[64];
+	int fd, res, width = 0;
+
+	fd = igt_debugfs_connector_dir(data->drm_fd, data->output->name, O_RDONLY);
+	if (fd < 0)
+		return 0;
+
+	res = igt_debugfs_simple_read(fd, "max_downscale_src_width", buf, sizeof(buf));
+	close(fd);
+
+	if (res <= 0 || sscanf(buf, "%d", &width) != 1 || width < 0)
+		return 0;
+
+	return width;
+}
+
 static void test_cursor(data_t *data, int size, unsigned int flags, unsigned int scaling_factor)
 {
 	int sw, sh;
@@ -372,9 +396,25 @@ static void test_cursor(data_t *data, int size, unsigned int flags, unsigned int
 					DRM_FORMAT_MOD_LINEAR, 0.0, 0.0, 0.0, &data->quarter_fb);
 
 	/* Create a FB for scaling. */
-	if (flags & TEST_SCALING)
-		igt_create_color_fb(data->drm_fd, (sw * scaling_factor) / 100, (sh * scaling_factor) / 100, DRM_FORMAT_XRGB8888,
-					DRM_FORMAT_MOD_LINEAR, 0.0, 0.0, 0.0, &data->scale_fb);
+	if (flags & TEST_SCALING) {
+		int src_w = (sw * scaling_factor) / 100;
+		int src_h = (sh * scaling_factor) / 100;
+		int max_src_w = get_max_downscale_src_width(data);
+
+		/*
+		 * Skip (don't fail) when this ASIC can't downscale from this
+		 * source width. Only downscaling (source wider than the
+		 * display) is subject to the limit, so the upscaling subtests
+		 * still run and can still catch a real regression.
+		 */
+		igt_skip_on_f(max_src_w && src_w > sw && src_w > max_src_w,
+			      "Source width %d exceeds ASIC downscale limit %d\n",
+			      src_w, max_src_w);
+
+		igt_create_color_fb(data->drm_fd, src_w, src_h, DRM_FORMAT_XRGB8888,
+				    DRM_FORMAT_MOD_LINEAR, 0.0, 0.0, 0.0,
+				    &data->scale_fb);
+	}
 
 	/*
 	 * Create RGB FB for overlay planes for MAX_PLANES and
