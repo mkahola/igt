@@ -660,6 +660,7 @@ const char *igt_plane_rotation_name(igt_rotation_t rotation);
 
 void igt_wait_for_vblank(igt_crtc_t *crtc);
 void igt_wait_for_vblank_count(igt_crtc_t *crtc, int count);
+void igt_wait_for_vblank_ts_seq(igt_crtc_t *crtc, uint64_t *ts_ns, unsigned int *seq);
 
 /**
  * igt_output_is_connected:

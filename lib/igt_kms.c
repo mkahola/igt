@@ -5852,10 +5852,12 @@ void igt_output_set_writeback_fb(igt_output_t *output, struct igt_fb *fb)
 					  (ptrdiff_t)&output->writeback_out_fence_fd);
 }
 
-static int __igt_vblank_wait(int drm_fd, int crtc_index, int count)
+static int __igt_vblank_wait(int drm_fd, int crtc_index, int count,
+			     uint64_t *ts_ns, unsigned int *seq)
 {
 	drmVBlank wait_vbl;
 	uint32_t pipe_id_flag;
+	int ret;
 
 	memset(&wait_vbl, 0, sizeof(wait_vbl));
 	pipe_id_flag = kmstest_get_vbl_flag(crtc_index);
@@ -5863,7 +5865,17 @@ static int __igt_vblank_wait(int drm_fd, int crtc_index, int count)
 	wait_vbl.request.type = DRM_VBLANK_RELATIVE | pipe_id_flag;
 	wait_vbl.request.sequence = count;
 
-	return drmWaitVBlank(drm_fd, &wait_vbl);
+	ret = drmWaitVBlank(drm_fd, &wait_vbl);
+	if (ret)
+		return ret;
+
+	if (ts_ns)
+		*ts_ns = wait_vbl.reply.tval_sec * NSEC_PER_SEC +
+			 wait_vbl.reply.tval_usec * NSEC_PER_USEC;
+	if (seq)
+		*seq = wait_vbl.reply.sequence;
+
+	return 0;
 }
 
 /**
@@ -5876,7 +5888,23 @@ static int __igt_vblank_wait(int drm_fd, int crtc_index, int count)
  */
 void igt_wait_for_vblank_count(igt_crtc_t *crtc, int count)
 {
-	igt_assert(__igt_vblank_wait(crtc->display->drm_fd, crtc->crtc_index, count) == 0);
+	igt_assert(__igt_vblank_wait(crtc->display->drm_fd, crtc->crtc_index,
+				     count, NULL, NULL) == 0);
+}
+
+/**
+ * igt_wait_for_vblank_ts_seq:
+ * @crtc: the CRTC
+ * @ts_ns: returns the vblank timestamp in nanoseconds, may be NULL
+ * @seq: returns the vblank sequence number, may be NULL
+ *
+ * Waits for the next vertical blank interval on @crtc and hands back the
+ * timestamp and the sequence number reported by the kernel for that event.
+ */
+void igt_wait_for_vblank_ts_seq(igt_crtc_t *crtc, uint64_t *ts_ns, unsigned int *seq)
+{
+	igt_assert(__igt_vblank_wait(crtc->display->drm_fd, crtc->crtc_index,
+				     1, ts_ns, seq) == 0);
 }
 
 /**
@@ -5890,7 +5918,8 @@ void igt_wait_for_vblank_count(igt_crtc_t *crtc, int count)
  */
 void igt_wait_for_vblank(igt_crtc_t *crtc)
 {
-	igt_assert(__igt_vblank_wait(crtc->display->drm_fd, crtc->crtc_index, 1) == 0);
+	igt_assert(__igt_vblank_wait(crtc->display->drm_fd, crtc->crtc_index,
+				     1, NULL, NULL) == 0);
 }
 
 /**
