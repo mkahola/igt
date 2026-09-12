@@ -32,6 +32,7 @@
 #include "igt_pm.h"
 #include "igt_psr.h"
 #include "i915/intel_drrs.h"
+#include "igt_vrr.h"
 #include "sw_sync.h"
 #include <fcntl.h>
 #include <signal.h>
@@ -80,9 +81,24 @@
  *
  * SUBTEST: lobf-dc3co
  * Description: Test DC3CO entry during LOBF.
+ *
+ * SUBTEST: cmrr-desktop-mode
+ * Description: Test to set a desktop mode CMRR target refresh rate and verify
+ *              it is correctly applied.
+ *
+ * SUBTEST: cmrr-video-mode
+ * Description: Test to set standard video timing refresh rates via CMRR
+ *              and verify each target rate is correctly applied.
  */
 
 #define NSECS_PER_SEC (1000000000ull)
+#define CMRR_NUMERATOR 1000ULL
+#define CMRR_DENOMINATOR 1000ULL
+#define CMRR_VIDEO_MODE_DENOMINATOR 1001ULL
+#define TARGET_RR_SAMP_COUNT 100
+
+/* Acceptable deviation from the expected refresh rate. */
+#define CMRR_RR_TOLERANCE_HZ 0.02
 
 /*
  * Each test measurement step runs for ~5 seconds.
@@ -103,6 +119,14 @@ enum {
 	TEST_LINK_OFF = 1 << 10,
 	TEST_NEGATIVE = 1 << 11,
 	TEST_FORCE_RR = 1 << 12,
+	TEST_CMRR_DESKTOP_MODE = 1 << 13,
+	TEST_CMRR_VIDEO_MODE = 1 << 14,
+};
+
+enum {
+	CMRR_VIDEO_MODE,
+	CMRR_DESKTOP_MODE,
+	CMRR_DISABLE,
 };
 
 enum {
@@ -219,6 +243,38 @@ output_mode_with_maxrate(igt_output_t *output, unsigned int vrr_max)
 			mode = connector->modes[i];
 
 	return mode;
+}
+
+/**
+ * get_mode_with_video_timing:
+ * @output: Display output containing connector mode list
+ * @fps: Requested integer refresh rate in Hz
+ * @matched_mode: Returned mode that matches @fps
+ *
+ * Find and return a connector mode that matches the requested
+ * video timing refresh rate in Hz.
+ *
+ * Returns: true when a mode is found, false otherwise
+ */
+
+static bool
+get_mode_with_video_timing(igt_output_t *output, uint32_t fps,
+			   drmModeModeInfo *matched_mode)
+{
+	drmModeConnectorPtr connector;
+
+	connector = output->config.connector;
+	if (!connector)
+		return false;
+
+	for (int i = 0; i < connector->count_modes; i++) {
+		if (connector->modes[i].vrefresh == fps) {
+			*matched_mode = connector->modes[i];
+			return true;
+		}
+	}
+
+	return false;
 }
 
 static drmModeModeInfo
@@ -578,6 +634,182 @@ flip_and_measure(data_t *data, igt_output_t *output,
 		return total_flip ? ((total_pass * 100) / total_flip) : 0;
 	}
 	return 0;
+}
+
+/* Measure and verify the effective refresh rate against the expected CMRR target rate. */
+static void
+flip_and_measure_target_rr(data_t *data, igt_crtc_t *crtc,
+			   double vrefresh, uint32_t cmrr_mode)
+{
+	uint64_t last_vblank_ns, vblank_ns, frame_time_ns;
+	uint64_t total_frame_time_ns = 0;
+	uint32_t last_seq, seq, seq_delta;
+	uint32_t err_frames = 0, valid_frames;
+	double avg_frame_time_ns, avg_refresh_rate;
+	double expected_rr = 0;
+	bool front = false;
+	uint32_t i;
+
+	switch (cmrr_mode) {
+	case CMRR_VIDEO_MODE:
+		expected_rr = (vrefresh * CMRR_NUMERATOR) /
+			      (double)CMRR_VIDEO_MODE_DENOMINATOR;
+		break;
+	case CMRR_DESKTOP_MODE:
+		expected_rr = (vrefresh * CMRR_NUMERATOR) /
+			      (double)CMRR_DENOMINATOR;
+		break;
+	case CMRR_DISABLE:
+		expected_rr = vrefresh;
+		break;
+	default:
+		igt_assert_f(0, "Invalid CMRR mode %u\n", cmrr_mode);
+	}
+
+	do_flip(data, &data->fb[0]);
+	(void)get_kernel_event_ns(data, DRM_EVENT_FLIP_COMPLETE);
+	igt_wait_for_vblank_ts_seq(crtc, &last_vblank_ns, &last_seq);
+
+	for (i = 0; i < TARGET_RR_SAMP_COUNT; i++) {
+		front = !front;
+
+		do_flip(data, front ? &data->fb[1] : &data->fb[0]);
+		igt_wait_for_vblank_ts_seq(crtc, &vblank_ns, &seq);
+		(void)get_kernel_event_ns(data, DRM_EVENT_FLIP_COMPLETE);
+
+		frame_time_ns = vblank_ns - last_vblank_ns;
+		seq_delta = seq - last_seq;
+
+		last_vblank_ns = vblank_ns;
+		last_seq = seq;
+
+		/*
+		 * Use only single-frame intervals. If delta > 1, one or
+		 * more vblanks were missed, so the interval is not valid
+		 * for calculating the average frame time.
+		 */
+		if (seq_delta != 1) {
+			igt_debug("vblank seq delta = %u\n", seq_delta);
+			err_frames++;
+			continue;
+		}
+
+		total_frame_time_ns += frame_time_ns;
+	}
+
+	valid_frames = TARGET_RR_SAMP_COUNT - err_frames;
+
+	igt_assert_f(valid_frames >= 90,
+		     "Valid frames below threshold (90): valid_frames=%u, err_frames=%u\n",
+		     valid_frames, err_frames);
+
+	avg_frame_time_ns = (double)total_frame_time_ns / valid_frames;
+	avg_refresh_rate = (double)NSECS_PER_SEC / avg_frame_time_ns;
+
+	igt_assert_f(fabs(avg_refresh_rate - expected_rr) <= CMRR_RR_TOLERANCE_HZ,
+		     "CMRR refresh rate mismatch: measured avg_rr = %.3f Hz, "
+		     "expected_rr = %.3f Hz\n",
+		      avg_refresh_rate, expected_rr);
+
+	igt_info("Average RR (Hz): %.2f, Expected RR (Hz): %.2f, error frames = %u\n",
+		 avg_refresh_rate, expected_rr, err_frames);
+}
+
+/**
+ * Programs the requested CMRR target refresh rate for @mode, verifies that the measured
+ * refresh rate matches the expected CMRR behaviour,then disables CMRR and verifies that
+ * the refresh rate returns to the mode's nominal refresh rate. The function asserts that
+ * all target refresh rate programming operations succeed.
+ */
+static void
+run_cmrr(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
+	 const drmModeModeInfo *mode, uint32_t cmrr_mode)
+{
+	uint32_t numerator, denominator;
+	bool ret;
+	double rr_from_mode = igt_vrr_mode_line_refresh_hz(mode);
+
+	switch (cmrr_mode) {
+	case CMRR_VIDEO_MODE:
+		numerator = mode->vrefresh * CMRR_NUMERATOR;
+		denominator = CMRR_VIDEO_MODE_DENOMINATOR;
+		break;
+	case CMRR_DESKTOP_MODE:
+		numerator = mode->vrefresh * CMRR_NUMERATOR;
+		denominator = CMRR_DENOMINATOR;
+		break;
+	default:
+		igt_assert_f(0, "Unsupported CMRR mode %u\n",
+			     cmrr_mode);
+	}
+
+	igt_output_override_mode(output, mode);
+	igt_info("Override mode:");
+	kmstest_dump_mode((drmModeModeInfo *)mode);
+	igt_display_commit2(&data->display, COMMIT_ATOMIC);
+
+	ret = igt_vrr_target_rr_debugfs_write(data->drm_fd,
+					      crtc->crtc_index,
+					      numerator,
+					      denominator);
+	igt_assert_f(ret, "Failed to program CMRR target RR (%u/%u)\n",
+		     numerator, denominator);
+
+	flip_and_measure_target_rr(data, crtc, mode->vrefresh, cmrr_mode);
+
+	ret = igt_vrr_target_rr_debugfs_write(data->drm_fd, crtc->crtc_index, 0, 0);
+
+	igt_assert_f(ret, "Failed to disable CMRR target RR\n");
+
+	flip_and_measure_target_rr(data, crtc, rr_from_mode, CMRR_DISABLE);
+}
+
+/* Validate CMRR behavior for supported video and desktop display modes. */
+static
+void test_cmrr(data_t *data, igt_crtc_t *crtc,
+	       igt_output_t *output, uint32_t flags)
+{
+	drmModeModeInfo mode;
+	bool found = false;
+	drmModeConnectorPtr connector = output->config.connector;
+	uint32_t j;
+
+	igt_require_f(igt_vrr_target_refresh_rate_supported(data->drm_fd, crtc->crtc_index),
+		      "CMRR not supported\n");
+	prepare_test(data, output, crtc);
+	set_vrr_on_crtc(data, crtc, true, false);
+
+	if (flags & TEST_CMRR_VIDEO_MODE) {
+		found = false;
+		for (j = 0; j < igt_vrr_standard_video_timing_fps_count; j++) {
+			if (!get_mode_with_video_timing(output,
+							igt_vrr_standard_video_timing_fps[j],
+							&mode))
+				continue;
+
+			found = true;
+			run_cmrr(data, crtc, output, &mode, CMRR_VIDEO_MODE);
+		}
+		igt_require_f(found, "No video mode found.\n");
+	}
+
+	if (flags & TEST_CMRR_DESKTOP_MODE) {
+		found = false;
+		for (j = 0; j < connector->count_modes; j++) {
+			mode = connector->modes[j];
+			/*
+			 * Mode-line based refresh-rate calculations may differ slightly from
+			 * the theoretical value due to rounding. Use a small margin to avoid
+			 * rejecting valid CMRR-capable modes.
+			 */
+			if (igt_vrr_mode_line_refresh_hz(&mode) - mode.vrefresh <= 0.04)
+				continue;
+
+			found = true;
+			run_cmrr(data, crtc, output, &mode, CMRR_DESKTOP_MODE);
+		}
+		igt_require_f(found, "No desktop mode found.\n");
+	}
 }
 
 /* Basic VRR flip functionality test - enable, measure, disable, measure */
@@ -1147,6 +1379,20 @@ int igt_main_args("drs:", long_opts, help_str, opt_handler, &data)
 		}
 	}
 
+	igt_subtest_group() {
+		igt_fixture()
+			igt_require_intel(data.drm_fd);
+
+		igt_describe("Test to validate CMRR in desktop mode.");
+		igt_subtest_with_dynamic("cmrr-desktop-mode") {
+			run_vrr_test(&data, test_cmrr, TEST_CMRR_DESKTOP_MODE);
+		}
+
+		igt_describe("Test to validate CMRR in video mode.");
+		igt_subtest_with_dynamic("cmrr-video-mode") {
+			run_vrr_test(&data, test_cmrr, TEST_CMRR_VIDEO_MODE);
+		}
+	}
 	igt_fixture() {
 		close(data.debugfs_fd);
 		igt_display_fini(&data.display);
