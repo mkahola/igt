@@ -33,7 +33,6 @@
  */
 
 #include "igt.h"
-#include "igt_amd.h"
 
 /**
  * SUBTEST: alpha-%s
@@ -78,7 +77,6 @@ typedef struct {
 	struct igt_fb xrgb_fb, argb_fb_0, argb_fb_cov_0, argb_fb_7e, argb_fb_cov_7e, argb_fb_fc, argb_fb_cov_fc, argb_fb_100, black_fb, gray_fb;
 	igt_crc_t ref_crc;
 	igt_pipe_crc_t *pipe_crc;
-	igt_output_t *output;
 } data_t;
 
 static bool in_simulation;
@@ -444,48 +442,10 @@ static void constant_alpha_max(data_t *data, igt_crtc_t *crtc,
 	igt_plane_set_fb(plane, NULL);
 }
 
-/*
- * The 7e/fc subtests (alpha-7efc, coverage-7efc) assert that swapping the
- * plane global alpha with the per-pixel fb alpha (0x7e <-> 0xfc) yields a
- * bit-identical pipe CRC. That identity only holds when the whole blend
- * datapath collapses to exact 8-bit arithmetic.
- *
- * On AMD DCN the alpha/gain values are 8-bit, but the blend itself is carried
- * at higher internal precision and only quantized down to the output bpc at
- * the very end, so the swap can leave a sub-LSB residue. At 8 bpc the output
- * quantization discards it and the two CRCs match; at >8 bpc, or when the
- * stream is DSC-compressed (carried at its native >8 bpc), the residue is
- * retained and the CRCs differ. This matches observation: the same test
- * PASSes on an 8 bpc eDP link without DSC and FAILs on an eDP link brought
- * up with DSC.
- *
- * So keep the strict bit-exact check everywhere except AMD at >8 bpc or with
- * DSC active, where the swap is legitimately not bit-exact.
- */
-static void skip_if_alpha_swap_not_exact(data_t *data, igt_crtc_t *crtc)
-{
-	unsigned int bpc;
-	bool dsc;
-
-	if (!is_amdgpu_device(data->gfx_fd))
-		return;
-
-	bpc = igt_get_crtc_current_bpc(crtc);
-	dsc = data->output &&
-	      is_dp_dsc_supported(data->gfx_fd, data->output->name) &&
-	      igt_amd_read_dsc_clock_status(data->gfx_fd, data->output->name) > 0;
-
-	igt_skip_on_f(bpc > 8 || dsc,
-		      "plane-alpha/fb-alpha swap is not bit-exact on AMD DCN "
-		      "at >8bpc/DSC (bpc=%u, dsc=%d)\n", bpc, dsc);
-}
-
 static void alpha_7efc(data_t *data, igt_crtc_t *crtc, igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
 	igt_crc_t ref_crc = {}, crc = {};
-
-	skip_if_alpha_swap_not_exact(data, crtc);
 
 	if (plane->type != DRM_PLANE_TYPE_PRIMARY)
 		igt_plane_set_fb(igt_crtc_get_plane_type(crtc, DRM_PLANE_TYPE_PRIMARY),
@@ -514,8 +474,6 @@ static void coverage_7efc(data_t *data, igt_crtc_t *crtc, igt_plane_t *plane)
 {
 	igt_display_t *display = &data->display;
 	igt_crc_t ref_crc = {}, crc = {};
-
-	skip_if_alpha_swap_not_exact(data, crtc);
 
 	igt_require(igt_plane_try_prop_enum(plane, IGT_PLANE_PIXEL_BLEND_MODE, "Coverage"));
 	igt_display_commit2(display, COMMIT_ATOMIC);
@@ -580,8 +538,6 @@ static void run_test_on_crtc_planes(data_t *data, igt_crtc_t *crtc,
 	igt_plane_t *plane;
 	int first_plane = -1;
 	int last_plane = -1;
-
-	data->output = output;
 
 	for_each_plane_on_crtc(crtc, plane) {
 		if (!igt_plane_has_prop(plane, IGT_PLANE_ALPHA))
