@@ -30,12 +30,28 @@
 
 static void ignore_wedged_in_dmesg(void)
 {
-	/* this is needed for igt_runner so it will ignore it */
+	/*
+	 * The wedged flow intentionally triggers a recoverable GT fault/CAT dump
+	 * while the reset attempt fails. Ignore the specific transient fault lines
+	 * emitted by that path: the GT header, the per-fault details, and the
+	 * corresponding CAT response.
+	 */
 	igt_emit_ignore_dmesg_regex("CRITICAL: Xe has declared device [0-9A-Fa-f:.]* as wedged"
 				    "|GT[0-9A-Fa-f]*: reset failed .-ECANCELED"
 				    "|GT[0-9A-Fa-f]*: Failed to submit"
 				    "|Modules linked in:"
-				    "|__pfx___drm_");
+				    "|__pfx___drm_"
+				    "|Tile[0-9]+: GT[0-9A-Fa-f]*:$"
+				    "|ASID: [0-9]+"
+				    "|Faulted Address: 0x[0-9A-Fa-f]+"
+				    "|FaultType: [0-9]+"
+				    "|AccessType: [0-9]+"
+				    "|FaultLevel: [0-9]+"
+				    "|EngineClass: [0-9]+ [a-z]+"
+				    "|EngineInstance: [0-9]+"
+				    "|Tile[0-9]+: GT[0-9A-Fa-f]*: Fault response: Unsuccessful -EINVAL"
+				    "|Tile[0-9]+: GT[0-9A-Fa-f]*: Engine memory CAT error \\[[0-9]+\\]:"
+				    "class=[a-z]+, logical_mask: 0x[0-9A-Fa-f]+, guc_id=[0-9]+");
 }
 
 static void force_wedged(int fd)
