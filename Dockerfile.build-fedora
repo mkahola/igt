@@ -6,7 +6,6 @@ RUN dnf install -y \
 	'pkgconfig(libdrm)' \
 	'pkgconfig(pciaccess)' \
 	'pkgconfig(libkmod)' \
-	'pkgconfig(libproc2)' \
 	'pkgconfig(libunwind)' \
 	'pkgconfig(libdw)' \
 	'pkgconfig(pixman-1)' \
