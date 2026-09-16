@@ -88,6 +88,7 @@ int igt_main()
 	struct pci_addr pci;
 	bool userq_arr_cap[AMD_IP_MAX] = {0};
 	bool enable_test = false;
+	struct amd_lockdep_state lockdep;
 #ifdef AMDGPU_USERQ_ENABLED
 	enable_test = true;
 #endif
@@ -117,103 +118,127 @@ int igt_main()
 	}
 	igt_describe("Test GPU reset using a binary shader to slow hang the job on compute ring");
 	igt_subtest_with_dynamic("amdgpu-dispatch-test-compute-with-IP-COMPUTE") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_COMPUTE]) {
 			igt_dynamic_f("amdgpu-dispatch-test-compute")
 			amdgpu_dispatch_hang_slow_compute(device, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test GPU reset using a binary shader to slow hang the job on gfx ring");
 	igt_subtest_with_dynamic("amdgpu-dispatch-test-gfx-with-IP-GFX") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_GFX]) {
 			igt_dynamic_f("amdgpu-dispatch-test-gfx")
 			 amdgpu_dispatch_hang_slow_gfx(device, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test GPU reset using a binary shader to hang the job on gfx ring");
 	igt_subtest_with_dynamic("amdgpu-dispatch-hang-test-gfx-with-IP-GFX") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_GFX] &&
 			is_reset_enable(AMD_IP_COMPUTE, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-dispatch-hang-test-gfx")
 			amdgpu_dispatch_hang_gfx(device, BACKEND_SE_GC_SHADER_INVALID_SHADER, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test GPU reset using a binary shader to hang the job on compute ring");
 	igt_subtest_with_dynamic("amdgpu-dispatch-hang-test-compute-with-IP-COMPUTE") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_COMPUTE] &&
 			is_reset_enable(AMD_IP_COMPUTE, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-dispatch-hang-test-compute")
 			amdgpu_dispatch_hang_compute(device, BACKEND_SE_GC_SHADER_INVALID_SHADER, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test GPU reset using a invalid shader program address to hang the job on compute ring");
 	igt_subtest_with_dynamic("amdgpu-dispatch-invalid-program-addr-test-compute-with-IP-COMPUTE") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_COMPUTE] &&
 			is_reset_enable(AMD_IP_COMPUTE, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-dispatch-invalid-program-addr-test-compute")
 			amdgpu_dispatch_hang_compute(device, BACKEND_SE_GC_SHADER_INVALID_PROGRAM_ADDR, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test GPU reset using a invalid shader program setting to hang the job on compute ring");
 	igt_subtest_with_dynamic("amdgpu-dispatch-invalid-setting-test-compute-with-IP-COMPUTE") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_COMPUTE] &&
 			is_reset_enable(AMD_IP_COMPUTE, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-dispatch-invalid-setting-test-compute")
 			amdgpu_dispatch_hang_compute(device, BACKEND_SE_GC_SHADER_INVALID_PROGRAM_SETTING, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test GPU reset using a invalid shader user data to hang the job on compute ring");
 	igt_subtest_with_dynamic("amdgpu-dispatch-invalid-user-data-test-compute-with-IP-COMPUTE") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_COMPUTE] &&
 			is_reset_enable(AMD_IP_COMPUTE, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-dispatch-invalid-user-data-test-compute")
 			amdgpu_dispatch_hang_compute(device, BACKEND_SE_GC_SHADER_INVALID_USER_DATA, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test GPU reset using amdgpu debugfs to hang the job on gfx ring");
 	igt_subtest_with_dynamic("amdgpu-reset-test-gfx-with-IP-GFX-and-COMPUTE") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_GFX] && arr_cap[AMD_IP_COMPUTE]) {
 			igt_dynamic_f("amdgpu-reset-gfx-compute")
 			amdgpu_gpu_reset_test(device, fd, &pci);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test GPU reset using a binary shader to hang the job on compute ring");
 	igt_subtest_with_dynamic("amdgpu-dispatch-hang-test-compute-with-IP-COMPUTE-UQM") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_COMPUTE]) {
 			igt_dynamic_f("amdgpu-dispatch-hang-test-compute-umq")
 			amdgpu_dispatch_hang_compute(device, BACKEND_SE_GC_SHADER_INVALID_SHADER, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test GPU reset using a invalid shader program address to hang the job on compute ring");
 	igt_subtest_with_dynamic("amdgpu-dispatch-invalid-program-addr-test-compute-with-IP-COMPUTE-UQM") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_COMPUTE]) {
 			igt_dynamic_f("amdgpu-dispatch-invalid-program-addr-test-compute-uqm")
 			amdgpu_dispatch_hang_compute(device, BACKEND_SE_GC_SHADER_INVALID_PROGRAM_ADDR, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test GPU reset using a invalid shader program setting to hang the job on compute ring");
 	igt_subtest_with_dynamic("amdgpu-dispatch-invalid-setting-test-compute-with-IP-COMPUTE-UQM") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_COMPUTE]) {
 			igt_dynamic_f("amdgpu-dispatch-invalid-setting-test-compute-uqm")
 			amdgpu_dispatch_hang_compute(device, BACKEND_SE_GC_SHADER_INVALID_PROGRAM_SETTING, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test GPU reset using a invalid shader user data to hang the job on compute ring");
 	igt_subtest_with_dynamic("amdgpu-dispatch-invalid-user-data-test-compute-with-IP-COMPUTE-UQM") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_COMPUTE]) {
 			igt_dynamic_f("amdgpu-dispatch-invalid-user-data-test-compute-uqm")
 			amdgpu_dispatch_hang_compute(device, BACKEND_SE_GC_SHADER_INVALID_USER_DATA, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_fixture() {

@@ -1170,6 +1170,7 @@ int igt_main()
 	int r;
 	char shm_name[256] = {0};
 	bool arr_cap[AMD_IP_MAX] = {0};
+	struct amd_lockdep_state lockdep;
 	uint32_t reset;
 	unsigned int ring_id_good;
 	unsigned int ring_id_bad;
@@ -1293,6 +1294,7 @@ int igt_main()
 			igt_describe("Stressful-and-multiple-cs-of-bad-and-good-length-operations-using-multiple-processes");
 			igt_subtest_with_dynamic_f("amdgpu-%s-%s", ip_tests[i] == AMD_IP_COMPUTE ? "COMPUTE":
 					ip_tests[i] == AMD_IP_GFX ? "GFX" : "SDMA", it->name) {
+				amd_lockdep_begin(&lockdep);
 				reset = AMDGPU_RESET_TYPE_PER_QUEUE;
 				if (arr_cap[ip_tests[i]] && is_sub_test_queue_reset_enable(&gpu_info, it) &&
 				    is_reset_enable(ip_tests[i], reset, &pci) &&
@@ -1305,6 +1307,7 @@ int igt_main()
 				} else {
 					set_next_test_to_skip(sh_mem);
 				}
+				amd_lockdep_end(&lockdep);
 			}
 		}
 	}

@@ -43,6 +43,7 @@ int igt_main()
 	int r;
 	bool arr_cap[AMD_IP_MAX] = {0};
 	bool userq_arr_cap[AMD_IP_MAX] = {0};
+	struct amd_lockdep_state lockdep;
 	struct pci_addr pci;
 
 #ifdef AMDGPU_USERQ_ENABLED
@@ -78,209 +79,253 @@ int igt_main()
 	}
 	igt_describe("Test-GPU-reset-by-flooding-sdma-ring-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_DMA]) {
 			igt_dynamic_f("amdgpu-deadlock-sdma")
 			amdgpu_wait_memory_helper(device, AMDGPU_HW_IP_DMA, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-access-gfx-illegal-reg");
 	igt_subtest_with_dynamic("amdgpu-gfx-illegal-reg-access") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_GFX] &&
 			is_reset_enable(AMD_IP_GFX, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-illegal-reg-access")
 			bad_access_ring_helper(device, CMD_STREAM_TRANS_BAD_REG_ADDRESS,
 					AMDGPU_HW_IP_GFX, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-access-gfx-illegal-mem-addr");
 	igt_subtest_with_dynamic("amdgpu-gfx-illegal-mem-access") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_GFX] &&
 			is_reset_enable(AMD_IP_GFX, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-illegal-mem-access")
 			bad_access_ring_helper(device, CMD_STREAM_TRANS_BAD_MEM_ADDRESS,
 					AMDGPU_HW_IP_GFX, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 
 	igt_describe("Test-GPU-reset-by-flooding-gfx-ring-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-gfx") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_GFX]) {
 			igt_dynamic_f("amdgpu-deadlock-gfx")
 			amdgpu_wait_memory_helper(device, AMDGPU_HW_IP_GFX, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-access-compute-illegal-mem-addr");
 	igt_subtest("amdgpu-compute-illegal-mem-access") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_COMPUTE] &&
 			 is_reset_enable(AMD_IP_COMPUTE, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 		bad_access_ring_helper(device, CMD_STREAM_TRANS_BAD_MEM_ADDRESS,
 				AMDGPU_HW_IP_COMPUTE, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-flooding-compute-ring-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-compute") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_COMPUTE]) {
 			igt_dynamic_f("amdgpu-deadlock-compute")
 			amdgpu_wait_memory_helper(device, AMDGPU_HW_IP_COMPUTE, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-sdma-corrupted-header-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma-corrupted-header-test") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_DMA] &&
 			is_reset_enable(AMD_IP_DMA, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-deadlock-sdma-corrupted-header-test")
 			amdgpu_hang_sdma_ring_helper(device, DMA_CORRUPTED_HEADER_HANG, &pci);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-sdma-slow-linear-copy-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma-slow-linear-copy") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_DMA] &&
 			is_reset_enable(AMD_IP_DMA, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-deadlock-sdma-slow-linear-copy")
 			amdgpu_hang_sdma_ring_helper(device, DMA_SLOW_LINEARCOPY_HANG, &pci);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-sdma-badop-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma-badop-test") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_DMA] &&
 			is_reset_enable(AMD_IP_DMA, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-deadlock-sdma-badop-test")
 			bad_access_ring_helper(device, CMD_STREAM_EXEC_INVALID_OPCODE,
 					AMDGPU_HW_IP_DMA, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-sdma-bad-mem-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma-bad-mem-test") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_DMA] &&
 			is_reset_enable(AMD_IP_DMA, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-deadlock-sdma-bad-mem-test")
 			bad_access_ring_helper(device, CMD_STREAM_TRANS_BAD_MEM_ADDRESS,
 					AMDGPU_HW_IP_DMA, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-sdma-bad-reg-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma-bad-reg-test") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_DMA] &&
 			is_reset_enable(AMD_IP_DMA, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-deadlock-sdma-bad-reg-test")
 			bad_access_ring_helper(device, CMD_STREAM_TRANS_BAD_REG_ADDRESS,
 					AMDGPU_HW_IP_DMA, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-sdma-bad-length-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma-bad-length-test") {
+		amd_lockdep_begin(&lockdep);
 		if (arr_cap[AMD_IP_DMA] &&
 			is_reset_enable(AMD_IP_DMA, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-deadlock-sdma-bad-length-test")
 			bad_access_ring_helper(device, CMD_STREAM_EXEC_INVALID_PACKET_LENGTH,
 					AMDGPU_HW_IP_DMA, &pci, false);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 #ifdef AMDGPU_USERQ_ENABLED
 	igt_describe("Test-GPU-reset-by-access-gfx-illegal-reg-umq");
 	igt_subtest_with_dynamic("amdgpu-gfx-illegal-reg-access-umq") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_GFX] &&
 		    is_reset_enable(AMD_IP_GFX, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-illegal-reg-access-umq")
 			bad_access_ring_helper(device, CMD_STREAM_TRANS_BAD_REG_ADDRESS,
 					       AMDGPU_HW_IP_GFX, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-sdma-badop-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma-badop-test-umq") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_DMA] &&
 			is_reset_enable(AMD_IP_DMA, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-deadlock-sdma-badop-test-umq")
 			bad_access_ring_helper(device, CMD_STREAM_EXEC_INVALID_OPCODE,
 					AMDGPU_HW_IP_DMA, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-sdma-bad-mem-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma-bad-mem-test-umq") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_DMA] &&
 			is_reset_enable(AMD_IP_DMA, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-deadlock-sdma-bad-mem-test-umq")
 			bad_access_ring_helper(device, CMD_STREAM_TRANS_BAD_MEM_ADDRESS,
 					AMDGPU_HW_IP_DMA, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-sdma-bad-reg-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma-bad-reg-test-umq") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_DMA] &&
 			is_reset_enable(AMD_IP_DMA, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-deadlock-sdma-bad-reg-test-umq")
 			bad_access_ring_helper(device, CMD_STREAM_TRANS_BAD_REG_ADDRESS,
 					AMDGPU_HW_IP_DMA, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-sdma-bad-length-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma-bad-length-test-umq") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_DMA] &&
 			is_reset_enable(AMD_IP_DMA, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-deadlock-sdma-bad-length-test-umq")
 			bad_access_ring_helper(device, CMD_STREAM_EXEC_INVALID_PACKET_LENGTH,
 					AMDGPU_HW_IP_DMA, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-GPU-reset-by-flooding-sdma-ring-with-jobs");
 	igt_subtest_with_dynamic("amdgpu-deadlock-sdma-umq") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_DMA]) {
 			igt_dynamic_f("amdgpu-deadlock-sdma-umq")
 			amdgpu_wait_memory_helper(device, AMDGPU_HW_IP_DMA, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-per-queue-reset-of-a-cleanly-hung-gfx-user-queue");
 	igt_subtest_with_dynamic("amdgpu-deadlock-gfx-umq") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_GFX] &&
 			is_reset_enable(AMD_IP_GFX, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-deadlock-gfx-umq")
 			amdgpu_hang_ring_helper(device, AMDGPU_HW_IP_GFX, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-per-queue-reset-recovery-of-a-gfx-user-queue-priv-fault");
 	igt_subtest_with_dynamic("amdgpu-gfx-priv-fault-umq") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_GFX] &&
 			is_reset_enable(AMD_IP_GFX, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-gfx-priv-fault-umq")
 			amdgpu_priv_fault_ring_helper(device, AMDGPU_HW_IP_GFX, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-gfx-user-queue-bad-opcode-with-nonzero-count-recovers-via-gfx-pipe-reset");
 	igt_subtest_with_dynamic("amdgpu-gfx-priv-fault-badcount-umq") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_GFX] &&
 			is_reset_enable(AMD_IP_GFX, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-gfx-priv-fault-badcount-umq")
 			amdgpu_priv_fault_badcount_ring_helper(device, AMDGPU_HW_IP_GFX, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 
 	igt_describe("Test-per-queue-reset-recovery-of-a-gfx-user-queue-privileged-instruction-fault");
 	igt_subtest_with_dynamic("amdgpu-gfx-priv-inst-umq") {
+		amd_lockdep_begin(&lockdep);
 		if (enable_test && userq_arr_cap[AMD_IP_GFX] &&
 			is_reset_enable(AMD_IP_GFX, AMDGPU_RESET_TYPE_PER_QUEUE, &pci)) {
 			igt_dynamic_f("amdgpu-gfx-priv-inst-umq")
 			amdgpu_priv_inst_ring_helper(device, AMDGPU_HW_IP_GFX, &pci, true);
 		}
+		amd_lockdep_end(&lockdep);
 	}
 #endif
 
