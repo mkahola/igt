@@ -37,6 +37,7 @@
 #include "igt_taints.h"
 #include "lib/amdgpu/amd_command_submission.h"
 #include "lib/amdgpu/amd_memory.h"
+#include "lib/amdgpu/amd_utils.h"
 
 #define BO_SIZE (4 * 1024 * 1024)  /* 4MB */
 #define NUM_BOS 16
@@ -47,99 +48,12 @@
 #define USERPTR_BUF_SIZE (64ull * 1024 * 1024) /* 64 MiB */
 #define PAGEOUT_ITERATIONS 8
 
-/* kmsg patterns that indicate lockdep violations */
-static const char * const lockdep_violation_patterns[] = {
-	"circular locking dependency",
-	"possible recursive locking detected",
-	"inconsistent lock state",
-	"possible circular locking dependency",
-	"WARNING: lock held when returning to user space",
-	NULL
-};
-
 struct thread_data {
 	amdgpu_device_handle device;
 	int fd;
 	bool stop;
 	int iterations;
 };
-
-/*
- * Check if CONFIG_LOCKDEP is enabled on the running kernel by testing
- * for the existence of /proc/lockdep_stats (only present with lockdep).
- */
-static bool is_lockdep_enabled(void)
-{
-	return access("/proc/lockdep_stats", F_OK) == 0;
-}
-
-/*
- * Open /dev/kmsg and seek to end so we only read new messages.
- * Returns fd or -1 on failure.
- */
-static int kmsg_open(void)
-{
-	int fd;
-
-	fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK);
-	if (fd < 0)
-		return -1;
-
-	/* Seek to end - only read messages generated after this point */
-	lseek(fd, 0, SEEK_END);
-	return fd;
-}
-
-/*
- * Scan /dev/kmsg for lockdep violation patterns since the fd was opened.
- * Returns true if a violation was found.
- */
-static bool kmsg_has_lockdep_violation(int kmsg_fd)
-{
-	char buf[4096];
-	ssize_t len;
-	int i;
-
-	if (kmsg_fd < 0)
-		return false;
-
-	while ((len = read(kmsg_fd, buf, sizeof(buf) - 1)) > 0) {
-		buf[len] = '\0';
-		for (i = 0; lockdep_violation_patterns[i]; i++) {
-			if (strstr(buf, lockdep_violation_patterns[i])) {
-				igt_warn("LOCKDEP VIOLATION: %s\n",
-					 lockdep_violation_patterns[i]);
-				igt_warn("  kmsg: %.200s\n", buf);
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
-/*
- * Assert no lockdep violations occurred.
- * Checks both kmsg patterns and kernel taint flags.
- */
-static void assert_no_lockdep_violations(int kmsg_fd, unsigned long taint_before)
-{
-	unsigned long taints = 0;
-	bool violation;
-
-	violation = kmsg_has_lockdep_violation(kmsg_fd);
-
-	igt_kernel_tainted(&taints);
-
-	/* Check for new taint bits that appeared during the test */
-	if ((taints & ~taint_before) & (1ul << TAINT_WARN)) {
-		igt_warn("TAINT_WARN set during test - possible lockdep splat\n");
-		violation = true;
-	}
-
-	igt_assert_f(!violation,
-		     "Lockdep violation detected! Check dmesg for details.\n");
-}
 
 /*
  * Helper: allocate and map a BO to exercise VRAM management locks
@@ -338,7 +252,7 @@ static void test_concurrent_reset_and_submit(int fd, amdgpu_device_handle device
 	int kmsg_fd;
 
 	igt_kernel_tainted(&taint_before);
-	kmsg_fd = kmsg_open();
+	kmsg_fd = amd_lockdep_kmsg_open();
 
 	igt_info("Running concurrent reset + VRAM allocation for %d seconds\n",
 		 THREAD_RUNTIME_SEC);
@@ -357,7 +271,7 @@ static void test_concurrent_reset_and_submit(int fd, amdgpu_device_handle device
 	igt_info("  VRAM allocs: %d, Resets: %d\n",
 		 vram_data.iterations, reset_data.iterations);
 
-	assert_no_lockdep_violations(kmsg_fd, taint_before);
+	amd_assert_no_lockdep_violations(kmsg_fd, taint_before);
 	close(kmsg_fd);
 }
 
@@ -376,7 +290,7 @@ static void test_concurrent_mmap_and_evict(int fd, amdgpu_device_handle device)
 	int kmsg_fd;
 
 	igt_kernel_tainted(&taint_before);
-	kmsg_fd = kmsg_open();
+	kmsg_fd = amd_lockdep_kmsg_open();
 
 	igt_info("Running concurrent mmap + VRAM pressure for %d seconds\n",
 		 THREAD_RUNTIME_SEC);
@@ -395,7 +309,7 @@ static void test_concurrent_mmap_and_evict(int fd, amdgpu_device_handle device)
 	igt_info("  mmap ops: %d, VRAM allocs: %d\n",
 		 mmap_data.iterations, vram_data.iterations);
 
-	assert_no_lockdep_violations(kmsg_fd, taint_before);
+	amd_assert_no_lockdep_violations(kmsg_fd, taint_before);
 	close(kmsg_fd);
 }
 
@@ -415,7 +329,7 @@ static void test_concurrent_userptr_and_reset(int fd,
 	int kmsg_fd;
 
 	igt_kernel_tainted(&taint_before);
-	kmsg_fd = kmsg_open();
+	kmsg_fd = amd_lockdep_kmsg_open();
 
 	igt_info("Running concurrent USERPTR + reset for %d seconds\n",
 		 THREAD_RUNTIME_SEC);
@@ -434,7 +348,7 @@ static void test_concurrent_userptr_and_reset(int fd,
 	igt_info("  USERPTR ops: %d, Resets: %d\n",
 		 userptr_data.iterations, reset_data.iterations);
 
-	assert_no_lockdep_violations(kmsg_fd, taint_before);
+	amd_assert_no_lockdep_violations(kmsg_fd, taint_before);
 	close(kmsg_fd);
 }
 
@@ -454,7 +368,7 @@ static void test_stress_all_paths(int fd, amdgpu_device_handle device)
 	int kmsg_fd;
 
 	igt_kernel_tainted(&taint_before);
-	kmsg_fd = kmsg_open();
+	kmsg_fd = amd_lockdep_kmsg_open();
 
 	igt_info("Running all paths concurrently for %d seconds\n",
 		 THREAD_RUNTIME_SEC);
@@ -480,7 +394,7 @@ static void test_stress_all_paths(int fd, amdgpu_device_handle device)
 		 vram_data.iterations, mmap_data.iterations,
 		 userptr_data.iterations, reset_data.iterations);
 
-	assert_no_lockdep_violations(kmsg_fd, taint_before);
+	amd_assert_no_lockdep_violations(kmsg_fd, taint_before);
 	close(kmsg_fd);
 }
 
@@ -520,7 +434,7 @@ static void test_notifier_reclaim_splat(int fd)
 	memset(buf, 0xa5, USERPTR_BUF_SIZE);
 
 	/* Open kmsg to monitor for lockdep violations */
-	kmsg_fd = kmsg_open();
+	kmsg_fd = amd_lockdep_kmsg_open();
 	igt_assert(kmsg_fd >= 0);
 
 	/* Register as userptr - this installs MMU notifier callback */
@@ -546,7 +460,7 @@ static void test_notifier_reclaim_splat(int fd)
 		usleep(50000);  /* 50ms - give kernel time to process */
 
 		/* Check for lockdep violations */
-		if (kmsg_has_lockdep_violation(kmsg_fd)) {
+		if (amd_lockdep_kmsg_has_violation(kmsg_fd)) {
 			violation_found = true;
 			igt_warn("LOCKDEP VIOLATION DETECTED during iteration %d\n", i + 1);
 			break;
@@ -616,7 +530,7 @@ int igt_main()
 		igt_require(r == 0);
 
 		/* Skip if lockdep is not enabled on the running kernel */
-		igt_require_f(is_lockdep_enabled(),
+		igt_require_f(amd_is_lockdep_enabled(),
 			      "CONFIG_LOCKDEP not enabled - "
 			      "rebuild kernel with CONFIG_PROVE_LOCKING=y\n");
 
