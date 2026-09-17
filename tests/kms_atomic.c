@@ -218,7 +218,8 @@ static void plane_commit_atomic_err(igt_plane_t *plane,
 
 static bool crtc_filter(enum igt_atomic_crtc_properties prop)
 {
-	if (prop == IGT_CRTC_MODE_ID || prop == IGT_CRTC_ACTIVE)
+	if (prop == IGT_CRTC_MODE_ID || prop == IGT_CRTC_ACTIVE ||
+	    prop == IGT_CRTC_BACKGROUND_COLOR)
 		return false;
 
 	return true;
