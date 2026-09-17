@@ -49,6 +49,7 @@
 #include <time.h>
 #include <ctype.h>
 
+#include "linux_scaffold.h"
 #include <i915_drm.h>
 
 #include "drmtest.h"
@@ -740,6 +741,7 @@ const char * const igt_crtc_prop_names[IGT_NUM_CRTC_PROPS] = {
 	[IGT_CRTC_VRR_ENABLED] = "VRR_ENABLED",
 	[IGT_CRTC_SCALING_FILTER] = "SCALING_FILTER",
 	[IGT_CRTC_SHARPNESS_STRENGTH] = "SHARPNESS_STRENGTH",
+	[IGT_CRTC_BACKGROUND_COLOR] = "BACKGROUND_COLOR",
 };
 
 const char * const igt_connector_prop_names[IGT_NUM_CONNECTOR_PROPS] = {
@@ -2741,6 +2743,10 @@ static void igt_crtc_reset(igt_crtc_t *crtc)
 
 	if (igt_crtc_has_prop(crtc, IGT_CRTC_SHARPNESS_STRENGTH))
 		igt_crtc_set_prop_value(crtc, IGT_CRTC_SHARPNESS_STRENGTH, 0);
+
+	if (igt_crtc_has_prop(crtc, IGT_CRTC_BACKGROUND_COLOR))
+		igt_crtc_set_prop_value(crtc, IGT_CRTC_BACKGROUND_COLOR,
+					DRM_ARGB64_PREP(0xffff, 0, 0, 0));
 
 	crtc->out_fence_fd = -1;
 }
