@@ -19,6 +19,15 @@ const char * const kms_colorop_lut1d_tf_names[KMS_COLOROP_LUT1D_NUM_ENUMS] = {
 	[KMS_COLOROP_LUT1D_GAMMA_2_2_INV_OETF] = "Gamma 2.2 Inverse",
 };
 
+const char * const kms_colorop_fixed_matrix_names[KMS_COLOROP_FIXED_MATRIX_NUM_ENUMS] = {
+	[KMS_COLOROP_FIXED_MATRIX_YCBCR601_FULL_RGB] = "YCbCr 601 Full to RGB",
+	[KMS_COLOROP_FIXED_MATRIX_YCBCR601_LIMITED_RGB] = "YCbCr 601 Limited to RGB",
+	[KMS_COLOROP_FIXED_MATRIX_YCBCR709_FULL_RGB] = "YCbCr 709 Full to RGB",
+	[KMS_COLOROP_FIXED_MATRIX_YCBCR709_LIMITED_RGB] = "YCbCr 709 Limited to RGB",
+	[KMS_COLOROP_FIXED_MATRIX_YCBCR2020_NC_FULL_RGB] = "YCbCr 2020 NC Full to RGB",
+	[KMS_COLOROP_FIXED_MATRIX_YCBCR2020_NC_LIMITED_RGB] = "YCbCr 2020 NC Limited to RGB",
+};
+
 kms_colorop_t kms_colorop_srgb_eotf = {
 	.type = KMS_COLOROP_ENUMERATED_LUT1D,
 	.enumerated_lut1d_info = {
@@ -204,7 +213,7 @@ kms_colorop_t kms_colorop_3dlut_17_12_rgb = {
 kms_colorop_t kms_colorop_bt709_limited_ycbcr_to_rgb = {
 	.type = KMS_COLOROP_FIXED_MATRIX,
 	.fixed_matrix_info = {
-		.fixed_matrix_type_name = "YCbCr 709 Limited to RGB",
+		.fixed_matrix_type = KMS_COLOROP_FIXED_MATRIX_YCBCR709_LIMITED_RGB,
 		.encoding = IGT_COLOR_YCBCR_BT709,
 		.range = IGT_COLOR_YCBCR_LIMITED_RANGE,
 	},
@@ -215,7 +224,7 @@ kms_colorop_t kms_colorop_bt709_limited_ycbcr_to_rgb = {
 kms_colorop_t kms_colorop_bt709_full_ycbcr_to_rgb = {
 	.type = KMS_COLOROP_FIXED_MATRIX,
 	.fixed_matrix_info = {
-		.fixed_matrix_type_name = "YCbCr 709 Full to RGB",
+		.fixed_matrix_type = KMS_COLOROP_FIXED_MATRIX_YCBCR709_FULL_RGB,
 		.encoding = IGT_COLOR_YCBCR_BT709,
 		.range = IGT_COLOR_YCBCR_FULL_RANGE,
 	},
@@ -226,7 +235,7 @@ kms_colorop_t kms_colorop_bt709_full_ycbcr_to_rgb = {
 kms_colorop_t kms_colorop_bt601_limited_ycbcr_to_rgb = {
 	.type = KMS_COLOROP_FIXED_MATRIX,
 	.fixed_matrix_info = {
-		.fixed_matrix_type_name = "YCbCr 601 Limited to RGB",
+		.fixed_matrix_type = KMS_COLOROP_FIXED_MATRIX_YCBCR601_LIMITED_RGB,
 		.encoding = IGT_COLOR_YCBCR_BT601,
 		.range = IGT_COLOR_YCBCR_LIMITED_RANGE,
 	},
@@ -237,7 +246,9 @@ kms_colorop_t kms_colorop_bt601_limited_ycbcr_to_rgb = {
 kms_colorop_t kms_colorop_bt2020_limited_ycbcr_to_rgb = {
 	.type = KMS_COLOROP_FIXED_MATRIX,
 	.fixed_matrix_info = {
-		.fixed_matrix_type_name = "YCbCr 2020 Limited to RGB NC",
+		.fixed_matrix_type = KMS_COLOROP_FIXED_MATRIX_YCBCR2020_NC_LIMITED_RGB,
+		.encoding = IGT_COLOR_YCBCR_BT2020,
+		.range = IGT_COLOR_YCBCR_LIMITED_RANGE,
 	},
 	.name = "YCbCr BT.2020 Limited Range to RGB",
 	.transform = NULL,
@@ -263,7 +274,8 @@ static bool can_use_colorop(igt_display_t *display, igt_colorop_t *colorop, kms_
 		return (igt_colorop_get_prop(display, colorop, IGT_COLOROP_TYPE) == DRM_COLOROP_3D_LUT);
 	case KMS_COLOROP_FIXED_MATRIX:
 		if (igt_colorop_get_prop(display, colorop, IGT_COLOROP_TYPE) == DRM_COLOROP_FIXED_MATRIX &&
-		    igt_colorop_try_prop_enum(colorop, IGT_COLOROP_FIXED_MATRIX_TYPE, desired->fixed_matrix_info.fixed_matrix_type_name))
+		    igt_colorop_try_prop_enum(colorop, IGT_COLOROP_FIXED_MATRIX_TYPE,
+					      kms_colorop_fixed_matrix_names[desired->fixed_matrix_info.fixed_matrix_type]))
 			return true;
 		return false;
 	default:
@@ -412,7 +424,7 @@ static void set_colorop(igt_display_t *display, kms_colorop_t *colorop)
 		break;
 	case KMS_COLOROP_FIXED_MATRIX:
 		igt_colorop_set_prop_enum(colorop->colorop, IGT_COLOROP_FIXED_MATRIX_TYPE,
-					  colorop->fixed_matrix_info.fixed_matrix_type_name);
+					  kms_colorop_fixed_matrix_names[colorop->fixed_matrix_info.fixed_matrix_type]);
 		break;
 	default:
 		igt_fail(IGT_EXIT_FAILURE);

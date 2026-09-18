@@ -51,8 +51,20 @@ typedef struct kms_colorop_lut3d_info {
 	enum drm_colorop_lut3d_interpolation_type interpolation;
 } kms_colorop_lut3d_info_t;
 
+typedef enum kms_colorop_fixed_matrix {
+	KMS_COLOROP_FIXED_MATRIX_YCBCR601_FULL_RGB,
+	KMS_COLOROP_FIXED_MATRIX_YCBCR601_LIMITED_RGB,
+	KMS_COLOROP_FIXED_MATRIX_YCBCR709_FULL_RGB,
+	KMS_COLOROP_FIXED_MATRIX_YCBCR709_LIMITED_RGB,
+	KMS_COLOROP_FIXED_MATRIX_YCBCR2020_NC_FULL_RGB,
+	KMS_COLOROP_FIXED_MATRIX_YCBCR2020_NC_LIMITED_RGB,
+	KMS_COLOROP_FIXED_MATRIX_NUM_ENUMS
+} kms_colorop_fixed_matrix_t;
+
+extern const char * const kms_colorop_fixed_matrix_names[KMS_COLOROP_FIXED_MATRIX_NUM_ENUMS];
+
 typedef struct kms_colorop_fixed_matrix_info {
-	const char *fixed_matrix_type_name;
+	kms_colorop_fixed_matrix_t fixed_matrix_type;
 	enum igt_color_encoding encoding;
 	enum igt_color_range range;
 } kms_colorop_fixed_matrix_info_t;
