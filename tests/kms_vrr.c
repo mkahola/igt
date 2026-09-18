@@ -1047,6 +1047,46 @@ test_seamless_virtual_rr_basic(data_t *data, igt_crtc_t *crtc,
 	}
 }
 
+/**
+ * lobf_flip_video_timing_fps:
+ * @data: test data
+ * @output: output under test
+ * @mode: mode currently committed on @output
+ *
+ * Flips at every standard video timing rate, from the highest to the lowest,
+ * on the currently committed @mode. Rates above the panel refresh rate can't
+ * be driven, so they are skipped.
+ *
+ * Returns: true as soon as LOBF gets enabled, false if no rate enables it.
+ */
+static bool
+lobf_flip_video_timing_fps(data_t *data, igt_output_t *output,
+			   const drmModeModeInfo *mode)
+{
+	uint64_t rate[] = {0};
+
+	for (int i = igt_vrr_standard_video_timing_fps_count - 1; i >= 0; i--) {
+		uint32_t fps = igt_vrr_standard_video_timing_fps[i];
+
+		if (fps > mode->vrefresh)
+			continue;
+
+		igt_info("Testing LOBF with a %u hz flip rate on %u hz panel refresh rate: ",
+			 fps, mode->vrefresh);
+
+		rate[0] = igt_kms_frame_time_from_vrefresh(fps);
+		flip_and_measure(data, output, rate, 1, NSECS_PER_SEC);
+
+		if (igt_get_i915_edp_lobf_status(data->drm_fd, output->name)) {
+			igt_info("LOBF enabled\n");
+			return true;
+		}
+		igt_info("LOBF not enabled\n");
+	}
+
+	return false;
+}
+
 /* FIXME: test_lobf : Lobf can be enabled when
  * (Set Context Latency + Guardband) > (First SDP Position + Wake Time)
  * one the depends patches are merged please fix this function.
@@ -1057,10 +1097,8 @@ test_lobf(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 	  uint32_t flags)
 {
 	uint64_t rate[] = {0};
-	uint32_t step_size, vrefresh;
 	bool lobf_enabled = false;
 
-	rate[0] = igt_kms_frame_time_from_vrefresh(data->switch_modes[HIGH_RR_MODE].vrefresh);
 	prepare_test(data, output, crtc);
 	data->flag |= flags;
 
@@ -1083,26 +1121,28 @@ test_lobf(data_t *data, igt_crtc_t *crtc, igt_output_t *output,
 		 output->name, igt_crtc_name(crtc), data->range.min,
 		 data->range.max);
 
+	/* Settle on the high refresh rate mode and sweep the content rates. */
 	igt_output_override_mode(output, &data->switch_modes[HIGH_RR_MODE]);
+	igt_display_commit2(&data->display, COMMIT_ATOMIC);
+
+	rate[0] = igt_kms_frame_time_from_vrefresh(data->switch_modes[HIGH_RR_MODE].vrefresh);
 	flip_and_measure(data, output, rate, 1, TEST_DURATION_NS);
 
-	step_size = (data->range.max - data->range.min) / 5;
+	lobf_enabled = lobf_flip_video_timing_fps(data, output,
+						  &data->switch_modes[HIGH_RR_MODE]);
 
-	for (vrefresh = data->range.max - step_size;
-	     vrefresh >= data->range.min; vrefresh -= step_size) {
-		igt_info("Testing LOBF with a %u hz flip rate on %u hz panel refresh rate\n",
-			 vrefresh, data->switch_modes[HIGH_RR_MODE].vrefresh);
+	/* No content rate enabled LOBF, retry the sweep on the low RR mode. */
+	if (!lobf_enabled) {
+		igt_info("LOBF test execution with lower refresh rate\n");
+		igt_output_override_mode(output, &data->switch_modes[LOW_RR_MODE]);
+		igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
-		rate[0] = igt_kms_frame_time_from_vrefresh(vrefresh);
-		flip_and_measure(data, output, rate, 1, NSECS_PER_SEC);
+		rate[0] = igt_kms_frame_time_from_vrefresh(
+				data->switch_modes[LOW_RR_MODE].vrefresh);
+		flip_and_measure(data, output, rate, 1, TEST_DURATION_NS);
 
-		if (igt_get_i915_edp_lobf_status(data->drm_fd, output->name)) {
-			lobf_enabled = true;
-			break;
-		}
-
-		if (vrefresh == data->range.min)
-			break;
+		lobf_enabled = lobf_flip_video_timing_fps(data, output,
+							  &data->switch_modes[LOW_RR_MODE]);
 	}
 
 	igt_assert_f(lobf_enabled, "LOBF not enabled\n");
