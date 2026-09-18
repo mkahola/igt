@@ -407,6 +407,9 @@ static void prepare(data_t *data)
 	igt_plane_t *primary, *sprite = NULL, *cursor = NULL;
 	int fb_w, fb_h, x, y, view_w, view_h;
 
+	igt_display_reset(&data->display);
+	igt_display_commit2(&data->display, COMMIT_ATOMIC);
+
 	psr_enable(data->drm_fd, data->debugfs_fd, data->psr_mode,
 		   data->output);
 
@@ -1044,6 +1047,22 @@ static void cleanup(data_t *data)
 	igt_remove_fb(data->drm_fd, &data->fb_test);
 }
 
+/* PSR/Panel Replay with joiner is only supported on the pipe A/B pair. */
+static bool sel_fetch_joiner_combo_valid(data_t *data)
+{
+	drmModeModeInfo *mode = igt_output_get_mode(data->output);
+	int max_dotclock = igt_get_max_dotclock(data->drm_fd);
+
+	if (igt_ultrajoiner_possible(data->drm_fd, mode, max_dotclock))
+		return false;
+
+	if (!igt_check_force_joiner_status(data->drm_fd, data->output->name) &&
+	    !igt_bigjoiner_possible(data->drm_fd, mode, max_dotclock))
+		return true;
+
+	return data->crtc->hardware_pipe == PIPE_A;
+}
+
 static bool sel_fetch_pipe_combo_valid(data_t *data)
 {
 	if (data->devid < 14 && !IS_ALDERLAKE_P(data->devid) && data->crtc->hardware_pipe != PIPE_A)
@@ -1051,6 +1070,9 @@ static bool sel_fetch_pipe_combo_valid(data_t *data)
 
 	if (data->output->config.connector->connector_type == DRM_MODE_CONNECTOR_eDP &&
 	    data->crtc->hardware_pipe != PIPE_A && data->crtc->hardware_pipe != PIPE_B)
+		return false;
+
+	if (!sel_fetch_joiner_combo_valid(data))
 		return false;
 
 	return true;
