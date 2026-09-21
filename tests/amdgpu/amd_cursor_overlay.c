@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright 2025 Advanced Micro Devices, Inc.
 
+#include <fcntl.h>
+
 #include "igt.h"
 #include "igt_kms.h"
 #include "amdgpu_drm.h"
