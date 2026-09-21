@@ -33,6 +33,7 @@
  */
 
 #include "igt.h"
+#include "igt_psr.h"
 #include "kms_dsc_helper.c"
 #include "kms_joiner_helper.h"
 
@@ -61,6 +62,10 @@
  *		Force joiner applies bigjoiner functionality to non-bigjoiner outputs thus,
  *		the test exclusively targets non-bigjoiner outputs.
  *
+ * SUBTEST: basic-force-big-joiner-psr2-sel-fetch
+ * Description: Verify PSR2 selective fetch can be entered while the output is
+ *		driven in force big joiner mode.
+ *
  * SUBTEST: basic-force-ultra-joiner
  * Description: Verify basic ultra joiner modeset in force joiner mode across all pipes.
  *		Force joiner applies bigjoiner functionality to non-bigjoiner outputs thus,
@@ -83,6 +88,7 @@ IGT_TEST_DESCRIPTION("Test joiner / force joiner");
 
 typedef struct {
 	int drm_fd;
+	int debugfs_fd;
 	int big_joiner_output_count;
 	int ultra_joiner_output_count;
 	int non_big_joiner_output_count;
@@ -217,6 +223,22 @@ static void require_big_joiner(data_t *data, enum force_joiner_mode mode)
 			      "No big joiner output found\n");
 }
 
+/* Returns a force joiner capable output supporting PSR2 selective fetch, or NULL. */
+static igt_output_t *get_psr2_sel_fetch_output(data_t *data)
+{
+	igt_output_t *output;
+	int i;
+
+	for (i = 0; i < data->non_big_joiner_output_count; i++) {
+		output = data->non_big_joiner_output[i];
+		if (psr_sink_support(data->drm_fd, data->debugfs_fd,
+				     PSR_MODE_2_SEL_FETCH, output))
+			return output;
+	}
+
+	return NULL;
+}
+
 static void switch_modeset_ultra_joiner_big_joiner(data_t *data, igt_output_t *output)
 {
 	drmModeModeInfo bj_mode;
@@ -305,6 +327,51 @@ static void test_single_joiner(data_t *data, igt_output_t **outputs, int output_
 			igt_remove_fb(data->drm_fd, &fb);
 		}
 	}
+}
+
+static void test_joiner_psr2_sel_fetch(data_t *data, igt_output_t *output)
+{
+	uint32_t available_pipe_mask = BIT(data->n_pipes) - 1;
+	enum hardware_pipe master_pipe;
+	igt_plane_t *primary;
+	igt_fb_t fb;
+	drmModeModeInfo *mode;
+	bool entered;
+	int retry;
+
+	/* enable_psr=1 (force PSR1) silently fails intel_psr2_config_valid(), overriding debugfs. */
+	igt_set_module_param_int(data->drm_fd, "enable_psr", 2);
+
+	igt_display_reset(&data->display);
+	igt_display_commit2(&data->display, COMMIT_ATOMIC);
+
+	/* Arm PSR2 selective fetch before the joiner modeset so it applies to the next commit. */
+	igt_require_f(psr_enable(data->drm_fd, data->debugfs_fd, PSR_MODE_2_SEL_FETCH, output),
+		      "Failed to enable PSR2 selective fetch on %s\n", output->name);
+
+	/* psr_joiner_config_valid() only allows the joiner pipe mask to be PIPE_A|PIPE_B. */
+	master_pipe = setup_pipe(data, output, PIPE_A, available_pipe_mask);
+	igt_require_f(master_pipe == PIPE_A,
+		      "No PIPE_A/B joiner pairing available for %s\n", output->name);
+
+	mode = igt_output_get_mode(output);
+	primary = igt_output_get_plane_type(output, DRM_PLANE_TYPE_PRIMARY);
+	igt_create_pattern_fb(data->drm_fd, mode->hdisplay, mode->vdisplay, DRM_FORMAT_XRGB8888,
+			      DRM_FORMAT_MOD_LINEAR, &fb);
+	igt_plane_set_fb(primary, &fb);
+	igt_display_commit2(&data->display, COMMIT_ATOMIC);
+
+	/* Bigjoiner commits settle slower than single-pipe ones, so retry past the 500ms default. */
+	entered = false;
+	for (retry = 0; retry < 4 && !entered; retry++)
+		entered = psr_wait_entry(data->debugfs_fd, PSR_MODE_2_SEL_FETCH, output);
+	igt_assert_f(entered,
+		     "PSR2 selective fetch did not enter with joiner active on %s\n", output->name);
+
+	psr_disable(data->drm_fd, data->debugfs_fd, output);
+	igt_display_reset(&data->display);
+	igt_plane_set_fb(primary, NULL);
+	igt_remove_fb(data->drm_fd, &fb);
 }
 
 static void test_multi_joiner(data_t *data, int output_count, bool force_joiner)
@@ -641,6 +708,7 @@ int igt_main()
 		j = 0;
 
 		data.drm_fd = drm_open_driver_master(DRIVER_INTEL | DRIVER_XE);
+		data.debugfs_fd = igt_debugfs_dir(data.drm_fd);
 		kmstest_set_vt_graphics_mode();
 		igt_display_require(&data.display, data.drm_fd);
 		igt_set_all_master_pipes_for_platform(&data.display, &data.master_pipes);
@@ -764,6 +832,25 @@ int igt_main()
 		}
 	}
 
+	igt_describe("Verify PSR2 selective fetch can be entered while the output "
+		     "is driven in force big joiner mode");
+	igt_subtest_with_dynamic("basic-force-big-joiner-psr2-sel-fetch") {
+		igt_output_t *psr_output;
+
+		require_big_joiner(&data, FORCE_JOINER_ENABLE);
+
+		psr_output = get_psr2_sel_fetch_output(&data);
+		igt_require_f(psr_output, "No output supporting PSR2 selective fetch found\n");
+
+		igt_dynamic_f("pipe-%s", psr_output->name) {
+			bool status = kmstest_force_connector_joiner(data.drm_fd, psr_output->config.connector,
+							     JOINED_PIPES_BIG_JOINER);
+			igt_assert_f(status, "Failed to toggle force joiner on %s\n", psr_output->name);
+			test_joiner_psr2_sel_fetch(&data, psr_output);
+			igt_reset_connectors();
+		}
+	}
+
 	igt_subtest_with_dynamic("invalid-modeset-force-big-joiner") {
 		require_big_joiner(&data, FORCE_JOINER_ENABLE);
 		if (data.non_big_joiner_output_count >= 1) {
@@ -836,6 +923,7 @@ int igt_main()
 
 	igt_fixture() {
 		igt_display_fini(&data.display);
+		close(data.debugfs_fd);
 		drm_close_driver(data.drm_fd);
 		igt_reset_connectors();
 	}
