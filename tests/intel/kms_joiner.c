@@ -275,18 +275,16 @@ static void switch_modeset_ultra_joiner_big_joiner(data_t *data, igt_output_t *o
 	}
 }
 
-static void test_single_joiner(data_t *data, int output_count, bool force_joiner)
+static void test_single_joiner(data_t *data, igt_output_t **outputs, int output_count)
 {
 	int i;
 	enum hardware_pipe pipe, master_pipe;
 	uint32_t available_pipe_mask = BIT(data->n_pipes) - 1;
 	igt_output_t *output;
 	igt_plane_t *primary;
-	igt_output_t **outputs;
 	igt_fb_t fb;
 	drmModeModeInfo *mode;
 
-	outputs = force_joiner ? data->non_big_joiner_output : data->big_joiner_output;
 	igt_display_reset(&data->display);
 	igt_display_commit2(&data->display, COMMIT_ATOMIC);
 
@@ -708,7 +706,7 @@ int igt_main()
 	igt_subtest_with_dynamic("basic-big-joiner") {
 		require_big_joiner(&data, FORCE_JOINER_DISABLE);
 		igt_dynamic_f("single-joiner")
-			test_single_joiner(&data, data.big_joiner_output_count, false);
+			test_single_joiner(&data, data.big_joiner_output, data.big_joiner_output_count);
 		if (data.big_joiner_output_count > 1)
 			igt_dynamic_f("multi-joiner")
 				test_multi_joiner(&data, data.big_joiner_output_count, false);
@@ -753,7 +751,7 @@ int igt_main()
 		require_big_joiner(&data, FORCE_JOINER_ENABLE);
 		igt_dynamic_f("single") {
 			enable_force_joiner_on_all_non_big_joiner_outputs(&data);
-			test_single_joiner(&data, data.non_big_joiner_output_count, true);
+			test_single_joiner(&data, data.non_big_joiner_output, data.non_big_joiner_output_count);
 			igt_reset_connectors();
 		}
 
